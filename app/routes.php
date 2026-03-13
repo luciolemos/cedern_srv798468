@@ -19,7 +19,21 @@ return function (App $app) {
 
     $app->get('/', function (Request $request, Response $response) use ($app) {
         $twig = $app->getContainer()->get(Twig::class);
-        $homeContent = require __DIR__ . '/content/home.php';
+        
+        $contentPath = __DIR__ . '/content/home.php';
+        $homeContent = [];
+
+        if (file_exists($contentPath)) {
+            $loaded = require $contentPath;
+            if (is_array($loaded)) {
+                $homeContent = $loaded;
+            } else {
+                // If require returns 1 or true, it implies the file was found but didn't return data
+                $homeContent = ['_debug_error' => 'Arquivo encontrado mas sem retorno de dados'];
+            }
+        } else {
+            $homeContent = ['_debug_error' => 'Arquivo de conteudo nao encontrado: ' . $contentPath];
+        }
 
         return $twig->render($response, 'home.twig', [
             'homeContent' => $homeContent,

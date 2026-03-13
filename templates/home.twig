@@ -1,7 +1,10 @@
 {% extends 'layouts/base.twig' %}
 
 {% block content %}
-  <div style="background:red; color:white; padding:20px; text-align:center; font-weight:bold;">DEBUG: TEMPLATE HOME CARREGADO</div>
+  <div style="background:red; color:white; padding:20px; text-align:center; font-weight:bold;">
+    DEBUG: TEMPLATE HOME CARREGADO<br>
+    HOME CONTENT DUMP: {{ homeContent|json_encode }}
+  </div>
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/hero.twig' %}
     {% include 'home/features.twig' %}
