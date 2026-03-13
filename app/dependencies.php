@@ -32,24 +32,41 @@ return function (ContainerBuilder $containerBuilder) {
                 'cache' => false,
             ]);
 
-            $allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
-            $allowedModes = ['light', 'dark'];
-            $allowedIntensities = ['neutral', 'vivid'];
+            $uiDefaults = [
+                'APP_DEFAULT_THEME' => [
+                    'default' => 'amber',
+                    'allowed' => ['blue', 'red', 'green', 'violet', 'amber'],
+                ],
+                'APP_DEFAULT_MODE' => [
+                    'default' => 'light',
+                    'allowed' => ['light', 'dark'],
+                ],
+                'APP_DEFAULT_DARK_INTENSITY' => [
+                    'default' => 'neutral',
+                    'allowed' => ['neutral', 'vivid'],
+                ],
+            ];
 
-            $defaultTheme = strtolower((string) ($_ENV['APP_DEFAULT_THEME'] ?? 'amber'));
-            $defaultMode = strtolower((string) ($_ENV['APP_DEFAULT_MODE'] ?? 'light'));
-            $defaultDarkIntensity = strtolower((string) ($_ENV['APP_DEFAULT_DARK_INTENSITY'] ?? 'neutral'));
+            $resolveEnvChoice = static function (string $key) use ($uiDefaults): string {
+                $config = $uiDefaults[$key];
+                $value = strtolower(trim((string) ($_ENV[$key] ?? $config['default'])));
 
-            if (!in_array($defaultTheme, $allowedThemes, true)) {
-                $defaultTheme = 'amber';
-            }
-            if (!in_array($defaultMode, $allowedModes, true)) {
-                $defaultMode = 'light';
-            }
-            if (!in_array($defaultDarkIntensity, $allowedIntensities, true)) {
-                $defaultDarkIntensity = 'neutral';
+                return in_array($value, $config['allowed'], true)
+                    ? $value
+                    : $config['default'];
+            };
+
+            $appDefaultPageTitle = trim((string) ($_ENV['APP_DEFAULT_PAGE_TITLE'] ?? 'NatalCode | Soluções web'));
+
+            if ($appDefaultPageTitle === '') {
+                $appDefaultPageTitle = 'NatalCode | Soluções web';
             }
 
+            $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME');
+            $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE');
+            $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY');
+
+            $twig->getEnvironment()->addGlobal('app_default_page_title', $appDefaultPageTitle);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
             $twig->getEnvironment()->addGlobal('default_mode', $defaultMode);
             $twig->getEnvironment()->addGlobal('default_dark_intensity', $defaultDarkIntensity);

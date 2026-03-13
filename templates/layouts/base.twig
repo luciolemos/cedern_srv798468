@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}NatalCode{% endblock %}</title>
+  <title>{% block title %}{{ app_default_page_title|default('NatalCode | Soluções web') }}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
   <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="icon" type="image/png" href="/assets/img/brand/nc7.png">
   {% block head %}{% endblock %}
 </head>
 <body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}">

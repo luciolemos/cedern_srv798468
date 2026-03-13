@@ -7,16 +7,14 @@
     title: cta_section.title|default('Pronto para resolver problemas reais com tecnologia certa?'),
     lead: cta_section.lead|default('Fale com a NatalCode e transforme seu desafio de negocio em um sistema funcional, escalavel e com a identidade da sua marca.')
   } %}
-  <div class="nc-final-cta" data-aos="fade-up" data-aos-delay="{{ cta_section.containerDelay|default(90) }}">
-    <div class="nc-actions" data-aos="fade-up" data-aos-delay="{{ cta_section.actionsDelay|default(160) }}">
-      {% for action in cta_actions %}
-        <a
-          class="{{ action.class }}"
-          href="{{ action.href }}"
-          {% if action.loadingOnClick|default(false) %}data-loading-on-click{% endif %}
-          {% if action.ariaDisabled|default(false) %}aria-disabled="true" tabindex="-1"{% endif %}
-        >{{ action.ariaDisabled|default(false) ? action.disabledLabel|default('Em breve') : action.label }}</a>
-      {% endfor %}
-    </div>
+  <div class="nc-actions" data-aos="fade-up" data-aos-delay="{{ cta_section.actionsDelay|default(160) }}">
+    {% for action in cta_actions %}
+      <a
+        class="{{ action.class }}"
+        href="{{ action.href }}"
+        {% if action.loadingOnClick|default(false) %}data-loading-on-click{% endif %}
+        {% if action.ariaDisabled|default(false) %}aria-disabled="true" tabindex="-1"{% endif %}
+      >{{ action.ariaDisabled|default(false) ? action.disabledLabel|default('Em breve') : action.label }}</a>
+    {% endfor %}
   </div>
 </section>

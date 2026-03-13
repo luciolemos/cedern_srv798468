@@ -33,37 +33,60 @@ Atualmente, a aplicacao entrega:
 - AOS (Animate On Scroll)
 - CSS custom com design tokens
 - JS vanilla para interacoes de tema
+- Playwright (regressao visual)
+- GitHub Actions (CI)
 
 ## Estrutura do projeto
 
 ```txt
 /var/www/natalcode
+├── .github/
+│   └── workflows/
+│       ├── visual-regression.yml
+│       ├── phpunit.yml
+│       ├── phpstan.yml
+│       └── phpcs.yml
 ├── app/
+│   ├── content/
+│   │   ├── home.php            # Conteudo centralizado da home
+│   │   └── README.md           # Guia de edicao do conteudo
 │   ├── dependencies.php        # Container + Twig globals
 │   ├── middleware.php
 │   ├── repositories.php
 │   ├── routes.php
 │   └── settings.php
+├── tests/
+│   └── visual/
+│       └── home.spec.js         # Regressao visual da home
 ├── public/
 │   ├── assets/
 │   │   ├── css/app.css         # Tokens + componentes + temas
 │   │   └── js/
 │   │       ├── aos-init.js
+│   │       ├── button-states.js
+│   │       ├── header-menu.js
 │   │       └── theme-palette.js
 │   └── index.php               # Bootstrap Slim + dotenv
 ├── templates/
 │   ├── components/
+│   │   ├── check-item.twig
+│   │   ├── faq-item.twig
+│   │   ├── feature-card.twig
 │   │   ├── footer.twig
 │   │   ├── header.twig
+│   │   ├── section-header.twig
 │   │   └── theme-palette.twig
 │   ├── home/
 │   │   ├── hero.twig
 │   │   ├── features.twig
 │   │   ├── social-proof.twig
 │   │   ├── roadmap.twig
+│   │   ├── faq.twig
 │   │   └── final-cta.twig
 │   ├── layouts/base.twig
 │   └── home.twig               # Composicao da home via includes
+├── package.json                # Scripts de regressao visual
+├── playwright.config.js        # Config Playwright
 ├── .env
 ├── .env.example
 └── README.md
@@ -83,13 +106,34 @@ Cada secao tem animacao AOS e delays progressivos nos elementos internos.
 
 ## Edicao de conteudo da home
 
-Os textos e listas da home estao centralizados em:
+O conteudo textual da home (titulos, descricoes, cards, roadmap, FAQ e CTAs) esta centralizado em:
 
 - `app/content/home.php`
 
-Guia rapido de edicao:
+Guia detalhado de edicao:
 
 - `app/content/README.md`
+
+### O que este guia cobre
+
+- quais chaves controlam cada secao da home;
+- como editar textos sem quebrar o layout;
+- como usar `delay` nas animacoes;
+- como configurar acoes de botoes (`loadingOnClick`, `ariaDisabled`, `disabledLabel`).
+
+### Fluxo recomendado para alterar conteudo
+
+1. editar `app/content/home.php`;
+2. validar localmente em `http://localhost:8080`;
+3. rodar checks (`npm run test:visual` e checks PHP no CI);
+4. abrir PR com a mudanca de conteudo.
+
+### Checklist rapido antes de publicar
+
+- textos coerentes com a linha editorial;
+- links validos (`href` funcionando);
+- ordem dos itens correta (arrays);
+- snapshots visuais atualizados quando houver mudanca intencional.
 
 ## Tema, modo e intensidade
 
@@ -220,3 +264,4 @@ No GitHub, configure protecao da branch principal (`main`/`master`) com:
 - Preferir `Squash and merge`
 - Bloquear merge direto na branch principal
 - Exigir PR mesmo para manutencao de conteudo
+- Utilizar checklist do template de PR: `.github/pull_request_template.md`

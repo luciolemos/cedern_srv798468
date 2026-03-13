@@ -28,6 +28,12 @@ deny from all
   # absolute physical path to the directory that contains this htaccess file.
   # RewriteBase /
 
+  # Encaminha rotas dinâmicas de /mvc para o front controller do projeto MVC
+  RewriteCond %{REQUEST_URI} ^/mvc(?:/.*)?$
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^mvc/?(.*)$ /mvc/index.php?url=$1 [QSA,L]
+
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^ index.php [QSA,L]

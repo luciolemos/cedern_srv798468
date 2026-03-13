@@ -47,12 +47,39 @@
   }
 
   function updateScrollTopVisibility() {
+    var mobileThreshold = Number.parseInt(
+      utilityStack && utilityStack.dataset.scrollThresholdMobile
+        ? utilityStack.dataset.scrollThresholdMobile
+        : '110',
+      10
+    );
+    var desktopThreshold = Number.parseInt(
+      utilityStack && utilityStack.dataset.scrollThresholdDesktop
+        ? utilityStack.dataset.scrollThresholdDesktop
+        : '260',
+      10
+    );
+
+    if (Number.isNaN(mobileThreshold)) {
+      mobileThreshold = 110;
+    }
+
+    if (Number.isNaN(desktopThreshold)) {
+      desktopThreshold = 260;
+    }
+
+    var threshold = isDesktop() ? desktopThreshold : mobileThreshold;
+    var isVisible = window.scrollY > threshold;
+
     if (!scrollTopButton) {
       return;
     }
 
-    var isVisible = window.scrollY > 260;
     scrollTopButton.hidden = !isVisible;
+
+    if (!isVisible) {
+      setPanelState(false);
+    }
   }
 
   function applyTheme(theme) {
