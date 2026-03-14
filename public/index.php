@@ -13,6 +13,8 @@ use Slim\Factory\ServerRequestCreatorFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $projectRoot = dirname(__DIR__);
 if (is_file($projectRoot . '/.env')) {
     Dotenv::createImmutable($projectRoot)->safeLoad();
