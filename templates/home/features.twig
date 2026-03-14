@@ -12,6 +12,8 @@
       {% include 'components/feature-card.twig' with {
         title: item.title,
         description: item.description,
+        href: item.href|default(''),
+        link_label: item.linkLabel|default('Saiba mais'),
         delay: item.delay
       } %}
     {% endfor %}

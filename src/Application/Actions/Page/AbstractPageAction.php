@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Actions\Page;
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Log\LoggerInterface;
+use Slim\Views\Twig;
+
+abstract class AbstractPageAction
+{
+    protected LoggerInterface $logger;
+
+    protected Twig $twig;
+
+    public function __construct(LoggerInterface $logger, Twig $twig)
+    {
+        $this->logger = $logger;
+        $this->twig = $twig;
+    }
+
+    abstract public function __invoke(Request $request, Response $response): Response;
+
+    protected function renderPage(Response $response, string $template, array $data = []): Response
+    {
+        $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
+
+        $context = array_merge([
+            'homeContent' => require __DIR__ . '/../../../../app/content/home.php',
+            'site_name' => trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE')),
+            'page_image' => trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png')),
+            'page_description' => trim((string) ($_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.')),
+            'page_url_base' => $baseUrl,
+        ], $data);
+
+        return $this->twig->render($response, $template, $context);
+    }
+}

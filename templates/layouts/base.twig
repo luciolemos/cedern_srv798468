@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {% set page_title = app_default_page_title|default('CEDE | Centro de Estudos da Doutrina Espírita') %}
-  {% set page_description = app_default_page_description|default('Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.') %}
-  {% set page_url = app_default_page_url|default('https://cedern.org/') %}
-  {% set page_image = app_default_page_image|default('https://cedern.org/assets/img/cedern/cede1_1600_1000.png') %}
-  {% set site_name = app_default_site_name|default('CEDE') %}
-  {% set twitter_site = app_default_twitter_site|default('@cedeoficialrn') %}
+  {% set page_title = page_title|default(app_default_page_title|default('CEDE | Centro de Estudos da Doutrina Espírita')) %}
+  {% set page_description = page_description|default(app_default_page_description|default('Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.')) %}
+  {% set page_url = page_url|default(app_default_page_url|default('https://cedern.org/')) %}
+  {% set page_image = page_image|default(app_default_page_image|default('https://cedern.org/assets/img/cedern/cede1_1600_1000.png')) %}
+  {% set site_name = site_name|default(app_default_site_name|default('CEDE')) %}
+  {% set twitter_site = twitter_site|default(app_default_twitter_site|default('@cedeoficialrn')) %}
   <title>{% block title %}{{ page_title }}{% endblock %}</title>
   <meta name="description" content="{{ page_description }}">
   <meta property="og:title" content="{{ page_title }}">
@@ -25,18 +25,20 @@
   <meta name="twitter:site" content="{{ twitter_site }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
   {# <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"> #}
-  <link rel="stylesheet" href="/assets/css/cedern.css?v={{ "now"|date("U") }}">
+  {% set asset_version = app_asset_version|default('1') %}
+  <link rel="stylesheet" href="/assets/css/cedern.css?v={{ asset_version }}">
   <link rel="icon" type="image/png" href="/assets/img/brand/nc7.png">
-  <script src="/assets/js/cedern-nav.js?v={{ "now"|date("U") }}" defer></script>
-  <script src="/assets/js/cedern-buttons.js?v={{ "now"|date("U") }}" defer></script>
-  <script src="/assets/js/cedern-theme.js?v={{ "now"|date("U") }}" defer></script>
+  <script src="/assets/js/cedern-nav.js?v={{ asset_version }}" defer></script>
+  <script src="/assets/js/cedern-buttons.js?v={{ asset_version }}" defer></script>
+  <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}">
   <div class="nc-shell">
     {% include 'components/header.twig' %}
+    {% include 'components/breadcrumbs.twig' %}
     {% block content %}{% endblock %}
     {% include 'components/footer.twig' %}
   </div>

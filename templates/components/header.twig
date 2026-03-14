@@ -1,19 +1,25 @@
 <header class="nc-header">
+  {% set path = current_path|default('') %}
+  {% set labels = navigation_labels|default({}) %}
+  {% set nav_groups = navigation_menu|default([]) %}
+  {% set nav_links_before = navigation_links_before_groups|default([]) %}
+  {% set nav_links_after = navigation_links_after_groups|default([]) %}
+
   <div class="nc-container nc-header-row">
     <a class="nc-brand" href="/" aria-label="CEDE - Início">
-      {#
+      
       <img
-        src="{{ base_url ?? '' }}/assets/img/brands/cedern.jpeg"
+        src="{{ base_url ?? '' }}/assets/img/brands/cede4_logo.png"
         alt="{{ app_name ?? 'Labs' }} (tema escuro)"
         class="navbar-logo logo-dark"
       >
       <img
-        src="{{ base_url ?? '' }}/assets/img/brands/cedern.jpeg"
+        src="{{ base_url ?? '' }}/assets/img/brands/cede4_logo.png"
         alt="{{ app_name ?? 'Labs' }} (tema claro)"
         class="navbar-logo logo-light"
       >
-      #}
-      <span class="nc-brand-name">{{ app_name ?? 'CEDE' }}</span>
+      
+      {# <span class="nc-brand-name">{{ app_name ?? 'CEDE' }}</span> #}
     </a>
     <button
       class="nc-nav-toggle"
@@ -27,12 +33,32 @@
       <span class="nc-nav-toggle-bar"></span>
     </button>
     <nav id="nc-nav-menu" class="nc-nav" aria-label="Navegação principal" hidden>
-      <a class="nc-link" href="/">Início</a>
-      <a class="nc-link" href="/#quem-somos">Quem Somos</a>
-      <a class="nc-link" href="/#estudos">Estudos</a>
-      <a class="nc-link" href="/#agenda">Agenda</a>
-      <a class="nc-link" href="/#faq">FAQ</a>
-      <a class="nc-link" href="/#contato">Contato</a>
+      {% for item in nav_links_before %}
+        {% set is_item_active = path == item.path %}
+        <a class="nc-link{{ is_item_active ? ' is-active' : '' }}" href="{{ item.path }}" {% if is_item_active %}aria-current="page"{% endif %}>{{ item.key is defined ? labels[item.key]|default(item.label|default(item.path)) : item.label|default(item.path) }}</a>
+      {% endfor %}
+
+      {% for group in nav_groups %}
+        {% set is_group_active = path starts with group.base %}
+        <div class="nc-nav-group{{ is_group_active ? ' is-active' : '' }}" data-nav-group>
+          <button class="nc-nav-group-toggle{{ is_group_active ? ' is-active' : '' }}" type="button" aria-expanded="false" aria-controls="nc-submenu-{{ group.key }}" {% if is_group_active %}aria-current="page"{% endif %}>
+            {{ labels[group.key]|default(group.label|default(group.key)) }}
+          </button>
+          <div id="nc-submenu-{{ group.key }}" class="nc-nav-submenu" hidden>
+            {% for item in group.items %}
+              {% set is_item_active = path == item.path %}
+              <a class="nc-nav-submenu-link{{ is_item_active ? ' is-active' : '' }}" href="{{ item.path }}" {% if is_item_active %}aria-current="page"{% endif %}>
+                {{ item.key is defined ? labels[item.key]|default(item.label|default(item.path)) : item.label|default(item.path) }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+      {% for item in nav_links_after %}
+        {% set is_item_active = path == item.path %}
+        <a class="nc-link{{ is_item_active ? ' is-active' : '' }}" href="{{ item.path }}" {% if is_item_active %}aria-current="page"{% endif %}>{{ item.key is defined ? labels[item.key]|default(item.label|default(item.path)) : item.label|default(item.path) }}</a>
+      {% endfor %}
     </nav>
   </div>
 </header>

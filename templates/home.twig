@@ -3,10 +3,57 @@
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/hero.twig' %}
-    {% include 'home/features.twig' %}
-    {% include 'home/social-proof.twig' %}
-    {% include 'home/roadmap.twig' %}
-    {% include 'home/faq.twig' %}
+
+    <section class="nc-section nc-section--surface" aria-label="Acesso rápido" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Caminhos',
+        title: 'Encontre o que você busca no CEDE',
+        lead: 'Reunimos aqui os principais caminhos para acolhimento, estudo, participação e contato fraterno.'
+      } %}
+
+      <div class="nc-feature-grid">
+        {% include 'components/feature-card.twig' with {
+          title: 'Quem Somos',
+          description: 'Conheça nossa identidade, missão, valores, história e o significado da marca institucional.',
+          href: '/quem-somos',
+          link_label: 'Conhecer o CEDE',
+          delay: 120
+        } %}
+
+        {% include 'components/feature-card.twig' with {
+          title: 'Estudos',
+          description: 'Participe das frentes de estudo da Doutrina Espírita e acompanhe os conteúdos formativos da casa.',
+          href: '/estudos',
+          link_label: 'Ver estudos',
+          delay: 160
+        } %}
+
+        {% include 'components/feature-card.twig' with {
+          title: 'Agenda',
+          description: 'Consulte os dias e horários das atividades públicas e dos encontros semanais do CEDE.',
+          href: '/agenda',
+          link_label: 'Ver agenda',
+          delay: 200
+        } %}
+
+        {% include 'components/feature-card.twig' with {
+          title: 'FAQ',
+          description: 'Tire dúvidas frequentes sobre doutrina, participação e práticas da casa espírita.',
+          href: '/faq',
+          link_label: 'Ler FAQ',
+          delay: 240
+        } %}
+
+        {% include 'components/feature-card.twig' with {
+          title: 'Contato',
+          description: 'Entre em contato conosco, consulte o endereço e acesse nossos canais oficiais de comunicação.',
+          href: '/contato',
+          link_label: 'Falar com o CEDE',
+          delay: 280
+        } %}
+      </div>
+    </section>
+
     {% include 'home/final-cta.twig' %}
   </main>
 {% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section" aria-label="Detalhes do estudo" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: study.kicker|default('Estudos'),
+        title: study.title|default('Atividade do CEDE'),
+        lead: study.lead|default('Conheça esta frente de estudo e veja como participar com serenidade e continuidade.')
+      } %}
+
+      <ul class="nc-checklist">
+        {% for topic in study.topics|default([]) %}
+          {% include 'components/check-item.twig' with {
+            step: topic.step,
+            title: topic.title,
+            description: topic.description,
+            delay: topic.delay|default(120)
+          } %}
+        {% endfor %}
+      </ul>
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="160">
+        <a class="nc-btn nc-btn-secondary" href="/estudos">Voltar para Estudos</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Entrar em contato</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

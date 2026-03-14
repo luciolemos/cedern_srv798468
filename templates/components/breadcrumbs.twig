@@ -1,0 +1,45 @@
+{% set path = current_path|default('/') %}
+{% set trimmed_path = path|trim('/') %}
+{% set segments = trimmed_path == '' ? [] : trimmed_path|split('/') %}
+{% set fallback_labels = {
+  'quem-somos': 'Quem Somos',
+  'missao': 'Missão',
+  'valores': 'Valores',
+  'historia': 'História',
+  'nossa-marca': 'Nossa Marca',
+  'estudos': 'Estudos',
+  'esde': 'ESDE',
+  'palestras': 'Palestras',
+  'atendimento-fraterno': 'Atendimento Fraterno',
+  'agenda': 'Agenda',
+  'estudo-do-evangelho': 'Estudo do Evangelho',
+  'palestra-publica': 'Palestra Pública',
+  'juventude-espirita': 'Juventude Espírita',
+  'faq': 'FAQ',
+  'doutrina': 'Doutrina Espírita',
+  'participacao': 'Participação',
+  'praticas': 'Práticas da Casa',
+  'contato': 'Contato'
+} %}
+{% set labels = navigation_labels|default(fallback_labels) %}
+
+{% if segments|length > 1 %}
+  <div class="nc-breadcrumbs-wrap">
+    <div class="nc-container">
+      <nav class="nc-breadcrumbs" aria-label="Breadcrumb">
+        <a class="nc-breadcrumb-link" href="/">Início</a>
+        {% set path_accumulator = '' %}
+        {% for segment in segments %}
+          {% set path_accumulator = path_accumulator ~ '/' ~ segment %}
+          {% set label = labels[segment]|default(segment|replace({'-': ' '})|capitalize) %}
+          <span class="nc-breadcrumb-separator" aria-hidden="true">/</span>
+          {% if loop.last %}
+            <span class="nc-breadcrumb-current" aria-current="page">{{ label }}</span>
+          {% else %}
+            <a class="nc-breadcrumb-link" href="{{ path_accumulator }}">{{ label }}</a>
+          {% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+  </div>
+{% endif %}

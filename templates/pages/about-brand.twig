@@ -1,0 +1,113 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section" aria-label="Nossa marca" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Quem Somos',
+        title: 'Nossa Marca',
+        lead: 'Uma descrição simbólica do emblema do CEDE, seus elementos e a mensagem institucional que ele transmite.'
+      } %}
+
+      <div class="nc-brand-hero" data-aos="fade-up" data-aos-delay="80">
+        <img
+          src="{{ base_url ?? '' }}/assets/img/brands/cedern.png"
+          alt="Marca institucional do CEDE"
+          class="nc-brand-hero-logo"
+        >
+      </div>
+
+      <div class="nc-list nc-brand-description-list" data-aos="fade-up" data-aos-delay="120">
+        <article class="nc-list-item">
+          <h3>Estrutura geral do emblema</h3>
+          <p>O emblema apresenta uma composição circular em tons de azul e dourado, envolvendo elementos espirituais e de conhecimento. A forma circular representa unidade, continuidade e universalidade da vida, princípios presentes na filosofia espírita.</p>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Livro aberto</h3>
+          <ul>
+            <li>O estudo da Doutrina Espírita, base do trabalho do CEDE.</li>
+            <li>As obras fundamentais de Allan Kardec, que estruturam o conhecimento espírita.</li>
+            <li>A ideia de aprendizado contínuo e busca pelo esclarecimento espiritual.</li>
+          </ul>
+          <p>A luz que emerge do livro simboliza o conhecimento que ilumina a consciência humana.</p>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Figura humana luminosa</h3>
+          <ul>
+            <li>O espírito imortal.</li>
+            <li>A evolução espiritual do ser humano.</li>
+            <li>A jornada de aperfeiçoamento moral proposta pela Doutrina Espírita.</li>
+          </ul>
+          <p>Ela indica que o conhecimento espiritual conduz ao crescimento interior e à elevação moral.</p>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Pomba branca</h3>
+          <ul>
+            <li>Paz.</li>
+            <li>Pureza espiritual.</li>
+            <li>Fraternidade.</li>
+          </ul>
+          <p>No contexto da doutrina espírita, representa também a harmonia entre os planos espiritual e material, bem como a mensagem de amor e caridade.</p>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Globo terrestre</h3>
+          <ul>
+            <li>A humanidade como campo de aprendizado espiritual.</li>
+            <li>A missão do espiritismo de esclarecer e consolar os povos.</li>
+            <li>A ideia de que a mensagem espiritual é universal, destinada a todos.</li>
+          </ul>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Céu estrelado</h3>
+          <ul>
+            <li>A imensidão do universo espiritual.</li>
+            <li>A pluralidade dos mundos habitados, princípio presente na doutrina espírita.</li>
+            <li>A ligação entre o mundo material e o mundo espiritual.</li>
+          </ul>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Estrela superior</h3>
+          <ul>
+            <li>A luz divina.</li>
+            <li>A orientação espiritual superior.</li>
+            <li>A presença da providência e da sabedoria divina guiando a evolução humana.</li>
+          </ul>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Cores do emblema</h3>
+          <p><strong>Azul:</strong> espiritualidade, serenidade e profundidade do conhecimento.</p>
+          <p><strong>Dourado:</strong> luz espiritual, sabedoria e valor do conhecimento moral.</p>
+          <p><strong>Branco:</strong> pureza, paz e elevação espiritual.</p>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Sigla CEDE</h3>
+          <p>A sigla em destaque reforça a identidade institucional: CEDE – Centro de Estudos da Doutrina Espírita.</p>
+          <ul>
+            <li>Estudar.</li>
+            <li>Compreender.</li>
+            <li>Praticar.</li>
+            <li>Divulgar a Doutrina Espírita.</li>
+          </ul>
+        </article>
+
+        <article class="nc-list-item">
+          <h3>Síntese simbólica</h3>
+          <p>O emblema do CEDE representa a jornada espiritual do ser humano que, por meio do estudo da Doutrina Espírita, encontra luz, evolução moral e fraternidade, orientado pelos princípios divinos e pela busca contínua do conhecimento.</p>
+        </article>
+      </div>
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="180">
+        <a class="nc-btn nc-btn-secondary" href="/quem-somos">Voltar para Quem Somos</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

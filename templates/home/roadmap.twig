@@ -10,9 +10,11 @@
   <ul class="nc-checklist">
     {% for item in roadmap_items %}
       {% include 'components/check-item.twig' with {
-        step: item.step,
+        step: item.step|default(item.phase),
         title: item.title,
         description: item.description,
+        href: item.href|default(''),
+        link_label: item.linkLabel|default('Saiba mais'),
         delay: item.delay
       } %}
     {% endfor %}

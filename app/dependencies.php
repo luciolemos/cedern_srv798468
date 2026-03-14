@@ -62,6 +62,7 @@ return function (ContainerBuilder $containerBuilder) {
             $appDefaultPageImage = trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png'));
             $appDefaultSiteName = trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'));
             $appDefaultTwitterSite = trim((string) ($_ENV['APP_DEFAULT_TWITTER_SITE'] ?? '@cedeoficialrn'));
+            $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
 
             if ($appDefaultPageTitle === '') {
                 $appDefaultPageTitle = 'CEDE | Centro de Estudos da Doutrina Espírita';
@@ -87,13 +88,95 @@ return function (ContainerBuilder $containerBuilder) {
                 $appDefaultTwitterSite = '@cedeoficialrn';
             }
 
+            if ($appAssetVersion === '') {
+                $appAssetVersion = '1';
+            }
+
             $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME');
             $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE');
             $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY');
             $homeContent = require __DIR__ . '/content/home.php';
+            $navigationContent = require __DIR__ . '/content/navigation.php';
+
+            $assertNavigationConfig = static function (array $config): void {
+                if (!isset($config['labels']) || !is_array($config['labels'])) {
+                    throw new \InvalidArgumentException('Navigation config inválida: `labels` deve ser um array.');
+                }
+
+                if (!isset($config['menu']) || !is_array($config['menu'])) {
+                    throw new \InvalidArgumentException('Navigation config inválida: `menu` deve ser um array.');
+                }
+
+                $validateStandaloneLinks = static function (array $links, string $sectionName): void {
+                    foreach ($links as $index => $link) {
+                        if (!is_array($link) || !isset($link['path']) || !is_string($link['path']) || $link['path'] === '') {
+                            throw new \InvalidArgumentException(sprintf('Navigation config inválida: `%s[%d].path` é obrigatório.', $sectionName, $index));
+                        }
+
+                        $hasLabel = isset($link['label']) && is_string($link['label']) && $link['label'] !== '';
+                        $hasKey = isset($link['key']) && is_string($link['key']) && $link['key'] !== '';
+
+                        if (!$hasLabel && !$hasKey) {
+                            throw new \InvalidArgumentException(sprintf('Navigation config inválida: `%s[%d]` precisa de `key` ou `label`.', $sectionName, $index));
+                        }
+                    }
+                };
+
+                foreach ($config['menu'] as $groupIndex => $group) {
+                    if (!is_array($group)) {
+                        throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d]` deve ser um array.', $groupIndex));
+                    }
+
+                    if (!isset($group['key']) || !is_string($group['key']) || $group['key'] === '') {
+                        throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].key` é obrigatório.', $groupIndex));
+                    }
+
+                    if (!isset($group['base']) || !is_string($group['base']) || $group['base'] === '') {
+                        throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].base` é obrigatório.', $groupIndex));
+                    }
+
+                    if (!isset($group['items']) || !is_array($group['items'])) {
+                        throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].items` deve ser um array.', $groupIndex));
+                    }
+
+                    foreach ($group['items'] as $itemIndex => $item) {
+                        if (!is_array($item)) {
+                            throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].items[%d]` deve ser um array.', $groupIndex, $itemIndex));
+                        }
+
+                        if (!isset($item['path']) || !is_string($item['path']) || $item['path'] === '') {
+                            throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].items[%d].path` é obrigatório.', $groupIndex, $itemIndex));
+                        }
+
+                        $hasLabel = isset($item['label']) && is_string($item['label']) && $item['label'] !== '';
+                        $hasKey = isset($item['key']) && is_string($item['key']) && $item['key'] !== '';
+
+                        if (!$hasLabel && !$hasKey) {
+                            throw new \InvalidArgumentException(sprintf('Navigation config inválida: `menu[%d].items[%d]` precisa de `key` ou `label`.', $groupIndex, $itemIndex));
+                        }
+                    }
+                }
+
+                $before = $config['links_before_groups'] ?? [];
+                $after = $config['links_after_groups'] ?? [];
+
+                if (!is_array($before) || !is_array($after)) {
+                    throw new \InvalidArgumentException('Navigation config inválida: `links_before_groups` e `links_after_groups` devem ser arrays.');
+                }
+
+                $validateStandaloneLinks($before, 'links_before_groups');
+                $validateStandaloneLinks($after, 'links_after_groups');
+            };
+
+            $assertNavigationConfig($navigationContent);
+
             $appAddress = (string) ($homeContent['sections']['cta']['address'] ?? '');
             $appInstagramUrl = (string) ($homeContent['sections']['cta']['instagramUrl'] ?? '');
             $appInstagramLabel = (string) ($homeContent['sections']['cta']['instagramLabel'] ?? 'Instagram oficial');
+            $navigationLabels = (array) ($navigationContent['labels'] ?? []);
+            $navigationMenu = (array) ($navigationContent['menu'] ?? []);
+            $navigationLinksBeforeGroups = (array) ($navigationContent['links_before_groups'] ?? []);
+            $navigationLinksAfterGroups = (array) ($navigationContent['links_after_groups'] ?? []);
 
             $twig->getEnvironment()->addGlobal('app_default_page_title', $appDefaultPageTitle);
             $twig->getEnvironment()->addGlobal('app_default_page_description', $appDefaultPageDescription);
@@ -101,12 +184,17 @@ return function (ContainerBuilder $containerBuilder) {
             $twig->getEnvironment()->addGlobal('app_default_page_image', $appDefaultPageImage);
             $twig->getEnvironment()->addGlobal('app_default_site_name', $appDefaultSiteName);
             $twig->getEnvironment()->addGlobal('app_default_twitter_site', $appDefaultTwitterSite);
+            $twig->getEnvironment()->addGlobal('app_asset_version', $appAssetVersion);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
             $twig->getEnvironment()->addGlobal('default_mode', $defaultMode);
             $twig->getEnvironment()->addGlobal('default_dark_intensity', $defaultDarkIntensity);
             $twig->getEnvironment()->addGlobal('app_address', $appAddress);
             $twig->getEnvironment()->addGlobal('app_instagram_url', $appInstagramUrl);
             $twig->getEnvironment()->addGlobal('app_instagram_label', $appInstagramLabel);
+            $twig->getEnvironment()->addGlobal('navigation_labels', $navigationLabels);
+            $twig->getEnvironment()->addGlobal('navigation_menu', $navigationMenu);
+            $twig->getEnvironment()->addGlobal('navigation_links_before_groups', $navigationLinksBeforeGroups);
+            $twig->getEnvironment()->addGlobal('navigation_links_after_groups', $navigationLinksAfterGroups);
 
             return $twig;
         },

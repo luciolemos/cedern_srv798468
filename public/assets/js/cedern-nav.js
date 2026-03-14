@@ -7,6 +7,35 @@ const initCedernNav = () => {
   }
 
   const desktopQuery = window.matchMedia("(min-width: 801px)");
+  const navGroups = Array.from(nav.querySelectorAll("[data-nav-group]"));
+
+  const setGroupOpen = (group, open) => {
+    const toggle = group.querySelector(".nc-nav-group-toggle");
+    const submenu = group.querySelector(".nc-nav-submenu");
+    if (!toggle || !submenu) {
+      return;
+    }
+
+    group.classList.toggle("is-open", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    submenu.hidden = !open;
+  };
+
+  const closeAllGroups = () => {
+    navGroups.forEach((group) => setGroupOpen(group, false));
+  };
+
+  const syncGroupsForViewport = () => {
+    const isDesktop = desktopQuery.matches;
+    navGroups.forEach((group) => {
+      setGroupOpen(group, false);
+      const submenu = group.querySelector(".nc-nav-submenu");
+      if (!submenu) {
+        return;
+      }
+      submenu.hidden = !isDesktop;
+    });
+  };
 
   const isMenuOpen = () => toggle.getAttribute("aria-expanded") === "true";
 
@@ -31,7 +60,10 @@ const initCedernNav = () => {
   const closeMenu = () => {
     if (!desktopQuery.matches) {
       // Small delay to allow click event to propagate
-      setTimeout(() => setState(false), 50);
+      setTimeout(() => {
+        setState(false);
+        closeAllGroups();
+      }, 50);
     }
   };
 
@@ -98,6 +130,25 @@ const initCedernNav = () => {
 
   toggle.addEventListener("click", () => {
     setState(!isMenuOpen());
+    if (desktopQuery.matches) {
+      closeAllGroups();
+    }
+  });
+
+  navGroups.forEach((group) => {
+    const groupToggle = group.querySelector(".nc-nav-group-toggle");
+    if (!groupToggle) {
+      return;
+    }
+
+    groupToggle.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      const willOpen = groupToggle.getAttribute("aria-expanded") !== "true";
+
+      closeAllGroups();
+      setGroupOpen(group, willOpen);
+    });
   });
 
   nav.querySelectorAll("a").forEach((link) => {
@@ -138,6 +189,7 @@ const initCedernNav = () => {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeAllGroups();
       closeMenu();
     }
   });
@@ -164,13 +216,17 @@ const initCedernNav = () => {
   );
 
   const syncState = () => setState(false);
+  const syncNavState = () => {
+    syncState();
+    syncGroupsForViewport();
+  };
   if (typeof desktopQuery.addEventListener === "function") {
-    desktopQuery.addEventListener("change", syncState);
+    desktopQuery.addEventListener("change", syncNavState);
   } else if (typeof desktopQuery.addListener === "function") {
-    desktopQuery.addListener(syncState);
+    desktopQuery.addListener(syncNavState);
   }
 
-  syncState();
+  syncNavState();
 
   if (window.location.pathname === "/" && window.location.hash) {
     window.setTimeout(() => scrollToHash(window.location.hash, false), 0);
