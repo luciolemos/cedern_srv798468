@@ -1,4 +1,9 @@
 <article class="nc-feature-card" data-aos="fade-up" data-aos-delay="{{ delay|default(120) }}">
   <h3>{{ title }}</h3>
   <p>{{ description }}</p>
+  {% if href is defined and href %}
+    <div class="nc-feature-card-action">
+      <a class="nc-btn nc-btn-secondary" href="{{ href }}">{{ link_label|default('Saiba mais') }}</a>
+    </div>
+  {% endif %}
 </article>

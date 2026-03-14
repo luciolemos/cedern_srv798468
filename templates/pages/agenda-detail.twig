@@ -1,0 +1,29 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section" aria-label="Detalhes da agenda" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: agenda.kicker|default('Agenda'),
+        title: agenda.title|default('Atividade do CEDE'),
+        lead: agenda.lead|default('Veja os detalhes deste encontro e organize sua participação na rotina fraterna da casa.')
+      } %}
+
+      <ul class="nc-checklist">
+        {% for topic in agenda.topics|default([]) %}
+          {% include 'components/check-item.twig' with {
+            step: topic.step,
+            title: topic.title,
+            description: topic.description,
+            delay: topic.delay|default(120)
+          } %}
+        {% endfor %}
+      </ul>
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="160">
+        <a class="nc-btn nc-btn-secondary" href="/agenda">Voltar para Agenda</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Entrar em contato</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

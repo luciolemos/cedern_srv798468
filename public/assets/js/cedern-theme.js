@@ -411,6 +411,37 @@ function initCedernTheme() {
     }
   });
 
+  document.addEventListener('click', function (event) {
+    if (!paletteToggle || !palettePanel) {
+      return;
+    }
+
+    var expanded = paletteToggle.getAttribute('aria-expanded') === 'true';
+    if (!expanded) {
+      return;
+    }
+
+    if (event.target.closest('.nc-palette')) {
+      return;
+    }
+
+    setPanelState(false);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' || !paletteToggle || !palettePanel) {
+      return;
+    }
+
+    var expanded = paletteToggle.getAttribute('aria-expanded') === 'true';
+    if (!expanded) {
+      return;
+    }
+
+    setPanelState(false);
+    paletteToggle.focus();
+  });
+
   window.addEventListener('resize', function () {
     setPanelState(false);
     updateUtilityLift();

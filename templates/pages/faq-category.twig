@@ -1,0 +1,46 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    {% set faq_section = homeContent.sections.faq|default({}) %}
+    {% set faq_items = homeContent.faqItems|default([]) %}
+    {% set faq_categories = homeContent.faqCategories|default([]) %}
+    {% set selected = null %}
+
+    {% for category in faq_categories %}
+      {% if category.slug == faq_category_slug|default('') %}
+        {% set selected = category %}
+      {% endif %}
+    {% endfor %}
+
+    <section class="nc-section" aria-label="FAQ por categoria">
+      {% include 'components/section-header.twig' with {
+        kicker: faq_section.kicker|default('FAQ'),
+        title: selected.title|default('Perguntas Frequentes'),
+        lead: selected.lead|default(faq_section.lead|default('Encontre orientações claras para dúvidas frequentes sobre a vivência e os princípios da casa espírita.'))
+      } %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="120">
+        {% for category in faq_categories %}
+          <a class="nc-btn {{ category.slug == faq_category_slug|default('') ? 'nc-btn-primary' : 'nc-btn-secondary' }}" href="/faq/{{ category.slug }}">{{ category.title }}</a>
+        {% endfor %}
+      </div>
+
+      <div class="nc-faq-list">
+        {% for item in faq_items %}
+          {% if item.category|default('') == faq_category_slug|default('') %}
+            {% include 'components/faq-item.twig' with {
+              question: item.question,
+              answer: item.answer,
+              delay: item.delay|default(120 + (loop.index0 * 40))
+            } %}
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="180">
+        <a class="nc-btn nc-btn-secondary" href="/faq">Voltar para FAQ</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

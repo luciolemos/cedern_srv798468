@@ -1,0 +1,25 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    {% set cta_section = homeContent.sections.cta|default({}) %}
+
+    <section class="nc-section" aria-label="Contato" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Contato',
+        title: 'Fale com o CEDE',
+        lead: 'Estamos de portas abertas para acolhimento, estudos e participação nas atividades da casa.'
+      } %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="120">
+        {% if cta_section.addressMapUrl|default('') %}
+          <a class="nc-btn nc-btn-primary" href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+        {% endif %}
+        {% if app_instagram_url|default('') %}
+          <a class="nc-btn nc-btn-secondary" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
+        {% endif %}
+        <a class="nc-btn nc-btn-secondary" href="mailto:contato@cedern.org">Enviar e-mail</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}
