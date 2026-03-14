@@ -239,7 +239,45 @@ Workflow dedicado:
 
 - `.github/workflows/smoke-check.yml`
 
-Ele roda automaticamente em push na branch `deploy-cedern` e tambem pode ser executado manualmente com URL informada.
+Ele roda manualmente (`workflow_dispatch`) e deve ser executado apos o deploy.
+
+## Checklist anti-quebra em hospedagem compartilhada
+
+Use esta lista como criterio de publicacao para evitar regressao em producao:
+
+1. **Paridade de ambiente**
+	- Validar local/staging com a mesma versao de PHP e extensoes do servidor.
+
+2. **Erro correto por tipo de resposta**
+	- Páginas HTML devem receber erro em HTML.
+	- Rotas de API devem receber erro em JSON.
+
+3. **Shutdown handler seguro**
+	- Tratar apenas erros fatais no shutdown (warnings/notices nao devem sobrescrever resposta valida).
+
+4. **Versionamento de assets**
+	- Sempre publicar CSS/JS com versao/hash para evitar cache antigo em deploy.
+
+5. **Smoke check obrigatorio pos-deploy**
+	- Executar `scripts/smoke-check.sh` contra o dominio publicado.
+	- Bloquear liberacao se houver HTML truncado, `statusCode: 500` injetado ou falta de scripts criticos.
+
+6. **CI alinhada ao runtime real**
+	- Matriz de testes deve usar versoes de PHP compativeis com `composer.lock`.
+
+7. **Logs e diagnostico rapido**
+	- Garantir logs acessiveis no servidor e endpoint de diagnostico quando necessario.
+
+8. **Deploy deterministico**
+	- Confirmar que o provedor publicou exatamente o commit esperado (sem artefato antigo em cache).
+
+### Fluxo recomendado de implantacao
+
+1. Rodar validacoes locais (`phpunit`, `phpstan`, `phpcs`, visual quando aplicavel).
+2. Publicar branch/PR e aguardar checks obrigatorios.
+3. Fazer deploy no provedor.
+4. Executar smoke check pos-deploy.
+5. Validar interacoes criticas (menu mobile, seletor de tema, rota API principal).
 
 ### Quando a mudanca visual for intencional
 
