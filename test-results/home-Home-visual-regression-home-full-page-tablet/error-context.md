@@ -1,0 +1,167 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "CEDE - Inicio" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: CEDE
+      - navigation "Navegacao principal" [ref=e7]:
+        - link "Inicio" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Solucoes" [ref=e9] [cursor=pointer]:
+          - /url: /#solucoes
+        - link "Roadmap" [ref=e10] [cursor=pointer]:
+          - /url: /#roadmap
+        - link "FAQ" [ref=e11] [cursor=pointer]:
+          - /url: /#faq
+        - link "Usuarios" [ref=e12] [cursor=pointer]:
+          - /url: /users
+  - main [ref=e13]:
+    - region "Hero principal" [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - paragraph [ref=e17]: Espiritualidade com Razão
+          - generic [ref=e18]: Sejam bem-vindos ao CEDE
+          - heading "Centro de Estudos da Doutrina Espírita" [level=1] [ref=e19]
+          - paragraph [ref=e20]: Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.
+          - generic [ref=e21]:
+            - link "Ver Horários" [ref=e22] [cursor=pointer]:
+              - /url: /#roadmap
+            - link "Falar Conosco" [ref=e23] [cursor=pointer]:
+              - /url: mailto:contato@cedern.org
+        - complementary "Indicadores da plataforma" [ref=e24]:
+          - heading "Nossas Atividades" [level=2] [ref=e25]
+          - list [ref=e26]:
+            - listitem [ref=e27]:
+              - generic [ref=e28]: 100%
+              - generic [ref=e29]: Gratuito
+            - listitem [ref=e30]:
+              - generic [ref=e31]: 5 Obras
+              - generic [ref=e32]: Pentateuco Kardequiano
+            - listitem [ref=e33]:
+              - generic [ref=e34]: 3 Grupos
+              - generic [ref=e35]: Estudo Sistematizado
+            - listitem [ref=e36]:
+              - generic [ref=e37]: Semanal
+              - generic [ref=e38]: Palestras Públicas
+    - region "Solucoes principais" [ref=e39]:
+      - paragraph [ref=e40]: Estudos
+      - heading "Iluminando consciências através do conhecimento" [level=2] [ref=e41]
+      - paragraph [ref=e42]: Oferecemos grupos de estudo sistematizado, palestras públicas e atendimento fraterno para todos que buscam compreender a vida além da matéria.
+      - generic [ref=e43]:
+        - article [ref=e44]:
+          - heading "Estudo Sistematizado (ESDE)" [level=3] [ref=e45]
+          - paragraph [ref=e46]: Grupos dedicados ao estudo aprofundado das obras básicas, promovendo o entendimento racional da fé.
+        - article [ref=e47]:
+          - heading "Atendimento Fraterno" [level=3] [ref=e48]
+          - paragraph [ref=e49]: Acolhimento individualizado para ouvir, orientar e consolar à luz da Doutrina Espírita com total sigilo.
+        - article [ref=e50]:
+          - heading "Palestras Públicas" [level=3] [ref=e51]
+          - paragraph [ref=e52]: Explanações semanais sobre temas atuais sob a ótica espírita, abertas ao público em geral.
+    - region "Prova social" [ref=e53]:
+      - paragraph [ref=e54]: Inspiração
+      - heading "A base da nossa doutrina" [level=2] [ref=e55]
+      - paragraph [ref=e56]: Seguimos os preceitos codificados por Allan Kardec, unindo ciência, filosofia e religião para o consolo e esclarecimento das almas.
+      - generic "Frentes de trabalho" [ref=e57]:
+        - article [ref=e58]:
+          - img "Grupo de estudos" [ref=e59]
+          - generic [ref=e60]:
+            - heading "Estudos Semanais" [level=3] [ref=e61]
+            - paragraph [ref=e62]: Aprofundamento na Doutrina e no Evangelho.
+        - article [ref=e63]:
+          - img "Evangelização Infantil" [ref=e64]
+          - generic [ref=e65]:
+            - heading "Evangelização" [level=3] [ref=e66]
+            - paragraph [ref=e67]: Ensinamentos morais para crianças e jovens.
+        - article [ref=e68]:
+          - img "Biblioteca Espírita" [ref=e69]
+          - generic [ref=e70]:
+            - heading "Biblioteca" [level=3] [ref=e71]
+            - paragraph [ref=e72]: Acervo completo das obras básicas e complementares.
+      - generic [ref=e73]:
+        - article [ref=e74]:
+          - generic [ref=e75]:
+            - img "Maria Silva" [ref=e76]
+            - generic [ref=e77]:
+              - strong [ref=e78]: Maria Silva
+              - generic [ref=e79]: Frequentadora
+          - paragraph [ref=e80]: "\"O CEDE mudou minha visão sobre a vida. Encontrei respostas lógicas e consoladoras para minhas dúvidas.\""
+        - article [ref=e81]:
+          - generic [ref=e82]:
+            - img "João Souza" [ref=e83]
+            - generic [ref=e84]:
+              - strong [ref=e85]: João Souza
+              - generic [ref=e86]: Estudante do ESDE
+          - paragraph [ref=e87]: "\"Os estudos são muito bem organizados e o ambiente é acolhedor. Recomendo a todos que buscam conhecimento.\""
+        - article [ref=e88]:
+          - generic [ref=e89]:
+            - img "Ana Pereira" [ref=e90]
+            - generic [ref=e91]:
+              - strong [ref=e92]: Ana Pereira
+              - generic [ref=e93]: Voluntária
+          - paragraph [ref=e94]: "\"Servir no CEDE é uma alegria. A caridade e o amor ao próximo são praticados aqui todos os dias.\""
+        - article [ref=e95]:
+          - generic [ref=e96]:
+            - img "Solange" [ref=e97]
+            - generic [ref=e98]:
+              - strong [ref=e99]: Solange
+              - generic [ref=e100]: Frequentadora
+          - paragraph [ref=e101]: "\"O acolhimento fraterno transformou minha vida. Sinto muita paz e gratidão por fazer parte desta casa.\""
+    - region "Roadmap recomendado" [ref=e102]:
+      - paragraph [ref=e103]: Agenda
+      - heading "Cronograma Semanal de Atividades" [level=2] [ref=e104]
+      - paragraph [ref=e105]: Confira nossos horários de reuniões públicas, estudos e assistência espiritual. Todas as atividades são gratuitas.
+      - list [ref=e106]:
+        - listitem [ref=e107]:
+          - generic [ref=e109]:
+            - heading "20:00 - Estudo do Evangelho" [level=3] [ref=e110]
+            - paragraph [ref=e111]: Reflexões sobre os ensinamentos morais de Jesus à luz do Espiritismo.
+        - listitem [ref=e112]:
+          - generic [ref=e114]:
+            - heading "19:30 - Palestra Pública" [level=3] [ref=e115]
+            - paragraph [ref=e116]: Tema livre evangélico-doutrinário seguido de passes magnéticos.
+        - listitem [ref=e117]:
+          - generic [ref=e119]:
+            - heading "16:00 - Juventude Espírita" [level=3] [ref=e120]
+            - paragraph [ref=e121]: Encontros voltados para jovens de 12 a 21 anos com dinâmicas e estudos.
+    - region "Perguntas frequentes" [ref=e122]:
+      - paragraph [ref=e123]: Dúvidas
+      - heading "Perguntas Frequentes" [level=2] [ref=e124]
+      - paragraph [ref=e125]: Entenda melhor sobre o Espiritismo, nossas atividades e como você pode participar e contribuir.
+      - generic [ref=e126]:
+        - group [ref=e127]:
+          - generic "O que é o Espiritismo?" [ref=e128] [cursor=pointer]
+        - group [ref=e129]:
+          - generic "Preciso pagar para participar?" [ref=e130] [cursor=pointer]
+        - group [ref=e131]:
+          - generic "Como funciona o atendimento fraterno?" [ref=e132] [cursor=pointer]
+        - group [ref=e133]:
+          - generic "O que são os passes magnéticos?" [ref=e134] [cursor=pointer]
+        - group [ref=e135]:
+          - generic "Crianças podem frequentar o centro?" [ref=e136] [cursor=pointer]
+        - group [ref=e137]:
+          - generic "Como posso começar a estudar?" [ref=e138] [cursor=pointer]
+        - group [ref=e139]:
+          - generic "Qual a visão espírita sobre outras religiões?" [ref=e140] [cursor=pointer]
+        - group [ref=e141]:
+          - generic "O que é a reencarnação?" [ref=e142] [cursor=pointer]
+        - group [ref=e143]:
+          - generic "O que é um médium?" [ref=e144] [cursor=pointer]
+        - group [ref=e145]:
+          - generic "Como posso ajudar o CEDE?" [ref=e146] [cursor=pointer]
+    - region "Chamada final" [ref=e147]:
+      - paragraph [ref=e148]: Participe
+      - heading "Junte-se a nós nesta jornada de luz" [level=2] [ref=e149]
+      - paragraph [ref=e150]: Venha conhecer o CEDE e encontrar respostas para suas indagações espirituais em um ambiente acolhedor e fraterno.
+      - link "Conheça nossa Biblioteca" [ref=e152] [cursor=pointer]:
+        - /url: /#biblioteca
+  - contentinfo [ref=e153]:
+    - generic [ref=e154]:
+      - paragraph [ref=e155]: Centro de Estudos da Doutrina Espírita - CEDE © 2026
+      - paragraph [ref=e156]: "Endereço: R. Frejó, 44 - Nova Parnamirim, Parnamirim - RN, 59150-663."
+  - complementary "Ferramentas de interface" [ref=e157]:
+    - region "Paleta de cores do site" [ref=e158]:
+      - button "Personalizar cores ▾" [ref=e159] [cursor=pointer]
+```
