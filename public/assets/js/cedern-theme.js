@@ -7,6 +7,44 @@ function initCedernTheme() {
   var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
   var allowedModes = ['light', 'dark'];
   var allowedDarkIntensities = ['neutral', 'vivid'];
+
+  function ensurePaletteMarkup() {
+    if (document.querySelector('[data-utility-stack]')) {
+      return;
+    }
+
+    var shell = document.querySelector('.nc-shell') || document.body;
+    if (!shell) {
+      return;
+    }
+
+    shell.insertAdjacentHTML('beforeend',
+      '<aside class="nc-utility-stack" data-utility-stack data-scroll-threshold-mobile="110" data-scroll-threshold-desktop="260" aria-label="Ferramentas de interface">'
+      + '<button type="button" class="nc-scroll-top" data-scroll-top aria-label="Voltar ao topo" hidden>↑</button>'
+      + '<section class="nc-palette" aria-label="Paleta de cores do site">'
+      + '<button type="button" class="nc-palette-toggle" data-palette-toggle aria-expanded="false" aria-controls="nc-palette-panel">Personalizar cores</button>'
+      + '<div class="nc-palette-panel" id="nc-palette-panel" data-palette-panel hidden>'
+      + '<p class="nc-palette-title">Modo</p>'
+      + '<div class="nc-mode-group" role="group" aria-label="Alternar modo claro e escuro">'
+      + '<button type="button" class="nc-mode-btn" data-mode-value="light" aria-pressed="false" aria-label="Ativar modo claro">Light</button>'
+      + '<button type="button" class="nc-mode-btn" data-mode-value="dark" aria-pressed="false" aria-label="Ativar modo escuro">Dark</button>'
+      + '</div>'
+      + '<p class="nc-palette-title">Paleta de cores</p>'
+      + '<div class="nc-palette-grid">'
+      + '<button type="button" class="nc-swatch" data-theme-value="blue" aria-pressed="false" aria-label="Ativar tema azul"><span class="nc-swatch-dot nc-dot-blue"></span><span class="nc-swatch-label">Blue</span></button>'
+      + '<button type="button" class="nc-swatch" data-theme-value="red" aria-pressed="false" aria-label="Ativar tema vermelho"><span class="nc-swatch-dot nc-dot-red"></span><span class="nc-swatch-label">Red</span></button>'
+      + '<button type="button" class="nc-swatch" data-theme-value="green" aria-pressed="false" aria-label="Ativar tema verde"><span class="nc-swatch-dot nc-dot-green"></span><span class="nc-swatch-label">Green</span></button>'
+      + '<button type="button" class="nc-swatch" data-theme-value="violet" aria-pressed="false" aria-label="Ativar tema violeta"><span class="nc-swatch-dot nc-dot-violet"></span><span class="nc-swatch-label">Violet</span></button>'
+      + '<button type="button" class="nc-swatch" data-theme-value="amber" aria-pressed="false" aria-label="Ativar tema ambar"><span class="nc-swatch-dot nc-dot-amber"></span><span class="nc-swatch-label">Amber</span></button>'
+      + '</div>'
+      + '</div>'
+      + '</section>'
+      + '</aside>'
+    );
+  }
+
+  ensurePaletteMarkup();
+
   var paletteToggle = document.querySelector('[data-palette-toggle]');
   var palettePanel = document.querySelector('[data-palette-panel]');
   var darkIntensityWrap = document.querySelector('[data-dark-intensity-wrap]');
