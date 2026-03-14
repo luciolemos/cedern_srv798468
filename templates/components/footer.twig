@@ -2,13 +2,7 @@
   <div class="nc-container">
     <p class="nc-footer-copy">Centro de Estudos da Doutrina Espírita - CEDE &copy; {{ "now"|date("Y") }}</p>
     {% if app_address is defined and app_address %}
-      <p class="nc-footer-copy">
-        {% if app_address_map_url is defined and app_address_map_url %}
-          <a href="{{ app_address_map_url }}" target="_blank" rel="noopener noreferrer">{{ app_address }}</a>
-        {% else %}
-          {{ app_address }}
-        {% endif %}
-      </p>
+      <p class="nc-footer-copy">{{ app_address }}</p>
     {% endif %}
   </div>
 </footer>

@@ -7,15 +7,6 @@
     title: cta_section.title|default('Pronto para resolver problemas reais com tecnologia certa?'),
     lead: cta_section.lead|default('Venha conhecer o CEDE e encontrar respostas para suas indagações espirituais.')
   } %}
-  {% if cta_section.address is defined and cta_section.address %}
-    <p class="nc-section-lead" data-aos="fade-up" data-aos-delay="120">
-      {% if cta_section.addressMapUrl is defined and cta_section.addressMapUrl %}
-        <a href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">{{ cta_section.address }}</a>
-      {% else %}
-        {{ cta_section.address }}
-      {% endif %}
-    </p>
-  {% endif %}
   <div class="nc-actions" data-aos="fade-up" data-aos-delay="{{ cta_section.actionsDelay|default(160) }}">
     {% for action in cta_actions %}
       <a
