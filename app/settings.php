@@ -13,7 +13,7 @@ return function (ContainerBuilder $containerBuilder) {
 
     // Global Settings Object
     $containerBuilder->addDefinitions([
-        SettingsInterface::class => function () {
+        SettingsInterface::class => function () use ($isDevelopment) {
             return new Settings([
                 'displayErrorDetails' => $isDevelopment,
                 'logError'            => !$isDevelopment,
