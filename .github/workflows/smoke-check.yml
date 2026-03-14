@@ -1,9 +1,7 @@
 name: Smoke Check
 
 on:
-  push:
-    branches:
-      - deploy-cedern
+  workflow_dispatch:
 
 jobs:
   smoke:
