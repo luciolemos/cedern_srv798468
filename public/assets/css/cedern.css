@@ -1037,6 +1037,10 @@ code {
   content: "▴";
 }
 
+.nc-palette-toggle-label-mobile {
+  display: none;
+}
+
 .nc-palette-panel {
   padding: 0 var(--space-4) var(--space-4);
 }
@@ -1108,6 +1112,34 @@ code {
 .nc-swatch-label {
   font-size: 0.7rem;
   color: var(--text-muted);
+}
+
+@media (max-width: 800px) {
+  .nc-utility-stack {
+    position: static;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: var(--space-4);
+    z-index: auto;
+  }
+
+  .nc-palette {
+    width: min(320px, 100%);
+    margin-left: auto;
+  }
+
+  .nc-palette-toggle {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .nc-palette-toggle-label-full {
+    display: none;
+  }
+
+  .nc-palette-toggle-label-mobile {
+    display: inline;
+  }
 }
 
 .nc-dot-blue { background: linear-gradient(90deg, var(--swatch-blue-1), var(--swatch-blue-2)); }
