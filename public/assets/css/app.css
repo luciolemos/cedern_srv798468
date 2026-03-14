@@ -1170,7 +1170,7 @@ code {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 801px) {
   :root {
     --header-height: 4.5rem;
     --anchor-offset: calc(var(--header-height) + 1rem);
