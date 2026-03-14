@@ -1,0 +1,20 @@
+name: Smoke Check
+
+on:
+  push:
+    branches:
+      - deploy-cedern
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare script
+        run: chmod +x scripts/smoke-check.sh
+
+      - name: Run smoke check (cedern)
+        run: ./scripts/smoke-check.sh https://cedern.org/
