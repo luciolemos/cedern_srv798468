@@ -16,7 +16,16 @@
 
     toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
     toggle.setAttribute("aria-label", expanded ? "Fechar menu" : "Abrir menu");
+    
+    // Toggle hidden attribute
     nav.hidden = isDesktop ? false : !expanded;
+    
+    // Toggle class for CSS display
+    if (expanded && !isDesktop) {
+      nav.classList.add("is-open");
+    } else {
+      nav.classList.remove("is-open");
+    }
   };
 
   const closeMenu = () => {
