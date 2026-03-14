@@ -56,10 +56,35 @@ return function (ContainerBuilder $containerBuilder) {
                     : $config['default'];
             };
 
-            $appDefaultPageTitle = trim((string) ($_ENV['APP_DEFAULT_PAGE_TITLE'] ?? 'NatalCode | Soluções web'));
+            $appDefaultPageTitle = trim((string) ($_ENV['APP_DEFAULT_PAGE_TITLE'] ?? 'CEDE | Centro de Estudos da Doutrina Espírita'));
+            $appDefaultPageDescription = trim((string) ($_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.'));
+            $appDefaultPageUrl = trim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'));
+            $appDefaultPageImage = trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png'));
+            $appDefaultSiteName = trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'));
+            $appDefaultTwitterSite = trim((string) ($_ENV['APP_DEFAULT_TWITTER_SITE'] ?? '@cedeoficialrn'));
 
             if ($appDefaultPageTitle === '') {
-                $appDefaultPageTitle = 'NatalCode | Soluções web';
+                $appDefaultPageTitle = 'CEDE | Centro de Estudos da Doutrina Espírita';
+            }
+
+            if ($appDefaultPageDescription === '') {
+                $appDefaultPageDescription = 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.';
+            }
+
+            if ($appDefaultPageUrl === '') {
+                $appDefaultPageUrl = 'https://cedern.org/';
+            }
+
+            if ($appDefaultPageImage === '') {
+                $appDefaultPageImage = 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png';
+            }
+
+            if ($appDefaultSiteName === '') {
+                $appDefaultSiteName = 'CEDE';
+            }
+
+            if ($appDefaultTwitterSite === '') {
+                $appDefaultTwitterSite = '@cedeoficialrn';
             }
 
             $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME');
@@ -71,6 +96,11 @@ return function (ContainerBuilder $containerBuilder) {
             $appInstagramLabel = (string) ($homeContent['sections']['cta']['instagramLabel'] ?? 'Instagram oficial');
 
             $twig->getEnvironment()->addGlobal('app_default_page_title', $appDefaultPageTitle);
+            $twig->getEnvironment()->addGlobal('app_default_page_description', $appDefaultPageDescription);
+            $twig->getEnvironment()->addGlobal('app_default_page_url', $appDefaultPageUrl);
+            $twig->getEnvironment()->addGlobal('app_default_page_image', $appDefaultPageImage);
+            $twig->getEnvironment()->addGlobal('app_default_site_name', $appDefaultSiteName);
+            $twig->getEnvironment()->addGlobal('app_default_twitter_site', $appDefaultTwitterSite);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
             $twig->getEnvironment()->addGlobal('default_mode', $defaultMode);
             $twig->getEnvironment()->addGlobal('default_dark_intensity', $defaultDarkIntensity);

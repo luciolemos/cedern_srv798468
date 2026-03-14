@@ -3,7 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ app_default_page_title|default('CEDE | Centro de Estudos da Doutrina Espírita') }}{% endblock %}</title>
+  {% set page_title = app_default_page_title|default('CEDE | Centro de Estudos da Doutrina Espírita') %}
+  {% set page_description = app_default_page_description|default('Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.') %}
+  {% set page_url = app_default_page_url|default('https://cedern.org/') %}
+  {% set page_image = app_default_page_image|default('https://cedern.org/assets/img/cedern/cede1_1600_1000.png') %}
+  {% set site_name = app_default_site_name|default('CEDE') %}
+  {% set twitter_site = app_default_twitter_site|default('@cedeoficialrn') %}
+  <title>{% block title %}{{ page_title }}{% endblock %}</title>
+  <meta name="description" content="{{ page_description }}">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ page_url }}">
+  <meta property="og:image" content="{{ page_image }}">
+  <meta property="og:site_name" content="{{ site_name }}">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_description }}">
+  <meta name="twitter:image" content="{{ page_image }}">
+  <meta name="twitter:site" content="{{ twitter_site }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
