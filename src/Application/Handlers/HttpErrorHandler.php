@@ -37,8 +37,16 @@ class HttpErrorHandler extends SlimErrorHandler
     {
         $safeDescription = htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
+        $template =
+            '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+            . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+            . '<title>Erro %d</title></head><body><main '
+            . 'style="max-width:720px;margin:3rem auto;padding:0 1rem;'
+            . 'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif">'
+            . '<h1>Erro %d</h1><p>%s</p></main></body></html>';
+
         return sprintf(
-            '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Erro %d</title></head><body><main style="max-width:720px;margin:3rem auto;padding:0 1rem;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><h1>Erro %d</h1><p>%s</p></main></body></html>',
+            $template,
             $statusCode,
             $statusCode,
             $safeDescription

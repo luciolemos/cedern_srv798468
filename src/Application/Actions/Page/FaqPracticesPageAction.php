@@ -15,7 +15,8 @@ class FaqPracticesPageAction extends AbstractPageAction
             'faq_category_slug' => 'praticas',
             'page_title' => 'FAQ Práticas da Casa | CEDE',
             'page_url' => 'https://cedern.org/faq/praticas',
-            'page_description' => 'Perguntas frequentes sobre atendimento fraterno, passes e práticas da casa espírita.',
+            'page_description' => 'Perguntas frequentes sobre atendimento fraterno, '
+                . 'passes e práticas da casa espírita.',
         ]);
     }
 }

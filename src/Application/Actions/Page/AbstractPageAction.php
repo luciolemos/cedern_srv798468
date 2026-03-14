@@ -26,12 +26,19 @@ abstract class AbstractPageAction
     protected function renderPage(Response $response, string $template, array $data = []): Response
     {
         $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
+        $defaultPageImage =
+            'https://cedern.org/assets/img/cedern/cede1_1600_1000.png';
+        $defaultPageDescription =
+            'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica '
+            . 'dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.';
 
         $context = array_merge([
             'homeContent' => require __DIR__ . '/../../../../app/content/home.php',
             'site_name' => trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE')),
-            'page_image' => trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png')),
-            'page_description' => trim((string) ($_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.')),
+            'page_image' => trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? $defaultPageImage)),
+            'page_description' => trim((string) (
+                $_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? $defaultPageDescription
+            )),
             'page_url_base' => $baseUrl,
         ], $data);
 

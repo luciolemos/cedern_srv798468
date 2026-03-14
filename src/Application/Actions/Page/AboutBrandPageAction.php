@@ -14,7 +14,8 @@ class AboutBrandPageAction extends AbstractPageAction
         return $this->renderPage($response, 'pages/about-brand.twig', [
             'page_title' => 'Nossa Marca | CEDE',
             'page_url' => 'https://cedern.org/quem-somos/nossa-marca',
-            'page_description' => 'Descrição simbólica da marca do CEDE e dos elementos visuais que expressam sua missão institucional.',
+            'page_description' => 'Descrição simbólica da marca do CEDE e dos elementos '
+                . 'visuais que expressam sua missão institucional.',
         ]);
     }
 }
