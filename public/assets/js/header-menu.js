@@ -25,7 +25,7 @@
     }
   };
 
-  window.matchMedia("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const getAnchorOffset = () => {
     const cssOffset = Number.parseFloat(
