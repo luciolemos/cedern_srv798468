@@ -6,7 +6,7 @@
     return;
   }
 
-  const desktopQuery = window.matchMedia("(min-width: 1024px)");
+  const desktopQuery = window.matchMedia("(min-width: 801px)");
 
   const isMenuOpen = () => toggle.getAttribute("aria-expanded") === "true";
 
