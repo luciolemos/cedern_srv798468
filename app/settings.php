@@ -8,14 +8,16 @@ use DI\ContainerBuilder;
 use Monolog\Logger;
 
 return function (ContainerBuilder $containerBuilder) {
+    $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? 'production'));
+    $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
 
     // Global Settings Object
     $containerBuilder->addDefinitions([
         SettingsInterface::class => function () {
             return new Settings([
-                'displayErrorDetails' => true, // Should be set to false in production
-                'logError'            => false,
-                'logErrorDetails'     => false,
+                'displayErrorDetails' => $isDevelopment,
+                'logError'            => !$isDevelopment,
+                'logErrorDetails'     => !$isDevelopment,
                 'logger' => [
                     'name' => 'slim-app',
                     'path' => ($_ENV['APP_ENV'] ?? '') === 'test'
