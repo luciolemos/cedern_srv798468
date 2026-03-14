@@ -1,4 +1,4 @@
-(function () {
+function initCedernTheme() {
   var root = document.documentElement;
   var body = document.body;
   var themeStorageKey = 'natalcode_theme';
@@ -203,4 +203,20 @@
 
   updateUtilityLift();
   updateScrollTopVisibility();
-})();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      initCedernTheme();
+    } catch (error) {
+      console.error('[CEDE] Falha ao iniciar seletor de tema:', error);
+    }
+  });
+} else {
+  try {
+    initCedernTheme();
+  } catch (error) {
+    console.error('[CEDE] Falha ao iniciar seletor de tema:', error);
+  }
+}

@@ -1,4 +1,4 @@
-(() => {
+const initCedernNav = () => {
   const header = document.querySelector(".nc-header");
   const toggle = document.querySelector(".nc-nav-toggle");
   const nav = document.getElementById("nc-nav-menu");
@@ -175,4 +175,20 @@
   if (window.location.pathname === "/" && window.location.hash) {
     window.setTimeout(() => scrollToHash(window.location.hash, false), 0);
   }
-})();
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    try {
+      initCedernNav();
+    } catch (error) {
+      console.error("[CEDE] Falha ao iniciar menu:", error);
+    }
+  });
+} else {
+  try {
+    initCedernNav();
+  } catch (error) {
+    console.error("[CEDE] Falha ao iniciar menu:", error);
+  }
+}
