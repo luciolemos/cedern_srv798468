@@ -15,9 +15,9 @@ return function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
         SettingsInterface::class => function () use ($isDevelopment) {
             return new Settings([
-                'displayErrorDetails' => $isDevelopment,
-                'logError'            => !$isDevelopment,
-                'logErrorDetails'     => !$isDevelopment,
+                'displayErrorDetails' => true,
+                'logError'            => true,
+                'logErrorDetails'     => true,
                 'logger' => [
                     'name' => 'slim-app',
                     'path' => ($_ENV['APP_ENV'] ?? '') === 'test'
