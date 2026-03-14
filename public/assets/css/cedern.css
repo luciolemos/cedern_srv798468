@@ -487,8 +487,8 @@ h3 {
 
 @media (max-width: 560px) {
   .navbar-logo {
-    max-width: min(74vw, 340px);
-    height: clamp(2rem, 6.9vw, 2.7rem);
+    max-width: min(calc(100vw - 4.2rem), 460px);
+    height: clamp(2.55rem, 9.4vw, 3.45rem);
   }
 
   .nc-brand-name {
