@@ -149,7 +149,7 @@ return [
             'phase' => 'Segunda-feira',
             'title' => '20:00 - Estudo do Evangelho',
             'description' => 'Reflexões sobre os ensinamentos morais de Jesus à luz do Espiritismo.',
-            'status' => 'done', 
+            'status' => 'done',
         ],
         [
             'phase' => 'Quarta-feira',
