@@ -10,7 +10,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use Slim\Views\Twig;
-use Throwable;
 
 return function (App $app) {
     $app->options('/{routes:.*}', function (Request $request, Response $response) {
@@ -69,7 +68,7 @@ return function (App $app) {
                     'ok' => true,
                     'length' => strlen($html),
                 ];
-            } catch (Throwable $exception) {
+            } catch (\Throwable $exception) {
                 $results[] = [
                     'template' => $template,
                     'ok' => false,
