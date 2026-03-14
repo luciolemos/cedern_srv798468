@@ -20,9 +20,9 @@
     {% include 'components/footer.twig' %}
   </div>
   {# <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> #}
-  <script src="/assets/js/header-menu.js" defer></script>
-  <script src="/assets/js/button-states.js" defer></script>
-  <script src="/assets/js/theme-palette.js" defer></script>
+  <script src="/assets/js/header-menu.js?v={{ "now"|date("U") }}" defer></script>
+  <script src="/assets/js/button-states.js?v={{ "now"|date("U") }}" defer></script>
+  <script src="/assets/js/theme-palette.js?v={{ "now"|date("U") }}" defer></script>
   {# <script src="/assets/js/aos-init.js" defer></script> #}
 </body>
 </html>
