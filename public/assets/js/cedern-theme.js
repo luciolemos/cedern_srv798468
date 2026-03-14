@@ -4,6 +4,7 @@ function initCedernTheme() {
   var themeStorageKey = 'natalcode_theme';
   var modeStorageKey = 'natalcode_mode';
   var darkIntensityStorageKey = 'natalcode_dark_intensity';
+  var mobilePalettePositionStorageKey = 'natalcode_mobile_palette_position';
   var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
   var allowedModes = ['light', 'dark'];
   var allowedDarkIntensities = ['neutral', 'vivid'];
@@ -65,6 +66,167 @@ function initCedernTheme() {
   var utilityStack = document.querySelector('[data-utility-stack]');
   var scrollTopButton = document.querySelector('[data-scroll-top]');
   var footer = document.querySelector('.nc-footer');
+  var pointerDragActive = false;
+  var pointerDragMoved = false;
+  var pointerDragSuppressToggle = false;
+  var pointerDragOffsetX = 0;
+  var pointerDragOffsetY = 0;
+
+  function getMobilePalettePosition() {
+    var rawValue = localStorage.getItem(mobilePalettePositionStorageKey);
+    if (!rawValue) {
+      return null;
+    }
+
+    try {
+      var parsed = JSON.parse(rawValue);
+      if (!parsed || typeof parsed.x !== 'number' || typeof parsed.y !== 'number') {
+        return null;
+      }
+
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveMobilePalettePosition(x, y) {
+    localStorage.setItem(mobilePalettePositionStorageKey, JSON.stringify({ x: x, y: y }));
+  }
+
+  function clearInlineMobilePalettePosition() {
+    if (!utilityStack) {
+      return;
+    }
+
+    utilityStack.style.left = '';
+    utilityStack.style.top = '';
+    utilityStack.style.right = '';
+    utilityStack.style.bottom = '';
+  }
+
+  function clampMobilePalettePosition(x, y) {
+    if (!utilityStack) {
+      return { x: 0, y: 0 };
+    }
+
+    var viewportPadding = 8;
+    var stackRect = utilityStack.getBoundingClientRect();
+    var maxX = Math.max(viewportPadding, window.innerWidth - stackRect.width - viewportPadding);
+    var maxY = Math.max(viewportPadding, window.innerHeight - stackRect.height - viewportPadding);
+
+    return {
+      x: Math.min(Math.max(x, viewportPadding), maxX),
+      y: Math.min(Math.max(y, viewportPadding), maxY),
+    };
+  }
+
+  function applyMobilePalettePosition(position) {
+    if (!utilityStack || !position) {
+      return;
+    }
+
+    var clamped = clampMobilePalettePosition(position.x, position.y);
+    utilityStack.style.left = clamped.x + 'px';
+    utilityStack.style.top = clamped.y + 'px';
+    utilityStack.style.right = 'auto';
+    utilityStack.style.bottom = 'auto';
+  }
+
+  function syncMobilePalettePosition() {
+    if (!utilityStack) {
+      return;
+    }
+
+    if (isDesktop()) {
+      clearInlineMobilePalettePosition();
+      return;
+    }
+
+    var storedPosition = getMobilePalettePosition();
+    if (!storedPosition) {
+      clearInlineMobilePalettePosition();
+      return;
+    }
+
+    applyMobilePalettePosition(storedPosition);
+  }
+
+  function initMobilePaletteDrag() {
+    if (!utilityStack || !paletteToggle || !window.PointerEvent) {
+      return;
+    }
+
+    paletteToggle.addEventListener('pointerdown', function (event) {
+      if (isDesktop()) {
+        return;
+      }
+
+      if (event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+      }
+
+      var stackRect = utilityStack.getBoundingClientRect();
+      pointerDragActive = true;
+      pointerDragMoved = false;
+      pointerDragOffsetX = event.clientX - stackRect.left;
+      pointerDragOffsetY = event.clientY - stackRect.top;
+
+      if (paletteToggle.setPointerCapture) {
+        try {
+          paletteToggle.setPointerCapture(event.pointerId);
+        } catch (error) {
+        }
+      }
+    });
+
+    paletteToggle.addEventListener('pointermove', function (event) {
+      if (!pointerDragActive || isDesktop()) {
+        return;
+      }
+
+      var nextPosition = clampMobilePalettePosition(
+        event.clientX - pointerDragOffsetX,
+        event.clientY - pointerDragOffsetY
+      );
+
+      var leftValue = Number.parseFloat(utilityStack.style.left || '0');
+      var topValue = Number.parseFloat(utilityStack.style.top || '0');
+      if (Math.abs(nextPosition.x - leftValue) > 2 || Math.abs(nextPosition.y - topValue) > 2) {
+        pointerDragMoved = true;
+      }
+
+      applyMobilePalettePosition(nextPosition);
+    });
+
+    function endPointerDrag(event) {
+      if (!pointerDragActive) {
+        return;
+      }
+
+      pointerDragActive = false;
+
+      if (pointerDragMoved && !isDesktop()) {
+        var leftValue = Number.parseFloat(utilityStack.style.left || '0');
+        var topValue = Number.parseFloat(utilityStack.style.top || '0');
+        saveMobilePalettePosition(leftValue, topValue);
+        pointerDragSuppressToggle = true;
+        window.setTimeout(function () {
+          pointerDragSuppressToggle = false;
+        }, 180);
+      }
+
+      if (paletteToggle.releasePointerCapture) {
+        try {
+          paletteToggle.releasePointerCapture(event.pointerId);
+        } catch (error) {
+        }
+      }
+    }
+
+    paletteToggle.addEventListener('pointerup', endPointerDrag);
+    paletteToggle.addEventListener('pointercancel', endPointerDrag);
+  }
 
   function isDesktop() {
     return window.matchMedia('(min-width: 801px)').matches;
@@ -197,11 +359,18 @@ function initCedernTheme() {
   var initialIntensity = allowedDarkIntensities.indexOf(savedIntensity) !== -1 ? savedIntensity : defaultDarkIntensity;
   applyDarkIntensity(initialIntensity);
   setPanelState(false);
+  syncMobilePalettePosition();
+  initMobilePaletteDrag();
 
   if (paletteToggle) {
     paletteToggle.addEventListener('click', function () {
+      if (pointerDragSuppressToggle) {
+        return;
+      }
+
       var expanded = paletteToggle.getAttribute('aria-expanded') === 'true';
       setPanelState(!expanded);
+      syncMobilePalettePosition();
     });
   }
 
@@ -246,6 +415,7 @@ function initCedernTheme() {
     setPanelState(false);
     updateUtilityLift();
     updateScrollTopVisibility();
+    syncMobilePalettePosition();
   });
 
   window.addEventListener('scroll', function () {
@@ -255,6 +425,7 @@ function initCedernTheme() {
 
   updateUtilityLift();
   updateScrollTopVisibility();
+  syncMobilePalettePosition();
 }
 
 if (document.readyState === 'loading') {
