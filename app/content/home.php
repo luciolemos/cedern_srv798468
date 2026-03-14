@@ -98,20 +98,20 @@ return [
     ],
     'socialProofTrustCards' => [
         [
-            'image' => '/assets/img/note/note_1600_900_1.png',
-            'alt' => 'Grupo de estudos',
+            'image' => '/assets/img/cedern/cede1_1600_1000.png',
+            'alt' => 'Participantes em estudo doutrinário no CEDE',
             'title' => 'Estudos Semanais',
             'text' => 'Aprofundamento na Doutrina e no Evangelho.',
         ],
         [
-            'image' => '/assets/img/note/note_1600_900_2.png',
-            'alt' => 'Evangelização Infantil',
+            'image' => '/assets/img/cedern/cede2_1600_1000.png',
+            'alt' => 'Evangelização no CEDE com crianças e jovens',
             'title' => 'Evangelização',
             'text' => 'Ensinamentos morais para crianças e jovens.',
         ],
         [
-            'image' => '/assets/img/note/note_1600_900_3.png',
-            'alt' => 'Biblioteca Espírita',
+            'image' => '/assets/img/cedern/cede3_1600_1000.png',
+            'alt' => 'Biblioteca espírita do CEDE com acervo de estudos',
             'title' => 'Biblioteca',
             'text' => 'Acervo completo das obras básicas e complementares.',
         ],
