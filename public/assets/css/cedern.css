@@ -1132,16 +1132,16 @@ code {
 
 @media (max-width: 800px) {
   .nc-utility-stack {
-    position: static;
-    right: auto;
-    bottom: auto;
-    width: 100%;
-    margin-top: var(--space-4);
-    z-index: auto;
+    position: fixed;
+    right: var(--utility-right);
+    bottom: var(--utility-bottom);
+    width: min(300px, calc(100vw - 1rem));
+    margin: 0;
+    z-index: var(--utility-z);
   }
 
   .nc-palette {
-    width: min(320px, 100%);
+    width: 100%;
     margin-left: auto;
   }
 
