@@ -95,6 +95,47 @@ return [
         ],
     ],
     'socialProofTrustCards' => [
+        [
+            'image' => 'https://via.placeholder.com/300x200?text=Estudos',
+            'alt' => 'Grupo de estudos',
+            'title' => 'Estudos Semanais',
+            'text' => 'Aprofundamento na Doutrina e no Evangelho.',
+        ],
+        [
+            'image' => 'https://via.placeholder.com/300x200?text=Evangelizacao',
+            'alt' => 'Evangelização Infantil',
+            'title' => 'Evangelização',
+            'text' => 'Ensinamentos morais para crianças e jovens.',
+        ],
+        [
+            'image' => 'https://via.placeholder.com/300x200?text=Biblioteca',
+            'alt' => 'Biblioteca Espírita',
+            'title' => 'Biblioteca',
+            'text' => 'Acervo completo das obras básicas e complementares.',
+        ],
+    ],
+    'socialProofTestimonials' => [
+        [
+            'avatar' => 'https://randomuser.me/api/portraits/women/44.jpg',
+            'alt' => 'Maria Silva',
+            'name' => 'Maria Silva',
+            'role' => 'Frequentadora',
+            'text' => 'O CEDE mudou minha visão sobre a vida. Encontrei respostas lógicas e consoladoras para minhas dúvidas.',
+        ],
+         [
+            'avatar' => 'https://randomuser.me/api/portraits/men/32.jpg',
+            'alt' => 'João Souza',
+            'name' => 'João Souza',
+            'role' => 'Estudante do ESDE',
+            'text' => 'Os estudos são muito bem organizados e o ambiente é acolhedor. Recomendo a todos que buscam conhecimento.',
+        ],
+         [
+            'avatar' => 'https://randomuser.me/api/portraits/women/68.jpg',
+            'alt' => 'Ana Pereira',
+            'name' => 'Ana Pereira',
+            'role' => 'Voluntária',
+            'text' => 'Servir no CEDE é uma alegria. A caridade e o amor ao próximo são praticados aqui todos os dias.',
+        ],
     ],
      'roadmapItems' => [
         [
