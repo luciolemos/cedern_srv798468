@@ -67,12 +67,14 @@ return function (ContainerBuilder $containerBuilder) {
             $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY');
             $homeContent = require __DIR__ . '/content/home.php';
             $appAddress = (string) ($homeContent['sections']['cta']['address'] ?? '');
+            $appAddressMapUrl = (string) ($homeContent['sections']['cta']['addressMapUrl'] ?? '');
 
             $twig->getEnvironment()->addGlobal('app_default_page_title', $appDefaultPageTitle);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
             $twig->getEnvironment()->addGlobal('default_mode', $defaultMode);
             $twig->getEnvironment()->addGlobal('default_dark_intensity', $defaultDarkIntensity);
             $twig->getEnvironment()->addGlobal('app_address', $appAddress);
+            $twig->getEnvironment()->addGlobal('app_address_map_url', $appAddressMapUrl);
 
             return $twig;
         },
