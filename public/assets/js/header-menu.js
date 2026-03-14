@@ -21,7 +21,8 @@
 
   const closeMenu = () => {
     if (!desktopQuery.matches) {
-      setState(false);
+      // Small delay to allow click event to propagate
+      setTimeout(() => setState(false), 50);
     }
   };
 
