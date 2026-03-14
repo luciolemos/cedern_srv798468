@@ -1199,6 +1199,11 @@ code {
     box-shadow: none;
   }
 
+  /* Force display on desktop even if hidden attribute is present (JS fail-safe) */
+  .nc-nav[hidden] {
+    display: flex !important;
+  }
+
   .nc-link {
     padding: 0;
     font-weight: 500;
