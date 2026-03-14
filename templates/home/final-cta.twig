@@ -7,6 +7,9 @@
     title: cta_section.title|default('Pronto para resolver problemas reais com tecnologia certa?'),
     lead: cta_section.lead|default('Venha conhecer o CEDE e encontrar respostas para suas indagações espirituais.')
   } %}
+  {% if cta_section.address is defined and cta_section.address %}
+    <p class="nc-section-lead" data-aos="fade-up" data-aos-delay="120">{{ cta_section.address }}</p>
+  {% endif %}
   <div class="nc-actions" data-aos="fade-up" data-aos-delay="{{ cta_section.actionsDelay|default(160) }}">
     {% for action in cta_actions %}
       <a
