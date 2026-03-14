@@ -1110,6 +1110,22 @@ code {
   color: var(--text-muted);
 }
 
+@media (max-width: 800px) {
+  .nc-utility-stack {
+    position: static;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: var(--space-4);
+    z-index: auto;
+  }
+
+  .nc-palette {
+    width: min(320px, 100%);
+    margin-left: auto;
+  }
+}
+
 .nc-dot-blue { background: linear-gradient(90deg, var(--swatch-blue-1), var(--swatch-blue-2)); }
 .nc-dot-red { background: linear-gradient(90deg, var(--swatch-red-1), var(--swatch-red-2)); }
 .nc-dot-green { background: linear-gradient(90deg, var(--swatch-green-1), var(--swatch-green-2)); }

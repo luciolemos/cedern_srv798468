@@ -18,7 +18,7 @@ function initCedernTheme() {
       return;
     }
 
-    shell.insertAdjacentHTML('beforeend',
+    var utilityMarkup =
       '<aside class="nc-utility-stack" data-utility-stack data-scroll-threshold-mobile="110" data-scroll-threshold-desktop="260" aria-label="Ferramentas de interface">'
       + '<button type="button" class="nc-scroll-top" data-scroll-top aria-label="Voltar ao topo" hidden>↑</button>'
       + '<section class="nc-palette" aria-label="Paleta de cores do site">'
@@ -39,8 +39,15 @@ function initCedernTheme() {
       + '</div>'
       + '</div>'
       + '</section>'
-      + '</aside>'
-    );
+      + '</aside>';
+
+    var footerNode = shell.querySelector('.nc-footer');
+    if (footerNode) {
+      footerNode.insertAdjacentHTML('beforebegin', utilityMarkup);
+      return;
+    }
+
+    shell.insertAdjacentHTML('beforeend', utilityMarkup);
   }
 
   ensurePaletteMarkup();
