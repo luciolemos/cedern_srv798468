@@ -100,11 +100,17 @@
           <tbody>
             {% for user in member_users %}
               <tr>
+                {% set user_status_key = user.status|default('') %}
+                {% set user_status_label = {
+                  'pending': 'Pendente',
+                  'active': 'Ativo',
+                  'blocked': 'Bloqueado'
+                }[user_status_key]|default(user_status_key ?: '-') %}
                 <td data-label="ID">{{ user.id }}</td>
                 <td data-label="Nome">{{ user.full_name|default('-') }}</td>
                 <td data-label="E-mail">{{ user.email|default('-') }}</td>
                 <td data-label="Status">
-                  <span class="nc-admin-featured-flag{{ user.status == 'active' ? ' is-on' : ' is-off' }}">{{ user.status }}</span>
+                  <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
                 <td data-label="Perfil">{{ user.role_name|default('-') }}</td>
                 <td data-label="Ações">
