@@ -167,10 +167,13 @@ class MemberRegisterPageAction extends AbstractPageAction
             'Boas-vindas ao CEDE',
             '<p>Olá, <strong>' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . '</strong>.</p>'
             . '<p>Ficamos felizes em receber sua solicitação de cadastro na área de membros do CEDE.</p>'
-            . '<p>Seu pedido entrou em análise e, após validação da equipe, seu acesso será liberado com este e-mail.</p>'
+            . '<p>Seu pedido entrou em análise e, após validação da equipe, '
+            . 'seu acesso será liberado com este e-mail.</p>'
             . '<p>Enquanto isso, você já pode acompanhar nossas atividades e agenda pública no site.</p>'
             . '<p><a href="' . htmlspecialchars($siteUrl . '/entrar', ENT_QUOTES, 'UTF-8') . '" '
-            . 'style="display:inline-block;padding:10px 14px;border-radius:8px;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;">Abrir área do membro</a></p>'
+            . 'style="display:inline-block;padding:10px 14px;border-radius:8px;'
+            . 'background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;">'
+            . 'Abrir área do membro</a></p>'
             . '<p style="margin-top:10px;color:#334155;">Com fraternidade,<br>Equipe CEDE</p>',
             $memberLogoSrc
         );
@@ -219,7 +222,10 @@ class MemberRegisterPageAction extends AbstractPageAction
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 
-        $hostFromUrl = (string) parse_url((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), PHP_URL_HOST);
+        $hostFromUrl = (string) parse_url(
+            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
+            PHP_URL_HOST
+        );
         if ($hostFromUrl !== '') {
             $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
         }
@@ -236,7 +242,11 @@ class MemberRegisterPageAction extends AbstractPageAction
         $mailer->isHTML(true);
         $mailer->Subject = $subject;
         $mailer->Body = $htmlBody;
-        $mailer->AltBody = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], ["\n", "\n", "\n", "\n"], $htmlBody));
+        $mailer->AltBody = strip_tags(str_replace(
+            ['<br>', '<br/>', '<br />', '</p>'],
+            ["\n", "\n", "\n", "\n"],
+            $htmlBody
+        ));
 
         $mailer->send();
     }

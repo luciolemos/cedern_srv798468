@@ -195,8 +195,10 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
                 if (!empty($permission['unlocked'])) {
                     $primaryAction = [
                         'title' => 'Acesse sua trilha principal',
-                        'description' => 'Seu perfil já permite entrar na ' . (string) ($permission['title'] ?? 'área interna') . '.',
-                        'href' => (string) ($permission['href'] ?? '/agenda'),
+                        'description' => 'Seu perfil já permite entrar na '
+                            . (string) $permission['title']
+                            . '.',
+                        'href' => (string) $permission['href'],
                         'button_label' => 'Acessar agora',
                     ];
                     break;
@@ -334,7 +336,7 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
 
         if (!empty($lockedTracks[0])) {
             $weeklyNextSteps[] = [
-                'title' => 'Solicitar acesso para ' . (string) ($lockedTracks[0]['title'] ?? 'nova trilha'),
+                'title' => 'Solicitar acesso para ' . (string) $lockedTracks[0]['title'],
                 'href' => '/contato',
             ];
         }

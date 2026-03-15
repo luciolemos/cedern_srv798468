@@ -114,7 +114,10 @@ class ContactPageAction extends AbstractPageAction
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 
-        $hostFromUrl = (string) parse_url((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), PHP_URL_HOST);
+        $hostFromUrl = (string) parse_url(
+            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
+            PHP_URL_HOST
+        );
         if ($hostFromUrl !== '') {
             $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
         }
@@ -136,19 +139,20 @@ class ContactPageAction extends AbstractPageAction
             $logoSrc = 'cid:' . $logoCid;
         }
 
-                $htmlBody = InstitutionalEmailTemplate::buildLayout(
-                        'Novo contato pelo site',
-                        '<p><strong>Nome:</strong> ' . $safeName . '</p>'
-                        . '<p><strong>E-mail:</strong> ' . $safeEmail . '</p>'
-                        . '<p><strong>Assunto:</strong> ' . $safeSubject . '</p>'
-                        . '<hr style="border:none;border-top:1px solid #e2e8f0;margin:14px 0;">'
+        $htmlBody = InstitutionalEmailTemplate::buildLayout(
+            'Novo contato pelo site',
+            '<p><strong>Nome:</strong> ' . $safeName . '</p>'
+            . '<p><strong>E-mail:</strong> ' . $safeEmail . '</p>'
+            . '<p><strong>Assunto:</strong> ' . $safeSubject . '</p>'
+            . '<hr style="border:none;border-top:1px solid #e2e8f0;'
+            . 'margin:14px 0;">'
             . '<p>' . $safeMessage . '</p>',
             $logoSrc
-                );
+        );
 
         $mailer->isHTML(true);
         $mailer->Subject = '[Contato Site] ' . $subject;
-                $mailer->Body = $htmlBody;
+            $mailer->Body = $htmlBody;
         $mailer->AltBody = "Novo contato pelo site\n"
             . "Nome: {$name}\n"
             . "E-mail: {$email}\n"
