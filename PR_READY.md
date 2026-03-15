@@ -27,6 +27,10 @@ Também centraliza a navegação, adiciona breadcrumbs, ajusta layout/header/foo
 
 ### 4) Estilo e comportamento frontend
 - Refinos em `public/assets/css/cedern.css` para header/footer, responsividade e hierarquia visual.
+- Consolidação de design tokens em camadas:
+  - **base** (tipografia, spacing, radius, layout, motion)
+  - **state** (hover/focus/active/disabled/loading)
+  - **component** (aliases/contratos para link, botão, submenu, mode toggle e swatch)
 - Melhorias de comportamento em:
   - `public/assets/js/cedern-nav.js`
   - `public/assets/js/cedern-theme.js`
@@ -46,6 +50,15 @@ Também centraliza a navegação, adiciona breadcrumbs, ajusta layout/header/foo
   - `/faq` 200
   - `/contato` 200
   - `/quem-somos/nossa-marca` 200
+
+## Fechamento para aprovação rápida
+- **Breaking changes:** none.
+- **Visual changes:** none intencional na fase de tokenização (refactor estrutural de tokens, sem alteração de layout previsto).
+- **Design tokens:** consolidação concluída em camadas `base`, `state` e `component` no CSS principal.
+- **Gates finais (reexecução):**
+  - `phpcs` ✅
+  - `composer test` ✅
+  - `npm run test:visual` ✅
 
 ## Observações importantes para revisão
 - Há mudanças em arquivos de ambiente (`.env` e `.env.example`).
