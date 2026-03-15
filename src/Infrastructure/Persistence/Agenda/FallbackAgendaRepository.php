@@ -13,6 +13,21 @@ class FallbackAgendaRepository implements AgendaRepository
         return [];
     }
 
+    public function findInterestedUpcomingByMember(int $memberId, int $limit = 10): array
+    {
+        return [];
+    }
+
+    public function listInterestedEventIdsByMember(int $memberId): array
+    {
+        return [];
+    }
+
+    public function setMemberEventInterest(int $memberId, int $eventId, bool $interested): bool
+    {
+        return false;
+    }
+
     public function findPublishedBySlug(string $slug): ?array
     {
         return null;

@@ -11,14 +11,61 @@
         lead: 'Estamos de portas abertas para acolhimento, estudos e participação nas atividades da casa.'
       } %}
 
-      <div class="nc-actions" data-aos="fade-up" data-aos-delay="120">
-        {% if cta_section.addressMapUrl|default('') %}
-          <a class="nc-btn nc-btn-primary" href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+      <article class="nc-card nc-admin-login-card">
+        {% if contact_form_status == 'sent' %}
+          <p class="nc-admin-login-success" role="status">Mensagem enviada com sucesso. Em breve retornaremos seu contato.</p>
         {% endif %}
+
+        {% if contact_form_errors|default([]) %}
+          <div class="nc-admin-login-error" role="alert">
+            <ul>
+              {% for error in contact_form_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <form class="nc-admin-login-form" method="post" action="/contato">
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="name">Nome</label>
+            <input class="nc-admin-login-input" id="name" name="name" type="text" value="{{ contact_form.name|default('') }}" autocomplete="name" required>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="email">E-mail</label>
+            <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ contact_form.email|default('') }}" autocomplete="email" required>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="subject">Assunto</label>
+            <input class="nc-admin-login-input" id="subject" name="subject" type="text" value="{{ contact_form.subject|default('') }}" placeholder="Ex: Dúvida sobre atividades">
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="message">Mensagem</label>
+            <textarea class="nc-admin-login-input" id="message" name="message" rows="5" required>{{ contact_form.message|default('') }}</textarea>
+          </div>
+
+          <div class="nc-admin-login-field" style="display:none;" aria-hidden="true">
+            <label class="nc-admin-login-label" for="company">Empresa</label>
+            <input class="nc-admin-login-input" id="company" name="company" type="text" value="{{ contact_form.company|default('') }}" tabindex="-1" autocomplete="off">
+          </div>
+
+          <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="120">
+            <button class="nc-btn nc-btn-primary" type="submit">Enviar mensagem</button>
+            {% if cta_section.addressMapUrl|default('') %}
+              <a class="nc-btn nc-btn-secondary" href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+            {% endif %}
+          </div>
+        </form>
+      </article>
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="120">
         {% if app_instagram_url|default('') %}
           <a class="nc-btn nc-btn-secondary" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
         {% endif %}
-        <a class="nc-btn nc-btn-secondary" href="mailto:contato@cedern.org">Enviar e-mail</a>
+        <a class="nc-btn nc-btn-secondary" href="mailto:cede@cedern.org">E-mail direto</a>
       </div>
     </section>
   </main>

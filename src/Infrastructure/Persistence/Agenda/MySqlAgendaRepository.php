@@ -52,6 +52,141 @@ class MySqlAgendaRepository implements AgendaRepository
         return array_map([$this, 'normalizeEvent'], $statement->fetchAll() ?: []);
     }
 
+    public function findInterestedUpcomingByMember(int $memberId, int $limit = 10): array
+    {
+        if ($memberId <= 0) {
+            return [];
+        }
+
+        $sql = <<<SQL
+            SELECT
+                e.id,
+                e.slug,
+                e.title,
+                e.description,
+                e.theme,
+                e.location_name,
+                e.location_address,
+                e.mode,
+                e.meeting_url,
+                e.audience,
+                e.notes,
+                e.starts_at,
+                e.ends_at,
+                e.status,
+                e.is_featured,
+                c.slug AS category_slug,
+                c.name AS category_name,
+                c.color AS category_color
+            FROM member_event_interests i
+            INNER JOIN agenda_events e ON e.id = i.event_id
+            INNER JOIN activity_categories c ON c.id = e.category_id
+            WHERE i.member_user_id = :member_id
+              AND e.status = 'published'
+              AND c.is_active = 1
+            ORDER BY e.starts_at ASC
+            LIMIT :limit
+        SQL;
+
+        try {
+            $statement = $this->pdo->prepare($sql);
+            $statement->bindValue(':member_id', $memberId, \PDO::PARAM_INT);
+            $statement->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $statement->execute();
+
+            return array_map([$this, 'normalizeEvent'], $statement->fetchAll() ?: []);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberInterestSchemaCompatibility();
+
+            $statement = $this->pdo->prepare($sql);
+            $statement->bindValue(':member_id', $memberId, \PDO::PARAM_INT);
+            $statement->bindValue(':limit', $limit, \PDO::PARAM_INT);
+            $statement->execute();
+
+            return array_map([$this, 'normalizeEvent'], $statement->fetchAll() ?: []);
+        }
+    }
+
+    public function listInterestedEventIdsByMember(int $memberId): array
+    {
+        if ($memberId <= 0) {
+            return [];
+        }
+
+        $sql = <<<SQL
+            SELECT event_id
+            FROM member_event_interests
+            WHERE member_user_id = :member_id
+        SQL;
+
+        try {
+            $statement = $this->pdo->prepare($sql);
+            $statement->bindValue(':member_id', $memberId, \PDO::PARAM_INT);
+            $statement->execute();
+
+            $rows = $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable $exception) {
+            $this->ensureMemberInterestSchemaCompatibility();
+
+            $statement = $this->pdo->prepare($sql);
+            $statement->bindValue(':member_id', $memberId, \PDO::PARAM_INT);
+            $statement->execute();
+
+            $rows = $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        }
+
+        return array_values(array_map(
+            static fn (array $row): int => (int) ($row['event_id'] ?? 0),
+            $rows
+        ));
+    }
+
+    public function setMemberEventInterest(int $memberId, int $eventId, bool $interested): bool
+    {
+        if ($memberId <= 0 || $eventId <= 0) {
+            return false;
+        }
+
+        $write = function () use ($memberId, $eventId, $interested): bool {
+            if ($interested) {
+                $sql = <<<SQL
+                    INSERT INTO member_event_interests (member_user_id, event_id)
+                    VALUES (:member_id, :event_id)
+                    ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP
+                SQL;
+
+                $statement = $this->pdo->prepare($sql);
+
+                return $statement->execute([
+                    'member_id' => $memberId,
+                    'event_id' => $eventId,
+                ]);
+            }
+
+            $sql = <<<SQL
+                DELETE FROM member_event_interests
+                WHERE member_user_id = :member_id
+                  AND event_id = :event_id
+                LIMIT 1
+            SQL;
+
+            $statement = $this->pdo->prepare($sql);
+
+            return $statement->execute([
+                'member_id' => $memberId,
+                'event_id' => $eventId,
+            ]);
+        };
+
+        try {
+            return $write();
+        } catch (\Throwable $exception) {
+            $this->ensureMemberInterestSchemaCompatibility();
+
+            return $write();
+        }
+    }
+
     public function findPublishedBySlug(string $slug): ?array
     {
                 $sql = $this->buildBaseSelect() . <<<SQL
@@ -410,7 +545,54 @@ class MySqlAgendaRepository implements AgendaRepository
             'starts_at_label' => $this->formatDateTimeLabel($startsAt),
             'ends_at_label' => $this->formatDateTimeLabel($endsAt),
             'mode_label' => $this->formatModeLabel((string) ($event['mode'] ?? 'presencial')),
+            'google_calendar_url' => $this->buildGoogleCalendarUrl($event),
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $event
+     */
+    private function buildGoogleCalendarUrl(array $event): string
+    {
+        $title = trim((string) ($event['title'] ?? 'Atividade do CEDE'));
+        $details = trim((string) ($event['description'] ?? ''));
+        $location = trim((string) ($event['location_name'] ?? ''));
+
+        $startsAt = $this->parseDateTime((string) ($event['starts_at'] ?? ''));
+        $endsAt = $this->parseDateTime((string) ($event['ends_at'] ?? ''));
+
+        if ($startsAt === null) {
+            return '';
+        }
+
+        if ($endsAt === null) {
+            $endsAt = $startsAt->modify('+90 minutes');
+        }
+
+        $dates = $startsAt->format('Ymd\\THis') . '/' . $endsAt->format('Ymd\\THis');
+
+        $query = http_build_query([
+            'action' => 'TEMPLATE',
+            'text' => $title,
+            'dates' => $dates,
+            'details' => $details,
+            'location' => $location,
+        ]);
+
+        return 'https://calendar.google.com/calendar/render?' . $query;
+    }
+
+    private function parseDateTime(string $value): ?\DateTimeImmutable
+    {
+        if (trim($value) === '') {
+            return null;
+        }
+
+        try {
+            return new \DateTimeImmutable($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
     }
 
     private function formatDateTimeLabel(string $value): string
@@ -436,5 +618,24 @@ class MySqlAgendaRepository implements AgendaRepository
         ];
 
         return $map[$mode] ?? ucfirst($mode);
+    }
+
+    private function ensureMemberInterestSchemaCompatibility(): void
+    {
+        $sql = <<<SQL
+            CREATE TABLE IF NOT EXISTS member_event_interests (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                event_id BIGINT UNSIGNED NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY uniq_member_event (member_user_id, event_id),
+                KEY idx_member_user_id (member_user_id),
+                KEY idx_event_id (event_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL;
+
+        $this->pdo->exec($sql);
     }
 }
