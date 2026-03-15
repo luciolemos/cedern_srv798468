@@ -29,13 +29,10 @@ class AgendaPageAction extends AbstractPageAction
         try {
             $events = $this->agendaRepository->findUpcomingPublished(30);
         } catch (\Throwable $exception) {
-            $this->logger->warning('Agenda dinâmica indisponível; usando fallback estático.', [
+            $this->logger->warning('Agenda dinâmica indisponível.', [
                 'error' => $exception->getMessage(),
             ]);
         }
-
-        $homeContent = require __DIR__ . '/../../../../app/content/home.php';
-        $fallbackRoadmap = $homeContent['roadmapItems'] ?? [];
 
         foreach ($events as $event) {
             if ((int) ($event['is_featured'] ?? 0) === 1) {
@@ -50,7 +47,6 @@ class AgendaPageAction extends AbstractPageAction
             'agenda_events' => $events,
             'agenda_featured_events' => $featuredEvents,
             'agenda_regular_events' => $regularEvents,
-            'agenda_roadmap_fallback' => $fallbackRoadmap,
             'page_title' => 'Agenda | CEDE',
             'page_url' => 'https://cedern.org/agenda',
             'page_description' => 'Confira o cronograma semanal de atividades e reuniões públicas do CEDE.',

@@ -39,22 +39,15 @@ class AgendaDetailPageAction extends AbstractPageAction
             ]);
         }
 
-        $homeContent = require __DIR__ . '/../../../../app/content/home.php';
-        $agendaFallback = $homeContent['agendaPages'][$slug] ?? null;
-
-        if ($agendaEvent === null && $agendaFallback === null) {
+        if ($agendaEvent === null) {
             return $response->withHeader('Location', '/agenda')->withStatus(302);
         }
 
-        $title = (string) ($agendaEvent['title'] ?? ($agendaFallback['title'] ?? 'Atividade do CEDE'));
-        $pageDescription = (string) (
-            $agendaEvent['description']
-            ?? ($agendaFallback['lead'] ?? 'Detalhes da atividade da agenda do CEDE.')
-        );
+        $title = (string) ($agendaEvent['title'] ?? 'Atividade do CEDE');
+        $pageDescription = (string) ($agendaEvent['description'] ?? 'Detalhes da atividade da agenda do CEDE.');
 
         return $this->renderPage($response, 'pages/agenda-detail.twig', [
             'agenda_event' => $agendaEvent,
-            'agenda' => $agendaFallback,
             'page_title' => $title . ' | CEDE',
             'page_url' => 'https://cedern.org/agenda/' . $slug,
             'page_description' => $pageDescription,

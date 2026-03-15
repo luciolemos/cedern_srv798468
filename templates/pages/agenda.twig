@@ -46,18 +46,7 @@
           {% endfor %}
         </ul>
       {% else %}
-        <ul class="nc-checklist">
-          {% for item in agenda_roadmap_fallback|default([]) %}
-            {% include 'components/check-item.twig' with {
-              step: item.phase|default('Agenda'),
-              title: item.title|default('Atividade'),
-              description: item.description|default('Confira os detalhes da atividade.'),
-              href: item.href|default(''),
-              link_label: item.linkLabel|default('Ver detalhes da atividade'),
-              delay: item.delay|default(120)
-            } %}
-          {% endfor %}
-        </ul>
+        <p>Nenhuma atividade publicada no momento.</p>
       {% endif %}
     </section>
     {% include 'home/final-cta.twig' %}
