@@ -19,6 +19,7 @@ use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
+use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
 use App\Application\Actions\Page\ContactPageAction;
 use App\Application\Actions\Page\EsdePageAction;
@@ -29,6 +30,7 @@ use App\Application\Actions\Page\FaqPracticesPageAction;
 use App\Application\Actions\Page\FraternalServicePageAction;
 use App\Application\Actions\Page\HomePageAction;
 use App\Application\Actions\Page\MemberCompleteProfilePageAction;
+use App\Application\Actions\Page\MemberEventInterestToggleAction;
 use App\Application\Actions\Page\MemberAdminAreaPageAction;
 use App\Application\Actions\Page\MemberHomePageAction;
 use App\Application\Actions\Page\MemberLoginPageAction;
@@ -111,11 +113,13 @@ return function (App $app) {
     $app->get('/estudos/atendimento-fraterno', FraternalServicePageAction::class);
     $app->get('/agenda', AgendaPageAction::class);
     $app->get('/agenda/{slug}', AgendaDetailPageAction::class);
+    $app->get('/agenda/{slug}/ics', AgendaEventIcsDownloadAction::class);
     $app->map(['GET', 'POST'], '/cadastro', MemberRegisterPageAction::class);
     $app->map(['GET', 'POST'], '/entrar', MemberLoginPageAction::class);
     $app->map(['GET', 'POST'], '/membro/sair', MemberLogoutAction::class);
     $app->get('/membro', MemberHomePageAction::class);
     $app->map(['GET', 'POST'], '/membro/perfil/completar', MemberCompleteProfilePageAction::class);
+    $app->post('/membro/eventos/{id}/participacao', MemberEventInterestToggleAction::class);
     $app->get('/membro/operacao', MemberOperatorAreaPageAction::class);
     $app->get('/membro/gestao', MemberManagerAreaPageAction::class);
     $app->get('/membro/administracao', MemberAdminAreaPageAction::class);
@@ -186,7 +190,7 @@ return function (App $app) {
     $app->get('/faq/doutrina', FaqDoctrinePageAction::class);
     $app->get('/faq/participacao', FaqParticipationPageAction::class);
     $app->get('/faq/praticas', FaqPracticesPageAction::class);
-    $app->get('/contato', ContactPageAction::class);
+    $app->map(['GET', 'POST'], '/contato', ContactPageAction::class);
 
     $app->get('/users', function (Request $request, Response $response) use ($app) {
         $twig = $app->getContainer()->get(Twig::class);

@@ -12,6 +12,18 @@ interface AgendaRepository
     public function findUpcomingPublished(int $limit = 20): array;
 
     /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function findInterestedUpcomingByMember(int $memberId, int $limit = 10): array;
+
+    /**
+     * @return array<int, int>
+     */
+    public function listInterestedEventIdsByMember(int $memberId): array;
+
+    public function setMemberEventInterest(int $memberId, int $eventId, bool $interested): bool;
+
+    /**
      * @return array<string, mixed>|null
      */
     public function findPublishedBySlug(string $slug): ?array;
