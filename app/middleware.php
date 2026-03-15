@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Agenda\AgendaRepository;
+use App\Domain\Member\MemberAuthRepository;
 use App\Application\Middleware\SessionMiddleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -35,15 +36,48 @@ return function (App $app) {
         $memberRoleKey = trim((string) ($_SESSION['member_role_key'] ?? 'member'));
         $memberRoleWeight = (int) ($dashboardRoleWeights[$memberRoleKey] ?? 0);
         $memberHasDashboardAccess = !empty($_SESSION['member_authenticated']) && $memberRoleWeight >= 20;
+        $memberCanManageUsers = !empty($_SESSION['member_authenticated'])
+            && in_array($memberRoleKey, ['admin'], true);
 
         $dashboardIsAdminSession = !empty($_SESSION['admin_authenticated']);
         $dashboardIsAuthenticated = !empty($_SESSION['admin_authenticated']) || $memberHasDashboardAccess;
+        $dashboardCanManageUsers = $dashboardIsAdminSession || $memberCanManageUsers;
         $dashboardUser = (string) ($_SESSION['admin_user'] ?? '');
         $dashboardUserPhotoPath = '';
+        $dashboardAdminNotifications = [];
+        $dashboardPendingUsers = [];
+        $dashboardNotificationCount = 0;
 
         if ($dashboardUser === '' && $memberHasDashboardAccess) {
             $dashboardUser = (string) ($_SESSION['member_name'] ?? 'Usuário');
             $dashboardUserPhotoPath = (string) ($_SESSION['member_profile_photo_path'] ?? '');
+        }
+
+        if ($dashboardCanManageUsers) {
+            try {
+                /** @var MemberAuthRepository $memberAuthRepository */
+                $memberAuthRepository = $app->getContainer()->get(MemberAuthRepository::class);
+                $allUsers = $memberAuthRepository->findAllUsersForAdmin();
+
+                $dashboardPendingUsers = array_values(array_filter(
+                    $allUsers,
+                    static fn (array $user): bool => (string) ($user['status'] ?? '') === 'pending'
+                ));
+
+                $dashboardNotificationCount = count($dashboardPendingUsers);
+
+                if ($dashboardNotificationCount > 0) {
+                    $dashboardAdminNotifications[] = [
+                        'title' => 'Contas pendentes',
+                        'description' => $dashboardNotificationCount . ' cadastro(s) para aprovar.',
+                        'href' => '/painel/usuarios?sort=created_at&dir=desc&q=pending',
+                        'cta' => 'Aprovar contas',
+                    ];
+                }
+
+                $dashboardPendingUsers = array_slice($dashboardPendingUsers, 0, 5);
+            } catch (\Throwable $exception) {
+            }
         }
 
         $twigEnvironment->addGlobal('current_path', $request->getUri()->getPath());
@@ -55,9 +89,15 @@ return function (App $app) {
         $twigEnvironment->addGlobal('member_name', (string) ($_SESSION['member_name'] ?? ''));
         $twigEnvironment->addGlobal('member_role_key', (string) ($_SESSION['member_role_key'] ?? ''));
         $twigEnvironment->addGlobal('member_role_name', (string) ($_SESSION['member_role_name'] ?? 'Membro'));
-        $twigEnvironment->addGlobal('member_profile_photo_path', (string) ($_SESSION['member_profile_photo_path'] ?? ''));
+        $twigEnvironment->addGlobal(
+            'member_profile_photo_path',
+            (string) ($_SESSION['member_profile_photo_path'] ?? '')
+        );
         $twigEnvironment->addGlobal('dashboard_env_label', $dashboardEnvLabel);
         $twigEnvironment->addGlobal('dashboard_env_tone', $dashboardEnvTone);
+        $twigEnvironment->addGlobal('dashboard_admin_notifications', $dashboardAdminNotifications);
+        $twigEnvironment->addGlobal('dashboard_admin_pending_users', $dashboardPendingUsers);
+        $twigEnvironment->addGlobal('dashboard_admin_notification_count', $dashboardNotificationCount);
 
         $navigationMenu = (array) ($twigEnvironment->getGlobals()['navigation_menu'] ?? []);
 

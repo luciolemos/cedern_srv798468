@@ -21,6 +21,45 @@
           {{ dashboard_env_label|default('Produção') }}
         </span>
         <span id="nc-dashboard-theme-badge" class="nc-dashboard-theme-badge" aria-live="polite">Tema: padrão</span>
+        {% set dashboard_notification_count = dashboard_admin_notification_count|default(0) %}
+        <details class="nc-dashboard-alerts" {% if current_path starts with '/painel/usuarios' and dashboard_notification_count > 0 %}open{% endif %}>
+          <summary aria-label="Notificações administrativas">
+            <span class="nc-dashboard-alerts-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4C9.23858 4 7 6.23858 7 9V11.5C7 13.05 6.41071 14.5446 5.35195 15.6841L4 17.1389H20L18.648 15.6841C17.5893 14.5446 17 13.05 17 11.5V9C17 6.23858 14.7614 4 12 4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 19C10.4174 19.6227 11.1318 20 12 20C12.8682 20 13.5826 19.6227 14 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="nc-dashboard-alerts-label">Notificações</span>
+            {% if dashboard_notification_count > 0 %}
+              <span class="nc-dashboard-alerts-badge" aria-live="polite">{{ dashboard_notification_count }}</span>
+            {% endif %}
+          </summary>
+          <div class="nc-dashboard-alerts-content">
+            {% if dashboard_notification_count == 0 %}
+              <p class="nc-dashboard-alerts-empty">Nenhuma pendência administrativa no momento.</p>
+            {% else %}
+              {% for notice in dashboard_admin_notifications|default([]) %}
+                <article class="nc-dashboard-alert-item">
+                  <strong>{{ notice.title }}</strong>
+                  <p>{{ notice.description }}</p>
+                  <a class="nc-link" href="{{ notice.href|default('/painel/usuarios') }}">{{ notice.cta|default('Abrir') }}</a>
+                </article>
+              {% endfor %}
+
+              {% if dashboard_admin_pending_users|default([])|length > 0 %}
+                <ul class="nc-dashboard-alert-users" aria-label="Cadastros pendentes mais recentes">
+                  {% for pending_user in dashboard_admin_pending_users %}
+                    <li>
+                      <span>{{ pending_user.full_name|default('Usuário') }}</span>
+                      <small>{{ pending_user.email|default('Sem e-mail') }}</small>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endif %}
+          </div>
+        </details>
         <details class="nc-dashboard-user-menu">
           {% set dashboard_user_label = dashboard_user|default('Usuário') %}
           {% set dashboard_user_initial = dashboard_user_label|slice(0, 1)|upper %}
@@ -220,6 +259,7 @@
       var sidebar = document.getElementById('nc-dashboard-sidebar');
       var shell = document.querySelector('.nc-dashboard-shell');
       var root = document.documentElement;
+      var alertsMenu = document.querySelector('.nc-dashboard-alerts');
       var userMenu = document.querySelector('.nc-dashboard-user-menu');
       var themeBadge = document.getElementById('nc-dashboard-theme-badge');
       var desktopMedia = window.matchMedia('(min-width: 981px)');
@@ -334,7 +374,39 @@
         setMobileSidebarOpen(!sidebar.classList.contains('is-open'));
       });
 
+      if (alertsMenu) {
+        var alertsSummary = alertsMenu.querySelector('summary');
+
+        if (alertsSummary) {
+          alertsSummary.addEventListener('click', function () {
+            if (userMenu && userMenu.open) {
+              userMenu.removeAttribute('open');
+            }
+          });
+        }
+
+        document.addEventListener('click', function (event) {
+          if (!alertsMenu.open) {
+            return;
+          }
+
+          if (!alertsMenu.contains(event.target)) {
+            alertsMenu.removeAttribute('open');
+          }
+        });
+      }
+
       if (userMenu) {
+        var userMenuSummary = userMenu.querySelector('summary');
+
+        if (userMenuSummary) {
+          userMenuSummary.addEventListener('click', function () {
+            if (alertsMenu && alertsMenu.open) {
+              alertsMenu.removeAttribute('open');
+            }
+          });
+        }
+
         document.addEventListener('click', function (event) {
           if (!userMenu.open) {
             return;
@@ -346,7 +418,15 @@
         });
 
         document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape' && userMenu.open) {
+          if (event.key !== 'Escape') {
+            return;
+          }
+
+          if (alertsMenu && alertsMenu.open) {
+            alertsMenu.removeAttribute('open');
+          }
+
+          if (userMenu.open) {
             userMenu.removeAttribute('open');
           }
         });
