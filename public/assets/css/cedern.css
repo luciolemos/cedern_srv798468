@@ -1505,6 +1505,10 @@ code {
   .nc-palette-toggle-label-mobile {
     display: inline;
   }
+
+  #nc-submenu-agenda .nc-nav-submenu-link:nth-child(n + 4):not(.is-active) {
+    display: none;
+  }
 }
 
 .nc-dot-blue { background: linear-gradient(90deg, var(--swatch-blue-1), var(--swatch-blue-2)); }
