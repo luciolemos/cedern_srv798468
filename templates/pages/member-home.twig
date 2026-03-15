@@ -20,6 +20,60 @@
 
         <section class="nc-member-dashboard" aria-label="Resumo do perfil">
           <article class="nc-card nc-member-panel">
+            <h3>Onboarding do membro</h3>
+            <p class="nc-member-subtitle">Acompanhe o progresso da sua conta e finalize os pontos pendentes.</p>
+            <div class="nc-member-onboarding-progress" role="status" aria-live="polite">
+              <div class="nc-member-onboarding-bar" aria-hidden="true">
+                <span style="width: {{ member_onboarding_percent|default(0) }}%;"></span>
+              </div>
+              <p>{{ member_onboarding_completed|default(0) }}/{{ member_onboarding_total|default(0) }} concluídos · {{ member_onboarding_percent|default(0) }}%</p>
+            </div>
+
+            <ul class="nc-member-checklist">
+              {% for item in member_onboarding_checklist|default([]) %}
+                <li class="{{ item.done ? 'is-done' : 'is-pending' }}">
+                  <span class="nc-member-check-indicator" aria-hidden="true">{{ item.done ? '✓' : '•' }}</span>
+                  <span>{{ item.label }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+
+            <div class="nc-actions nc-admin-login-actions nc-member-actions">
+              <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Completar perfil</a>
+            </div>
+          </article>
+
+          <article class="nc-card nc-member-panel">
+            <h3>O que fazer agora</h3>
+            <p class="nc-member-subtitle">Próximas ações sugeridas para sua jornada na área de membro.</p>
+
+            <ul class="nc-member-next-actions">
+              {% for action in member_next_actions|default([]) %}
+                <li>
+                  <strong>{{ action.title }}</strong>
+                  <p>{{ action.description }}</p>
+                  <a class="nc-link" href="{{ action.href }}">Ir para ação</a>
+                </li>
+              {% endfor %}
+            </ul>
+
+            {% if member_upcoming_events|default([])|length > 0 %}
+              <div class="nc-member-upcoming-block">
+                <h4>Próximos eventos</h4>
+                <ul class="nc-member-upcoming-events">
+                  {% for event in member_upcoming_events %}
+                    <li>
+                      <strong>{{ event.title|default('Atividade') }}</strong>
+                      <span>{{ event.starts_at_label|default('Data a confirmar') }}</span>
+                      <a class="nc-link" href="/agenda/{{ event.slug|default('') }}">Ver detalhes</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </article>
+
+          <article class="nc-card nc-member-panel">
             <div class="nc-member-header">
               <div class="nc-member-avatar-wrap" aria-hidden="true">
                 {% if member_data.profile_photo_path %}
@@ -52,23 +106,21 @@
             </div>
           </article>
 
-          {% set role_key = member_data.role_key|default('member') %}
           <article class="nc-card nc-member-panel">
-            <h3>Acessos do seu perfil</h3>
-            <p class="nc-member-subtitle">Os atalhos abaixo variam de acordo com seu nível de acesso.</p>
-            <ul class="nc-member-access-list">
-              {% if role_key in ['operator', 'manager', 'admin'] %}
-                <li><a class="nc-link" href="/membro/operacao">Área de Operação</a></li>
-              {% endif %}
-              {% if role_key in ['manager', 'admin'] %}
-                <li><a class="nc-link" href="/membro/gestao">Área de Gestão</a></li>
-              {% endif %}
-              {% if role_key == 'admin' %}
-                <li><a class="nc-link" href="/membro/administracao">Área Administrativa</a></li>
-              {% endif %}
-              {% if role_key not in ['operator', 'manager', 'admin'] %}
-                <li>Seu perfil atual é de membro básico. Novos acessos aparecem após atribuição de papel no painel.</li>
-              {% endif %}
+            <h3>Permissões e trilhas de acesso</h3>
+            <p class="nc-member-subtitle">Veja claramente o que já está liberado e o que depende de novo papel.</p>
+            <ul class="nc-member-access-list nc-member-permission-list">
+              {% for permission in member_permission_feedback|default([]) %}
+                <li class="{{ permission.unlocked ? 'is-unlocked' : 'is-locked' }}">
+                  <div>
+                    <strong>{{ permission.title }}</strong>
+                    <p>{{ permission.reason }}</p>
+                  </div>
+                  {% if permission.unlocked %}
+                    <a class="nc-link" href="{{ permission.href }}">Acessar</a>
+                  {% endif %}
+                </li>
+              {% endfor %}
             </ul>
           </article>
         </section>

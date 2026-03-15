@@ -6,7 +6,7 @@ const initCedernNav = () => {
     return;
   }
 
-  const desktopQuery = window.matchMedia("(min-width: 801px)");
+  const desktopQuery = window.matchMedia("(min-width: 981px)");
   const navGroups = Array.from(nav.querySelectorAll("[data-nav-group]"));
 
   const setGroupOpen = (group, open) => {
