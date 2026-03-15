@@ -9,13 +9,21 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
 {
+    private const AUDIENCE_OPTIONS = [
+        'Jovens',
+        'Adultos',
+        'Crianças',
+        'Público interno',
+        'Livre',
+    ];
+
     public function __invoke(Request $request, Response $response): Response
     {
         $idRaw = $request->getAttribute('id');
         $eventId = ($idRaw !== null) ? (int) $idRaw : null;
         $isEdit = $eventId !== null && $eventId > 0;
 
-        $categories = $this->agendaRepository->findActiveCategories();
+        $categories = $this->agendaRepository->findAllCategoriesForAdmin();
 
         $existingEvent = null;
         if ($isEdit) {
@@ -96,15 +104,16 @@ class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
             'theme' => $submittedPayload['theme'] ?? ($existingEvent['theme'] ?? ''),
             'location_name' => $submittedPayload['location_name'] ?? ($existingEvent['location_name'] ?? ''),
             'location_address' => $submittedPayload['location_address'] ?? ($existingEvent['location_address'] ?? ''),
-            'mode' => $submittedPayload['mode'] ?? ($existingEvent['mode'] ?? 'presencial'),
+            'mode' => $submittedPayload['mode'] ?? ($existingEvent['mode'] ?? ''),
             'meeting_url' => $submittedPayload['meeting_url'] ?? ($existingEvent['meeting_url'] ?? ''),
-            'audience' => $submittedPayload['audience'] ?? ($existingEvent['audience'] ?? ''),
+            'audience' => $submittedPayload['audience']
+                ?? ($existingEvent['audience'] ?? ''),
             'notes' => $submittedPayload['notes'] ?? ($existingEvent['notes'] ?? ''),
             'starts_at' => $submittedPayload['starts_at']
                 ?? $this->toDateTimeLocal((string) ($existingEvent['starts_at'] ?? '')),
             'ends_at' => $submittedPayload['ends_at']
                 ?? $this->toDateTimeLocal((string) ($existingEvent['ends_at'] ?? '')),
-            'status' => $submittedPayload['status'] ?? ($existingEvent['status'] ?? 'draft'),
+            'status' => $submittedPayload['status'] ?? ($existingEvent['status'] ?? ''),
             'is_featured' => (string) ($submittedPayload['is_featured'] ?? ($existingEvent['is_featured'] ?? '0')),
         ];
 
@@ -114,6 +123,7 @@ class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
             'agenda_form_errors' => $errors,
             'agenda_form_is_edit' => $isEdit,
             'agenda_event_id' => $existingEvent['id'] ?? null,
+            'agenda_audience_options' => self::AUDIENCE_OPTIONS,
             'page_title' => ($isEdit ? 'Editar evento' : 'Novo evento') . ' | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/eventos',
             'page_description' => 'Formulário do dashboard para eventos da agenda.',

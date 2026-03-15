@@ -12,6 +12,9 @@ use App\Application\Actions\Admin\AdminAgendaDeleteAction;
 use App\Application\Actions\Admin\AdminAgendaFormPageAction;
 use App\Application\Actions\Admin\AdminLoginPageAction;
 use App\Application\Actions\Admin\AdminAgendaListPageAction;
+use App\Application\Actions\Admin\AdminCategoryFormPageAction;
+use App\Application\Actions\Admin\AdminCategoryListPageAction;
+use App\Application\Actions\Admin\AdminCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaPageAction;
@@ -122,6 +125,10 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/eventos/novo', AdminAgendaFormPageAction::class);
         $group->map(['GET', 'POST'], '/eventos/{id}/editar', AdminAgendaFormPageAction::class);
         $group->post('/eventos/{id}/excluir', AdminAgendaDeleteAction::class);
+        $group->get('/categorias', AdminCategoryListPageAction::class);
+        $group->map(['GET', 'POST'], '/categorias/nova', AdminCategoryFormPageAction::class);
+        $group->map(['GET', 'POST'], '/categorias/{id}/editar', AdminCategoryFormPageAction::class);
+        $group->post('/categorias/{id}/alternar-status', AdminCategoryToggleStatusAction::class);
     })->add($adminSessionAuthMiddleware);
 
     $app->get('/admin', function (Request $request, Response $response) {
@@ -149,6 +156,20 @@ return function (App $app) {
     $app->post('/admin/agenda/{id}/excluir', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/eventos/' . $id . '/excluir')->withStatus(307);
+    });
+    $app->get('/admin/categorias', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/categorias')->withStatus(302);
+    });
+    $app->map(['GET', 'POST'], '/admin/categorias/nova', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/categorias/nova')->withStatus(302);
+    });
+    $app->map(['GET', 'POST'], '/admin/categorias/{id}/editar', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        return $response->withHeader('Location', '/painel/categorias/' . $id . '/editar')->withStatus(302);
+    });
+    $app->post('/admin/categorias/{id}/alternar-status', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        return $response->withHeader('Location', '/painel/categorias/' . $id . '/alternar-status')->withStatus(307);
     });
     $app->get('/faq', FaqPageAction::class);
     $app->get('/faq/doutrina', FaqDoctrinePageAction::class);

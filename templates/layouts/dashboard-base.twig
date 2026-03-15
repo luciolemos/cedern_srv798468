@@ -46,6 +46,15 @@
         if (allowedDarkIntensities.indexOf(savedDarkIntensity) !== -1) {
           root.setAttribute('data-dark-intensity', savedDarkIntensity);
         }
+
+        var isDesktop = window.matchMedia && window.matchMedia('(min-width: 981px)').matches;
+        var savedSidebarCollapsed = localStorage.getItem('natalcode_dashboard_sidebar_collapsed') === '1';
+
+        if (isDesktop && savedSidebarCollapsed) {
+          root.setAttribute('data-dashboard-sidebar-collapsed', '1');
+        } else {
+          root.removeAttribute('data-dashboard-sidebar-collapsed');
+        }
       } catch (error) {
       }
     })();

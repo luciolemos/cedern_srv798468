@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS agenda_events (
     location_address VARCHAR(255) NULL,
     mode ENUM('presencial', 'online', 'hibrido') NOT NULL DEFAULT 'presencial',
     meeting_url VARCHAR(255) NULL,
-    audience VARCHAR(120) NULL,
+    audience ENUM('Jovens', 'Adultos', 'Crianças', 'Público interno', 'Livre') NOT NULL DEFAULT 'Livre',
     notes TEXT NULL,
     starts_at DATETIME NOT NULL,
     ends_at DATETIME NULL,
@@ -38,11 +38,44 @@ CREATE TABLE IF NOT EXISTS agenda_events (
     INDEX idx_agenda_events_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+UPDATE agenda_events
+SET audience = 'Livre'
+WHERE audience IS NULL OR TRIM(audience) = '';
+
+UPDATE agenda_events
+SET audience = 'Livre'
+WHERE audience IN ('Público geral', 'Publico geral');
+
+UPDATE agenda_events
+SET audience = 'Jovens'
+WHERE audience LIKE 'Jovens%';
+
+UPDATE agenda_events
+SET audience = 'Adultos'
+WHERE audience LIKE 'Adultos%';
+
+UPDATE agenda_events
+SET audience = 'Crianças'
+WHERE audience LIKE 'Crian%';
+
+UPDATE agenda_events
+SET audience = 'Público interno'
+WHERE audience LIKE 'Público interno%' OR audience LIKE 'Publico interno%';
+
+ALTER TABLE agenda_events
+    MODIFY COLUMN audience ENUM('Jovens', 'Adultos', 'Crianças', 'Público interno', 'Livre') NOT NULL DEFAULT 'Livre';
+
 INSERT INTO activity_categories (slug, name, color, audience_default)
 VALUES
     ('estudo', 'Estudo', '#2563eb', 'Adultos'),
     ('palestra', 'Palestra', '#d97706', 'Público geral'),
-    ('juventude', 'Juventude', '#16a34a', 'Jovens')
+    ('juventude', 'Juventude', '#16a34a', 'Jovens'),
+    ('campanha', 'Campanha', '#dc2626', 'Público geral'),
+    ('curso', 'Curso', '#7c3aed', 'Adultos e jovens'),
+    ('simposio', 'Simpósio', '#0ea5e9', 'Público geral'),
+    ('seminario', 'Seminário', '#9333ea', 'Público geral'),
+    ('estagio', 'Estágio', '#f59e0b', 'Trabalhadores e colaboradores'),
+    ('outros', 'Outros', '#64748b', 'Público geral')
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     color = VALUES(color),
@@ -93,7 +126,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'presencial',
         NULL,
-        'Público geral',
+        'Livre',
         'Aberta a visitantes. Atendimento fraterno após a palestra.',
         '2026-03-18 19:30:00',
         '2026-03-18 21:00:00',
@@ -110,7 +143,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'hibrido',
         'https://meet.exemplo.org/juventude-cede',
-        'Jovens de 12 a 21 anos',
+        'Público interno',
         'Responsáveis são bem-vindos no acolhimento inicial.',
         '2026-03-21 16:00:00',
         '2026-03-21 17:30:00',
@@ -144,7 +177,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'presencial',
         NULL,
-        'Público geral',
+        'Livre',
         'Haverá atendimento fraterno após a atividade.',
         '2026-03-25 19:30:00',
         '2026-03-25 21:00:00',
@@ -161,7 +194,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'hibrido',
         'https://meet.exemplo.org/juventude-cede-20260328',
-        'Jovens de 12 a 21 anos',
+        'Crianças',
         'Encontro com atividade prática colaborativa.',
         '2026-03-28 16:00:00',
         '2026-03-28 17:30:00',
@@ -195,7 +228,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'presencial',
         NULL,
-        'Público geral',
+        'Livre',
         'Chegue cedo para melhor acomodação.',
         '2026-04-01 19:30:00',
         '2026-04-01 21:00:00',
@@ -212,7 +245,7 @@ VALUES
         'Rua Exemplo, 123 - Natal/RN',
         'online',
         'https://meet.exemplo.org/juventude-cede-20260404',
-        'Jovens de 12 a 21 anos',
+        'Jovens',
         'Link disponível no grupo institucional.',
         '2026-04-04 16:00:00',
         '2026-04-04 17:30:00',

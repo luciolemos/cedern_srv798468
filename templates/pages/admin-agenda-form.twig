@@ -21,28 +21,29 @@
         <form class="nc-admin-form" method="post" action="{{ agenda_form_is_edit ? '/painel/eventos/' ~ agenda_event_id ~ '/editar' : '/painel/eventos/novo' }}">
           <div class="nc-admin-form-grid nc-admin-form-grid-identity">
             <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="title">Título</label>
-              <input class="nc-admin-form-input" id="title" name="title" type="text" required value="{{ agenda_form.title|default('') }}">
+              <label class="nc-admin-form-label" for="title">Título do evento</label>
+              <input class="nc-admin-form-input" id="title" name="title" type="text" required placeholder="Ex: Estudo do Evangelho" value="{{ agenda_form.title|default('') }}">
             </div>
 
             <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="category_id">Categoria</label>
+              <label class="nc-admin-form-label" for="category_id">Categoria do evento</label>
               <select class="nc-admin-form-input" id="category_id" name="category_id" required>
-                <option value="">Selecione</option>
+                <option value="" {% if agenda_form.category_id|default('') == '' %}selected{% endif %} disabled>Selecione uma categoria</option>
                 {% for category in agenda_categories %}
-                  <option value="{{ category.id }}" {{ agenda_form.category_id == category.id ? 'selected' : '' }}>{{ category.name }}</option>
+                  <option value="{{ category.id }}" {{ agenda_form.category_id == category.id ? 'selected' : '' }}>{{ category.name }}{% if category.is_active is defined and not category.is_active %} (inativa){% endif %}</option>
                 {% endfor %}
               </select>
             </div>
 
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="slug">Slug</label>
-              <input class="nc-admin-form-input" id="slug" name="slug" type="text" required value="{{ agenda_form.slug|default('') }}">
+              <input class="nc-admin-form-input" id="slug" name="slug" type="text" required placeholder="Ex: estudo-do-evangelho-2026-03-16" value="{{ agenda_form.slug|default('') }}">
             </div>
 
             <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="status">Status</label>
+              <label class="nc-admin-form-label" for="status">Status do evento</label>
               <select class="nc-admin-form-input" id="status" name="status">
+                <option value="" {% if agenda_form.status|default('') == '' %}selected{% endif %} disabled>Selecione status</option>
                 <option value="draft" {{ agenda_form.status == 'draft' ? 'selected' : '' }}>Rascunho</option>
                 <option value="published" {{ agenda_form.status == 'published' ? 'selected' : '' }}>Publicado</option>
                 <option value="cancelled" {{ agenda_form.status == 'cancelled' ? 'selected' : '' }}>Cancelado</option>
@@ -52,58 +53,69 @@
 
           <div class="nc-admin-form-grid">
             <div class="nc-admin-form-field nc-admin-form-field-full">
-              <label class="nc-admin-form-label" for="description">Descrição</label>
-              <textarea class="nc-admin-form-input" id="description" name="description" rows="3">{{ agenda_form.description|default('') }}</textarea>
+              <label class="nc-admin-form-label" for="description">Descrição do evento</label>
+              <textarea class="nc-admin-form-input" id="description" name="description" rows="3" placeholder="Resumo do evento para exibição na agenda.">{{ agenda_form.description|default('') }}</textarea>
             </div>
 
-            <div class="nc-admin-form-field nc-admin-form-field-full">
-              <label class="nc-admin-form-label" for="theme">Tema</label>
-              <input class="nc-admin-form-input" id="theme" name="theme" type="text" value="{{ agenda_form.theme|default('') }}">
+            <div class="nc-admin-form-grid nc-admin-form-grid-triplet nc-admin-form-field-full">
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="theme">Tema</label>
+                <input class="nc-admin-form-input" id="theme" name="theme" type="text" placeholder="Ex: Esperança e renovação" value="{{ agenda_form.theme|default('') }}">
+              </div>
+
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="mode">Modo</label>
+                <select class="nc-admin-form-input" id="mode" name="mode">
+                  <option value="" {% if agenda_form.mode|default('') == '' %}selected{% endif %} disabled>Selecione modo</option>
+                  <option value="presencial" {{ agenda_form.mode == 'presencial' ? 'selected' : '' }}>Presencial</option>
+                  <option value="online" {{ agenda_form.mode == 'online' ? 'selected' : '' }}>Online</option>
+                  <option value="hibrido" {{ agenda_form.mode == 'hibrido' ? 'selected' : '' }}>Híbrido</option>
+                </select>
+              </div>
+
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="audience">Público alvo</label>
+                <select class="nc-admin-form-input" id="audience" name="audience">
+                  <option value="" {% if agenda_form.audience|default('') == '' %}selected{% endif %} disabled>Selecione um público</option>
+                  {% for audience_option in agenda_audience_options|default(['Jovens', 'Adultos', 'Crianças', 'Público interno', 'Livre']) %}
+                    <option value="{{ audience_option }}" {{ agenda_form.audience == audience_option ? 'selected' : '' }}>{{ audience_option }}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
 
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="location_name">Local (nome)</label>
-              <input class="nc-admin-form-input" id="location_name" name="location_name" type="text" value="{{ agenda_form.location_name|default('') }}">
+              <input class="nc-admin-form-input" id="location_name" name="location_name" type="text" placeholder="Ex: CEDE - Auditório" value="{{ agenda_form.location_name|default('') }}">
             </div>
 
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="location_address">Local (endereço)</label>
-              <input class="nc-admin-form-input" id="location_address" name="location_address" type="text" value="{{ agenda_form.location_address|default('') }}">
+              <input class="nc-admin-form-input" id="location_address" name="location_address" type="text" placeholder="Ex: Rua Exemplo, 123 - Natal/RN" value="{{ agenda_form.location_address|default('') }}">
             </div>
 
-            <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="mode">Modo</label>
-              <select class="nc-admin-form-input" id="mode" name="mode">
-                <option value="presencial" {{ agenda_form.mode == 'presencial' ? 'selected' : '' }}>Presencial</option>
-                <option value="online" {{ agenda_form.mode == 'online' ? 'selected' : '' }}>Online</option>
-                <option value="hibrido" {{ agenda_form.mode == 'hibrido' ? 'selected' : '' }}>Híbrido</option>
-              </select>
-            </div>
+            <div class="nc-admin-form-grid nc-admin-form-grid-schedule nc-admin-form-field-full">
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="meeting_url">URL da reunião</label>
+                <input class="nc-admin-form-input" id="meeting_url" name="meeting_url" type="url" placeholder="https://" value="{{ agenda_form.meeting_url|default('') }}">
+              </div>
 
-            <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="meeting_url">URL da reunião</label>
-              <input class="nc-admin-form-input" id="meeting_url" name="meeting_url" type="url" value="{{ agenda_form.meeting_url|default('') }}">
-            </div>
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="starts_at">Início</label>
+                <input class="nc-admin-form-input" id="starts_at" name="starts_at" type="datetime-local" required value="{{ agenda_form.starts_at|default('') }}">
+              </div>
 
-            <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="audience">Público</label>
-              <input class="nc-admin-form-input" id="audience" name="audience" type="text" value="{{ agenda_form.audience|default('') }}">
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label" for="ends_at">Fim</label>
+                <input class="nc-admin-form-input" id="ends_at" name="ends_at" type="datetime-local" value="{{ agenda_form.ends_at|default('') }}">
+              </div>
             </div>
 
             <div class="nc-admin-form-field nc-admin-form-field-full">
               <label class="nc-admin-form-label" for="notes">Observações</label>
-              <textarea class="nc-admin-form-input" id="notes" name="notes" rows="3">{{ agenda_form.notes|default('') }}</textarea>
+              <textarea class="nc-admin-form-input" id="notes" name="notes" rows="3" placeholder="Informações adicionais para equipe e participantes.">{{ agenda_form.notes|default('') }}</textarea>
             </div>
 
-            <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="starts_at">Início</label>
-              <input class="nc-admin-form-input" id="starts_at" name="starts_at" type="datetime-local" required value="{{ agenda_form.starts_at|default('') }}">
-            </div>
-
-            <div class="nc-admin-form-field">
-              <label class="nc-admin-form-label" for="ends_at">Fim</label>
-              <input class="nc-admin-form-input" id="ends_at" name="ends_at" type="datetime-local" value="{{ agenda_form.ends_at|default('') }}">
-            </div>
           </div>
 
           <label class="nc-admin-form-checkbox">

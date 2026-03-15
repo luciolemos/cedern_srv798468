@@ -33,6 +33,31 @@ class FallbackAgendaRepository implements AgendaRepository
         return [];
     }
 
+    public function findAllCategoriesForAdmin(): array
+    {
+        return [];
+    }
+
+    public function findCategoryByIdForAdmin(int $id): ?array
+    {
+        return null;
+    }
+
+    public function createCategory(array $data): int
+    {
+        return 0;
+    }
+
+    public function updateCategory(int $id, array $data): bool
+    {
+        return false;
+    }
+
+    public function setCategoryActive(int $id, bool $isActive): bool
+    {
+        return false;
+    }
+
     public function createEvent(array $data): int
     {
         return 0;

@@ -1,0 +1,167 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Gerenciar Categorias' %}
+{% set dashboard_page_lead = 'Cadastre, edite e ative/inative categorias usadas nos eventos da agenda.' %}
+
+{% block admin_content %}
+    <section class="nc-section" aria-label="Administração de categorias" data-aos="fade-up" data-aos-delay="0">
+      {% if admin_status == 'created' %}
+        <p>Categoria criada com sucesso.</p>
+      {% elseif admin_status == 'updated' %}
+        <p>Categoria atualizada com sucesso.</p>
+      {% elseif admin_status == 'enabled' %}
+        <p>Categoria ativada com sucesso.</p>
+      {% elseif admin_status == 'disabled' %}
+        <p>Categoria inativada com sucesso.</p>
+      {% elseif admin_status == 'not-found' %}
+        <p>Categoria não encontrada.</p>
+      {% elseif admin_status == 'toggle-error' %}
+        <p>Não foi possível alterar o status da categoria.</p>
+      {% endif %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
+        <a class="nc-btn nc-btn-primary nc-btn-icon nc-admin-action-create" href="/painel/categorias/nova" aria-label="Nova categoria" title="Nova categoria">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 9V15M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span class="nc-sr-only">Nova categoria</span>
+        </a>
+      </div>
+
+      {% set pagination = agenda_categories_pagination|default({}) %}
+      {% set sort_links = agenda_categories_sort_links|default({}) %}
+      {% set search_term = agenda_categories_search|default('') %}
+
+      {% if agenda_categories|length == 0 %}
+        <form class="nc-admin-table-search" method="get" action="/painel/categorias" data-aos="fade-up" data-aos-delay="95">
+          <label for="nc-categories-search">Buscar categorias</label>
+          <div class="nc-admin-table-search-controls">
+            <input id="nc-categories-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, público, status...">
+            <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+            <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+            <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+            <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+          </div>
+        </form>
+        <p>{{ search_term ? 'Nenhuma categoria encontrada para a busca informada.' : 'Nenhuma categoria cadastrada.' }}</p>
+      {% else %}
+        <form class="nc-admin-table-search" method="get" action="/painel/categorias" data-aos="fade-up" data-aos-delay="95">
+          <label for="nc-categories-search">Buscar categorias</label>
+          <div class="nc-admin-table-search-controls">
+            <input id="nc-categories-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, público, status...">
+            <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+            <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+            <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+            <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+          </div>
+        </form>
+
+        <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="110">
+          <p class="nc-admin-table-counter">
+            Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+          </p>
+
+          <form class="nc-admin-table-page-size" method="get" action="/painel/categorias">
+            <label for="nc-categories-per-page">Registros por página</label>
+            <select id="nc-categories-per-page" name="per_page" onchange="this.form.submit()">
+              {% for option in pagination.page_size_options %}
+                <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+              {% endfor %}
+            </select>
+            <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+            <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+            <input type="hidden" name="q" value="{{ search_term }}">
+            <noscript>
+              <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+            </noscript>
+          </form>
+        </div>
+
+        <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="140">
+          <table class="nc-admin-table">
+            <thead>
+              <tr>
+                <th>
+                  <a class="nc-admin-sort-link{% if sort_links.id.active %} is-active{% endif %}" href="{{ sort_links.id.url }}">ID <span aria-hidden="true">{{ sort_links.id.indicator }}</span></a>
+                </th>
+                <th>
+                  <a class="nc-admin-sort-link{% if sort_links.name.active %} is-active{% endif %}" href="{{ sort_links.name.url }}">Nome <span aria-hidden="true">{{ sort_links.name.indicator }}</span></a>
+                </th>
+                <th>
+                  <a class="nc-admin-sort-link{% if sort_links.slug.active %} is-active{% endif %}" href="{{ sort_links.slug.url }}">Slug <span aria-hidden="true">{{ sort_links.slug.indicator }}</span></a>
+                </th>
+                <th>
+                  <a class="nc-admin-sort-link{% if sort_links.audience_default.active %} is-active{% endif %}" href="{{ sort_links.audience_default.url }}">Público padrão <span aria-hidden="true">{{ sort_links.audience_default.indicator }}</span></a>
+                </th>
+                <th>
+                  <a class="nc-admin-sort-link{% if sort_links.is_active.active %} is-active{% endif %}" href="{{ sort_links.is_active.url }}">Status <span aria-hidden="true">{{ sort_links.is_active.indicator }}</span></a>
+                </th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for category in agenda_categories %}
+                <tr>
+                  <td data-label="ID">{{ category.id }}</td>
+                  <td data-label="Nome">{{ category.name }}</td>
+                  <td class="nc-admin-cell-slug" data-label="Slug" title="{{ category.slug }}"><span>{{ category.slug }}</span></td>
+                  <td data-label="Público padrão">{{ category.audience_default|default('-') }}</td>
+                  <td data-label="Status">
+                    <span class="nc-admin-featured-flag{{ category.is_active ? ' is-on' : ' is-off' }}">{{ category.is_active ? 'Ativa' : 'Inativa' }}</span>
+                  </td>
+                  <td class="nc-admin-table-actions" data-label="Ações">
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/categorias/{{ category.id }}/editar" aria-label="Editar categoria {{ category.name }}" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span class="nc-sr-only">Editar</span>
+                    </a>
+                    <form method="post" action="/painel/categorias/{{ category.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status desta categoria?');">
+                      <button class="nc-btn nc-btn-secondary nc-btn-icon {{ category.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ category.is_active ? 'Inativar' : 'Ativar' }} categoria {{ category.name }}" title="{{ category.is_active ? 'Inativar' : 'Ativar' }}">
+                        {% if category.is_active %}
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                            <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        {% else %}
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                        {% endif %}
+                        <span class="nc-sr-only">{{ category.is_active ? 'Inativar' : 'Ativar' }}</span>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if pagination.total_pages > 1 %}
+          <nav class="nc-admin-pagination" aria-label="Paginação de categorias" data-aos="fade-up" data-aos-delay="170">
+            {% if pagination.previous_url %}
+              <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+            {% else %}
+              <span class="is-disabled">← Anterior</span>
+            {% endif %}
+
+            <div class="nc-admin-pagination-pages">
+              {% for link in pagination.links %}
+                <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+              {% endfor %}
+            </div>
+
+            {% if pagination.next_url %}
+              <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+            {% else %}
+              <span class="is-disabled">Próxima →</span>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% endif %}
+    </section>
+{% endblock %}

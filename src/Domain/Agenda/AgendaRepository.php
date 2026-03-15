@@ -32,6 +32,28 @@ interface AgendaRepository
     public function findActiveCategories(): array;
 
     /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function findAllCategoriesForAdmin(): array;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findCategoryByIdForAdmin(int $id): ?array;
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function createCategory(array $data): int;
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function updateCategory(int $id, array $data): bool;
+
+    public function setCategoryActive(int $id, bool $isActive): bool;
+
+    /**
      * @param array<string, mixed> $data
      */
     public function createEvent(array $data): int;

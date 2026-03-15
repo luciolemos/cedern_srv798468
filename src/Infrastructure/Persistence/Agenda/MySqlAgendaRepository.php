@@ -119,6 +119,122 @@ class MySqlAgendaRepository implements AgendaRepository
         return $statement->fetchAll() ?: [];
     }
 
+    public function findAllCategoriesForAdmin(): array
+    {
+        $sql = <<<SQL
+            SELECT
+                id,
+                slug,
+                name,
+                color,
+                icon,
+                audience_default,
+                is_active,
+                created_at,
+                updated_at
+            FROM activity_categories
+            ORDER BY name ASC
+        SQL;
+
+        $statement = $this->pdo->query($sql);
+
+        return $statement->fetchAll() ?: [];
+    }
+
+    public function findCategoryByIdForAdmin(int $id): ?array
+    {
+        $sql = <<<SQL
+            SELECT
+                id,
+                slug,
+                name,
+                color,
+                icon,
+                audience_default,
+                is_active
+            FROM activity_categories
+            WHERE id = :id
+            LIMIT 1
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->bindValue(':id', $id, \PDO::PARAM_INT);
+        $statement->execute();
+
+        $category = $statement->fetch();
+
+        if (!$category) {
+            return null;
+        }
+
+        return $category;
+    }
+
+    public function createCategory(array $data): int
+    {
+        $sql = <<<SQL
+            INSERT INTO activity_categories (
+                slug,
+                name,
+                color,
+                icon,
+                audience_default,
+                is_active
+            ) VALUES (
+                :slug,
+                :name,
+                :color,
+                :icon,
+                :audience_default,
+                :is_active
+            )
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute($this->buildCategoryWriteParams($data));
+
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function updateCategory(int $id, array $data): bool
+    {
+        $sql = <<<SQL
+            UPDATE activity_categories
+            SET
+                slug = :slug,
+                name = :name,
+                color = :color,
+                icon = :icon,
+                audience_default = :audience_default,
+                is_active = :is_active
+            WHERE id = :id
+            LIMIT 1
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+        $params = $this->buildCategoryWriteParams($data);
+        $params['id'] = $id;
+
+        return $statement->execute($params);
+    }
+
+    public function setCategoryActive(int $id, bool $isActive): bool
+    {
+        $sql = <<<SQL
+            UPDATE activity_categories
+            SET is_active = :is_active
+            WHERE id = :id
+            LIMIT 1
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+
+        return $statement->execute([
+            'id' => $id,
+            'is_active' => $isActive ? 1 : 0,
+        ]);
+    }
+
     public function createEvent(array $data): int
     {
         $sql = <<<SQL
@@ -263,6 +379,22 @@ class MySqlAgendaRepository implements AgendaRepository
         $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function buildCategoryWriteParams(array $data): array
+    {
+        return [
+            'slug' => (string) ($data['slug'] ?? ''),
+            'name' => (string) ($data['name'] ?? ''),
+            'color' => $this->nullableText($data['color'] ?? null),
+            'icon' => $this->nullableText($data['icon'] ?? null),
+            'audience_default' => $this->nullableText($data['audience_default'] ?? null),
+            'is_active' => (int) ($data['is_active'] ?? 1),
+        ];
     }
 
     /**

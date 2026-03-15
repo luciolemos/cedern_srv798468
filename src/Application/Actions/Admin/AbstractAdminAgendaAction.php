@@ -33,6 +33,7 @@ abstract class AbstractAdminAgendaAction extends AbstractPageAction
     {
         $mode = (string) ($input['mode'] ?? 'presencial');
         $status = (string) ($input['status'] ?? 'draft');
+        $audience = $this->normalizeAudience((string) ($input['audience'] ?? ''));
 
         if (!in_array($mode, ['presencial', 'online', 'hibrido'], true)) {
             $mode = 'presencial';
@@ -52,13 +53,32 @@ abstract class AbstractAdminAgendaAction extends AbstractPageAction
             'location_address' => trim((string) ($input['location_address'] ?? '')),
             'mode' => $mode,
             'meeting_url' => trim((string) ($input['meeting_url'] ?? '')),
-            'audience' => trim((string) ($input['audience'] ?? '')),
+            'audience' => $audience,
             'notes' => trim((string) ($input['notes'] ?? '')),
             'starts_at' => $this->normalizeDateTime((string) ($input['starts_at'] ?? '')),
             'ends_at' => $this->normalizeDateTime((string) ($input['ends_at'] ?? '')),
             'status' => $status,
             'is_featured' => (int) (($input['is_featured'] ?? '') === '1'),
         ];
+    }
+
+    protected function normalizeAudience(string $value): string
+    {
+        $normalized = trim($value);
+
+        $allowed = [
+            'Jovens',
+            'Adultos',
+            'Crianças',
+            'Público interno',
+            'Livre',
+        ];
+
+        if (!in_array($normalized, $allowed, true)) {
+            return 'Livre';
+        }
+
+        return $normalized;
     }
 
     /**
