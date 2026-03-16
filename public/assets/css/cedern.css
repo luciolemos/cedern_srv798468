@@ -2556,6 +2556,53 @@ code {
   text-underline-offset: 0.16em;
 }
 
+.nc-admin-user-summary {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-main);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.nc-admin-user-summary-photo-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.nc-admin-user-summary-photo {
+  width: 4.2rem;
+  height: 4.2rem;
+  font-size: 1.2rem;
+}
+
+.nc-admin-user-summary-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.nc-admin-user-summary-grid div {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.62rem;
+  background: color-mix(in srgb, var(--theme-soft-1) 5%, var(--surface-main));
+}
+
+.nc-admin-user-summary-grid dt {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.nc-admin-user-summary-grid dd {
+  margin: 0.25rem 0 0;
+  color: var(--text-main);
+}
+
 .nc-dashboard-content-footer {
   margin-top: var(--space-6);
   padding-top: var(--space-3);
@@ -3622,15 +3669,15 @@ textarea.nc-admin-form-input {
 }
 
 .nc-btn-icon {
-  width: 1.68rem;
-  height: 1.68rem;
+  width: 2.2rem;
+  height: 2.2rem;
   padding: 0;
   border-radius: var(--radius-sm);
 }
 
 .nc-btn-icon svg {
-  width: 0.82rem;
-  height: 0.82rem;
+  width: 1.08rem;
+  height: 1.08rem;
   display: block;
 }
 
@@ -3661,6 +3708,7 @@ textarea.nc-admin-form-input {
   appearance: none;
   -webkit-appearance: none;
   min-width: 11.5rem;
+  min-height: 2.2rem;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   background: var(--surface-main);
@@ -3686,8 +3734,8 @@ textarea.nc-admin-form-input {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
 }
 
-.nc-admin-inline-form .nc-btn {
-  min-height: 2rem;
+.nc-admin-inline-form .nc-btn:not(.nc-btn-icon) {
+  min-height: 2.2rem;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   background: var(--surface-main);
@@ -3697,13 +3745,13 @@ textarea.nc-admin-form-input {
   line-height: 1.15;
 }
 
-.nc-admin-inline-form .nc-btn:hover {
+.nc-admin-inline-form .nc-btn:not(.nc-btn-icon):hover {
   border-color: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-border));
   background: color-mix(in srgb, var(--theme-accent-1) 4%, var(--surface-main));
   color: var(--theme-accent-1);
 }
 
-.nc-admin-inline-form .nc-btn:focus-visible {
+.nc-admin-inline-form .nc-btn:not(.nc-btn-icon):focus-visible {
   outline: none;
   border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
@@ -3977,13 +4025,13 @@ textarea.nc-admin-form-input {
   }
 
   .nc-btn-icon {
-    width: 1.86rem;
-    height: 1.86rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .nc-btn-icon svg {
-    width: 0.92rem;
-    height: 0.92rem;
+    width: 1.08rem;
+    height: 1.08rem;
   }
 
   .nc-admin-table {
@@ -4022,13 +4070,13 @@ textarea.nc-admin-form-input {
   }
 
   .nc-btn-icon {
-    width: 1.98rem;
-    height: 1.98rem;
+    width: 2.2rem;
+    height: 2.2rem;
   }
 
   .nc-btn-icon svg {
-    width: 0.98rem;
-    height: 0.98rem;
+    width: 1.08rem;
+    height: 1.08rem;
   }
 
   .nc-admin-inline-form {
@@ -4384,6 +4432,10 @@ textarea.nc-admin-form-input {
   .nc-pagination {
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  .nc-admin-user-summary-grid {
+    grid-template-columns: 1fr;
   }
 }
 

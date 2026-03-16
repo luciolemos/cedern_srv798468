@@ -123,7 +123,7 @@
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
                 <td data-label="Perfil">{{ user.role_name|default('-') }}</td>
-                <td data-label="Ações">
+                <td class="nc-admin-table-actions" data-label="Ações">
                   <form method="post" action="/painel/usuarios/{{ user.id }}/atribuir-papel" class="nc-admin-inline-form">
                     <select class="nc-admin-inline-select" name="role_id" aria-label="Selecionar perfil para {{ user.full_name|default('usuário') }}">
                       <option value="">Selecionar perfil</option>
@@ -131,7 +131,21 @@
                         <option value="{{ role.id }}"{% if user.role_key is defined and user.role_key == role.role_key %} selected{% endif %}>{{ role.name }}</option>
                       {% endfor %}
                     </select>
-                    <button class="nc-btn nc-btn-secondary" type="submit">Salvar</button>
+                    <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" type="submit" aria-label="Salvar perfil de {{ user.full_name|default('usuário') }}" title="Salvar">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M5 4H16L20 8V20H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 4V10H16V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="8" y="14" width="8" height="6" rx="1" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span class="nc-sr-only">Salvar</span>
+                    </button>
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Visualizar resumo de {{ user.full_name|default('usuário') }}" title="Visualizar">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M2 12C4.5 7.5 8 5.5 12 5.5C16 5.5 19.5 7.5 22 12C19.5 16.5 16 18.5 12 18.5C8 18.5 4.5 16.5 2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span class="nc-sr-only">Visualizar</span>
+                    </a>
                   </form>
                 </td>
               </tr>

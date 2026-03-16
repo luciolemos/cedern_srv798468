@@ -1,0 +1,79 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = dashboard_page_title|default('Resumo do usuário') %}
+{% set dashboard_page_lead = 'Visualização rápida dos principais dados cadastrais.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Resumo do usuário">
+    <p>
+      <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">← Voltar para Gestão de Pessoal</a>
+    </p>
+
+    {% if summary_user is empty %}
+      <p>{{ summary_error_message|default('Usuário não encontrado.') }}</p>
+    {% else %}
+      {% set user_status_key = summary_user.status|default('') %}
+      {% set user_status_label = {
+        'pending': 'Pendente',
+        'active': 'Ativo',
+        'blocked': 'Bloqueado'
+      }[user_status_key]|default(user_status_key ?: '-') %}
+
+      <article class="nc-admin-user-summary" data-aos="fade-up" data-aos-delay="70">
+        <div class="nc-admin-user-summary-photo-wrap">
+          <span class="nc-admin-user-photo nc-admin-user-summary-photo" aria-hidden="true">
+            {% if summary_user.profile_photo_path|default('') %}
+              <img src="/{{ summary_user.profile_photo_path }}" alt="">
+            {% else %}
+              <span>{{ (summary_user.full_name|default(summary_user.email|default('U'))|slice(0, 1)|upper) }}</span>
+            {% endif %}
+          </span>
+        </div>
+
+        <dl class="nc-admin-user-summary-grid">
+          <div>
+            <dt>ID</dt>
+            <dd>{{ summary_user.id|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Nome</dt>
+            <dd>{{ summary_user.full_name|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>E-mail</dt>
+            <dd>{{ summary_user.email|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ user_status_label }}</dd>
+          </div>
+          <div>
+            <dt>Perfil</dt>
+            <dd>{{ summary_user.role_name|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Telefone celular</dt>
+            <dd>{{ summary_user.phone_mobile|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Telefone fixo</dt>
+            <dd>{{ summary_user.phone_landline|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Data de nascimento</dt>
+            <dd>{{ summary_user.birth_date|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Cidade de nascimento</dt>
+            <dd>{{ summary_user.birth_place|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Perfil completo</dt>
+            <dd>{{ summary_user.profile_completed|default(0) ? 'Sim' : 'Não' }}</dd>
+          </div>
+        </dl>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}
