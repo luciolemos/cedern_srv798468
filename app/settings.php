@@ -34,6 +34,9 @@ return function (ContainerBuilder $containerBuilder) {
                         : (isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log'),
                     'level' => Logger::DEBUG,
                 ],
+                'agenda' => [
+                    'public_upcoming_limit' => max(1, min(100, (int) ($_ENV['APP_AGENDA_PUBLIC_LIMIT'] ?? 12))),
+                ],
             ]);
         }
     ]);

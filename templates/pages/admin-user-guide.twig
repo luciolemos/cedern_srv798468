@@ -1,0 +1,11 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Admin' %}
+{% set dashboard_page_title = 'Guia do Usuário' %}
+{% set dashboard_page_lead = 'Conteúdo do README.md do projeto.' %}
+
+{% block admin_content %}
+  <article class="nc-admin-readme" aria-label="README do projeto">
+    <div class="nc-admin-readme-markdown">{{ admin_project_readme_html|default('<p>README.md não encontrado.</p>')|raw }}</div>
+  </article>
+{% endblock %}

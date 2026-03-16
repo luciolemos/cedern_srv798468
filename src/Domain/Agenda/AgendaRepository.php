@@ -14,6 +14,13 @@ interface AgendaRepository
     /**
      * @return array<int, array<string, mixed>>
      */
+    public function findUpcomingPublishedPage(int $limit, int $offset): array;
+
+    public function countUpcomingPublished(): int;
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function findInterestedUpcomingByMember(int $memberId, int $limit = 10): array;
 
     /**

@@ -17,6 +17,8 @@ use App\Application\Actions\Admin\AdminCategoryListPageAction;
 use App\Application\Actions\Admin\AdminCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
+use App\Application\Actions\Admin\AdminPracticalGuidePageAction;
+use App\Application\Actions\Admin\AdminUserGuidePageAction;
 use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
@@ -137,6 +139,8 @@ return function (App $app) {
         $group->post('/categorias/{id}/alternar-status', AdminCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/guia-do-usuario', AdminUserGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/guia-pratico', AdminPracticalGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
     })->add($adminSessionAuthMiddleware);
 
     $app->get('/admin', function (Request $request, Response $response) {
@@ -185,6 +189,12 @@ return function (App $app) {
     $app->post('/admin/usuarios/{id}/atribuir-papel', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/usuarios/' . $id . '/atribuir-papel')->withStatus(307);
+    });
+    $app->get('/admin/guia', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/guia-do-usuario')->withStatus(302);
+    });
+    $app->get('/admin/guia-pratico', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/guia-pratico')->withStatus(302);
     });
     $app->get('/faq', FaqPageAction::class);
     $app->get('/faq/doutrina', FaqDoctrinePageAction::class);

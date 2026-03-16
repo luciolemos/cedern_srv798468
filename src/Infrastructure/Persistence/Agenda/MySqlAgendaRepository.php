@@ -52,6 +52,63 @@ class MySqlAgendaRepository implements AgendaRepository
         return array_map([$this, 'normalizeEvent'], $statement->fetchAll() ?: []);
     }
 
+    public function findUpcomingPublishedPage(int $limit, int $offset): array
+    {
+        $limit = max(1, $limit);
+        $offset = max(0, $offset);
+
+        $sql = <<<SQL
+            SELECT
+                e.id,
+                e.slug,
+                e.title,
+                e.description,
+                e.theme,
+                e.location_name,
+                e.location_address,
+                e.mode,
+                e.meeting_url,
+                e.audience,
+                e.notes,
+                e.starts_at,
+                e.ends_at,
+                e.status,
+                e.is_featured,
+                c.slug AS category_slug,
+                c.name AS category_name,
+                c.color AS category_color
+            FROM agenda_events e
+            INNER JOIN activity_categories c ON c.id = e.category_id
+            WHERE e.status = 'published'
+              AND c.is_active = 1
+            ORDER BY e.starts_at ASC
+            LIMIT :limit OFFSET :offset
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $statement->execute();
+
+        return array_map([$this, 'normalizeEvent'], $statement->fetchAll() ?: []);
+    }
+
+    public function countUpcomingPublished(): int
+    {
+        $sql = <<<SQL
+            SELECT COUNT(*)
+            FROM agenda_events e
+            INNER JOIN activity_categories c ON c.id = e.category_id
+            WHERE e.status = 'published'
+              AND c.is_active = 1
+        SQL;
+
+        $statement = $this->pdo->query($sql);
+        $total = $statement !== false ? $statement->fetchColumn() : 0;
+
+        return max(0, (int) $total);
+    }
+
     public function findInterestedUpcomingByMember(int $memberId, int $limit = 10): array
     {
         if ($memberId <= 0) {

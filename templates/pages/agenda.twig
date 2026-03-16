@@ -16,14 +16,16 @@
             {% for event in agenda_featured_events %}
               {% set event_place = event.location_name|default('CEDE') %}
               {% set event_description = event.description|default('Confira os detalhes completos desta atividade.') %}
-              {% include 'components/check-item.twig' with {
-                step: event.starts_at_label|default('Agenda'),
-                title: event.title,
-                description: event_place ~ ' • ' ~ event.mode_label|default('Presencial') ~ ' • ' ~ event_description,
-                href: '/agenda/' ~ event.slug,
-                link_label: 'Ver detalhes',
-                delay: 100 + (loop.index * 35)
-              } %}
+              <li class="nc-check-item nc-agenda-featured-card" data-aos="fade-right" data-aos-delay="{{ 100 + (loop.index * 35) }}">
+                <div class="nc-check-content">
+                  <span class="nc-check-icon nc-agenda-featured-date-badge">{{ event.starts_at_label|default('Agenda') }}</span>
+                  <h3>{{ event.title }}</h3>
+                  <p>{{ event_place }} • {{ event.mode_label|default('Presencial') }} • {{ event_description }}</p>
+                  <div class="nc-check-content-action">
+                    <a class="nc-btn nc-btn-secondary" href="/agenda/{{ event.slug }}">Ver detalhes</a>
+                  </div>
+                </div>
+              </li>
             {% endfor %}
           </ul>
         {% endif %}
@@ -31,20 +33,57 @@
         {% if agenda_regular_events|default([])|length > 0 %}
           <p class="nc-badge">Próximas atividades</p>
         {% endif %}
-        <ul class="nc-checklist nc-agenda-events-list">
-          {% for event in agenda_regular_events|default(agenda_events) %}
-            {% set event_place = event.location_name|default('CEDE') %}
-            {% set event_description = event.description|default('Confira os detalhes completos desta atividade.') %}
-            {% include 'components/check-item.twig' with {
-              step: event.starts_at_label|default('Agenda'),
-              title: event.title,
-              description: event_place ~ ' • ' ~ event.mode_label|default('Presencial') ~ ' • ' ~ event_description,
-              href: '/agenda/' ~ event.slug,
-              link_label: 'Ver detalhes',
-              delay: 100 + (loop.index * 40)
-            } %}
-          {% endfor %}
-        </ul>
+        <div class="nc-agenda-table-wrap" role="region" aria-label="Lista de próximas atividades">
+          <table class="nc-agenda-table">
+            <thead>
+              <tr>
+                <th scope="col">Data e hora</th>
+                <th scope="col">Atividade</th>
+                <th scope="col">Local</th>
+                <th scope="col">Modalidade</th>
+                <th scope="col">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for event in agenda_regular_events|default(agenda_events) %}
+                {% set event_place = event.location_name|default('CEDE') %}
+                {% set event_description = event.description|default('Confira os detalhes completos desta atividade.') %}
+                <tr>
+                  <td data-label="Data e hora">{{ event.starts_at_label|default('Agenda') }}</td>
+                  <td data-label="Atividade">
+                    <strong>{{ event.title }}</strong>
+                    <small>{{ event_description }}</small>
+                  </td>
+                  <td data-label="Local">{{ event_place }}</td>
+                  <td data-label="Modalidade">{{ event.mode_label|default('Presencial') }}</td>
+                  <td data-label="Ação">
+                    <a class="nc-link" href="/agenda/{{ event.slug }}">Ver detalhes</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% set agenda_current_page = agenda_pagination.current_page|default(1) %}
+        {% set agenda_total_pages = agenda_pagination.total_pages|default(1) %}
+        {% if agenda_total_pages > 1 %}
+          <nav class="nc-pagination" aria-label="Paginação da agenda">
+            {% if agenda_pagination.has_previous|default(false) %}
+              <a class="nc-pagination-link" href="/agenda?page={{ agenda_pagination.previous_page|default(1) }}">Anterior</a>
+            {% else %}
+              <span class="nc-pagination-link is-disabled" aria-disabled="true">Anterior</span>
+            {% endif %}
+
+            <span class="nc-pagination-status">Página {{ agenda_current_page }} de {{ agenda_total_pages }}</span>
+
+            {% if agenda_pagination.has_next|default(false) %}
+              <a class="nc-pagination-link" href="/agenda?page={{ agenda_pagination.next_page|default(1) }}">Próxima</a>
+            {% else %}
+              <span class="nc-pagination-link is-disabled" aria-disabled="true">Próxima</span>
+            {% endif %}
+          </nav>
+        {% endif %}
       {% else %}
         <p>Nenhuma atividade publicada no momento.</p>
       {% endif %}

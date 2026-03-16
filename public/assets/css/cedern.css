@@ -1470,6 +1470,13 @@ code {
   margin: 0;
   display: grid;
   gap: var(--utility-gap);
+  pointer-events: none;
+}
+
+.nc-utility-stack .nc-scroll-top,
+.nc-utility-stack .nc-palette,
+.nc-utility-stack .nc-palette * {
+  pointer-events: auto;
 }
 
 .nc-scroll-top {
@@ -1990,9 +1997,40 @@ code {
 }
 
 .nc-dashboard-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-main);
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
+}
+
+.nc-dashboard-brand-logo {
+  width: 7.8rem;
+  height: 7.8rem;
+  object-fit: contain;
+  display: block;
+}
+
+.nc-dashboard-brand-name {
+  width: 100%;
+  font-size: 0.56rem;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nc-dashboard-sidebar-brand {
+  margin-top: -0.25rem;
+  margin-bottom: var(--space-2);
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.2rem;
 }
 
 .nc-dashboard-sidebar-toggle {
@@ -2271,11 +2309,17 @@ code {
   flex-direction: column;
   border-right: 1px solid var(--surface-border);
   background: var(--surface-main);
-  padding: var(--space-6) var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-6);
 }
 
 @media (min-width: 981px) {
   .nc-admin-sidebar {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+    height: calc(100vh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     opacity: 1;
     transform: translateX(0);
     transition: opacity var(--motion-fast), transform var(--motion-fast);
@@ -2452,6 +2496,64 @@ code {
 .nc-admin-sidebar-footer-copy {
   color: var(--text-subtle);
   font-size: var(--font-size-caption);
+}
+
+.nc-admin-readme {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-main);
+  padding: var(--space-3);
+}
+
+.nc-admin-readme-markdown {
+  color: var(--text-main);
+  line-height: 1.55;
+}
+
+.nc-admin-readme-markdown h1,
+.nc-admin-readme-markdown h2,
+.nc-admin-readme-markdown h3,
+.nc-admin-readme-markdown h4 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-main);
+}
+
+.nc-admin-readme-markdown h1,
+.nc-admin-readme-markdown h2 {
+  margin-top: var(--space-4);
+}
+
+.nc-admin-readme-markdown p {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+}
+
+.nc-admin-readme-markdown ul {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.2rem;
+}
+
+.nc-admin-readme-markdown li {
+  margin: 0.2rem 0;
+}
+
+.nc-admin-readme-markdown pre {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 8%, var(--surface-main));
+  overflow-x: auto;
+}
+
+.nc-admin-readme-markdown code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+}
+
+.nc-admin-readme-markdown a {
+  color: var(--comp-link-hover-color);
+  text-underline-offset: 0.16em;
 }
 
 .nc-dashboard-content-footer {
@@ -3813,6 +3915,21 @@ textarea.nc-admin-form-input {
     display: none;
   }
 
+  .nc-dashboard-topbar .nc-dashboard-brand-name {
+    display: none;
+  }
+
+  .nc-dashboard-alerts {
+    position: static;
+  }
+
+  .nc-dashboard-alerts-content {
+    left: var(--container-gutter-mobile);
+    right: var(--container-gutter-mobile);
+    width: auto;
+    max-width: none;
+  }
+
   .nc-dashboard-env-badge {
     font-size: 0.62rem;
     padding: 0.18rem 0.5rem;
@@ -4060,6 +4177,69 @@ textarea.nc-admin-form-input {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--theme-accent-1) 12%, transparent);
 }
 
+.nc-agenda-featured-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.nc-agenda-featured-list .nc-check-item {
+  grid-template-columns: 1fr;
+  padding: var(--space-2);
+  height: 100%;
+}
+
+.nc-agenda-featured-card {
+  display: flex;
+}
+
+.nc-agenda-featured-card .nc-check-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.nc-agenda-featured-date-badge {
+  width: auto;
+  height: auto;
+  min-height: 1.4rem;
+  padding: 0.16rem 0.52rem;
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  justify-self: start;
+  border-color: color-mix(in srgb, var(--theme-accent-1) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 20%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
+.nc-agenda-featured-list .nc-check-content h3 {
+  font-size: var(--font-size-sm-plus);
+  line-height: 1.2;
+}
+
+.nc-agenda-featured-list .nc-check-content p {
+  font-size: var(--font-size-caption);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nc-agenda-featured-list .nc-check-content-action {
+  margin-top: auto;
+}
+
+.nc-agenda-featured-list .nc-check-content-action .nc-btn {
+  padding: 0.34rem 0.56rem;
+  font-size: var(--font-size-caption);
+}
+
 .nc-agenda-events-list .nc-check-item,
 .nc-agenda-featured-list .nc-check-item {
   grid-template-columns: minmax(8.1rem, max-content) minmax(0, 1fr);
@@ -4083,6 +4263,104 @@ textarea.nc-admin-form-input {
   color: var(--theme-accent-1);
 }
 
+.nc-agenda-table-wrap {
+  margin-top: var(--space-3);
+  overflow-x: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-main);
+}
+
+.nc-agenda-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.nc-agenda-table th,
+.nc-agenda-table td {
+  padding: 0.62rem 0.72rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.nc-agenda-table thead th {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-subtle);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+}
+
+.nc-agenda-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.nc-agenda-table td strong {
+  display: block;
+  color: var(--text-main);
+  line-height: 1.22;
+}
+
+.nc-agenda-table td small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.32;
+}
+
+.nc-agenda-table td .nc-link {
+  display: inline-flex;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.nc-pagination {
+  margin-top: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  position: relative;
+  z-index: 1;
+}
+
+.nc-pagination-status {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm-plus);
+}
+
+.nc-pagination-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.72rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-main);
+  color: var(--text-main);
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.nc-pagination-link:hover,
+.nc-pagination-link:focus-visible {
+  color: var(--comp-link-hover-color);
+  border-color: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 6%, var(--surface-main));
+}
+
+.nc-pagination-link.is-disabled {
+  text-decoration: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 @media (max-width: 700px) {
   .nc-agenda-events-list .nc-check-item,
   .nc-agenda-featured-list .nc-check-item {
@@ -4090,8 +4368,27 @@ textarea.nc-admin-form-input {
     gap: var(--space-2);
   }
 
+  .nc-agenda-featured-list {
+    grid-template-columns: 1fr;
+  }
+
   .nc-agenda-events-list .nc-check-icon,
   .nc-agenda-featured-list .nc-check-icon {
     justify-self: start;
+  }
+
+  .nc-agenda-table {
+    min-width: 650px;
+  }
+
+  .nc-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .nc-agenda-featured-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

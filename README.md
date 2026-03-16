@@ -158,6 +158,7 @@ Chaves disponíveis:
 APP_DEFAULT_THEME=amber
 APP_DEFAULT_MODE=light
 APP_DEFAULT_DARK_INTENSITY=neutral
+APP_AGENDA_PUBLIC_LIMIT=12
 ```
 
 Valores válidos:
@@ -165,6 +166,7 @@ Valores válidos:
 - `APP_DEFAULT_THEME`: `blue | red | green | violet | amber`
 - `APP_DEFAULT_MODE`: `light | dark`
 - `APP_DEFAULT_DARK_INTENSITY`: `neutral | vivid`
+- `APP_AGENDA_PUBLIC_LIMIT`: quantidade de eventos futuros exibidos em `/agenda` (mínimo `1`, máximo `100`)
 
 ## Acesso administrativo via membros
 

@@ -1,0 +1,73 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Admin' %}
+{% set dashboard_page_title = 'Guia Prático' %}
+{% set dashboard_page_lead = 'Manual rápido para operação diária da agenda e gestão administrativa.' %}
+
+{% block admin_content %}
+  <ul class="nc-checklist">
+    {% include 'components/check-item.twig' with {
+      step: '01',
+      title: 'Papéis e responsabilidades',
+      description: 'Operator cadastra e atualiza eventos. Manager organiza categorias e revisão. Admin faz validação final, publicação estratégica e gestão de pessoal.',
+      href: '/painel/eventos',
+      link_label: 'Abrir eventos',
+      delay: 120
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '02',
+      title: 'Fluxo padrão de publicação',
+      description: 'Cadastro inicial em rascunho → revisão de conteúdo e horário → validação interna → publicar. Em caso de mudança de última hora, atualizar imediatamente no painel.',
+      delay: 160
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '03',
+      title: 'Como a agenda aparece no site',
+      description: 'A agenda pública exibe 12 eventos por página. Os marcados como destaque aparecem primeiro em cards no topo. Os demais ficam em Próximas atividades na tabela.',
+      href: '/agenda',
+      link_label: 'Ver agenda pública',
+      delay: 200
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '04',
+      title: 'Eventos passados',
+      description: 'Eventos passados não aparecem mais na agenda pública de próximos eventos. Eles permanecem no painel para histórico, conferência e auditoria interna.',
+      delay: 240
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '05',
+      title: 'Checklist antes de publicar',
+      description: 'Confirmar: título claro, data e hora corretas, local/modalidade definidos, descrição objetiva, slug legível e status publicado.',
+      href: '/painel/eventos',
+      link_label: 'Revisar eventos',
+      delay: 280
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '06',
+      title: 'Rotina semanal recomendada',
+      description: 'Toda semana: revisar rascunhos, garantir publicação dos próximos 7 a 14 dias, conferir destaques da página 1 e revisar usuários pendentes.',
+      href: '/painel/usuarios',
+      link_label: 'Abrir Gestão de Pessoal',
+      delay: 320
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '07',
+      title: 'Boas práticas de operação',
+      description: 'Evite duplicar evento, padronize horário e linguagem dos títulos, e valide links/endereços antes de compartilhar em canais oficiais.',
+      delay: 360
+    } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '08',
+      title: 'Quando cancelar ou alterar evento',
+      description: 'Atualize o evento no painel assim que a decisão for tomada. Se for cancelado, ajuste o status e comunique a equipe de divulgação no mesmo dia.',
+      delay: 400
+    } %}
+  </ul>
+{% endblock %}
