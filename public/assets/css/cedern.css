@@ -3452,6 +3452,32 @@ textarea.nc-admin-form-input {
   color: var(--text-muted);
 }
 
+.nc-admin-user-photo-cell {
+  width: 62px;
+}
+
+.nc-admin-user-photo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--theme-soft-1) 12%, var(--surface-main));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+}
+
+.nc-admin-user-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .nc-admin-table-actions {
   display: flex;
   align-items: center;
@@ -3847,6 +3873,10 @@ textarea.nc-admin-form-input {
 
   .nc-admin-table tbody td.nc-admin-table-actions::before {
     display: none;
+  }
+
+  .nc-admin-user-photo-cell {
+    width: auto;
   }
 }
 
