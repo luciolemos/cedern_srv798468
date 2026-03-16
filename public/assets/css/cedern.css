@@ -2553,6 +2553,27 @@ code {
   font-size: var(--font-size-caption);
 }
 
+@media (max-width: 700px) {
+  .nc-contact-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nc-contact-form-actions .nc-btn {
+    width: 100%;
+  }
+
+  .nc-member-register-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nc-member-register-actions .nc-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 .nc-member-dashboard {
   display: grid;
   gap: var(--space-4);

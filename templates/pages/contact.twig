@@ -52,7 +52,7 @@
             <input class="nc-admin-login-input" id="company" name="company" type="text" value="{{ contact_form.company|default('') }}" tabindex="-1" autocomplete="off">
           </div>
 
-          <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="120">
+          <div class="nc-actions nc-admin-login-actions nc-contact-form-actions" data-aos="fade-up" data-aos-delay="120">
             <button class="nc-btn nc-btn-primary" type="submit">Enviar mensagem</button>
             {% if cta_section.addressMapUrl|default('') %}
               <a class="nc-btn nc-btn-secondary" href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
