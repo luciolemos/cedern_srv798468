@@ -95,16 +95,16 @@
         </div>
 
         <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="140">
-          <table class="nc-admin-table">
+          <table class="nc-admin-table nc-admin-table-events">
             <thead>
               <tr>
-                <th>
+                <th class="nc-admin-col-id">
                   <a class="nc-admin-sort-link{% if sort_links.id.active %} is-active{% endif %}" href="{{ sort_links.id.url }}">ID <span aria-hidden="true">{{ sort_links.id.indicator }}</span></a>
                 </th>
                 <th>
                   <a class="nc-admin-sort-link{% if sort_links.title.active %} is-active{% endif %}" href="{{ sort_links.title.url }}">Título <span aria-hidden="true">{{ sort_links.title.indicator }}</span></a>
                 </th>
-                <th>
+                <th class="nc-admin-col-category">
                   <a class="nc-admin-sort-link{% if sort_links.category_name.active %} is-active{% endif %}" href="{{ sort_links.category_name.url }}">Categoria <span aria-hidden="true">{{ sort_links.category_name.indicator }}</span></a>
                 </th>
                 <th>
@@ -116,7 +116,7 @@
                 <th>
                   <a class="nc-admin-sort-link{% if sort_links.is_featured.active %} is-active{% endif %}" href="{{ sort_links.is_featured.url }}">Destacar <span aria-hidden="true">{{ sort_links.is_featured.indicator }}</span></a>
                 </th>
-                <th>
+                <th class="nc-admin-col-slug">
                   <a class="nc-admin-sort-link{% if sort_links.slug.active %} is-active{% endif %}" href="{{ sort_links.slug.url }}">Slug <span aria-hidden="true">{{ sort_links.slug.indicator }}</span></a>
                 </th>
                 <th>Ações</th>
@@ -131,15 +131,21 @@
                   'cancelled': 'Cancelado'
                 }[event_status_key]|default(event_status_key ?: '-') %}
                 <tr>
-                  <td data-label="ID">{{ event.id }}</td>
-                  <td data-label="Título">{{ event.title }}</td>
-                  <td data-label="Categoria">{{ event.category_name|default('-') }}</td>
+                  {% set event_category_color = event.category_color|default('')|trim %}
+                  <td class="nc-admin-col-id" data-label="ID">{{ event.id }}</td>
+                  <td data-label="Título">
+                    <span>{{ event.title }}</span>
+                    <small class="nc-admin-event-category-inline">
+                      <span class="nc-admin-event-category-badge{% if event_category_color %} is-colored{% endif %}"{% if event_category_color %} style="--nc-category-color: {{ event_category_color|e('html_attr') }};"{% endif %}>{{ event.category_name|default('-') }}</span>
+                    </small>
+                  </td>
+                  <td class="nc-admin-col-category" data-label="Categoria">{{ event.category_name|default('-') }}</td>
                   <td data-label="Início">{{ event.starts_at_label|default(event.starts_at) }}</td>
                   <td data-label="Status">{{ event_status_label }}</td>
                   <td data-label="Destacar">
                     <span class="nc-admin-featured-flag{{ event.is_featured ? ' is-on' : ' is-off' }}">{{ event.is_featured ? 'Sim' : 'Não' }}</span>
                   </td>
-                  <td class="nc-admin-cell-slug" data-label="Slug" title="{{ event.slug }}"><span>{{ event.slug }}</span></td>
+                  <td class="nc-admin-cell-slug nc-admin-col-slug" data-label="Slug" title="{{ event.slug }}"><span>{{ event.slug }}</span></td>
                   <td class="nc-admin-table-actions" data-label="Ações">
                     <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/eventos/{{ event.id }}/editar" aria-label="Editar evento {{ event.title }}" title="Editar">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

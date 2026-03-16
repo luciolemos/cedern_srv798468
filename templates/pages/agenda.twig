@@ -10,6 +10,10 @@
       } %}
 
       {% if agenda_events|default([])|length > 0 %}
+        {% set pagination = agenda_pagination|default({}) %}
+        {% set sort_links = agenda_sort_links|default({}) %}
+        {% set search_term = agenda_search|default('') %}
+
         {% if agenda_featured_events|default([])|length > 0 %}
           <p class="nc-badge">Em destaque</p>
           <ul class="nc-checklist nc-agenda-featured-list">
@@ -33,24 +37,65 @@
         {% if agenda_regular_events|default([])|length > 0 %}
           <p class="nc-badge">Próximas atividades</p>
         {% endif %}
-        <div class="nc-agenda-table-wrap" role="region" aria-label="Lista de próximas atividades">
-          <table class="nc-agenda-table">
+
+        <form class="nc-admin-table-search" method="get" action="/agenda">
+          <label for="nc-agenda-search">Buscar atividades</label>
+          <div class="nc-admin-table-search-controls">
+            <input id="nc-agenda-search" name="q" type="search" value="{{ search_term }}" placeholder="Título, local, modalidade...">
+            <input type="hidden" name="sort" value="{{ pagination.sort|default('starts_at') }}">
+            <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+            <input type="hidden" name="per_page" value="{{ pagination.per_page|default(12) }}">
+            <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+          </div>
+        </form>
+
+        <div class="nc-admin-table-toolbar">
+          <p class="nc-admin-table-counter">
+            Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} atividades
+          </p>
+
+          <form class="nc-admin-table-page-size" method="get" action="/agenda">
+            <label for="nc-agenda-per-page">Registros por página</label>
+            <select id="nc-agenda-per-page" name="per_page" onchange="this.form.submit()">
+              {% for option in pagination.page_size_options|default([]) %}
+                <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+              {% endfor %}
+            </select>
+            <input type="hidden" name="sort" value="{{ pagination.sort|default('starts_at') }}">
+            <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+            <input type="hidden" name="q" value="{{ search_term }}">
+            <noscript>
+              <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+            </noscript>
+          </form>
+        </div>
+
+        <div class="nc-admin-table-wrap" role="region" aria-label="Lista de próximas atividades">
+          <table class="nc-admin-table">
             <thead>
               <tr>
-                <th scope="col">Data e hora</th>
-                <th scope="col">Atividade</th>
-                <th scope="col">Local</th>
-                <th scope="col">Modalidade</th>
+                <th scope="col">
+                  <a class="nc-admin-sort-link{% if sort_links.starts_at.active %} is-active{% endif %}" href="{{ sort_links.starts_at.url|default('#') }}">Data e hora <span aria-hidden="true">{{ sort_links.starts_at.indicator|default('↕') }}</span></a>
+                </th>
+                <th scope="col">
+                  <a class="nc-admin-sort-link{% if sort_links.title.active %} is-active{% endif %}" href="{{ sort_links.title.url|default('#') }}">Atividade <span aria-hidden="true">{{ sort_links.title.indicator|default('↕') }}</span></a>
+                </th>
+                <th scope="col">
+                  <a class="nc-admin-sort-link{% if sort_links.location_name.active %} is-active{% endif %}" href="{{ sort_links.location_name.url|default('#') }}">Local <span aria-hidden="true">{{ sort_links.location_name.indicator|default('↕') }}</span></a>
+                </th>
+                <th scope="col">
+                  <a class="nc-admin-sort-link{% if sort_links.mode_label.active %} is-active{% endif %}" href="{{ sort_links.mode_label.url|default('#') }}">Modalidade <span aria-hidden="true">{{ sort_links.mode_label.indicator|default('↕') }}</span></a>
+                </th>
                 <th scope="col">Ação</th>
               </tr>
             </thead>
             <tbody>
-              {% for event in agenda_regular_events|default(agenda_events) %}
+              {% for event in agenda_table_events|default([]) %}
                 {% set event_place = event.location_name|default('CEDE') %}
                 {% set event_description = event.description|default('Confira os detalhes completos desta atividade.') %}
                 <tr>
                   <td data-label="Data e hora">{{ event.starts_at_label|default('Agenda') }}</td>
-                  <td data-label="Atividade">
+                  <td class="nc-agenda-activity-cell" data-label="Atividade">
                     <strong>{{ event.title }}</strong>
                     <small>{{ event_description }}</small>
                   </td>
@@ -65,22 +110,24 @@
           </table>
         </div>
 
-        {% set agenda_current_page = agenda_pagination.current_page|default(1) %}
-        {% set agenda_total_pages = agenda_pagination.total_pages|default(1) %}
-        {% if agenda_total_pages > 1 %}
-          <nav class="nc-pagination" aria-label="Paginação da agenda">
-            {% if agenda_pagination.has_previous|default(false) %}
-              <a class="nc-pagination-link" href="/agenda?page={{ agenda_pagination.previous_page|default(1) }}">Anterior</a>
+        {% if pagination.total_pages|default(1) > 1 %}
+          <nav class="nc-admin-pagination" aria-label="Paginação da agenda">
+            {% if pagination.previous_url %}
+              <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
             {% else %}
-              <span class="nc-pagination-link is-disabled" aria-disabled="true">Anterior</span>
+              <span class="is-disabled">← Anterior</span>
             {% endif %}
 
-            <span class="nc-pagination-status">Página {{ agenda_current_page }} de {{ agenda_total_pages }}</span>
+            <div class="nc-admin-pagination-pages">
+              {% for link in pagination.links|default([]) %}
+                <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+              {% endfor %}
+            </div>
 
-            {% if agenda_pagination.has_next|default(false) %}
-              <a class="nc-pagination-link" href="/agenda?page={{ agenda_pagination.next_page|default(1) }}">Próxima</a>
+            {% if pagination.next_url %}
+              <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
             {% else %}
-              <span class="nc-pagination-link is-disabled" aria-disabled="true">Próxima</span>
+              <span class="is-disabled">Próxima →</span>
             {% endif %}
           </nav>
         {% endif %}

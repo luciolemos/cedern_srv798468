@@ -61,6 +61,12 @@
         </details>
         <details class="nc-dashboard-user-menu">
           {% set dashboard_user_label = dashboard_user|default('Usuário') %}
+          {% set dashboard_user_role_label = member_role_name|default({
+            'admin': 'Administrador',
+            'manager': 'Gestor',
+            'operator': 'Operador',
+            'member': 'Membro'
+          }[panel_role_key]|default('Membro')) %}
           {% set dashboard_user_initial = dashboard_user_label|slice(0, 1)|upper %}
           {% set dashboard_user_photo_path = dashboard_user_photo_path|default('') %}
           <summary>
@@ -71,10 +77,17 @@
                 {{ dashboard_user_initial }}
               {% endif %}
             </span>
-            <span class="nc-dashboard-user-name">{{ dashboard_user_label }}</span>
+            <span class="nc-dashboard-user-meta">
+              <span class="nc-dashboard-user-name">{{ dashboard_user_label }}</span>
+              <span class="nc-dashboard-user-role">{{ dashboard_user_role_label }}</span>
+            </span>
             <span class="nc-dashboard-user-caret" aria-hidden="true">▾</span>
           </summary>
           <div class="nc-dashboard-user-menu-content">
+            <div class="nc-dashboard-user-menu-identity" aria-label="Identificação do usuário">
+              <strong>{{ dashboard_user_label }}</strong>
+              <small>{{ dashboard_user_role_label }}</small>
+            </div>
             <a class="nc-link nc-dashboard-user-menu-link" href="/painel">
               <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -192,7 +205,7 @@
             <span class="nc-admin-link-label">Home do site</span>
           </a>
           <details class="nc-admin-nav-group" aria-label="Seção eventos" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
-            <summary class="nc-admin-nav-group-title">EVENTOS</summary>
+            <summary class="nc-admin-nav-group-title">AGENDA</summary>
             <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/eventos' ? ' is-active' : '' }}" href="/painel/eventos">
               <span class="nc-admin-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -202,7 +215,7 @@
                   <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
                 </svg>
               </span>
-              <span class="nc-admin-link-label">Lista de eventos</span>
+              <span class="nc-admin-link-label">Gestão de eventos</span>
             </a>
             {% if panel_can_categories %}
               <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/categorias' ? ' is-active' : '' }}" href="/painel/categorias">
@@ -214,7 +227,7 @@
                     <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Lista de categorias</span>
+                <span class="nc-admin-link-label">Gestão de categorias</span>
               </a>
             {% endif %}
           </details>

@@ -71,14 +71,6 @@
               <input type="hidden" name="phone_landline" value="{{ member_profile_form.phone_landline|default('') }}">
 
               <div class="nc-admin-login-field">
-                <label class="nc-admin-login-label" for="birth_city">Cidade de nascimento</label>
-                <select class="nc-admin-login-input" id="birth_city" name="birth_city" data-member-birth-city data-selected-city="{{ member_profile_form.birth_city|default('')|e('html_attr') }}" required>
-                  <option value="">Selecione a cidade</option>
-                </select>
-                <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
-              </div>
-
-              <div class="nc-admin-login-field">
                 <label class="nc-admin-login-label" for="birth_state">UF de nascimento</label>
                 <select class="nc-admin-login-input" id="birth_state" name="birth_state" data-member-birth-state required>
                   <option value="">Selecione a UF</option>
@@ -110,6 +102,14 @@
                   <option value="SE"{% if member_profile_form.birth_state|default('') == 'SE' %} selected{% endif %}>Sergipe</option>
                   <option value="TO"{% if member_profile_form.birth_state|default('') == 'TO' %} selected{% endif %}>Tocantins</option>
                 </select>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="birth_city">Cidade de nascimento</label>
+                <select class="nc-admin-login-input" id="birth_city" name="birth_city" data-member-birth-city data-selected-city="{{ member_profile_form.birth_city|default('')|e('html_attr') }}" required>
+                  <option value="">Selecione a cidade</option>
+                </select>
+                <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
               </div>
 
               <div class="nc-actions nc-admin-login-actions nc-member-profile-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">

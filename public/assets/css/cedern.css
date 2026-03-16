@@ -2218,9 +2218,25 @@ code {
 }
 
 .nc-dashboard-user-name {
+  display: block;
   font-size: var(--font-size-ui);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-ui-tight);
+}
+
+.nc-dashboard-user-meta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.nc-dashboard-user-role {
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-subtle);
+  line-height: 1.1;
 }
 
 .nc-dashboard-user-caret {
@@ -2251,6 +2267,27 @@ code {
   border-radius: var(--radius-md);
   background: var(--surface-main);
   box-shadow: var(--shadow-soft);
+}
+
+.nc-dashboard-user-menu-identity {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.2rem 0.1rem 0.45rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
+  margin-bottom: 0.1rem;
+}
+
+.nc-dashboard-user-menu-identity strong {
+  font-size: var(--font-size-ui);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.nc-dashboard-user-menu-identity small {
+  font-size: var(--font-size-caption);
+  color: var(--text-subtle);
+  line-height: 1.2;
 }
 
 .nc-dashboard-user-menu-content .nc-link {
@@ -3594,6 +3631,20 @@ textarea.nc-admin-form-input {
   font-size: 0.88rem;
 }
 
+.nc-admin-table tbody td.nc-agenda-activity-cell strong {
+  display: block;
+  color: var(--text-main);
+  line-height: 1.22;
+}
+
+.nc-admin-table tbody td.nc-agenda-activity-cell small {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.32;
+}
+
 .nc-admin-table tbody tr:hover {
   background: color-mix(in srgb, var(--theme-soft-1) 10%, transparent);
 }
@@ -3661,6 +3712,37 @@ textarea.nc-admin-form-input {
   display: block;
 }
 
+.nc-admin-table-users .nc-admin-user-email-inline {
+  display: none;
+}
+
+.nc-admin-event-category-inline {
+  display: none;
+}
+
+.nc-admin-event-category-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-pill);
+  padding: 0.08rem 0.46rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--text-subtle);
+  background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
+}
+
+.nc-admin-event-category-badge.is-colored {
+  border-color: color-mix(in srgb, var(--nc-category-color) 46%, var(--surface-border));
+  background: color-mix(in srgb, var(--nc-category-color) 16%, var(--surface-main));
+  color: color-mix(in srgb, var(--nc-category-color) 68%, var(--text-main));
+}
+
+.nc-admin-table-users th.nc-admin-col-id,
+.nc-admin-table-users td.nc-admin-col-id {
+  display: none;
+}
+
 .nc-admin-table-actions {
   display: flex;
   align-items: center;
@@ -3708,7 +3790,7 @@ textarea.nc-admin-form-input {
   appearance: none;
   -webkit-appearance: none;
   min-width: 11.5rem;
-  min-height: 2.2rem;
+  height: 2.2rem;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   background: var(--surface-main);
@@ -3735,7 +3817,7 @@ textarea.nc-admin-form-input {
 }
 
 .nc-admin-inline-form .nc-btn:not(.nc-btn-icon) {
-  min-height: 2.2rem;
+  height: 2.2rem;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-sm);
   background: var(--surface-main);
@@ -3958,8 +4040,34 @@ textarea.nc-admin-form-input {
     display: none;
   }
 
-  .nc-dashboard-alerts-label,
+  .nc-dashboard-alerts-label {
+    display: none;
+  }
+
+  .nc-dashboard-user-meta {
+    display: inline-flex;
+    max-width: 8.8rem;
+  }
+
   .nc-dashboard-user-name {
+    font-size: 0.76rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .nc-dashboard-user-role {
+    font-size: 0.62rem;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .nc-dashboard-user-menu-identity {
     display: none;
   }
 
@@ -4037,6 +4145,33 @@ textarea.nc-admin-form-input {
   .nc-admin-table {
     min-width: 760px;
   }
+
+  .nc-admin-table-events th.nc-admin-col-id,
+  .nc-admin-table-events td.nc-admin-col-id,
+  .nc-admin-table-events th.nc-admin-col-category,
+  .nc-admin-table-events td.nc-admin-col-category,
+  .nc-admin-table-events th.nc-admin-col-slug,
+  .nc-admin-table-events td.nc-admin-col-slug {
+    display: none;
+  }
+
+  .nc-admin-event-category-inline {
+    display: block;
+    margin-top: 0.18rem;
+  }
+
+  .nc-admin-table-users .nc-admin-user-email-inline {
+    display: block;
+    margin-top: 0.16rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .nc-admin-table-users th.nc-admin-col-email,
+  .nc-admin-table-users td.nc-admin-col-email {
+    display: none;
+  }
 }
 
 @media (max-width: 560px) {
@@ -4094,6 +4229,14 @@ textarea.nc-admin-form-input {
 }
 
 @media (max-width: 700px) {
+  .nc-dashboard-user-menu-identity {
+    display: grid;
+  }
+
+  .nc-dashboard-user-meta {
+    display: none;
+  }
+
   .nc-admin-toast {
     top: 72px;
     right: 10px;

@@ -76,17 +76,17 @@
       </div>
 
       <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="80">
-        <table class="nc-admin-table">
+        <table class="nc-admin-table nc-admin-table-users">
           <thead>
             <tr>
-              <th>
+              <th class="nc-admin-col-id">
                 <a class="nc-admin-sort-link{% if sort_links.id.active %} is-active{% endif %}" href="{{ sort_links.id.url }}">ID <span aria-hidden="true">{{ sort_links.id.indicator }}</span></a>
               </th>
               <th>Foto</th>
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.full_name.active %} is-active{% endif %}" href="{{ sort_links.full_name.url }}">Nome <span aria-hidden="true">{{ sort_links.full_name.indicator }}</span></a>
               </th>
-              <th>
+              <th class="nc-admin-col-email">
                 <a class="nc-admin-sort-link{% if sort_links.email.active %} is-active{% endif %}" href="{{ sort_links.email.url }}">E-mail <span aria-hidden="true">{{ sort_links.email.indicator }}</span></a>
               </th>
               <th>
@@ -107,7 +107,7 @@
                   'active': 'Ativo',
                   'blocked': 'Bloqueado'
                 }[user_status_key]|default(user_status_key ?: '-') %}
-                <td data-label="ID">{{ user.id }}</td>
+                <td class="nc-admin-col-id" data-label="ID">{{ user.id }}</td>
                 <td class="nc-admin-user-photo-cell" data-label="Foto">
                   <span class="nc-admin-user-photo" aria-hidden="true">
                     {% if user.profile_photo_path|default('') %}
@@ -117,8 +117,11 @@
                     {% endif %}
                   </span>
                 </td>
-                <td data-label="Nome">{{ user.full_name|default('-') }}</td>
-                <td data-label="E-mail">{{ user.email|default('-') }}</td>
+                <td data-label="Nome">
+                  <span>{{ user.full_name|default('-') }}</span>
+                  <small class="nc-admin-user-email-inline">{{ user.email|default('-') }}</small>
+                </td>
+                <td class="nc-admin-col-email" data-label="E-mail">{{ user.email|default('-') }}</td>
                 <td data-label="Status">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
