@@ -22,7 +22,7 @@
         </span>
         <span id="nc-dashboard-theme-badge" class="nc-dashboard-theme-badge" aria-live="polite">Tema: padrão</span>
         {% set dashboard_notification_count = dashboard_admin_notification_count|default(0) %}
-        <details class="nc-dashboard-alerts" {% if current_path starts with '/painel/usuarios' and dashboard_notification_count > 0 %}open{% endif %}>
+        <details class="nc-dashboard-alerts">
           <summary aria-label="Notificações administrativas">
             <span class="nc-dashboard-alerts-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -178,7 +178,7 @@
             </span>
             <span class="nc-admin-link-label">Home do site</span>
           </a>
-          <details class="nc-admin-nav-group" aria-label="Seção eventos" open>
+          <details class="nc-admin-nav-group" aria-label="Seção eventos" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
             <summary class="nc-admin-nav-group-title">EVENTOS</summary>
             <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/eventos' ? ' is-active' : '' }}" href="/painel/eventos">
               <span class="nc-admin-link-icon" aria-hidden="true">

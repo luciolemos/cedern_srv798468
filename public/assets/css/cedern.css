@@ -2987,16 +2987,33 @@ code {
 
 .nc-member-profile-card {
   gap: var(--space-3);
+  max-width: 980px;
+}
+
+.nc-member-profile-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.nc-member-profile-fields {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.nc-member-profile-field-full,
+.nc-member-profile-actions {
+  grid-column: 1 / -1;
 }
 
 .nc-member-photo-field {
   display: grid;
   gap: 0.5rem;
+  align-content: start;
 }
 
 .nc-member-photo-preview-wrap {
-  width: 92px;
-  height: 92px;
+  width: 132px;
+  height: 132px;
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--surface-border);
@@ -3023,6 +3040,38 @@ code {
 .nc-member-profile-help {
   color: var(--text-muted);
   font-size: 0.79rem;
+}
+
+@media (max-width: 859px) {
+  .nc-member-photo-field {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .nc-member-profile-actions {
+    width: 100%;
+  }
+
+  .nc-member-profile-actions .nc-admin-login-submit {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 860px) {
+  .nc-member-profile-form {
+    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .nc-member-profile-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-member-photo-field {
+    position: sticky;
+    top: calc(var(--space-4) + 4rem);
+  }
 }
 
 .nc-admin-login-submit,

@@ -35,7 +35,7 @@
             </div>
           {% endif %}
 
-          <form class="nc-admin-login-form" method="post" action="/membro/perfil/completar" enctype="multipart/form-data">
+          <form class="nc-admin-login-form nc-member-profile-form" method="post" action="/membro/perfil/completar" enctype="multipart/form-data">
             <div class="nc-member-photo-field">
               <p class="nc-admin-login-label">Foto de perfil</p>
               <div class="nc-member-photo-preview-wrap">
@@ -49,70 +49,72 @@
               <small class="nc-member-profile-help">Formatos aceitos: JPG, PNG ou WEBP (máx. 2MB).</small>
             </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="full_name">Nome completo</label>
-              <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_profile_form.full_name|default('') }}" autocomplete="name" required>
-            </div>
+            <div class="nc-member-profile-fields">
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-admin-login-label" for="full_name">Nome completo</label>
+                <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_profile_form.full_name|default('') }}" autocomplete="name" required>
+                {% if member_profile_form.email|default('') %}
+                  <small class="nc-member-profile-help">E-mail: {{ member_profile_form.email }}</small>
+                {% endif %}
+              </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="phone_mobile">Celular</label>
-              <input class="nc-admin-login-input" id="phone_mobile" name="phone_mobile" type="text" value="{{ member_profile_form.phone_mobile|default('') }}" autocomplete="tel" placeholder="(84) 99999-9999" required>
-            </div>
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="phone_mobile">Celular</label>
+                <input class="nc-admin-login-input" id="phone_mobile" name="phone_mobile" type="text" value="{{ member_profile_form.phone_mobile|default('') }}" autocomplete="tel" placeholder="(84) 99999-9999" required>
+              </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="phone_landline">Telefone fixo</label>
-              <input class="nc-admin-login-input" id="phone_landline" name="phone_landline" type="text" value="{{ member_profile_form.phone_landline|default('') }}" autocomplete="tel-national" placeholder="(84) 3211-1111">
-            </div>
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="birth_date">Data de nascimento</label>
+                <input class="nc-admin-login-input" id="birth_date" name="birth_date" type="date" value="{{ member_profile_form.birth_date|default('') }}" required>
+              </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="birth_date">Data de nascimento</label>
-              <input class="nc-admin-login-input" id="birth_date" name="birth_date" type="date" value="{{ member_profile_form.birth_date|default('') }}" required>
-            </div>
+              <input type="hidden" name="phone_landline" value="{{ member_profile_form.phone_landline|default('') }}">
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="birth_state">UF de nascimento</label>
-              <select class="nc-admin-login-input" id="birth_state" name="birth_state" data-member-birth-state required>
-                <option value="">Selecione a UF</option>
-                <option value="AC"{% if member_profile_form.birth_state|default('') == 'AC' %} selected{% endif %}>Acre</option>
-                <option value="AL"{% if member_profile_form.birth_state|default('') == 'AL' %} selected{% endif %}>Alagoas</option>
-                <option value="AP"{% if member_profile_form.birth_state|default('') == 'AP' %} selected{% endif %}>Amapá</option>
-                <option value="AM"{% if member_profile_form.birth_state|default('') == 'AM' %} selected{% endif %}>Amazonas</option>
-                <option value="BA"{% if member_profile_form.birth_state|default('') == 'BA' %} selected{% endif %}>Bahia</option>
-                <option value="CE"{% if member_profile_form.birth_state|default('') == 'CE' %} selected{% endif %}>Ceará</option>
-                <option value="DF"{% if member_profile_form.birth_state|default('') == 'DF' %} selected{% endif %}>Distrito Federal</option>
-                <option value="ES"{% if member_profile_form.birth_state|default('') == 'ES' %} selected{% endif %}>Espírito Santo</option>
-                <option value="GO"{% if member_profile_form.birth_state|default('') == 'GO' %} selected{% endif %}>Goiás</option>
-                <option value="MA"{% if member_profile_form.birth_state|default('') == 'MA' %} selected{% endif %}>Maranhão</option>
-                <option value="MT"{% if member_profile_form.birth_state|default('') == 'MT' %} selected{% endif %}>Mato Grosso</option>
-                <option value="MS"{% if member_profile_form.birth_state|default('') == 'MS' %} selected{% endif %}>Mato Grosso do Sul</option>
-                <option value="MG"{% if member_profile_form.birth_state|default('') == 'MG' %} selected{% endif %}>Minas Gerais</option>
-                <option value="PA"{% if member_profile_form.birth_state|default('') == 'PA' %} selected{% endif %}>Pará</option>
-                <option value="PB"{% if member_profile_form.birth_state|default('') == 'PB' %} selected{% endif %}>Paraíba</option>
-                <option value="PR"{% if member_profile_form.birth_state|default('') == 'PR' %} selected{% endif %}>Paraná</option>
-                <option value="PE"{% if member_profile_form.birth_state|default('') == 'PE' %} selected{% endif %}>Pernambuco</option>
-                <option value="PI"{% if member_profile_form.birth_state|default('') == 'PI' %} selected{% endif %}>Piauí</option>
-                <option value="RJ"{% if member_profile_form.birth_state|default('') == 'RJ' %} selected{% endif %}>Rio de Janeiro</option>
-                <option value="RN"{% if member_profile_form.birth_state|default('') == 'RN' %} selected{% endif %}>Rio Grande do Norte</option>
-                <option value="RS"{% if member_profile_form.birth_state|default('') == 'RS' %} selected{% endif %}>Rio Grande do Sul</option>
-                <option value="RO"{% if member_profile_form.birth_state|default('') == 'RO' %} selected{% endif %}>Rondônia</option>
-                <option value="RR"{% if member_profile_form.birth_state|default('') == 'RR' %} selected{% endif %}>Roraima</option>
-                <option value="SC"{% if member_profile_form.birth_state|default('') == 'SC' %} selected{% endif %}>Santa Catarina</option>
-                <option value="SP"{% if member_profile_form.birth_state|default('') == 'SP' %} selected{% endif %}>São Paulo</option>
-                <option value="SE"{% if member_profile_form.birth_state|default('') == 'SE' %} selected{% endif %}>Sergipe</option>
-                <option value="TO"{% if member_profile_form.birth_state|default('') == 'TO' %} selected{% endif %}>Tocantins</option>
-              </select>
-            </div>
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="birth_city">Cidade de nascimento</label>
+                <select class="nc-admin-login-input" id="birth_city" name="birth_city" data-member-birth-city data-selected-city="{{ member_profile_form.birth_city|default('')|e('html_attr') }}" required>
+                  <option value="">Selecione a cidade</option>
+                </select>
+                <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
+              </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="birth_city">Cidade de nascimento</label>
-              <select class="nc-admin-login-input" id="birth_city" name="birth_city" data-member-birth-city data-selected-city="{{ member_profile_form.birth_city|default('')|e('html_attr') }}" required>
-                <option value="">Selecione a cidade</option>
-              </select>
-              <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
-            </div>
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="birth_state">UF de nascimento</label>
+                <select class="nc-admin-login-input" id="birth_state" name="birth_state" data-member-birth-state required>
+                  <option value="">Selecione a UF</option>
+                  <option value="AC"{% if member_profile_form.birth_state|default('') == 'AC' %} selected{% endif %}>Acre</option>
+                  <option value="AL"{% if member_profile_form.birth_state|default('') == 'AL' %} selected{% endif %}>Alagoas</option>
+                  <option value="AP"{% if member_profile_form.birth_state|default('') == 'AP' %} selected{% endif %}>Amapá</option>
+                  <option value="AM"{% if member_profile_form.birth_state|default('') == 'AM' %} selected{% endif %}>Amazonas</option>
+                  <option value="BA"{% if member_profile_form.birth_state|default('') == 'BA' %} selected{% endif %}>Bahia</option>
+                  <option value="CE"{% if member_profile_form.birth_state|default('') == 'CE' %} selected{% endif %}>Ceará</option>
+                  <option value="DF"{% if member_profile_form.birth_state|default('') == 'DF' %} selected{% endif %}>Distrito Federal</option>
+                  <option value="ES"{% if member_profile_form.birth_state|default('') == 'ES' %} selected{% endif %}>Espírito Santo</option>
+                  <option value="GO"{% if member_profile_form.birth_state|default('') == 'GO' %} selected{% endif %}>Goiás</option>
+                  <option value="MA"{% if member_profile_form.birth_state|default('') == 'MA' %} selected{% endif %}>Maranhão</option>
+                  <option value="MT"{% if member_profile_form.birth_state|default('') == 'MT' %} selected{% endif %}>Mato Grosso</option>
+                  <option value="MS"{% if member_profile_form.birth_state|default('') == 'MS' %} selected{% endif %}>Mato Grosso do Sul</option>
+                  <option value="MG"{% if member_profile_form.birth_state|default('') == 'MG' %} selected{% endif %}>Minas Gerais</option>
+                  <option value="PA"{% if member_profile_form.birth_state|default('') == 'PA' %} selected{% endif %}>Pará</option>
+                  <option value="PB"{% if member_profile_form.birth_state|default('') == 'PB' %} selected{% endif %}>Paraíba</option>
+                  <option value="PR"{% if member_profile_form.birth_state|default('') == 'PR' %} selected{% endif %}>Paraná</option>
+                  <option value="PE"{% if member_profile_form.birth_state|default('') == 'PE' %} selected{% endif %}>Pernambuco</option>
+                  <option value="PI"{% if member_profile_form.birth_state|default('') == 'PI' %} selected{% endif %}>Piauí</option>
+                  <option value="RJ"{% if member_profile_form.birth_state|default('') == 'RJ' %} selected{% endif %}>Rio de Janeiro</option>
+                  <option value="RN"{% if member_profile_form.birth_state|default('') == 'RN' %} selected{% endif %}>Rio Grande do Norte</option>
+                  <option value="RS"{% if member_profile_form.birth_state|default('') == 'RS' %} selected{% endif %}>Rio Grande do Sul</option>
+                  <option value="RO"{% if member_profile_form.birth_state|default('') == 'RO' %} selected{% endif %}>Rondônia</option>
+                  <option value="RR"{% if member_profile_form.birth_state|default('') == 'RR' %} selected{% endif %}>Roraima</option>
+                  <option value="SC"{% if member_profile_form.birth_state|default('') == 'SC' %} selected{% endif %}>Santa Catarina</option>
+                  <option value="SP"{% if member_profile_form.birth_state|default('') == 'SP' %} selected{% endif %}>São Paulo</option>
+                  <option value="SE"{% if member_profile_form.birth_state|default('') == 'SE' %} selected{% endif %}>Sergipe</option>
+                  <option value="TO"{% if member_profile_form.birth_state|default('') == 'TO' %} selected{% endif %}>Tocantins</option>
+                </select>
+              </div>
 
-            <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="80">
-              <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Salvar e continuar</button>
+              <div class="nc-actions nc-admin-login-actions nc-member-profile-actions" data-aos="fade-up" data-aos-delay="80">
+                <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Salvar e continuar</button>
+              </div>
             </div>
           </form>
         </article>

@@ -43,6 +43,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 
         $form = [
             'full_name' => (string) ($member['full_name'] ?? ''),
+            'email' => (string) ($member['email'] ?? ''),
             'phone_mobile' => (string) ($member['phone_mobile'] ?? ''),
             'phone_landline' => (string) ($member['phone_landline'] ?? ''),
             'birth_date' => (string) ($member['birth_date'] ?? ''),
