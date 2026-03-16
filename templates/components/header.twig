@@ -162,16 +162,16 @@
       {% else %}
         {% set member_login_active = path == '/entrar' %}
         {% set member_register_active = path == '/cadastro' %}
-        <a class="nc-link{{ member_login_active ? ' is-active' : '' }}" href="/entrar" {% if member_login_active %}aria-current="page"{% endif %}>
-          <span class="nc-nav-link-content">
-            {% include 'components/nav-icon.twig' with { icon_key: 'entrar' } only %}
-            <span>Entrar</span>
-          </span>
-        </a>
         <a class="nc-link{{ member_register_active ? ' is-active' : '' }}" href="/cadastro" {% if member_register_active %}aria-current="page"{% endif %}>
           <span class="nc-nav-link-content">
             {% include 'components/nav-icon.twig' with { icon_key: 'cadastrar' } only %}
             <span>Cadastrar</span>
+          </span>
+        </a>
+        <a class="nc-link{{ member_login_active ? ' is-active' : '' }}" href="/entrar" {% if member_login_active %}aria-current="page"{% endif %}>
+          <span class="nc-nav-link-content">
+            {% include 'components/nav-icon.twig' with { icon_key: 'entrar' } only %}
+            <span>Entrar</span>
           </span>
         </a>
       {% endif %}
