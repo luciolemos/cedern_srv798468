@@ -83,6 +83,41 @@
         {% endif %}
       {% endfor %}
 
+      {% set auth_is_logged = dashboard_is_authenticated|default(false) %}
+      {% if auth_is_logged %}
+        {% set auth_path = '/painel' %}
+        {% set auth_label = 'PAINEL' %}
+        {% set auth_is_active = path starts with '/painel' %}
+
+        <a class="nc-link nc-link-panel{{ auth_is_active ? ' is-active' : '' }}" href="{{ auth_path }}" {% if auth_is_active %}aria-current="page"{% endif %}>
+          <span class="nc-link-panel-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M8 15H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span>{{ auth_label }}</span>
+        </a>
+
+        {% set can_admin_notifications = dashboard_is_admin_session|default(false) or member_role_key|default('member') == 'admin' %}
+        {% set admin_notification_count = dashboard_admin_notification_count|default(0) %}
+        {% if can_admin_notifications %}
+          {% set notify_is_active = path starts with '/painel/usuarios' %}
+          <a class="nc-link nc-link-notify{{ notify_is_active ? ' is-active' : '' }}" href="/painel/usuarios?sort=created_at&dir=desc&q=pending" {% if notify_is_active %}aria-current="page"{% endif %} aria-label="Notificações administrativas">
+            <span class="nc-link-notify-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4C9.23858 4 7 6.23858 7 9V11.5C7 13.05 6.41071 14.5446 5.35195 15.6841L4 17.1389H20L18.648 15.6841C17.5893 14.5446 17 13.05 17 11.5V9C17 6.23858 14.7614 4 12 4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 19C10.4174 19.6227 11.1318 20 12 20C12.8682 20 13.5826 19.6227 14 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </span>
+            {% if admin_notification_count > 0 %}
+              <span class="nc-link-notify-badge" aria-live="polite">{{ admin_notification_count }}</span>
+            {% endif %}
+          </a>
+        {% endif %}
+      {% endif %}
+
       {% set member_is_logged = member_is_authenticated|default(false) %}
       {% if member_is_logged %}
         {% set member_area_active = path starts with '/membro' %}
@@ -138,24 +173,6 @@
             {% include 'components/nav-icon.twig' with { icon_key: 'cadastrar' } only %}
             <span>Cadastrar</span>
           </span>
-        </a>
-      {% endif %}
-
-      {% set auth_is_logged = dashboard_is_authenticated|default(false) %}
-      {% if auth_is_logged %}
-        {% set auth_path = '/painel' %}
-        {% set auth_label = 'PAINEL' %}
-        {% set auth_is_active = path starts with '/painel' %}
-
-        <a class="nc-link nc-link-panel{{ auth_is_active ? ' is-active' : '' }}" href="{{ auth_path }}" {% if auth_is_active %}aria-current="page"{% endif %}>
-          <span class="nc-link-panel-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M3 10H21" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M8 15H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </span>
-          <span>{{ auth_label }}</span>
         </a>
       {% endif %}
     </nav>

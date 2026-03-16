@@ -3676,6 +3676,48 @@ textarea.nc-admin-form-input {
   transform: translateY(-1px);
 }
 
+.nc-link-notify {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nc-link-notify-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color var(--motion-fast), transform var(--motion-fast);
+}
+
+.nc-link-notify-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.nc-link-notify:hover .nc-link-notify-icon,
+.nc-link-notify.is-active .nc-link-notify-icon {
+  color: var(--theme-accent-1);
+  transform: translateY(-1px);
+}
+
+.nc-link-notify-badge {
+  min-width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  background: var(--swatch-red-1);
+  color: var(--white);
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-semibold);
+}
+
 @media (max-width: 980px) {
   .nc-dashboard-layout {
     grid-template-columns: minmax(0, 1fr);
