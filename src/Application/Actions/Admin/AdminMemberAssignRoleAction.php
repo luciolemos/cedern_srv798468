@@ -64,7 +64,9 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         }
 
         if ($hasInstitutionalRoleInput && $institutionalRole === null) {
-            return $response->withHeader('Location', '/painel/usuarios?status=invalid-institutional-role')->withStatus(302);
+            return $response
+                ->withHeader('Location', '/painel/usuarios?status=invalid-institutional-role')
+                ->withStatus(302);
         }
 
         if ($roleId <= 0) {

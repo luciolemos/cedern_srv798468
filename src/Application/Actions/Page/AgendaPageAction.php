@@ -92,20 +92,23 @@ class AgendaPageAction extends AbstractPageAction
 
         $sortMultiplier = $sortDirection === 'desc' ? -1 : 1;
 
-        usort($allUpcomingEvents, static function (array $firstEvent, array $secondEvent) use ($sortBy, $sortMultiplier): int {
-            $firstValue = (string) ($firstEvent[$sortBy] ?? '');
-            $secondValue = (string) ($secondEvent[$sortBy] ?? '');
+        usort(
+            $allUpcomingEvents,
+            static function (array $firstEvent, array $secondEvent) use ($sortBy, $sortMultiplier): int {
+                $firstValue = (string) ($firstEvent[$sortBy] ?? '');
+                $secondValue = (string) ($secondEvent[$sortBy] ?? '');
 
-            if ($sortBy === 'starts_at') {
-                $comparison = strtotime($firstValue) <=> strtotime($secondValue);
+                if ($sortBy === 'starts_at') {
+                    $comparison = strtotime($firstValue) <=> strtotime($secondValue);
+
+                    return $comparison * $sortMultiplier;
+                }
+
+                $comparison = strnatcasecmp($firstValue, $secondValue);
 
                 return $comparison * $sortMultiplier;
             }
-
-            $comparison = strnatcasecmp($firstValue, $secondValue);
-
-            return $comparison * $sortMultiplier;
-        });
+        );
 
         $totalEvents = count($allUpcomingEvents);
         $totalPages = max(1, (int) ceil($totalEvents / $pageSize));

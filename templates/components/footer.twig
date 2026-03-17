@@ -1,52 +1,94 @@
+{% set footer = site.footer|default({}) %}
+{% set footer_nav_groups = footer.navGroups|default([]) %}
+{% set site_contact = site.contact|default({}) %}
+{% set site_instagram = site.social.instagram|default({}) %}
+{% set brand = site.brand|default({}) %}
+
 <footer id="contato" class="nc-footer">
-  <div class="nc-container nc-footer-layout">
-    <section class="nc-footer-block nc-footer-brand-block" aria-label="Identidade institucional">
-      <a class="nc-footer-brand" href="/" aria-label="CEDE - Início">
-        <img
-          src="{{ base_url ?? '' }}/assets/img/brands/cedern.png"
-          alt="{{ app_name ?? 'CEDE' }} (tema escuro)"
-          class="footer-logo logo-dark"
-        >
-        <img
-          src="{{ base_url ?? '' }}/assets/img/brands/cedern.png"
-          alt="{{ app_name ?? 'CEDE' }} (tema claro)"
-          class="footer-logo logo-light"
-        >
-      </a>
-      <p class="nc-footer-copy">Centro de Estudos da Doutrina Espírita (CEDE)</p>
-      <p class="nc-footer-copy">Estudo, acolhimento fraterno e prática do bem à luz do Espiritismo.</p>
-    </section>
+  <div class="nc-container">
+    <div class="nc-footer-layout">
+      <section class="nc-footer-block nc-footer-brand-block" aria-label="Identidade institucional">
+        <a class="nc-footer-brand" href="{{ brand.homeHref|default('/') }}" aria-label="{{ site.name|default('CEDE') }} - Início">
+          <img
+            src="{{ (base_url ?? '') ~ (brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+            alt="{{ brand.logoAlt|default(site.name|default('CEDE')) }}"
+            class="footer-logo"
+          >
+        </a>
+        {% if footer.kicker|default('') %}
+          <p class="nc-footer-kicker">{{ footer.kicker }}</p>
+        {% endif %}
+        <p class="nc-footer-heading">{{ site.legalName|default(site.name|default('CEDE')) }}</p>
+        <p class="nc-footer-copy">{{ footer.description|default(site.tagline|default('')) }}</p>
+      </section>
 
-    <nav class="nc-footer-block" aria-label="Links institucionais">
-      <h3 class="nc-footer-title">Institucional</h3>
-      <ul class="nc-footer-links">
-        <li><a class="nc-footer-link" href="/">Início</a></li>
-        <li><a class="nc-footer-link" href="/quem-somos">Quem Somos</a></li>
-        <li><a class="nc-footer-link" href="/quem-somos/nossa-marca">Nossa Marca</a></li>
-        <li><a class="nc-footer-link" href="/estudos">Estudos</a></li>
-        <li><a class="nc-footer-link" href="/agenda">Agenda</a></li>
-        <li><a class="nc-footer-link" href="/faq">FAQ</a></li>
-      </ul>
-    </nav>
+      <div class="nc-footer-nav-grid">
+        {% for group in footer_nav_groups %}
+          <nav class="nc-footer-block" aria-label="{{ group.title|default('Navegação do rodapé') }}">
+            <h3 class="nc-footer-title">{{ group.title|default('Links') }}</h3>
+            {% if group.links|default([]) %}
+              <ul class="nc-footer-links">
+                {% for link in group.links %}
+                  <li><a class="nc-footer-link" href="{{ link.path }}">{{ link.label|default(link.path) }}</a></li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </nav>
+        {% endfor %}
+      </div>
 
+      <div class="nc-footer-contact-group">
+        {% if footer.contactKicker|default('') %}
+          <p class="nc-footer-kicker">{{ footer.contactKicker }}</p>
+        {% endif %}
         <section class="nc-footer-block" aria-label="Informações de contato">
-          <h3 class="nc-footer-title">Contato</h3>
-          {% if app_address is defined and app_address %}
-            <p class="nc-footer-copy">{{ app_address }}</p>
+          <h3 class="nc-footer-contact-title">{{ footer.contactTitle|default('Fale com o CEDE') }}</h3>
+          {% if footer.contactLead|default('') %}
+            <p class="nc-footer-copy">{{ footer.contactLead }}</p>
           {% endif %}
-          <p class="nc-footer-copy">
-            <a class="nc-footer-link" href="mailto:cede@cedern.org">cede@cedern.org</a>
-          </p>
-          {% if app_instagram_url is defined and app_instagram_url %}
-            <p class="nc-footer-copy">
-              <a class="nc-footer-link" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
-            </p>
-          {% endif %}
+
+          <address class="nc-footer-contact-list">
+            {% if site_contact.address|default('') %}
+              <p class="nc-footer-copy">
+                {% if site_contact.mapUrl|default('') %}
+                  <a class="nc-footer-link nc-footer-contact-link" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">{{ site_contact.address }}</a>
+                {% else %}
+                  {{ site_contact.address }}
+                {% endif %}
+              </p>
+            {% endif %}
+
+            {% if site_contact.email|default('') %}
+              <p class="nc-footer-copy">
+                <a class="nc-footer-link nc-footer-contact-link" href="mailto:{{ site_contact.email }}">{{ site_contact.email }}</a>
+              </p>
+            {% endif %}
+
+            {% if site_instagram.url|default('') %}
+              <p class="nc-footer-copy">
+                <a class="nc-footer-link nc-footer-contact-link" href="{{ site_instagram.url }}" target="_blank" rel="noopener noreferrer">{{ site_instagram.label|default('Instagram oficial') }}</a>
+              </p>
+            {% endif %}
+          </address>
+
+          <div class="nc-actions nc-footer-actions is-stacked-mobile">
+            <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+            {% if site_contact.mapUrl|default('') %}
+              <a class="nc-btn nc-btn-secondary" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+            {% endif %}
+          </div>
         </section>
+      </div>
+    </div>
 
-  </div>
-
-  <div class="nc-container nc-footer-bottom">
-    <p class="nc-footer-copy">© {{ "now"|date("Y") }} CEDE. Todos os direitos reservados.</p>
+    <div class="nc-footer-bottom">
+      <p class="nc-footer-copy">© {{ "now"|date("Y") }} {{ site.name|default('CEDE') }}. Todos os direitos reservados.</p>
+      {% if footer.cnpj|default('') %}
+        <p class="nc-footer-copy">CNPJ: {{ footer.cnpj }}</p>
+      {% endif %}
+      {% if footer.bottomNote|default('') %}
+        <p class="nc-footer-copy">{{ footer.bottomNote }}</p>
+      {% endif %}
+    </div>
   </div>
 </footer>

@@ -14,17 +14,39 @@ use Throwable;
 class AboutManagementPageAction extends AbstractPageAction
 {
     private const ROLE_RESPONSIBILITIES = [
-        'Presidente CEDE' => 'Representa institucionalmente o CEDE, coordena decisões estratégicas e acompanha o cumprimento do plano anual da casa.',
-        'Vice-presidente CEDE' => 'Apoia a presidência na coordenação geral, acompanha frentes prioritárias e substitui a presidência quando necessário.',
-        'Secretário' => 'Organiza registros administrativos, atas e comunicações internas para dar suporte à governança institucional.',
-        'Diretor de Finanças' => 'Planeja e acompanha orçamento, receitas e despesas, promovendo uso responsável dos recursos da instituição.',
-        'Diretor de Eventos' => 'Coordena planejamento e execução de eventos e atividades, alinhando logística, equipes e calendário institucional.',
-        'Diretor de Patrimônio' => 'Zela pelos espaços e bens do CEDE, organizando manutenção, conservação e uso adequado da infraestrutura.',
-        'Diretor de Estudos' => 'Orienta frentes formativas e estudos doutrinários, estruturando conteúdos e acompanhando ciclos de aprendizagem.',
-        'Diretor de Atendimento Fraterno' => 'Coordena o acolhimento fraterno e o encaminhamento das demandas de atendimento espiritual e humano.',
-        'Diretor de Comunicação' => 'Conduz a comunicação institucional e os canais oficiais, garantindo clareza, unidade e responsabilidade na divulgação.',
-        'Coordenador' => 'Acompanha a operação de uma frente específica, organiza equipe e garante execução das atividades previstas.',
-        'Conselheiro' => 'Contribui com orientação e acompanhamento institucional, apoiando decisões e o fortalecimento da missão do CEDE.',
+        'Presidente CEDE' =>
+            'Representa institucionalmente o CEDE, coordena decisões estratégicas '
+            . 'e acompanha o cumprimento do plano anual da casa.',
+        'Vice-presidente CEDE' =>
+            'Apoia a presidência na coordenação geral, acompanha frentes prioritárias '
+            . 'e substitui a presidência quando necessário.',
+        'Secretário' =>
+            'Organiza registros administrativos, atas e comunicações internas '
+            . 'para dar suporte à governança institucional.',
+        'Diretor de Finanças' =>
+            'Planeja e acompanha orçamento, receitas e despesas, promovendo '
+            . 'uso responsável dos recursos da instituição.',
+        'Diretor de Eventos' =>
+            'Coordena planejamento e execução de eventos e atividades, '
+            . 'alinhando logística, equipes e calendário institucional.',
+        'Diretor de Patrimônio' =>
+            'Zela pelos espaços e bens do CEDE, organizando manutenção, '
+            . 'conservação e uso adequado da infraestrutura.',
+        'Diretor de Estudos' =>
+            'Orienta frentes formativas e estudos doutrinários, estruturando '
+            . 'conteúdos e acompanhando ciclos de aprendizagem.',
+        'Diretor de Atendimento Fraterno' =>
+            'Coordena o acolhimento fraterno e o encaminhamento das demandas '
+            . 'de atendimento espiritual e humano.',
+        'Diretor de Comunicação' =>
+            'Conduz a comunicação institucional e os canais oficiais, garantindo '
+            . 'clareza, unidade e responsabilidade na divulgação.',
+        'Coordenador' =>
+            'Acompanha a operação de uma frente específica, organiza equipe '
+            . 'e garante execução das atividades previstas.',
+        'Conselheiro' =>
+            'Contribui com orientação e acompanhamento institucional, '
+            . 'apoiando decisões e o fortalecimento da missão do CEDE.',
     ];
 
     private MemberAuthRepository $memberAuthRepository;
@@ -73,7 +95,9 @@ class AboutManagementPageAction extends AbstractPageAction
             'public_cede_management' => $managementMembers,
             'page_title' => 'Gestão CEDE | Quem Somos | CEDE',
             'page_url' => 'https://cedern.org/quem-somos/gestao-cede',
-            'page_description' => 'Conheça a composição da gestão atual do CEDE e as atribuições institucionais de cada função.',
+            'page_description' =>
+                'Conheça a composição da gestão atual do CEDE '
+                . 'e as atribuições institucionais de cada função.',
         ]);
     }
 }

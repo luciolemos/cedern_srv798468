@@ -2,7 +2,8 @@
 
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
-    {% set cta_section = homeContent.sections.cta|default({}) %}
+    {% set site_contact = site.contact|default({}) %}
+    {% set site_instagram = site.social.instagram|default({}) %}
 
     <section class="nc-section" aria-label="Contato" data-aos="fade-up" data-aos-delay="0">
       {% include 'components/section-header.twig' with {
@@ -54,18 +55,20 @@
 
           <div class="nc-actions nc-admin-login-actions nc-contact-form-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="120">
             <button class="nc-btn nc-btn-primary" type="submit">Enviar mensagem</button>
-            {% if cta_section.addressMapUrl|default('') %}
-              <a class="nc-btn nc-btn-secondary" href="{{ cta_section.addressMapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+            {% if site_contact.mapUrl|default('') %}
+              <a class="nc-btn nc-btn-secondary" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
             {% endif %}
           </div>
         </form>
       </article>
 
       <div class="nc-actions" data-aos="fade-up" data-aos-delay="120">
-        {% if app_instagram_url|default('') %}
-          <a class="nc-btn nc-btn-secondary" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
+        {% if site_instagram.url|default('') %}
+          <a class="nc-btn nc-btn-secondary" href="{{ site_instagram.url }}" target="_blank" rel="noopener noreferrer">{{ site_instagram.label|default('Instagram oficial') }}</a>
         {% endif %}
-        <a class="nc-btn nc-btn-secondary" href="mailto:cede@cedern.org">E-mail direto</a>
+        {% if site_contact.email|default('') %}
+          <a class="nc-btn nc-btn-secondary" href="mailto:{{ site_contact.email }}">E-mail direto</a>
+        {% endif %}
       </div>
     </section>
   </main>

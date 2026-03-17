@@ -67,7 +67,9 @@ class AdminMemberUsersPageAction extends AbstractPageAction
 
         if ($status === 'institutional-role-conflict') {
             $roleLabel = $institutionalRoleConflict !== '' ? $institutionalRoleConflict : 'esta função institucional';
-            $loadError = 'Já existe um usuário ativo com a função "' . $roleLabel . '". Remova ou altere a função atual antes de prosseguir.';
+            $loadError = 'Já existe um usuário ativo com a função "'
+                . $roleLabel
+                . '". Remova ou altere a função atual antes de prosseguir.';
         }
 
         if ($searchTerm !== '') {

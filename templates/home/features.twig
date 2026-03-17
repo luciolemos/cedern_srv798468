@@ -7,7 +7,7 @@
     title: features_section.title|default('Iluminando consciências através do conhecimento'),
     lead: features_section.lead|default('Oferecemos grupos de estudo sistematizado, palestras públicas e atendimento fraterno para todos que buscam compreender a vida além da matéria.')
   } %}
-  <div class="nc-feature-grid">
+  <div class="nc-feature-grid nc-tonal-feature-grid">
     {% for item in features_items %}
       {% include 'components/feature-card.twig' with {
         title: item.title,

@@ -875,7 +875,10 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         if ($institutionalRole === null) {
             $deleteStatement = $this->pdo->prepare(
-                'DELETE FROM member_management_roles WHERE management_id = :management_id AND member_user_id = :member_user_id LIMIT 1'
+                'DELETE FROM member_management_roles '
+                . 'WHERE management_id = :management_id '
+                . 'AND member_user_id = :member_user_id '
+                . 'LIMIT 1'
             );
 
             return $deleteStatement->execute([

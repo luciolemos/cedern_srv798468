@@ -7,18 +7,16 @@
 
   <div class="nc-container nc-header-row">
     <a class="nc-brand" href="/" aria-label="CEDE - Início">
-      
       <img
-        src="{{ base_url ?? '' }}/assets/img/brands/cede4_logo.png"
-        alt="{{ app_name ?? 'Labs' }} (tema escuro)"
+        src="{{ (base_url ?? '') ~ (site.brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+        alt="{{ site.brand.logoAlt|default(site.name|default('CEDE')) }} (tema escuro)"
         class="navbar-logo logo-dark"
       >
       <img
-        src="{{ base_url ?? '' }}/assets/img/brands/cede4_logo.png"
-        alt="{{ app_name ?? 'Labs' }} (tema claro)"
+        src="{{ (base_url ?? '') ~ (site.brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+        alt="{{ site.brand.logoAlt|default(site.name|default('CEDE')) }} (tema claro)"
         class="navbar-logo logo-light"
       >
-      
       {# <span class="nc-brand-name">{{ app_name ?? 'CEDE' }}</span> #}
     </a>
     <button

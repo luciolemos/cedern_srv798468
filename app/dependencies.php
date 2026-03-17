@@ -125,6 +125,7 @@ return function (ContainerBuilder $containerBuilder) {
             $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY');
             $homeContent = require __DIR__ . '/content/home.php';
             $navigationContent = require __DIR__ . '/content/navigation.php';
+            $siteContent = require __DIR__ . '/content/site.php';
 
             $assertNavigationConfig = static function (array $config): void {
                 if (!isset($config['labels']) || !is_array($config['labels'])) {
@@ -198,13 +199,43 @@ return function (ContainerBuilder $containerBuilder) {
 
             $assertNavigationConfig($navigationContent);
 
-            $appAddress = (string) ($homeContent['sections']['cta']['address'] ?? '');
-            $appInstagramUrl = (string) ($homeContent['sections']['cta']['instagramUrl'] ?? '');
-            $appInstagramLabel = (string) ($homeContent['sections']['cta']['instagramLabel'] ?? 'Instagram oficial');
             $navigationLabels = (array) ($navigationContent['labels'] ?? []);
             $navigationMenu = (array) ($navigationContent['menu'] ?? []);
             $navigationLinksBeforeGroups = (array) ($navigationContent['links_before_groups'] ?? []);
             $navigationLinksAfterGroups = (array) ($navigationContent['links_after_groups'] ?? []);
+            $siteFooter = (array) ($siteContent['footer'] ?? []);
+            $siteFooterNavGroups = (array) ($siteFooter['navGroups'] ?? []);
+
+            $siteFooter['navGroups'] = array_map(
+                static function (array $group) use ($navigationLabels): array {
+                    $groupLinks = array_map(
+                        static function (array $link) use ($navigationLabels): array {
+                            $label = trim((string) ($link['label'] ?? ''));
+                            $key = trim((string) ($link['key'] ?? ''));
+
+                            if ($label === '' && $key !== '') {
+                                $label = (string) ($navigationLabels[$key] ?? $key);
+                            }
+
+                            $link['label'] = $label !== '' ? $label : (string) ($link['path'] ?? '');
+
+                            return $link;
+                        },
+                        (array) ($group['links'] ?? [])
+                    );
+
+                    $group['links'] = $groupLinks;
+
+                    return $group;
+                },
+                $siteFooterNavGroups
+            );
+
+            $siteContent['footer'] = $siteFooter;
+
+            $appAddress = (string) ($siteContent['contact']['address'] ?? '');
+            $appInstagramUrl = (string) ($siteContent['social']['instagram']['url'] ?? '');
+            $appInstagramLabel = (string) ($siteContent['social']['instagram']['label'] ?? 'Instagram oficial');
 
             $twig->getEnvironment()->addGlobal('app_default_page_title', $appDefaultPageTitle);
             $twig->getEnvironment()->addGlobal('app_default_page_description', $appDefaultPageDescription);
@@ -216,6 +247,7 @@ return function (ContainerBuilder $containerBuilder) {
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
             $twig->getEnvironment()->addGlobal('default_mode', $defaultMode);
             $twig->getEnvironment()->addGlobal('default_dark_intensity', $defaultDarkIntensity);
+            $twig->getEnvironment()->addGlobal('site', $siteContent);
             $twig->getEnvironment()->addGlobal('app_address', $appAddress);
             $twig->getEnvironment()->addGlobal('app_instagram_url', $appInstagramUrl);
             $twig->getEnvironment()->addGlobal('app_instagram_label', $appInstagramLabel);

@@ -66,10 +66,14 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         natcasesort($institutionalRoleOptions);
         $institutionalRoleOptions = array_values($institutionalRoleOptions);
 
-        if ($selectedInstitutionalRole !== '' && in_array($selectedInstitutionalRole, $institutionalRoleOptions, true)) {
+        if (
+            $selectedInstitutionalRole !== ''
+            && in_array($selectedInstitutionalRole, $institutionalRoleOptions, true)
+        ) {
             $users = array_values(array_filter(
                 $users,
-                static fn (array $user): bool => (string) ($user['institutional_role'] ?? '') === $selectedInstitutionalRole
+                static fn (array $user): bool =>
+                    (string) ($user['institutional_role'] ?? '') === $selectedInstitutionalRole
             ));
         } else {
             $selectedInstitutionalRole = '';

@@ -2,47 +2,50 @@
   {% set donation_section = homeContent.sections.donation|default({}) %}
   {% set donation_options = homeContent.donationOptions|default([]) %}
 
-  {% include 'components/section-header.twig' with {
-    kicker: donation_section.kicker|default('Apoie o CEDE'),
-    title: donation_section.title|default('Faça sua doação'),
-    lead: donation_section.lead|default('Sua contribuição ajuda o CEDE a manter estudos, acolhimento e ações fraternas.'),
-    lead_secondary: donation_section.leadSecondary|default('')
-  } %}
+  <p class="nc-section-kicker" data-aos="fade-up" data-aos-delay="20">{{ donation_section.kicker|default('Apoie o CEDE') }}</p>
 
-  {% if donation_options|length > 0 %}
-    <div class="nc-feature-grid nc-donation-grid">
-      {% for option in donation_options %}
-        <article class="nc-feature-card" data-aos="fade-up" data-aos-delay="{{ 120 + (loop.index0 * 60) }}">
-          <h3>{{ option.title|default('Forma de doação') }}</h3>
-          <p>{{ option.description|default('Escolha a forma de doação mais conveniente.') }}</p>
-
-          {% if option.qrImage|default('') %}
-            <img class="nc-donation-qr" src="{{ option.qrImage }}" alt="{{ option.qrAlt|default('QR Code de doação') }}">
-          {% else %}
-            <div class="nc-donation-qr-placeholder" aria-hidden="true">QR Code</div>
-            <p class="nc-donation-helper">{{ option.hint|default('Configure o QR Code desta opção no conteúdo da home.') }}</p>
-          {% endif %}
-
-          {% if option.pixKey|default('') %}
-            {% set pix_key = option.pixKey|trim %}
-            {% set pix_key_masked = pix_key %}
-            {% if pix_key|length > 4 %}
-              {% set pix_key_masked = '••••••••' ~ pix_key|slice(-4) %}
-            {% endif %}
-            <div class="nc-donation-key-wrap">
-              <p class="nc-donation-key"><strong>Chave PIX:</strong> <span data-pix-masked>{{ pix_key_masked }}</span></p>
-              <button class="nc-btn nc-btn-secondary nc-btn-copy-pix" type="button" data-pix-copy data-pix-key="{{ pix_key }}" aria-label="Copiar chave PIX" title="Copiar chave PIX">Copiar chave</button>
-              <span class="nc-pix-copy-feedback" data-pix-copy-feedback hidden>Copiado!</span>
-            </div>
-          {% endif %}
-
-          {% if option.href|default('') %}
-            <div class="nc-feature-card-action">
-              <a class="nc-btn nc-btn-primary" href="{{ option.href }}" target="_blank" rel="noopener">{{ option.linkLabel|default('Doar agora') }}</a>
-            </div>
-          {% endif %}
-        </article>
-      {% endfor %}
+  <div class="nc-donation-layout">
+    <div class="nc-donation-copy" data-aos="fade-up" data-aos-delay="20">
+      <h2 class="nc-section-title">Faça sua doação</h2>
+      <p class="nc-section-lead">
+        Sua contribuição é essencial para que o CEDE – Centro de Estudos da Doutrina Espírita continue promovendo estudos, atendimentos fraternos e ações de acolhimento, levando conhecimento, consolo e orientação a todos que buscam crescimento espiritual.
+      </p>
+      <p class="nc-section-lead">
+        Cada gesto de apoio fortalece essa missão e permite que a casa permaneça ativa, organizada e acessível à comunidade.
+      </p>
     </div>
-  {% endif %}
+
+    {% if donation_options|length > 0 %}
+      <div class="nc-feature-grid nc-donation-grid">
+        {% for option in donation_options %}
+          <article class="nc-feature-card" data-aos="fade-up" data-aos-delay="{{ 120 + (loop.index0 * 60) }}">
+            <h3>{{ option.title|default('Forma de doação') }}</h3>
+            <p>{{ option.description|default('Escolha a forma de doação mais conveniente.') }}</p>
+
+            {% if option.qrImage|default('') %}
+              <img class="nc-donation-qr" src="{{ option.qrImage }}" alt="{{ option.qrAlt|default('QR Code de doação') }}">
+            {% else %}
+              <div class="nc-donation-qr-placeholder" aria-hidden="true">QR Code</div>
+              <p class="nc-donation-helper">{{ option.hint|default('Configure o QR Code desta opção no conteúdo da home.') }}</p>
+            {% endif %}
+
+            {% if option.pixKey|default('') %}
+              {% set pix_key = option.pixKey|trim %}
+              <div class="nc-donation-key-wrap">
+                <p class="nc-donation-key"><strong>Chave PIX:</strong> <span>{{ pix_key }}</span></p>
+                <button class="nc-btn nc-btn-secondary nc-btn-copy-pix" type="button" data-pix-copy data-pix-key="{{ pix_key }}" aria-label="Copiar chave PIX" title="Copiar chave PIX">Copiar chave</button>
+                <span class="nc-pix-copy-feedback" data-pix-copy-feedback hidden>Copiado!</span>
+              </div>
+            {% endif %}
+
+            {% if option.href|default('') %}
+              <div class="nc-feature-card-action">
+                <a class="nc-btn nc-btn-primary" href="{{ option.href }}" target="_blank" rel="noopener">{{ option.linkLabel|default('Doar agora') }}</a>
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
 </section>
