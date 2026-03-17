@@ -234,9 +234,9 @@ class MemberRegisterPageAction extends AbstractPageAction
         $mailer->addAddress($toEmail, $toName);
         $mailer->addReplyTo($replyToEmail, $replyToName);
 
-        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cedern.png';
+        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
         if (is_file($logoPath)) {
-            $mailer->addEmbeddedImage($logoPath, 'cedern-logo', 'cedern.png', 'base64', 'image/png');
+            $mailer->addEmbeddedImage($logoPath, 'cedern-logo', 'cede4_logo.png', 'base64', 'image/png');
         }
 
         $mailer->isHTML(true);
@@ -253,7 +253,7 @@ class MemberRegisterPageAction extends AbstractPageAction
 
     private function resolveEmbeddedLogoSrc(): ?string
     {
-        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cedern.png';
+        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
 
         return is_file($logoPath) ? 'cid:cedern-logo' : null;
     }

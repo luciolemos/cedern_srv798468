@@ -78,5 +78,14 @@
       link_label: 'Ver Quem Somos',
       delay: 440
     } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '10',
+      title: 'Fluxo de e-mail no cadastro de membro',
+      description: 'Quando alguém se cadastra, o sistema primeiro valida os dados e salva o cadastro como pendente de aprovação. Em seguida, envia dois e-mails: um para a equipe do CEDE avisando que chegou um novo cadastro e outro para a pessoa confirmando que o pedido foi recebido. Se o e-mail falhar naquele momento, o cadastro continua salvo normalmente e não é perdido.',
+      href: '/painel/usuarios',
+      link_label: 'Abrir Gestão de Pessoal',
+      delay: 480
+    } %}
   </ul>
 {% endblock %}

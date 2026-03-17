@@ -44,7 +44,7 @@ return [
         'cta' => [
             'kicker' => 'Participe',
             'title' => 'Junte-se a nós nesta jornada de luz',
-            'lead' => 'Venha conhecer o CEDE e encontrar respostas para suas indagações espirituais em um ambiente acolhedor e fraterno.',
+            'lead' => 'Venha conhecer o CEDE e permita-se sentir a serenidade de um ambiente onde o conhecimento ilumina, o acolhimento conforta e a verdade espiritual se revela com simplicidade e amor. Aqui, cada encontro é um convite à reflexão, cada palavra é um passo na jornada interior, e cada experiência é uma oportunidade de reencontro consigo mesmo e com o propósito maior da vida.',
             'actionsDelay' => 160,
         ],
     ],

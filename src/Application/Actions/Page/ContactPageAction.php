@@ -132,10 +132,10 @@ class ContactPageAction extends AbstractPageAction
         $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
 
         $logoCid = 'cedern-logo';
-        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cedern.png';
+        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
         $logoSrc = null;
         if (is_file($logoPath)) {
-            $mailer->addEmbeddedImage($logoPath, $logoCid, 'cedern.png', 'base64', 'image/png');
+            $mailer->addEmbeddedImage($logoPath, $logoCid, 'cede4_logo.png', 'base64', 'image/png');
             $logoSrc = 'cid:' . $logoCid;
         }
 

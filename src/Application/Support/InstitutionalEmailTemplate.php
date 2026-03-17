@@ -12,7 +12,7 @@ final class InstitutionalEmailTemplate
         $siteName = htmlspecialchars((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'), ENT_QUOTES, 'UTF-8');
         $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
         $siteUrl = htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8');
-        $resolvedLogoSrc = $logoSrc ?: ($baseUrl . '/assets/img/brands/cedern.png');
+        $resolvedLogoSrc = $logoSrc ?: ($baseUrl . '/assets/img/brands/cede4_logo.png');
         $logoUrl = htmlspecialchars($resolvedLogoSrc, ENT_QUOTES, 'UTF-8');
 
         $institutionalEmail = trim((string) (

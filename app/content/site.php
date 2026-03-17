@@ -34,7 +34,7 @@ return [
     ],
     'footer' => [
         'kicker' => 'Presença e acolhimento',
-        'description' => 'Estamos de portas abertas para estudo, atendimento fraterno e convivência cristã.',
+        'description' => 'O CEDE mantém suas portas abertas à comunidade, oferecendo estudo doutrinário, atendimento fraterno e convivência cristã, com seriedade, organização e acolhimento.',
         'navGroups' => [
             [
                 'title' => 'Institucional',
@@ -54,7 +54,6 @@ return [
                     ['path' => '/estudos', 'key' => 'estudos'],
                     ['path' => '/agenda', 'key' => 'agenda'],
                     ['path' => '/faq', 'key' => 'faq'],
-                    ['path' => '/quem-somos/nossa-marca', 'key' => 'nossa-marca'],
                 ],
             ],
         ],
