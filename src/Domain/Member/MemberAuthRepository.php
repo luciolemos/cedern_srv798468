@@ -36,7 +36,9 @@ interface MemberAuthRepository
      */
     public function updateProfile(int $id, array $data): bool;
 
-    public function approveAndAssignRole(int $id, int $roleId): bool;
+    public function approveAndAssignRole(int $id, int $roleId, ?string $institutionalRole = null): bool;
+
+    public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool;
 
     /**
      * @return array<int, array<string, mixed>>

@@ -35,6 +35,12 @@ return [
             'title' => 'Perguntas Frequentes',
             'lead' => 'Entenda melhor sobre o Espiritismo, nossas atividades e como você pode participar e contribuir.',
         ],
+        'donation' => [
+            'kicker' => 'Apoie o CEDE',
+            'title' => 'Faça sua doação',
+            'lead' => 'Sua contribuição ajuda a manter os estudos, atendimentos fraternos e ações de acolhimento realizados pelo CEDE.',
+            'leadSecondary' => 'Escolha abaixo a forma de doação mais conveniente para você.',
+        ],
         'cta' => [
             'kicker' => 'Participe',
             'title' => 'Junte-se a nós nesta jornada de luz',
@@ -307,6 +313,16 @@ return [
             'name' => 'Solange',
             'role' => 'Frequentadora',
             'quote' => 'O acolhimento fraterno transformou minha vida. Sinto muita paz e gratidão por fazer parte desta casa.',
+        ],
+    ],
+    'donationOptions' => [
+        [
+            'title' => 'Doação via PIX (Banco do Brasil)',
+            'description' => 'Escaneie o QR Code do PIX para contribuir de forma rápida e segura.',
+            'qrImage' => '/assets/img/cedern/qr_bb_lemos.jpeg',
+            'qrAlt' => 'QR Code para doação via PIX',
+            'pixKey' => '38578760344',
+            'hint' => 'Adicione a imagem do QR do PIX e atualize a chave PIX no arquivo de conteúdo da home.',
         ],
     ],
      'roadmapItems' => [

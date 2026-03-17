@@ -6,6 +6,7 @@
   {% set panel_can_events = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
+  {% set panel_can_cede_management = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
 
   <main class="nc-dashboard-shell" aria-label="Dashboard administrativo">
     <header class="nc-dashboard-topbar">
@@ -135,6 +136,20 @@
                 <span>Gestão de Pessoal</span>
               </a>
 
+              {% if panel_can_cede_management %}
+                <a class="nc-link nc-dashboard-user-menu-link" href="/painel/gestao-cede">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Gestão CEDE</span>
+                </a>
+              {% endif %}
+
               <a class="nc-link nc-dashboard-user-menu-link" href="/painel/guia-pratico">
                 <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -145,6 +160,19 @@
                   </svg>
                 </span>
                 <span>Guia Prático</span>
+              </a>
+            {% endif %}
+            {% if panel_can_cede_management and not panel_can_users %}
+              <a class="nc-link nc-dashboard-user-menu-link" href="/painel/gestao-cede">
+                <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span>Gestão CEDE</span>
               </a>
             {% endif %}
             <a class="nc-link nc-dashboard-user-menu-link" href="/membro/perfil/completar">
@@ -244,6 +272,20 @@
               <span class="nc-admin-link-label">Gestão de Pessoal</span>
             </a>
 
+            {% if panel_can_cede_management %}
+              <a class="nc-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Gestão CEDE</span>
+              </a>
+            {% endif %}
+
             <a class="nc-link{{ current_path starts with '/painel/guia-pratico' ? ' is-active' : '' }}" href="/painel/guia-pratico">
               <span class="nc-admin-link-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -254,6 +296,19 @@
                 </svg>
               </span>
               <span class="nc-admin-link-label">Guia Prático</span>
+            </a>
+          {% endif %}
+          {% if panel_can_cede_management and not panel_can_users %}
+            <a class="nc-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">
+              <span class="nc-admin-link-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="nc-admin-link-label">Gestão CEDE</span>
             </a>
           {% endif %}
           <a class="nc-link" href="/painel/logout">

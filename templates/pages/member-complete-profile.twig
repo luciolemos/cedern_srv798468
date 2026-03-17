@@ -60,7 +60,7 @@
 
               <div class="nc-admin-login-field">
                 <label class="nc-admin-login-label" for="phone_mobile">Celular</label>
-                <input class="nc-admin-login-input" id="phone_mobile" name="phone_mobile" type="text" value="{{ member_profile_form.phone_mobile|default('') }}" autocomplete="tel" placeholder="(84) 99999-9999" required>
+                <input class="nc-admin-login-input" id="phone_mobile" name="phone_mobile" type="text" value="{{ member_profile_form.phone_mobile|default('') }}" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(84) 99999-9999" required>
               </div>
 
               <div class="nc-admin-login-field">
@@ -68,7 +68,10 @@
                 <input class="nc-admin-login-input" id="birth_date" name="birth_date" type="date" value="{{ member_profile_form.birth_date|default('') }}" required>
               </div>
 
-              <input type="hidden" name="phone_landline" value="{{ member_profile_form.phone_landline|default('') }}">
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="phone_landline">Telefone fixo</label>
+                <input class="nc-admin-login-input" id="phone_landline" name="phone_landline" type="text" value="{{ member_profile_form.phone_landline|default('') }}" autocomplete="tel-national" inputmode="numeric" maxlength="14" placeholder="(84) 3210-1234">
+              </div>
 
               <div class="nc-admin-login-field">
                 <label class="nc-admin-login-label" for="birth_state">UF de nascimento</label>

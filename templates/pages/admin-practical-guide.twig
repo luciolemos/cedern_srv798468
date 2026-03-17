@@ -69,5 +69,14 @@
       description: 'Atualize o evento no painel assim que a decisão for tomada. Se for cancelado, ajuste o status e comunique a equipe de divulgação no mesmo dia.',
       delay: 400
     } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '09',
+      title: 'Gestão CEDE no site público',
+      description: 'Na home, a seção Gestão CEDE exibe teaser limitado a 4 cards. A lista completa da diretoria e funções institucionais fica em Quem Somos.',
+      href: '/quem-somos',
+      link_label: 'Ver Quem Somos',
+      delay: 440
+    } %}
   </ul>
 {% endblock %}

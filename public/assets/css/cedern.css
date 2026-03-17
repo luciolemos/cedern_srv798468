@@ -1,3 +1,22 @@
+.nc-donation-key-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.nc-btn-copy-pix {
+  font-size: var(--font-size-caption);
+  padding: var(--space-1) var(--space-3);
+  line-height: 1.2;
+}
+
+.nc-pix-copy-feedback {
+  color: var(--theme-accent-1);
+  font-size: var(--font-size-caption);
+  margin-left: var(--space-2);
+  transition: opacity 0.2s;
+}
 :root {
   --font-heading: "Lora", "Times New Roman", Georgia, serif;
   --font-body: "Source Sans 3", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -1304,6 +1323,49 @@ h3 {
   margin-top: var(--space-4);
 }
 
+.nc-donation-grid {
+  margin-top: var(--space-4);
+}
+
+.nc-donation-qr {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  display: block;
+  object-fit: contain;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-main);
+  padding: var(--space-2);
+  margin: var(--space-4) auto 0;
+}
+
+.nc-donation-qr-placeholder {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--surface-border);
+  border-radius: var(--radius-md);
+  color: var(--text-subtle);
+  background: var(--surface-alt);
+  margin: var(--space-4) auto 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  letter-spacing: var(--tracking-wide);
+}
+
+.nc-donation-helper {
+  margin-top: var(--space-3);
+  color: var(--text-subtle);
+  font-size: var(--font-size-caption);
+}
+
+.nc-donation-key {
+  margin-top: var(--space-3);
+  color: var(--text-main);
+  font-size: var(--font-size-ui);
+}
+
 .nc-logo-list {
   list-style: none;
   margin: var(--space-4) 0 0;
@@ -1378,20 +1440,39 @@ code {
   padding: var(--testimonial-card-padding);
 }
 
+.nc-management-intro {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.nc-management-intro p {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 78ch;
+}
+
 .nc-testimonial-head {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
 }
 
 .nc-testimonial-avatar {
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.1rem;
+  height: 3.1rem;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid color-mix(in srgb, var(--theme-soft-2) 62%, var(--surface-border));
   flex-shrink: 0;
+}
+
+.nc-testimonial-avatar-fallback {
+  display: inline-grid;
+  place-items: center;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--theme-soft-2) 46%, var(--surface-main));
 }
 
 .nc-testimonial-meta {
@@ -1412,6 +1493,26 @@ code {
 .nc-testimonial-card p {
   margin: 0;
   color: var(--text-muted);
+}
+
+.nc-management-slideshow-controls {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.nc-management-slideshow-status {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  color: var(--text-subtle);
+  min-width: 4rem;
+  text-align: center;
+}
+
+.nc-management-slideshow-controls[hidden] {
+  display: none;
 }
 
 .nc-checklist {
@@ -3569,6 +3670,36 @@ textarea.nc-admin-form-input {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
 }
 
+.nc-admin-table-search-controls select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 12.5rem;
+  height: 2.2rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-main);
+  color: var(--text-main);
+  padding: 0.34rem 1.7rem 0.34rem 0.58rem;
+  line-height: 1.15;
+  font: inherit;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), background-color var(--motion-fast);
+}
+
+.nc-admin-table-search-controls select:hover {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-border));
+  background-color: color-mix(in srgb, var(--theme-accent-1) 4%, var(--surface-main));
+}
+
+.nc-admin-table-search-controls select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
+}
+
 .nc-admin-table-counter {
   margin: 0;
   color: var(--text-muted);
@@ -3713,6 +3844,19 @@ textarea.nc-admin-form-input {
 }
 
 .nc-admin-table-users .nc-admin-user-email-inline {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.24;
+}
+
+.nc-admin-table-users .nc-admin-user-email-inline + .nc-admin-user-email-inline {
+  margin-top: 0.12rem;
+}
+
+.nc-admin-table-users th.nc-admin-col-email,
+.nc-admin-table-users td.nc-admin-col-email {
   display: none;
 }
 
@@ -3773,6 +3917,43 @@ textarea.nc-admin-form-input {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.nc-admin-phone-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.86rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.24;
+}
+
+.nc-admin-phone-inline svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.nc-admin-phone-inline.is-mobile svg {
+  color: color-mix(in srgb, var(--swatch-blue-1) 72%, var(--text-muted));
+}
+
+.nc-admin-phone-inline.is-landline svg {
+  color: color-mix(in srgb, var(--swatch-green-1) 68%, var(--text-muted));
+}
+
+.nc-admin-email-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+
+.nc-admin-email-inline svg {
+  width: 1rem;
+  height: 1rem;
+  color: color-mix(in srgb, var(--swatch-blue-1) 58%, var(--text-muted));
+  flex-shrink: 0;
 }
 
 .nc-admin-table-actions form {
@@ -4162,15 +4343,6 @@ textarea.nc-admin-form-input {
 
   .nc-admin-table-users .nc-admin-user-email-inline {
     display: block;
-    margin-top: 0.16rem;
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    line-height: 1.2;
-  }
-
-  .nc-admin-table-users th.nc-admin-col-email,
-  .nc-admin-table-users td.nc-admin-col-email {
-    display: none;
   }
 }
 
@@ -4249,6 +4421,11 @@ textarea.nc-admin-form-input {
 
   .nc-admin-table-search input[type="search"] {
     width: 100%;
+  }
+
+  .nc-admin-table-search-controls select {
+    width: 100%;
+    min-width: 0;
   }
 
   .nc-admin-pagination-pages {

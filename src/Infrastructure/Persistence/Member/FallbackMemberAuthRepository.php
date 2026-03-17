@@ -39,6 +39,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'phone_landline' => null,
             'birth_date' => null,
             'birth_place' => null,
+            'institutional_role' => null,
             'profile_photo_path' => null,
             'profile_completed' => 0,
             'role_id' => null,
@@ -103,7 +104,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         return true;
     }
 
-    public function approveAndAssignRole(int $id, int $roleId): bool
+    public function approveAndAssignRole(int $id, int $roleId, ?string $institutionalRole = null): bool
     {
         if (!isset($this->users[$id])) {
             return false;
@@ -125,10 +126,36 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['role_id'] = $roleId;
         $this->users[$id]['role_key'] = (string) ($role['role_key'] ?? 'member');
         $this->users[$id]['role_name'] = (string) ($role['name'] ?? 'Membro');
+        $this->users[$id]['institutional_role'] = $this->nullableText($institutionalRole);
         $this->users[$id]['status'] = 'active';
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
 
         return true;
+    }
+
+    public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool
+    {
+        $normalizedRole = trim($institutionalRole);
+
+        if ($normalizedRole === '') {
+            return false;
+        }
+
+        foreach ($this->users as $user) {
+            if ((int) ($user['id'] ?? 0) === $exceptUserId) {
+                continue;
+            }
+
+            if ((string) ($user['status'] ?? '') !== 'active') {
+                continue;
+            }
+
+            if ((string) ($user['institutional_role'] ?? '') === $normalizedRole) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function findAllUsersForAdmin(): array

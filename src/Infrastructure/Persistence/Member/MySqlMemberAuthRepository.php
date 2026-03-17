@@ -8,6 +8,8 @@ use App\Domain\Member\MemberAuthRepository;
 
 class MySqlMemberAuthRepository implements MemberAuthRepository
 {
+    private const DEFAULT_MANAGEMENT_NAME = 'Gestão Atual';
+
     private \PDO $pdo;
 
     public function __construct(\PDO $pdo)
@@ -101,6 +103,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.role_id,
@@ -108,6 +111,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     r.name AS role_name
                 FROM member_users u
                 LEFT JOIN roles r ON r.id = u.role_id
+                LEFT JOIN member_management_roles mmr
+                    ON mmr.member_user_id = u.id
+                   AND mmr.ends_at IS NULL
+                   AND mmr.management_id = (
+                        SELECT m.id
+                        FROM institutional_managements m
+                        WHERE m.is_current = 1
+                        ORDER BY m.id DESC
+                        LIMIT 1
+                   )
                 WHERE u.email = :email
                 LIMIT 1
             SQL;
@@ -130,10 +143,14 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS institutional_role,
                         u.profile_photo_path,
                         u.profile_completed,
-                        u.role_id
+                        u.role_id,
+                        r.role_key,
+                        r.name AS role_name
                     FROM member_users u
+                    LEFT JOIN roles r ON r.id = u.role_id
                     WHERE u.email = :email
                     LIMIT 1
                 SQL;
@@ -153,6 +170,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS institutional_role,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS role_id
@@ -188,6 +206,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.role_id,
@@ -195,6 +214,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     r.name AS role_name
                 FROM member_users u
                 LEFT JOIN roles r ON r.id = u.role_id
+                LEFT JOIN member_management_roles mmr
+                    ON mmr.member_user_id = u.id
+                   AND mmr.ends_at IS NULL
+                   AND mmr.management_id = (
+                        SELECT m.id
+                        FROM institutional_managements m
+                        WHERE m.is_current = 1
+                        ORDER BY m.id DESC
+                        LIMIT 1
+                   )
                 WHERE u.id = :id
                 LIMIT 1
             SQL;
@@ -217,10 +246,14 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS institutional_role,
                         u.profile_photo_path,
                         u.profile_completed,
-                        u.role_id
+                        u.role_id,
+                        r.role_key,
+                        r.name AS role_name
                     FROM member_users u
+                    LEFT JOIN roles r ON r.id = u.role_id
                     WHERE u.id = :id
                     LIMIT 1
                 SQL;
@@ -240,6 +273,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS institutional_role,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS role_id
@@ -379,24 +413,137 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
-    public function approveAndAssignRole(int $id, int $roleId): bool
+    public function approveAndAssignRole(int $id, int $roleId, ?string $institutionalRole = null): bool
     {
+        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+
         $sql = <<<SQL
             UPDATE member_users
             SET
                 role_id = :role_id,
+                institutional_role = :institutional_role,
                 status = 'active',
                 approved_at = NOW()
             WHERE id = :id
             LIMIT 1
         SQL;
 
-        $statement = $this->pdo->prepare($sql);
+        try {
+            $statement = $this->pdo->prepare($sql);
 
-        return $statement->execute([
-            'id' => $id,
-            'role_id' => $roleId,
-        ]);
+            return $statement->execute([
+                'id' => $id,
+                'role_id' => $roleId,
+                'institutional_role' => $normalizedInstitutionalRole,
+            ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                $statement = $this->pdo->prepare($sql);
+
+                return $statement->execute([
+                    'id' => $id,
+                    'role_id' => $roleId,
+                    'institutional_role' => $normalizedInstitutionalRole,
+                ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+            } catch (\Throwable $innerException) {
+                $fallbackSql = <<<SQL
+                    UPDATE member_users
+                    SET
+                        role_id = :role_id,
+                        status = 'active',
+                        approved_at = NOW()
+                    WHERE id = :id
+                    LIMIT 1
+                SQL;
+
+                $fallbackStatement = $this->pdo->prepare($fallbackSql);
+
+                return $fallbackStatement->execute([
+                    'id' => $id,
+                    'role_id' => $roleId,
+                ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+            }
+        }
+    }
+
+    public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool
+    {
+        $normalizedRole = trim($institutionalRole);
+
+        if ($normalizedRole === '') {
+            return false;
+        }
+
+        try {
+                        $currentManagementId = $this->ensureCurrentManagementId();
+
+            $sql = <<<SQL
+                SELECT COUNT(*)
+                                FROM member_management_roles mmr
+                                INNER JOIN member_users u ON u.id = mmr.member_user_id
+                                WHERE mmr.management_id = :management_id
+                                    AND mmr.role_name = :institutional_role
+                                    AND mmr.ends_at IS NULL
+                                    AND u.status = 'active'
+                                    AND (:except_user_id_check <= 0 OR u.id <> :except_user_id_filter)
+            SQL;
+
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute([
+                                'management_id' => $currentManagementId,
+                'institutional_role' => $normalizedRole,
+                'except_user_id_check' => $exceptUserId,
+                'except_user_id_filter' => $exceptUserId,
+            ]);
+
+            return (int) ($statement->fetchColumn() ?: 0) > 0;
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                $currentManagementId = $this->ensureCurrentManagementId();
+
+                $sql = <<<SQL
+                    SELECT COUNT(*)
+                    FROM member_management_roles mmr
+                    INNER JOIN member_users u ON u.id = mmr.member_user_id
+                    WHERE mmr.management_id = :management_id
+                      AND mmr.role_name = :institutional_role
+                      AND mmr.ends_at IS NULL
+                      AND u.status = 'active'
+                      AND (:except_user_id_check <= 0 OR u.id <> :except_user_id_filter)
+                SQL;
+
+                $statement = $this->pdo->prepare($sql);
+                $statement->execute([
+                    'management_id' => $currentManagementId,
+                    'institutional_role' => $normalizedRole,
+                    'except_user_id_check' => $exceptUserId,
+                    'except_user_id_filter' => $exceptUserId,
+                ]);
+
+                return (int) ($statement->fetchColumn() ?: 0) > 0;
+            } catch (\Throwable $innerException) {
+                $fallbackSql = <<<SQL
+                    SELECT COUNT(*)
+                    FROM member_users u
+                    WHERE u.status = 'active'
+                      AND u.institutional_role = :institutional_role
+                      AND (:except_user_id_check <= 0 OR u.id <> :except_user_id_filter)
+                SQL;
+
+                $fallbackStatement = $this->pdo->prepare($fallbackSql);
+                $fallbackStatement->execute([
+                    'institutional_role' => $normalizedRole,
+                    'except_user_id_check' => $exceptUserId,
+                    'except_user_id_filter' => $exceptUserId,
+                ]);
+
+                return (int) ($fallbackStatement->fetchColumn() ?: 0) > 0;
+            }
+        }
     }
 
     public function findAllUsersForAdmin(): array
@@ -412,6 +559,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.created_at,
@@ -420,6 +568,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     r.name AS role_name
                 FROM member_users u
                 LEFT JOIN roles r ON r.id = u.role_id
+                LEFT JOIN member_management_roles mmr
+                    ON mmr.member_user_id = u.id
+                   AND mmr.ends_at IS NULL
+                   AND mmr.management_id = (
+                        SELECT m.id
+                        FROM institutional_managements m
+                        WHERE m.is_current = 1
+                        ORDER BY m.id DESC
+                        LIMIT 1
+                   )
                 ORDER BY u.created_at DESC
             SQL;
 
@@ -438,13 +596,15 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS institutional_role,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.created_at,
                         u.updated_at,
-                        NULL AS role_key,
-                        NULL AS role_name
+                        r.role_key,
+                        r.name AS role_name
                     FROM member_users u
+                    LEFT JOIN roles r ON r.id = u.role_id
                     ORDER BY u.id DESC
                 SQL;
 
@@ -461,6 +621,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS institutional_role,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS created_at,
@@ -485,12 +646,33 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
      */
     private function normalizeMemberRowWithDefaults(array $row): array
     {
-        $row['role_key'] = (string) ($row['role_key'] ?? 'member');
-        $row['role_name'] = (string) ($row['role_name'] ?? 'Membro');
+        $roleId = (int) ($row['role_id'] ?? 0);
+        $roleKeyById = [
+            1 => 'member',
+            2 => 'operator',
+            3 => 'manager',
+            4 => 'admin',
+        ];
+        $roleNameById = [
+            1 => 'Membro',
+            2 => 'Operador',
+            3 => 'Gerente',
+            4 => 'Administrador',
+        ];
+
+        $fallbackRoleKey = (string) ($roleKeyById[$roleId] ?? 'member');
+        $fallbackRoleName = (string) ($roleNameById[$roleId] ?? 'Membro');
+
+        $roleKey = trim((string) ($row['role_key'] ?? ''));
+        $roleName = trim((string) ($row['role_name'] ?? ''));
+
+        $row['role_key'] = $roleKey !== '' ? $roleKey : $fallbackRoleKey;
+        $row['role_name'] = $roleName !== '' ? $roleName : $fallbackRoleName;
         $row['phone_mobile'] = $row['phone_mobile'] ?? null;
         $row['phone_landline'] = $row['phone_landline'] ?? null;
         $row['birth_date'] = $row['birth_date'] ?? null;
         $row['birth_place'] = $row['birth_place'] ?? null;
+        $row['institutional_role'] = $row['institutional_role'] ?? null;
         $row['profile_photo_path'] = $row['profile_photo_path'] ?? null;
         $row['profile_completed'] = (int) ($row['profile_completed'] ?? 0);
 
@@ -533,11 +715,45 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 phone_landline VARCHAR(30) NULL,
                 birth_date DATE NULL,
                 birth_place VARCHAR(140) NULL,
+                institutional_role VARCHAR(120) NULL,
                 profile_photo_path VARCHAR(255) NULL,
                 profile_completed TINYINT(1) NOT NULL DEFAULT 0,
                 approved_at DATETIME NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS institutional_managements (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(120) NOT NULL,
+                starts_at DATE NULL,
+                ends_at DATE NULL,
+                is_current TINYINT(1) NOT NULL DEFAULT 0,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS member_management_roles (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                management_id BIGINT UNSIGNED NOT NULL,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                role_name VARCHAR(120) NOT NULL,
+                starts_at DATE NULL,
+                ends_at DATE NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_member_management_unique_member (management_id, member_user_id),
+                KEY idx_member_management_role_name (management_id, role_name),
+                CONSTRAINT fk_member_management_roles_management
+                    FOREIGN KEY (management_id) REFERENCES institutional_managements(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE,
+                CONSTRAINT fk_member_management_roles_member
+                    FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
 
@@ -588,6 +804,11 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         );
         $this->ensureColumn(
             'member_users',
+            'institutional_role',
+            'ALTER TABLE member_users ADD COLUMN institutional_role VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
             'profile_photo_path',
             'ALTER TABLE member_users ADD COLUMN profile_photo_path VARCHAR(255) NULL'
         );
@@ -614,6 +835,118 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         );
 
         $this->ensureDefaultRoles();
+        $currentManagementId = $this->ensureCurrentManagementId();
+        $this->migrateLegacyInstitutionalRolesToCurrentManagement($currentManagementId);
+    }
+
+    private function ensureCurrentManagementId(): int
+    {
+        try {
+            $statement = $this->pdo->query(
+                "SELECT id FROM institutional_managements WHERE is_current = 1 ORDER BY id DESC LIMIT 1"
+            );
+            $currentId = (int) ($statement !== false ? $statement->fetchColumn() : 0);
+
+            if ($currentId > 0) {
+                return $currentId;
+            }
+
+            $insertStatement = $this->pdo->prepare(
+                'INSERT INTO institutional_managements (name, starts_at, is_current) VALUES (:name, :starts_at, 1)'
+            );
+            $insertStatement->execute([
+                'name' => self::DEFAULT_MANAGEMENT_NAME,
+                'starts_at' => date('Y-m-d'),
+            ]);
+
+            return (int) $this->pdo->lastInsertId();
+        } catch (\Throwable $exception) {
+            return 0;
+        }
+    }
+
+    private function syncInstitutionalRoleForCurrentManagement(int $userId, ?string $institutionalRole): bool
+    {
+        $managementId = $this->ensureCurrentManagementId();
+
+        if ($managementId <= 0 || $userId <= 0) {
+            return true;
+        }
+
+        if ($institutionalRole === null) {
+            $deleteStatement = $this->pdo->prepare(
+                'DELETE FROM member_management_roles WHERE management_id = :management_id AND member_user_id = :member_user_id LIMIT 1'
+            );
+
+            return $deleteStatement->execute([
+                'management_id' => $managementId,
+                'member_user_id' => $userId,
+            ]);
+        }
+
+        $sql = <<<SQL
+            INSERT INTO member_management_roles (
+                management_id,
+                member_user_id,
+                role_name,
+                starts_at,
+                ends_at
+            ) VALUES (
+                :management_id,
+                :member_user_id,
+                :role_name,
+                :starts_at,
+                NULL
+            )
+            ON DUPLICATE KEY UPDATE
+                role_name = VALUES(role_name),
+                ends_at = NULL
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+
+        return $statement->execute([
+            'management_id' => $managementId,
+            'member_user_id' => $userId,
+            'role_name' => $institutionalRole,
+            'starts_at' => date('Y-m-d'),
+        ]);
+    }
+
+    private function migrateLegacyInstitutionalRolesToCurrentManagement(int $managementId): void
+    {
+        if ($managementId <= 0) {
+            return;
+        }
+
+        $sql = <<<SQL
+            INSERT INTO member_management_roles (
+                management_id,
+                member_user_id,
+                role_name,
+                starts_at,
+                ends_at
+            )
+            SELECT
+                :management_id,
+                u.id,
+                u.institutional_role,
+                COALESCE(DATE(u.approved_at), DATE(u.created_at), CURRENT_DATE),
+                NULL
+            FROM member_users u
+            LEFT JOIN member_management_roles mmr
+                ON mmr.management_id = :management_id
+               AND mmr.member_user_id = u.id
+               AND mmr.ends_at IS NULL
+            WHERE u.institutional_role IS NOT NULL
+              AND TRIM(u.institutional_role) <> ''
+              AND mmr.id IS NULL
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute([
+            'management_id' => $managementId,
+        ]);
     }
 
     private function ensureColumn(string $tableName, string $columnName, string $alterSql): void

@@ -12,27 +12,13 @@ use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
 use Throwable;
 
-class AdminMemberUsersPageAction extends AbstractPageAction
+class AdminCedeManagementPageAction extends AbstractPageAction
 {
     private const DEFAULT_PAGE_SIZE = 10;
 
     private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
 
-    private const SORT_FIELDS = ['id', 'full_name', 'email', 'status', 'role_name'];
-
-    private const INSTITUTIONAL_ROLE_OPTIONS = [
-        'Presidente CEDE',
-        'Vice-presidente CEDE',
-        'Secretário',
-        'Diretor de Finanças',
-        'Diretor de Eventos',
-        'Diretor de Patrimônio',
-        'Diretor de Estudos',
-        'Diretor de Atendimento Fraterno',
-        'Diretor de Comunicação',
-        'Coordenador',
-        'Conselheiro',
-    ];
+    private const SORT_FIELDS = ['full_name', 'email', 'institutional_role', 'role_name', 'status'];
 
     private MemberAuthRepository $memberAuthRepository;
 
@@ -45,29 +31,58 @@ class AdminMemberUsersPageAction extends AbstractPageAction
     public function __invoke(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
-        $status = (string) ($queryParams['status'] ?? '');
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
-        $institutionalRoleConflict = trim((string) ($queryParams['institutional_role'] ?? ''));
+        $selectedInstitutionalRole = trim((string) ($queryParams['institutional_role'] ?? ''));
+        $selectedStatus = trim((string) ($queryParams['status_filter'] ?? ''));
+        $status = (string) ($queryParams['status'] ?? '');
 
         $users = [];
-        $roles = [];
         $loadError = '';
 
         try {
             $users = $this->memberAuthRepository->findAllUsersForAdmin();
-            $roles = $this->memberAuthRepository->findAllRoles();
         } catch (Throwable $exception) {
             $status = $status !== '' ? $status : 'load-error';
-            $loadError = 'Não foi possível carregar os usuários no momento. Verifique o schema de membros no banco.';
+            $loadError = 'Não foi possível carregar a Gestão CEDE no momento.';
 
-            $this->logger->error('Falha ao carregar usuários do painel.', [
+            $this->logger->error('Falha ao carregar lista de Gestão CEDE.', [
                 'exception' => $exception,
             ]);
         }
 
-        if ($status === 'institutional-role-conflict') {
-            $roleLabel = $institutionalRoleConflict !== '' ? $institutionalRoleConflict : 'esta função institucional';
-            $loadError = 'Já existe um usuário ativo com a função "' . $roleLabel . '". Remova ou altere a função atual antes de prosseguir.';
+        $users = array_values(array_filter(
+            $users,
+            static fn (array $user): bool => trim((string) ($user['institutional_role'] ?? '')) !== ''
+        ));
+
+        $institutionalRoleOptions = array_values(array_unique(array_map(
+            static fn (array $user): string => trim((string) ($user['institutional_role'] ?? '')),
+            $users
+        )));
+        $institutionalRoleOptions = array_values(array_filter(
+            $institutionalRoleOptions,
+            static fn (string $role): bool => $role !== ''
+        ));
+        natcasesort($institutionalRoleOptions);
+        $institutionalRoleOptions = array_values($institutionalRoleOptions);
+
+        if ($selectedInstitutionalRole !== '' && in_array($selectedInstitutionalRole, $institutionalRoleOptions, true)) {
+            $users = array_values(array_filter(
+                $users,
+                static fn (array $user): bool => (string) ($user['institutional_role'] ?? '') === $selectedInstitutionalRole
+            ));
+        } else {
+            $selectedInstitutionalRole = '';
+        }
+
+        $statusOptions = ['active', 'pending', 'blocked'];
+        if ($selectedStatus !== '' && in_array($selectedStatus, $statusOptions, true)) {
+            $users = array_values(array_filter(
+                $users,
+                static fn (array $user): bool => (string) ($user['status'] ?? '') === $selectedStatus
+            ));
+        } else {
+            $selectedStatus = '';
         }
 
         if ($searchTerm !== '') {
@@ -79,9 +94,9 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                     $haystack = implode(' ', [
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
-                        (string) ($user['status'] ?? ''),
-                        (string) ($user['role_name'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
+                        (string) ($user['role_name'] ?? ''),
+                        (string) ($user['status'] ?? ''),
                     ]);
 
                     return stripos(strtolower($haystack), $normalizedSearch) !== false;
@@ -89,23 +104,17 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             ));
         }
 
-        $sortBy = (string) ($queryParams['sort'] ?? 'id');
+        $sortBy = (string) ($queryParams['sort'] ?? 'full_name');
         if (!in_array($sortBy, self::SORT_FIELDS, true)) {
-            $sortBy = 'id';
+            $sortBy = 'full_name';
         }
 
-        $sortDirection = strtolower((string) ($queryParams['dir'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortDirection = strtolower((string) ($queryParams['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
         $sortMultiplier = $sortDirection === 'desc' ? -1 : 1;
 
         usort($users, static function (array $firstUser, array $secondUser) use ($sortBy, $sortMultiplier): int {
             $firstValue = (string) ($firstUser[$sortBy] ?? '');
             $secondValue = (string) ($secondUser[$sortBy] ?? '');
-
-            if ($sortBy === 'id') {
-                $comparison = (int) $firstValue <=> (int) $secondValue;
-
-                return $comparison * $sortMultiplier;
-            }
 
             $comparison = strnatcasecmp($firstValue, $secondValue);
 
@@ -135,7 +144,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         $startItem = $totalItems > 0 ? $offset + 1 : 0;
         $endItem = $totalItems > 0 ? min($offset + count($users), $totalItems) : 0;
 
-        $basePath = '/painel/usuarios';
+        $basePath = '/painel/gestao-cede';
         $baseQuery = [
             'per_page' => $pageSize,
             'sort' => $sortBy,
@@ -144,6 +153,12 @@ class AdminMemberUsersPageAction extends AbstractPageAction
 
         if ($searchTerm !== '') {
             $baseQuery['q'] = $searchTerm;
+        }
+        if ($selectedInstitutionalRole !== '') {
+            $baseQuery['institutional_role'] = $selectedInstitutionalRole;
+        }
+        if ($selectedStatus !== '') {
+            $baseQuery['status_filter'] = $selectedStatus;
         }
 
         $sortLinks = [];
@@ -162,6 +177,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                     'sort' => $field,
                     'dir' => $nextDirection,
                     'q' => $searchTerm,
+                    'institutional_role' => $selectedInstitutionalRole,
+                    'status_filter' => $selectedStatus,
                 ]),
                 'indicator' => $indicator,
                 'active' => $sortBy === $field,
@@ -187,24 +204,18 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         $pageSizeOptions = array_map(static fn (int $option): array => [
             'value' => $option,
             'selected' => $option === $pageSize,
-            'url' => $basePath . '?' . http_build_query([
-                'page' => 1,
-                'per_page' => $option,
-                'sort' => $sortBy,
-                'dir' => $sortDirection,
-                'q' => $searchTerm,
-            ]),
         ], self::PAGE_SIZE_OPTIONS);
 
-        return $this->renderPage($response, 'pages/admin-member-users.twig', [
-            'member_users' => $users,
-            'member_roles' => $roles,
-            'member_institutional_role_options' => self::INSTITUTIONAL_ROLE_OPTIONS,
-            'admin_status' => $status,
-            'admin_error_message' => $loadError,
-            'member_users_search' => $searchTerm,
-            'member_users_sort_links' => $sortLinks,
-            'member_users_pagination' => [
+        return $this->renderPage($response, 'pages/admin-cede-management.twig', [
+            'cede_management_users' => $users,
+            'cede_management_status' => $status,
+            'cede_management_error_message' => $loadError,
+            'cede_management_search' => $searchTerm,
+            'cede_management_institutional_role' => $selectedInstitutionalRole,
+            'cede_management_institutional_role_options' => $institutionalRoleOptions,
+            'cede_management_status_filter' => $selectedStatus,
+            'cede_management_sort_links' => $sortLinks,
+            'cede_management_pagination' => [
                 'current_page' => $currentPage,
                 'total_pages' => $totalPages,
                 'total_items' => $totalItems,
@@ -218,9 +229,12 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Usuários | Dashboard Agenda',
-            'page_url' => 'https://cedern.org/painel/usuarios',
-            'page_description' => 'Validação de cadastro e atribuição de perfis de usuário.',
+            'dashboard_page_kicker' => 'Dashboard',
+            'dashboard_page_title' => 'Gestão CEDE',
+            'dashboard_page_lead' => 'Usuários com função institucional ativa no CEDE.',
+            'page_title' => 'Gestão CEDE | Dashboard Agenda',
+            'page_url' => 'https://cedern.org/painel/gestao-cede',
+            'page_description' => 'Lista administrativa de funções institucionais do CEDE.',
         ]);
     }
 

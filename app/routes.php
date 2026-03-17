@@ -7,6 +7,7 @@ use App\Application\Actions\Page\AboutMissionPageAction;
 use App\Application\Actions\Page\AboutValuesPageAction;
 use App\Application\Actions\Page\AboutHistoryPageAction;
 use App\Application\Actions\Page\AboutBrandPageAction;
+use App\Application\Actions\Page\AboutManagementPageAction;
 use App\Application\Actions\Admin\AdminDashboardPageAction;
 use App\Application\Actions\Admin\AdminAgendaDeleteAction;
 use App\Application\Actions\Admin\AdminAgendaFormPageAction;
@@ -18,6 +19,7 @@ use App\Application\Actions\Admin\AdminCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
+use App\Application\Actions\Admin\AdminCedeManagementPageAction;
 use App\Application\Actions\Admin\AdminPracticalGuidePageAction;
 use App\Application\Actions\Admin\AdminUserGuidePageAction;
 use App\Application\Actions\Admin\AdminLogoutAction;
@@ -110,6 +112,7 @@ return function (App $app) {
     $app->get('/quem-somos/valores', AboutValuesPageAction::class);
     $app->get('/quem-somos/historia', AboutHistoryPageAction::class);
     $app->get('/quem-somos/nossa-marca', AboutBrandPageAction::class);
+    $app->get('/quem-somos/gestao-cede', AboutManagementPageAction::class);
     $app->get('/estudos', StudiesPageAction::class);
     $app->get('/estudos/esde', EsdePageAction::class);
     $app->get('/estudos/palestras', PublicLecturesPageAction::class);
@@ -139,6 +142,7 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/categorias/{id}/editar', AdminCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->post('/categorias/{id}/alternar-status', AdminCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/guia-do-usuario', AdminUserGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
@@ -187,6 +191,9 @@ return function (App $app) {
     });
     $app->get('/admin/usuarios', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/usuarios')->withStatus(302);
+    });
+    $app->get('/admin/gestao-cede', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/gestao-cede')->withStatus(302);
     });
     $app->get('/admin/usuarios/{id}/resumo', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');

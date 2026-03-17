@@ -48,7 +48,7 @@
 
   const sanitizeDigits = (value) => (value || '').replace(/\D+/g, '');
 
-  const formatPhone = (value) => {
+  const formatMobilePhone = (value) => {
     const digits = sanitizeDigits(value).slice(0, 11);
 
     if (digits.length <= 2) {
@@ -66,13 +66,27 @@
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
   };
 
-  const applyPhoneMask = (input) => {
+  const formatLandlinePhone = (value) => {
+    const digits = sanitizeDigits(value).slice(0, 10);
+
+    if (digits.length <= 2) {
+      return digits;
+    }
+
+    if (digits.length <= 6) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    }
+
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+  };
+
+  const applyPhoneMask = (input, formatter) => {
     if (!input) {
       return;
     }
 
     const onInput = () => {
-      input.value = formatPhone(input.value);
+      input.value = formatter(input.value);
     };
 
     input.addEventListener('input', onInput);
@@ -286,8 +300,8 @@
     });
   };
 
-  applyPhoneMask(phoneMobileInput);
-  applyPhoneMask(phoneLandlineInput);
+  applyPhoneMask(phoneMobileInput, formatMobilePhone);
+  applyPhoneMask(phoneLandlineInput, formatLandlinePhone);
   initCityCascade();
   initPhotoPreview();
 })();

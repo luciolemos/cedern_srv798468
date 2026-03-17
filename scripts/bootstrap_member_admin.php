@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS member_users (
     phone_landline VARCHAR(30) NULL,
     birth_date DATE NULL,
     birth_place VARCHAR(140) NULL,
+    institutional_role VARCHAR(120) NULL,
     profile_photo_path VARCHAR(255) NULL,
     profile_completed TINYINT(1) NOT NULL DEFAULT 0,
     approved_at DATETIME NULL,
@@ -72,6 +73,39 @@ CREATE TABLE IF NOT EXISTS member_users (
 SQL);
 
 $pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS institutional_managements (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        starts_at DATE NULL,
+        ends_at DATE NULL,
+        is_current TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL);
+
+$pdo->exec(<<<SQL
+CREATE TABLE IF NOT EXISTS member_management_roles (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        management_id BIGINT UNSIGNED NOT NULL,
+        member_user_id BIGINT UNSIGNED NOT NULL,
+        role_name VARCHAR(120) NOT NULL,
+        starts_at DATE NULL,
+        ends_at DATE NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_member_management_unique_member (management_id, member_user_id),
+        KEY idx_member_management_role_name (management_id, role_name),
+        CONSTRAINT fk_member_management_roles_management
+            FOREIGN KEY (management_id) REFERENCES institutional_managements(id)
+            ON UPDATE CASCADE ON DELETE CASCADE,
+        CONSTRAINT fk_member_management_roles_member
+            FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+            ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+SQL);
+
+$pdo->exec(<<<SQL
 INSERT INTO roles (role_key, name, description)
 VALUES
     ('member', 'Membro', 'Acesso básico.'),
@@ -81,6 +115,14 @@ VALUES
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description)
+SQL);
+
+$pdo->exec(<<<SQL
+INSERT INTO institutional_managements (name, starts_at, is_current)
+SELECT 'Gestão Atual', CURRENT_DATE, 1
+WHERE NOT EXISTS (
+    SELECT 1 FROM institutional_managements WHERE is_current = 1
+)
 SQL);
 
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);

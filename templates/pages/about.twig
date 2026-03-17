@@ -2,7 +2,6 @@
 
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
-    {% include 'home/social-proof.twig' %}
     <section class="nc-section" aria-label="Detalhes institucionais">
       {% include 'components/section-header.twig' with {
         kicker: 'Quem Somos',
@@ -16,6 +15,19 @@
         <a class="nc-btn nc-btn-secondary" href="/quem-somos/nossa-marca">Nossa Marca</a>
       </div>
     </section>
+
+    <section class="nc-section" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="40">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Gestão CEDE',
+        title: 'Diretoria e funções institucionais',
+        lead: 'Acesse a página dedicada com os membros da gestão atual e as atribuições institucionais de cada função.'
+      } %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="140">
+        <a class="nc-btn nc-btn-secondary" href="/quem-somos/gestao-cede">Abrir Gestão CEDE</a>
+      </div>
+    </section>
+
     {% include 'home/final-cta.twig' %}
   </main>
 {% endblock %}

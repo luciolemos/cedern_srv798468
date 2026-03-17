@@ -4,7 +4,42 @@
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/hero.twig' %}
 
-    <section class="nc-section nc-section--surface" aria-label="Acesso rápido" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section" aria-label="Depoimentos" data-aos="fade-up" data-aos-delay="0">
+      {% set social_proof = homeContent.sections.socialProof|default({}) %}
+      {% set testimonials = homeContent.socialProofTestimonials|default([]) %}
+
+      {% include 'components/section-header.twig' with {
+        kicker: social_proof.kicker|default('Depoimentos'),
+        title: 'Depoimentos e testemunhos',
+        lead: 'Relatos de quem participa das atividades e vivencia o acolhimento fraterno do CEDE.'
+      } %}
+
+      {% if testimonials|length > 0 %}
+        <div class="nc-testimonial-grid" data-testimonials-grid>
+          {% for person in testimonials %}
+            <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ person.delay|default(160 + (loop.index0 * 60)) }}"{% if loop.index > 3 %} hidden data-testimonial-extra="true"{% endif %}>
+              <div class="nc-testimonial-head">
+                <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}">
+                <div class="nc-testimonial-meta">
+                  <strong class="nc-testimonial-name">{{ person.name }}</strong>
+                  <span class="nc-testimonial-role">{{ person.role }}</span>
+                </div>
+              </div>
+              <p>"{{ person.quote }}"</p>
+            </article>
+          {% endfor %}
+        </div>
+
+        {% if testimonials|length > 3 %}
+          <div class="nc-actions" data-aos="fade-up" data-aos-delay="180">
+            <button class="nc-btn nc-btn-primary" type="button" data-testimonials-toggle aria-expanded="false">Ver mais depoimentos</button>
+          </div>
+        {% endif %}
+      {% endif %}
+    </section>
+
+
+    <section class="nc-section" aria-label="Acesso rápido" data-aos="fade-up" data-aos-delay="0">
       {% include 'components/section-header.twig' with {
         kicker: 'Caminhos',
         title: 'Encontre o que você busca no CEDE',
@@ -54,6 +89,19 @@
       </div>
     </section>
 
+    <section class="nc-section" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="40">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Transparência',
+        title: 'Gestão CEDE',
+        lead: 'Consulte a diretoria e as funções institucionais atualizadas na página Quem Somos.'
+      } %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="140">
+        <a class="nc-btn nc-btn-primary" href="/quem-somos">Ver gestão completa</a>
+      </div>
+    </section>
+
     {% include 'home/final-cta.twig' %}
+    {% include 'home/donation.twig' %}
   </main>
 {% endblock %}

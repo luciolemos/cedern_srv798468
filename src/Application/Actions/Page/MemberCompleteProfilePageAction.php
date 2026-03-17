@@ -74,8 +74,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 
             if ($form['phone_landline'] !== '') {
                 $landlineDigits = preg_replace('/\D+/', '', $form['phone_landline']);
-                if ($landlineDigits === null || strlen($landlineDigits) < 10 || strlen($landlineDigits) > 11) {
-                    $errors[] = 'Informe um telefone fixo válido com DDD ou deixe em branco.';
+                if ($landlineDigits === null || strlen($landlineDigits) !== 10) {
+                    $errors[] = 'Informe um telefone fixo válido no formato (84) 3210-1234 ou deixe em branco.';
                 }
             }
 

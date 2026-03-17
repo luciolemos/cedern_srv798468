@@ -10,6 +10,7 @@ return [
         'valores' => 'Valores',
         'historia' => 'História',
         'nossa-marca' => 'Nossa Marca',
+        'gestao-cede' => 'Gestão CEDE',
         'estudos' => 'Estudos',
         'esde' => 'ESDE',
         'palestras' => 'Palestras',
@@ -34,6 +35,7 @@ return [
                 ['path' => '/quem-somos/valores', 'key' => 'valores'],
                 ['path' => '/quem-somos/historia', 'key' => 'historia'],
                 ['path' => '/quem-somos/nossa-marca', 'key' => 'nossa-marca'],
+                ['path' => '/quem-somos/gestao-cede', 'key' => 'gestao-cede'],
             ],
         ],
         [

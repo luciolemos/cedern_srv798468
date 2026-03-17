@@ -7,7 +7,7 @@
         {% include 'components/section-header.twig' with {
           kicker: 'Área do Membro',
           title: 'Bem-vindo, ' ~ (member_data.full_name|default(member_name|default('Membro'))),
-          lead: 'Sua área pessoal está ativa. Revise seus dados e acesse os recursos conforme seu perfil.'
+          lead: 'Sua área pessoal está ativa. Perfil: ' ~ (member_data.role_name|default(member_role_name|default('Membro'))) ~ ' • Função no CEDE: ' ~ (member_data.institutional_role|default('Sem função definida')) ~ '.'
         } %}
 
         {% if member_home_status == 'forbidden' %}
@@ -211,6 +211,7 @@
               <div><dt>Telefone</dt><dd>{{ member_data.phone_landline|default('-') }}</dd></div>
               <div><dt>Data de nascimento</dt><dd>{{ member_data.birth_date|default('-') }}</dd></div>
               <div><dt>Naturalidade</dt><dd>{{ member_data.birth_place|default('-') }}</dd></div>
+              <div><dt>Função no CEDE</dt><dd>{{ member_data.institutional_role|default('Sem função definida') }}</dd></div>
             </dl>
 
             <div class="nc-actions nc-admin-login-actions nc-member-actions" data-aos="fade-up" data-aos-delay="80">

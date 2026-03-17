@@ -1,0 +1,52 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section nc-management-slideshow" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="40" data-cards-slideshow data-page-size-mobile="1" data-page-size-tablet="2" data-page-size-desktop="3" data-autoplay="true" data-autoplay-interval="4500">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Quem Somos',
+        title: 'Gestão CEDE',
+        lead: 'Conheça os membros da gestão atual e as atribuições de cada função institucional, responsáveis por conduzir o CEDE com dedicação, equilíbrio e compromisso com seus princípios.'
+      } %}
+
+      <div class="nc-management-intro" data-aos="fade-up" data-aos-delay="80">
+        <p>A gestão do CEDE é pautada na seriedade, responsabilidade e fidelidade aos ensinamentos da Doutrina Espírita, assegurando que todas as atividades da casa sejam realizadas com organização, harmonia e propósito. Cada integrante da gestão exerce seu papel com espírito de serviço, buscando sempre o bem coletivo e o crescimento moral e espiritual de todos os frequentadores.</p>
+        <p>Mais do que uma estrutura administrativa, a gestão representa um instrumento de sustentação e continuidade da missão do CEDE, garantindo que os estudos, atendimentos e ações fraternas sejam conduzidos com qualidade, acolhimento e coerência doutrinária.</p>
+        <p>Uma gestão comprometida fortalece a instituição, amplia seu alcance e consolida sua credibilidade perante a comunidade, permitindo que o CEDE continue sendo um espaço de luz, aprendizado e transformação interior.</p>
+      </div>
+
+      {% if public_cede_management|default([])|length > 0 %}
+        <div class="nc-testimonial-grid" data-slideshow-track>
+          {% for member in public_cede_management %}
+            <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ 120 + (loop.index0 * 40) }}">
+              <div class="nc-testimonial-head">
+                {% if member.profile_photo_path|default('') %}
+                  <img class="nc-testimonial-avatar" src="/{{ member.profile_photo_path }}" alt="Foto de {{ member.full_name|default('Membro') }}">
+                {% else %}
+                  <span class="nc-testimonial-avatar nc-testimonial-avatar-fallback" aria-hidden="true">{{ member.full_name|default('M')|slice(0, 1)|upper }}</span>
+                {% endif %}
+                <div class="nc-testimonial-meta">
+                  <strong class="nc-testimonial-name">{{ member.full_name|default('Membro') }}</strong>
+                  <span class="nc-testimonial-role">{{ member.institutional_role|default('Função institucional') }}</span>
+                </div>
+              </div>
+              <p>{{ member.institutional_role_description|default('Atua na organização e no fortalecimento das atividades institucionais do CEDE.') }}</p>
+            </article>
+          {% endfor %}
+        </div>
+
+        <div class="nc-management-slideshow-controls" data-slideshow-controls>
+          <button class="nc-btn nc-btn-secondary" type="button" data-slideshow-prev aria-label="Slide anterior">←</button>
+          <span class="nc-management-slideshow-status" data-slideshow-status aria-live="polite">1 / 1</span>
+          <button class="nc-btn nc-btn-secondary" type="button" data-slideshow-next aria-label="Próximo slide">→</button>
+        </div>
+      {% else %}
+        <p>Nenhum membro da gestão foi publicado no momento.</p>
+      {% endif %}
+
+      <div class="nc-actions" data-aos="fade-up" data-aos-delay="160">
+        <a class="nc-btn nc-btn-primary" href="/quem-somos">Voltar para Quem Somos</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

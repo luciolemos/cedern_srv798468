@@ -10,8 +10,14 @@
     {% set toast_tone = 'success' %}
     {% if admin_status == 'approved' %}
       {% set toast_message = 'Usuário aprovado e perfil atualizado com sucesso.' %}
+    {% elseif admin_status == 'institutional-role-conflict' %}
+      {% set toast_message = admin_error_message|default('Já existe um usuário ativo com esta função institucional. Remova ou altere a função atual antes de prosseguir.') %}
+      {% set toast_tone = 'error' %}
     {% elseif admin_status == 'invalid-role' %}
       {% set toast_message = 'Selecione um perfil válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-institutional-role' %}
+      {% set toast_message = 'Selecione uma função institucional válida para continuar.' %}
       {% set toast_tone = 'error' %}
     {% elseif admin_status == 'assign-error' %}
       {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
@@ -29,6 +35,7 @@
     {% set pagination = member_users_pagination|default({}) %}
     {% set sort_links = member_users_sort_links|default({}) %}
     {% set search_term = member_users_search|default('') %}
+    {% set institutional_role_options = member_institutional_role_options|default([]) %}
 
     {% if member_users|length == 0 %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
@@ -119,7 +126,30 @@
                 </td>
                 <td data-label="Nome">
                   <span>{{ user.full_name|default('-') }}</span>
-                  <small class="nc-admin-user-email-inline">{{ user.email|default('-') }}</small>
+                  <small class="nc-admin-user-email-inline nc-admin-email-inline">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <rect x="3.5" y="6" width="17" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                      <path d="M4.5 7L12 12.5L19.5 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>{{ user.email|default('-') }}</span>
+                  </small>
+                  {% if user.phone_mobile_display is defined and user.phone_mobile_display != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-mobile">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="7" y="3.5" width="10" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                        <circle cx="12" cy="17.5" r="0.9" fill="currentColor"/>
+                      </svg>
+                      <span>{{ user.phone_mobile_display }}</span>
+                    </small>
+                  {% endif %}
+                  {% if user.phone_landline_display is defined and user.phone_landline_display != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-landline">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M6.5 4H9.2L10.4 7.4L8.9 8.6C9.6 10.2 10.8 11.4 12.4 12.1L13.6 10.6L17 11.8V14.5C17 15.1 16.5 15.6 15.9 15.6C10.7 15.6 6.4 11.3 6.4 6.1C6.4 5.5 6.9 5 7.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ user.phone_landline_display }}</span>
+                    </small>
+                  {% endif %}
                 </td>
                 <td class="nc-admin-col-email" data-label="E-mail">{{ user.email|default('-') }}</td>
                 <td data-label="Status">
@@ -132,6 +162,12 @@
                       <option value="">Selecionar perfil</option>
                       {% for role in member_roles %}
                         <option value="{{ role.id }}"{% if user.role_key is defined and user.role_key == role.role_key %} selected{% endif %}>{{ role.name }}</option>
+                      {% endfor %}
+                    </select>
+                    <select class="nc-admin-inline-select" name="institutional_role" aria-label="Selecionar função no CEDE para {{ user.full_name|default('usuário') }}">
+                      <option value="">Função no CEDE (opcional)</option>
+                      {% for institutional_role_option in institutional_role_options %}
+                        <option value="{{ institutional_role_option }}"{% if user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
                       {% endfor %}
                     </select>
                     <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" type="submit" aria-label="Salvar perfil de {{ user.full_name|default('usuário') }}" title="Salvar">

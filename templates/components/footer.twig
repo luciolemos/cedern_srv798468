@@ -29,20 +29,21 @@
       </ul>
     </nav>
 
-    <section class="nc-footer-block" aria-label="Informações de contato">
-      <h3 class="nc-footer-title">Contato</h3>
-      {% if app_address is defined and app_address %}
-        <p class="nc-footer-copy">{{ app_address }}</p>
-      {% endif %}
-      <p class="nc-footer-copy">
-        <a class="nc-footer-link" href="mailto:cede@cedern.org">cede@cedern.org</a>
-      </p>
-      {% if app_instagram_url is defined and app_instagram_url %}
-        <p class="nc-footer-copy">
-          <a class="nc-footer-link" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
-        </p>
-      {% endif %}
-    </section>
+        <section class="nc-footer-block" aria-label="Informações de contato">
+          <h3 class="nc-footer-title">Contato</h3>
+          {% if app_address is defined and app_address %}
+            <p class="nc-footer-copy">{{ app_address }}</p>
+          {% endif %}
+          <p class="nc-footer-copy">
+            <a class="nc-footer-link" href="mailto:cede@cedern.org">cede@cedern.org</a>
+          </p>
+          {% if app_instagram_url is defined and app_instagram_url %}
+            <p class="nc-footer-copy">
+              <a class="nc-footer-link" href="{{ app_instagram_url }}" target="_blank" rel="noopener noreferrer">{{ app_instagram_label|default('Instagram oficial') }}</a>
+            </p>
+          {% endif %}
+        </section>
+
   </div>
 
   <div class="nc-container nc-footer-bottom">

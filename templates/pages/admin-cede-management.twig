@@ -1,0 +1,201 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Gestão CEDE' %}
+{% set dashboard_page_lead = 'Usuários com função institucional ativa no CEDE.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'error' %}
+    {% if cede_management_status == 'load-error' %}
+      {% set toast_message = cede_management_error_message|default('Não foi possível carregar a lista no momento.') %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    {% set pagination = cede_management_pagination|default({}) %}
+    {% set sort_links = cede_management_sort_links|default({}) %}
+    {% set search_term = cede_management_search|default('') %}
+    {% set selected_institutional_role = cede_management_institutional_role|default('') %}
+    {% set institutional_role_options = cede_management_institutional_role_options|default([]) %}
+    {% set selected_status_filter = cede_management_status_filter|default('') %}
+    {% set has_active_filters = search_term != '' or selected_institutional_role != '' or selected_status_filter != '' %}
+
+    <form class="nc-admin-table-search" method="get" action="/painel/gestao-cede" data-aos="fade-up" data-aos-delay="95">
+      <label for="nc-cede-management-search">Buscar na Gestão CEDE</label>
+      <div class="nc-admin-table-search-controls">
+        <input id="nc-cede-management-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, função, perfil, status...">
+        <select name="institutional_role" aria-label="Filtrar por função no CEDE">
+          <option value="">Todas as funções</option>
+          {% for role_option in institutional_role_options %}
+            <option value="{{ role_option }}"{% if selected_institutional_role == role_option %} selected{% endif %}>{{ role_option }}</option>
+          {% endfor %}
+        </select>
+        <select name="status_filter" aria-label="Filtrar por status">
+          <option value="">Todos os status</option>
+          <option value="active"{% if selected_status_filter == 'active' %} selected{% endif %}>Ativo</option>
+          <option value="pending"{% if selected_status_filter == 'pending' %} selected{% endif %}>Pendente</option>
+          <option value="blocked"{% if selected_status_filter == 'blocked' %} selected{% endif %}>Bloqueado</option>
+        </select>
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('full_name') }}">
+        <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+        <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+        {% if has_active_filters %}
+          <a class="nc-btn nc-btn-secondary" href="/painel/gestao-cede">Limpar filtros</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if cede_management_users|length == 0 %}
+      <p>{{ search_term ? 'Nenhum usuário com função no CEDE encontrado para a busca informada.' : 'Nenhum usuário com função institucional ativa no CEDE.' }}</p>
+    {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="110">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="/painel/gestao-cede">
+          <label for="nc-cede-management-per-page">Registros por página</label>
+          <select id="nc-cede-management-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('full_name') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="institutional_role" value="{{ selected_institutional_role }}">
+          <input type="hidden" name="status_filter" value="{{ selected_status_filter }}">
+          <noscript>
+            <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+          </noscript>
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="80">
+        <table class="nc-admin-table nc-admin-table-users">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.full_name.active %} is-active{% endif %}" href="{{ sort_links.full_name.url }}">Nome <span aria-hidden="true">{{ sort_links.full_name.indicator }}</span></a>
+              </th>
+              <th>Telefone</th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.institutional_role.active %} is-active{% endif %}" href="{{ sort_links.institutional_role.url }}">Função no CEDE <span aria-hidden="true">{{ sort_links.institutional_role.indicator }}</span></a>
+              </th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil no sistema <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
+              </th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
+              </th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in cede_management_users %}
+              {% set user_status_key = user.status|default('') %}
+              {% set user_status_label = {
+                'pending': 'Pendente',
+                'active': 'Ativo',
+                'blocked': 'Bloqueado'
+              }[user_status_key]|default(user_status_key ?: '-') %}
+              <tr>
+                <td class="nc-admin-user-photo-cell" data-label="Foto">
+                  <span class="nc-admin-user-photo" aria-hidden="true">
+                    {% if user.profile_photo_path|default('') %}
+                      <img src="/{{ user.profile_photo_path }}" alt="">
+                    {% else %}
+                      <span>{{ (user.full_name|default(user.email|default('U'))|slice(0, 1)|upper) }}</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td data-label="Nome">
+                  <span>{{ user.full_name|default('-') }}</span>
+                  <small class="nc-admin-user-email-inline nc-admin-email-inline">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <rect x="3.5" y="6" width="17" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                      <path d="M4.5 7L12 12.5L19.5 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>{{ user.email|default('-') }}</span>
+                  </small>
+                </td>
+                <td data-label="Telefone">
+                  {% if user.phone_landline_display|default('-') != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-landline">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M6.5 4H9.2L10.4 7.4L8.9 8.6C9.6 10.2 10.8 11.4 12.4 12.1L13.6 10.6L17 11.8V14.5C17 15.1 16.5 15.6 15.9 15.6C10.7 15.6 6.4 11.3 6.4 6.1C6.4 5.5 6.9 5 7.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ user.phone_landline_display }}</span>
+                    </small>
+                  {% elseif user.phone_mobile_display|default('-') != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-mobile">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="7" y="3.5" width="10" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                        <circle cx="12" cy="17.5" r="0.9" fill="currentColor"/>
+                      </svg>
+                      <span>{{ user.phone_mobile_display }}</span>
+                    </small>
+                  {% else %}
+                    <span>-</span>
+                  {% endif %}
+                  {% if user.phone_mobile_display is defined and user.phone_mobile_display != '-' and user.phone_landline_display|default('-') != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-mobile">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="7" y="3.5" width="10" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                        <circle cx="12" cy="17.5" r="0.9" fill="currentColor"/>
+                      </svg>
+                      <span>{{ user.phone_mobile_display }}</span>
+                    </small>
+                  {% endif %}
+                </td>
+                <td data-label="Função no CEDE">{{ user.institutional_role|default('-') }}</td>
+                <td data-label="Perfil no sistema">{{ user.role_name|default('-') }}</td>
+                <td data-label="Status">
+                  <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
+                </td>
+                <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Visualizar resumo de {{ user.full_name|default('usuário') }}" title="Visualizar">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M2 12C4.5 7.5 8 5.5 12 5.5C16 5.5 19.5 7.5 22 12C19.5 16.5 16 18.5 12 18.5C8 18.5 4.5 16.5 2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span class="nc-sr-only">Visualizar</span>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação da Gestão CEDE" data-aos="fade-up" data-aos-delay="170">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

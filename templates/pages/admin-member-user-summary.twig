@@ -53,6 +53,10 @@
             <dt>Naturalidade</dt>
             <dd>{{ summary_user.birth_place|default('-') }}</dd>
           </div>
+          <div>
+            <dt>Função no CEDE</dt>
+            <dd>{{ summary_user.institutional_role|default('Sem função definida') }}</dd>
+          </div>
         </dl>
       </article>
     {% endif %}
