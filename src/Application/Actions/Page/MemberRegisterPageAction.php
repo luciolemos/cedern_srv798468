@@ -368,5 +368,4 @@ class MemberRegisterPageAction extends AbstractPageAction
             'subject' => trim($subject),
         ], '', '&', PHP_QUERY_RFC3986);
     }
-
 }

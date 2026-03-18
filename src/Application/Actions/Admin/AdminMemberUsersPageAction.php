@@ -145,7 +145,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    strtolower(trim((string) ($user['role_key'] ?? ''))) === $selectedRoleFilter
+                    strtolower(trim((string) $user['role_key'])) === $selectedRoleFilter
             ));
         }
 
@@ -153,7 +153,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    strtolower(trim((string) ($user['member_type'] ?? ''))) === $selectedMemberTypeFilter
+                    strtolower(trim((string) $user['member_type'])) === $selectedMemberTypeFilter
             ));
         }
 
@@ -184,7 +184,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                         (string) ($user['status'] ?? ''),
                         (string) ($user['role_name'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
-                        (string) ($user['member_type_label'] ?? ''),
+                        (string) $user['member_type_label'],
                     ]);
 
                     return stripos(strtolower($haystack), $normalizedSearch) !== false;

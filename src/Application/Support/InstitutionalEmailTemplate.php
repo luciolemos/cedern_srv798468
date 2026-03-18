@@ -35,8 +35,7 @@ final class InstitutionalEmailTemplate
         string $contentHtml,
         ?string $logoSrc = null,
         ?string $headerMetaHtml = null
-    ): string
-    {
+    ): string {
         $titleSafe = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $siteName = htmlspecialchars((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'), ENT_QUOTES, 'UTF-8');
         $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
@@ -111,8 +110,8 @@ final class InstitutionalEmailTemplate
         $rows = [];
 
         foreach ($actions as $action) {
-            $href = htmlspecialchars((string) ($action['href'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $label = htmlspecialchars((string) ($action['label'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $href = htmlspecialchars($action['href'], ENT_QUOTES, 'UTF-8');
+            $label = htmlspecialchars($action['label'], ENT_QUOTES, 'UTF-8');
             $isPrimary = (bool) ($action['is_primary'] ?? false);
 
             if ($href === '' || $label === '') {

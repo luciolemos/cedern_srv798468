@@ -434,7 +434,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $redirectPath = (string) (parse_url($redirectTarget, PHP_URL_PATH) ?? $redirectTarget);
 
         if (preg_match('#^/painel/usuarios/(\d+)/resumo$#', $redirectPath, $matches) === 1) {
-            return 'admin_member_user_summary_' . (int) ($matches[1] ?? 0);
+            return 'admin_member_user_summary_' . (int) $matches[1];
         }
 
         return AdminMemberUsersPageAction::FLASH_KEY;

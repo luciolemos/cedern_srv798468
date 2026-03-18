@@ -114,7 +114,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
-                        (string) ($user['member_type_label'] ?? ''),
+                        (string) $user['member_type_label'],
                         (string) ($user['role_name'] ?? ''),
                         (string) ($user['status'] ?? ''),
                     ]);

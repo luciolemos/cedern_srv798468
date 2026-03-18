@@ -428,8 +428,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         int $roleId,
         ?string $institutionalRole = null,
         ?string $memberType = null
-    ): bool
-    {
+    ): bool {
         $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
         $normalizedMemberType = $this->nullableText($memberType);
 

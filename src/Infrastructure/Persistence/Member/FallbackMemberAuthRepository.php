@@ -115,8 +115,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         int $roleId,
         ?string $institutionalRole = null,
         ?string $memberType = null
-    ): bool
-    {
+    ): bool {
         if (!isset($this->users[$id])) {
             return false;
         }
