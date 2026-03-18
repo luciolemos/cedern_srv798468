@@ -87,5 +87,14 @@
       link_label: 'Abrir Gestão de Pessoal',
       delay: 480
     } %}
+
+    {% include 'components/check-item.twig' with {
+      step: '11',
+      title: 'Primeiro acesso do membro aprovado',
+      description: 'Depois da aprovação, no primeiro login o usuário é levado para Completar perfil. Enquanto não concluir essa etapa, ele continua autenticado, mas não entra na área do membro: qualquer acesso interno redireciona novamente para o formulário de conclusão. Nessa tela ele pode salvar os dados e continuar ou sair para concluir depois.',
+      href: '/membro/perfil/completar',
+      link_label: 'Ver tela de conclusão',
+      delay: 520
+    } %}
   </ul>
 {% endblock %}

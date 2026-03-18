@@ -18,6 +18,78 @@
   {% set panel_can_events = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
+  {% set panel_can_visit_reset = panel_is_superuser or panel_role_key == 'admin' %}
+  {% set visit_metrics = dashboard_visit_metrics|default({}) %}
+
+  {% if dashboard_visit_metrics_flash_status == 'visit-count-reset' %}
+    <p class="nc-admin-login-success" role="status">Nova contagem de visitas iniciada com sucesso a partir de hoje.</p>
+  {% elseif dashboard_visit_metrics_flash_status == 'visit-count-reset-error' %}
+    <p class="nc-admin-login-error" role="alert">Não foi possível iniciar uma nova contagem de visitas agora.</p>
+  {% endif %}
+
+  <section class="nc-card nc-dashboard-visit-panel" aria-label="Visitas do site">
+    <div class="nc-dashboard-visit-panel-head">
+      <div>
+        <h3 class="nc-dashboard-visit-panel-title">Visitas do site</h3>
+        <p class="nc-dashboard-visit-panel-copy">
+          {% if visit_metrics.baseline_started_at|default('') %}
+            Nova contagem em andamento desde {{ visit_metrics.baseline_started_at|date('d/m/Y') }}.
+          {% else %}
+            Histórico total de visitas públicas registradas pelo contador interno do site.
+          {% endif %}
+        </p>
+      </div>
+
+      {% if panel_can_visit_reset %}
+        <form method="post" action="/painel/visitas/nova-contagem" onsubmit="return confirm('Iniciar uma nova contagem de visitas a partir de hoje?');">
+          <button class="nc-btn nc-btn-secondary" type="submit">Iniciar nova contagem</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if dashboard_visit_metrics_error %}
+      <p class="nc-admin-login-error" role="alert">{{ dashboard_visit_metrics_error }}</p>
+    {% else %}
+      <div class="nc-dashboard-visit-grid">
+        <article class="nc-dashboard-visit-card">
+          <span class="nc-metric-label">Hoje</span>
+          <strong class="nc-metric-value">{{ visit_metrics.today_views|default(0) }}</strong>
+          <p>{{ visit_metrics.today_unique_visitors|default(0) }} visitante(s) único(s)</p>
+        </article>
+
+        <article class="nc-dashboard-visit-card">
+          <span class="nc-metric-label">Últimos 7 dias</span>
+          <strong class="nc-metric-value">{{ visit_metrics.last_7_days_views|default(0) }}</strong>
+          <p>{{ visit_metrics.last_7_days_unique_visitors|default(0) }} visitante(s) único(s)</p>
+        </article>
+
+        <article class="nc-dashboard-visit-card">
+          <span class="nc-metric-label">{% if visit_metrics.baseline_started_at|default('') %}Desde a nova contagem{% else %}Total histórico{% endif %}</span>
+          <strong class="nc-metric-value">{{ visit_metrics.total_views|default(0) }}</strong>
+          <p>{{ visit_metrics.total_unique_visitors|default(0) }} visitante(s) único(s)</p>
+        </article>
+      </div>
+
+      <div class="nc-dashboard-visit-top-pages">
+        <h4>Páginas mais visitadas{% if visit_metrics.baseline_started_at|default('') %} desde a nova contagem{% endif %}</h4>
+        {% if dashboard_visit_metrics_top_pages|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for entry in dashboard_visit_metrics_top_pages %}
+              <li>
+                <div>
+                  <strong>{{ entry.label }}</strong>
+                  <p>{{ entry.page_key }}</p>
+                </div>
+                <span>{{ entry.page_views }} visita(s) · {{ entry.unique_visitors }} único(s)</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma visita pública registrada até o momento.</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
 
   <ul class="nc-checklist">
     {% if panel_can_events %}

@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS member_users (
     institutional_role VARCHAR(120) NULL,
     member_type VARCHAR(20) NULL,
     profile_photo_path VARCHAR(255) NULL,
+    privacy_notice_version VARCHAR(40) NULL,
+    privacy_notice_accepted_at DATETIME NULL,
     profile_completed TINYINT(1) NOT NULL DEFAULT 0,
     approved_at DATETIME NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -43,6 +45,36 @@ CREATE TABLE IF NOT EXISTS member_users (
         ON DELETE SET NULL,
     INDEX idx_member_users_status (status),
     INDEX idx_member_users_role (role_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS page_visit_daily (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    page_key VARCHAR(190) NOT NULL,
+    visit_date DATE NOT NULL,
+    page_views INT UNSIGNED NOT NULL DEFAULT 0,
+    unique_visitors INT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_page_visit_daily (page_key, visit_date),
+    KEY idx_page_visit_daily_date (visit_date),
+    KEY idx_page_visit_daily_page (page_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS page_visit_uniques (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    page_key VARCHAR(190) NOT NULL,
+    visit_date DATE NOT NULL,
+    visitor_token_hash CHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_page_visit_uniques (page_key, visit_date, visitor_token_hash),
+    KEY idx_page_visit_uniques_date (visit_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS page_visit_baselines (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    started_at DATETIME NOT NULL,
+    created_by_member_id BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_page_visit_baselines_started_at (started_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS institutional_managements (

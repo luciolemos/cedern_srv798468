@@ -15,6 +15,7 @@ use Throwable;
 class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 {
     private const FLASH_KEY = 'member_complete_profile';
+    private const PRIVACY_NOTICE_VERSION = 'member-profile-privacy-v1';
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
     {
@@ -33,6 +34,9 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 
         $errors = [];
         $warnings = [];
+        $privacyNoticeAcceptedAt = trim((string) ($member['privacy_notice_accepted_at'] ?? ''));
+        $privacyNoticeVersion = trim((string) ($member['privacy_notice_version'] ?? ''));
+        $privacyNoticeAlreadyAccepted = $privacyNoticeAcceptedAt !== '';
 
         $existingBirthPlace = trim((string) ($member['birth_place'] ?? ''));
         $existingBirthState = '';
@@ -53,6 +57,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'birth_city' => $existingBirthCity,
             'birth_place' => (string) ($member['birth_place'] ?? ''),
             'profile_photo_path' => (string) ($member['profile_photo_path'] ?? ''),
+            'privacy_notice_acknowledged' => $privacyNoticeAlreadyAccepted ? '1' : '',
         ];
 
         if (strtoupper($request->getMethod()) !== 'POST') {
@@ -77,6 +82,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'birth_city' => trim((string) ($flashForm['birth_city'] ?? $form['birth_city'])),
                     'birth_place' => trim((string) ($flashForm['birth_place'] ?? $form['birth_place'])),
                     'profile_photo_path' => (string) ($flashForm['profile_photo_path'] ?? $form['profile_photo_path']),
+                    'privacy_notice_acknowledged' => (string) ($flashForm['privacy_notice_acknowledged'] ?? $form['privacy_notice_acknowledged']),
                 ]);
             }
         }
@@ -90,6 +96,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             $form['birth_state'] = strtoupper(trim((string) ($body['birth_state'] ?? '')));
             $form['birth_city'] = trim((string) ($body['birth_city'] ?? ''));
             $form['birth_place'] = trim((string) ($body['birth_place'] ?? ''));
+            $form['privacy_notice_acknowledged'] = (($body['privacy_notice_acknowledged'] ?? '') === '1') ? '1' : '';
 
             if ($form['full_name'] === '') {
                 $errors[] = 'Informe seu nome completo.';
@@ -156,13 +163,32 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 if (!empty($uploadResult['error'])) {
                     $errors[] = (string) $uploadResult['error'];
                 } elseif (!empty($uploadResult['warning'])) {
-                    $warnings[] = (string) $uploadResult['warning'];
+                    if (trim($photoPath) === '') {
+                        $errors[] = 'Não foi possível salvar sua foto agora. Tente novamente em instantes.';
+                    } else {
+                        $warnings[] = (string) $uploadResult['warning'];
+                    }
                 } elseif (!empty($uploadResult['path'])) {
                     $photoPath = (string) $uploadResult['path'];
                 }
             }
 
+            if (trim($photoPath) === '') {
+                $errors[] = 'Envie uma foto de perfil para concluir seu cadastro.';
+            }
+
+            if (!$privacyNoticeAlreadyAccepted && $form['privacy_notice_acknowledged'] !== '1') {
+                $errors[] = 'Confirme a ciência do aviso de privacidade para concluir seu cadastro.';
+            }
+
             if (empty($errors)) {
+                $acceptedNoticeVersion = $privacyNoticeAlreadyAccepted
+                    ? ($privacyNoticeVersion !== '' ? $privacyNoticeVersion : self::PRIVACY_NOTICE_VERSION)
+                    : self::PRIVACY_NOTICE_VERSION;
+                $acceptedNoticeAt = $privacyNoticeAlreadyAccepted
+                    ? $privacyNoticeAcceptedAt
+                    : date('Y-m-d H:i:s');
+
                 try {
                     $this->memberAuthRepository->updateProfile($memberId, [
                         'full_name' => $form['full_name'],
@@ -171,6 +197,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'birth_date' => $form['birth_date'],
                         'birth_place' => $composedBirthPlace,
                         'profile_photo_path' => $photoPath,
+                        'privacy_notice_version' => $acceptedNoticeVersion,
+                        'privacy_notice_accepted_at' => $acceptedNoticeAt,
                         'profile_completed' => 1,
                     ]);
                 } catch (Throwable $exception) {
@@ -218,6 +246,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'birth_city' => $form['birth_city'],
                     'birth_place' => $form['birth_place'],
                     'profile_photo_path' => $form['profile_photo_path'],
+                    'privacy_notice_acknowledged' => $form['privacy_notice_acknowledged'],
                 ],
             ]);
 
@@ -228,6 +257,9 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'member_profile_errors' => $errors,
             'member_profile_warnings' => $warnings,
             'member_profile_form' => $form,
+            'member_profile_privacy_notice_required' => !$privacyNoticeAlreadyAccepted,
+            'member_profile_privacy_notice_version' => self::PRIVACY_NOTICE_VERSION,
+            'member_profile_privacy_notice_acknowledged_at' => $privacyNoticeAcceptedAt,
             'page_title' => 'Completar Perfil | CEDE',
             'page_url' => 'https://cedern.org/membro/perfil/completar',
             'page_description' => 'Complete seus dados de contato para liberar a área de membro.',

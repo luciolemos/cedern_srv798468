@@ -106,6 +106,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
                     u.profile_photo_path,
+                    u.privacy_notice_version,
+                    u.privacy_notice_accepted_at,
                     u.profile_completed,
                     u.role_id,
                     r.role_key,
@@ -147,6 +149,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         u.profile_photo_path,
+                        NULL AS privacy_notice_version,
+                        NULL AS privacy_notice_accepted_at,
                         u.profile_completed,
                         u.role_id,
                         r.role_key,
@@ -175,6 +179,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS profile_photo_path,
+                        NULL AS privacy_notice_version,
+                        NULL AS privacy_notice_accepted_at,
                         0 AS profile_completed,
                         u.role_id,
                         NULL AS role_key,
@@ -214,6 +220,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
                     u.profile_photo_path,
+                    u.privacy_notice_version,
+                    u.privacy_notice_accepted_at,
                     u.profile_completed,
                     u.role_id,
                     r.role_key,
@@ -255,6 +263,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         u.profile_photo_path,
+                        NULL AS privacy_notice_version,
+                        NULL AS privacy_notice_accepted_at,
                         u.profile_completed,
                         u.role_id,
                         r.role_key,
@@ -283,6 +293,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS profile_photo_path,
+                        NULL AS privacy_notice_version,
+                        NULL AS privacy_notice_accepted_at,
                         0 AS profile_completed,
                         u.role_id,
                         NULL AS role_key,
@@ -371,6 +383,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 birth_date = :birth_date,
                 birth_place = :birth_place,
                 profile_photo_path = :profile_photo_path,
+                privacy_notice_version = :privacy_notice_version,
+                privacy_notice_accepted_at = :privacy_notice_accepted_at,
                 profile_completed = :profile_completed
             WHERE id = :id
             LIMIT 1
@@ -384,6 +398,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'birth_date' => $this->nullableText($data['birth_date'] ?? null),
             'birth_place' => $this->nullableText($data['birth_place'] ?? null),
             'profile_photo_path' => $this->nullableText($data['profile_photo_path'] ?? null),
+            'privacy_notice_version' => $this->nullableText($data['privacy_notice_version'] ?? null),
+            'privacy_notice_accepted_at' => $this->nullableText($data['privacy_notice_accepted_at'] ?? null),
             'profile_completed' => (int) ($data['profile_completed'] ?? 0),
         ];
 
@@ -700,6 +716,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['member_type'] = $row['member_type'] ?? null;
         $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
         $row['profile_photo_path'] = $row['profile_photo_path'] ?? null;
+        $row['privacy_notice_version'] = $row['privacy_notice_version'] ?? null;
+        $row['privacy_notice_accepted_at'] = $row['privacy_notice_accepted_at'] ?? null;
         $row['profile_completed'] = (int) ($row['profile_completed'] ?? 0);
 
         return $row;
@@ -753,6 +771,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 institutional_role VARCHAR(120) NULL,
                 member_type VARCHAR(20) NULL,
                 profile_photo_path VARCHAR(255) NULL,
+                privacy_notice_version VARCHAR(40) NULL,
+                privacy_notice_accepted_at DATETIME NULL,
                 profile_completed TINYINT(1) NOT NULL DEFAULT 0,
                 approved_at DATETIME NULL,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -852,6 +872,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_users',
             'profile_photo_path',
             'ALTER TABLE member_users ADD COLUMN profile_photo_path VARCHAR(255) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'privacy_notice_version',
+            'ALTER TABLE member_users ADD COLUMN privacy_notice_version VARCHAR(40) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'privacy_notice_accepted_at',
+            'ALTER TABLE member_users ADD COLUMN privacy_notice_accepted_at DATETIME NULL'
         );
         $this->ensureColumn(
             'member_users',

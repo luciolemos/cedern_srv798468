@@ -43,6 +43,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'member_type' => null,
             'member_type_label' => 'Não definido',
             'profile_photo_path' => null,
+            'privacy_notice_version' => null,
+            'privacy_notice_accepted_at' => null,
             'profile_completed' => 0,
             'role_id' => null,
             'role_key' => null,
@@ -104,6 +106,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['birth_date'] = $this->nullableText($data['birth_date'] ?? null);
         $this->users[$id]['birth_place'] = $this->nullableText($data['birth_place'] ?? null);
         $this->users[$id]['profile_photo_path'] = $this->nullableText($data['profile_photo_path'] ?? null);
+        $this->users[$id]['privacy_notice_version'] = $this->nullableText($data['privacy_notice_version'] ?? null);
+        $this->users[$id]['privacy_notice_accepted_at'] = $this->nullableText($data['privacy_notice_accepted_at'] ?? null);
         $this->users[$id]['profile_completed'] = (int) ($data['profile_completed'] ?? 0);
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
 
@@ -197,6 +201,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     {
         $user['member_type'] = $user['member_type'] ?? null;
         $user['member_type_label'] = $this->resolveMemberTypeLabel((string) ($user['member_type'] ?? ''));
+        $user['privacy_notice_version'] = $user['privacy_notice_version'] ?? null;
+        $user['privacy_notice_accepted_at'] = $user['privacy_notice_accepted_at'] ?? null;
 
         return $user;
     }

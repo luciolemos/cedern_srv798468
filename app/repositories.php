@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Domain\Agenda\AgendaRepository;
+use App\Domain\Analytics\SiteVisitRepository;
 use App\Domain\Institutional\InstitutionalContentRepository;
 use App\Domain\Member\MemberAuthRepository;
 use App\Domain\User\UserRepository;
 use App\Infrastructure\Persistence\Agenda\FallbackAgendaRepository;
 use App\Infrastructure\Persistence\Agenda\MySqlAgendaRepository;
+use App\Infrastructure\Persistence\Analytics\FallbackSiteVisitRepository;
+use App\Infrastructure\Persistence\Analytics\MySqlSiteVisitRepository;
 use App\Infrastructure\Persistence\Institutional\FallbackInstitutionalContentRepository;
 use App\Infrastructure\Persistence\Institutional\MySqlInstitutionalContentRepository;
 use App\Infrastructure\Persistence\Member\FallbackMemberAuthRepository;
@@ -38,6 +41,13 @@ return function (ContainerBuilder $containerBuilder) {
                 return new MySqlInstitutionalContentRepository($c->get(\PDO::class));
             } catch (\Throwable $exception) {
                 return new FallbackInstitutionalContentRepository();
+            }
+        },
+        SiteVisitRepository::class => function (ContainerInterface $c): SiteVisitRepository {
+            try {
+                return new MySqlSiteVisitRepository($c->get(\PDO::class));
+            } catch (\Throwable $exception) {
+                return new FallbackSiteVisitRepository();
             }
         },
         UserRepository::class => \DI\autowire(InMemoryUserRepository::class),

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Agenda\AgendaRepository;
+use App\Domain\Analytics\SiteVisitRepository;
 use App\Domain\Member\MemberAuthRepository;
 use App\Application\Middleware\SessionMiddleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -11,6 +12,129 @@ use Slim\App;
 use Slim\Views\Twig;
 
 return function (App $app) {
+    $normalizeTrackedPageKey = static function (string $path): string {
+        $normalizedPath = rtrim(trim($path), '/');
+
+        return $normalizedPath === '' ? '/' : $normalizedPath;
+    };
+
+    $isTrackablePublicPage = static function (Request $request) use ($normalizeTrackedPageKey): bool {
+        if (strtoupper($request->getMethod()) !== 'GET') {
+            return false;
+        }
+
+        $path = $normalizeTrackedPageKey($request->getUri()->getPath());
+
+        if ($path === '/entrar' || $path === '/cadastro') {
+            return false;
+        }
+
+        if (
+            preg_match('#^/(painel|membro|admin|assets)(/|$)#', $path) === 1
+            || str_ends_with($path, '/ics')
+            || preg_match('/\.[a-z0-9]{2,8}$/i', $path) === 1
+        ) {
+            return false;
+        }
+
+        return true;
+    };
+
+    $buildVisitorCookieHeader = static function (string $name, string $value, int $maxAge): string {
+        $expires = gmdate('D, d M Y H:i:s \G\M\T', time() + $maxAge);
+        $cookieHeader = sprintf(
+            '%s=%s; Path=/; Max-Age=%d; Expires=%s; HttpOnly; SameSite=Lax',
+            rawurlencode($name),
+            rawurlencode($value),
+            $maxAge,
+            $expires
+        );
+
+        $isHttps = str_starts_with(strtolower((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/')), 'https://')
+            || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https'
+            || (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off');
+
+        if ($isHttps) {
+            $cookieHeader .= '; Secure';
+        }
+
+        return $cookieHeader;
+    };
+
+    $cookieName = 'cede_vid';
+    $cookieMaxAge = 31536000;
+
+    $app->add(function (
+        Request $request,
+        RequestHandler $handler
+    ) use (
+        $app,
+        $buildVisitorCookieHeader,
+        $cookieName,
+        $cookieMaxAge,
+        $isTrackablePublicPage,
+        $normalizeTrackedPageKey
+    ) {
+        $response = $handler->handle($request);
+
+        if (!$isTrackablePublicPage($request)) {
+            return $response;
+        }
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode < 200 || $statusCode >= 300) {
+            return $response;
+        }
+
+        $contentType = strtolower(implode(';', $response->getHeader('Content-Type')));
+        if ($contentType !== '' && !str_contains($contentType, 'text/html')) {
+            return $response;
+        }
+
+        $visitorToken = trim((string) ($_COOKIE[$cookieName] ?? ''));
+        $shouldSetVisitorCookie = false;
+        if (!preg_match('/^[a-f0-9]{32}$/i', $visitorToken)) {
+            try {
+                $visitorToken = bin2hex(random_bytes(16));
+                $shouldSetVisitorCookie = true;
+            } catch (\Throwable $exception) {
+                return $response;
+            }
+        }
+
+        $pageKey = $normalizeTrackedPageKey($request->getUri()->getPath());
+        $visitorTokenHash = hash('sha256', $visitorToken);
+        $trackingKey = $pageKey . '|' . substr($visitorTokenHash, 0, 16);
+        $trackedVisits = $_SESSION['_site_visit_tracker'] ?? [];
+
+        if (!is_array($trackedVisits)) {
+            $trackedVisits = [];
+        }
+
+        $now = time();
+        $lastTrackedAt = (int) ($trackedVisits[$trackingKey] ?? 0);
+
+        if ($lastTrackedAt === 0 || ($now - $lastTrackedAt) >= 60) {
+            try {
+                /** @var SiteVisitRepository $siteVisitRepository */
+                $siteVisitRepository = $app->getContainer()->get(SiteVisitRepository::class);
+                $siteVisitRepository->registerPageVisit($pageKey, $visitorTokenHash, new \DateTimeImmutable('now'));
+                $trackedVisits[$trackingKey] = $now;
+                $_SESSION['_site_visit_tracker'] = $trackedVisits;
+            } catch (\Throwable $exception) {
+            }
+        }
+
+        if ($shouldSetVisitorCookie) {
+            $response = $response->withAddedHeader(
+                'Set-Cookie',
+                $buildVisitorCookieHeader($cookieName, $visitorToken, $cookieMaxAge)
+            );
+        }
+
+        return $response;
+    });
+
     $app->add(function (Request $request, RequestHandler $handler) use ($app) {
         $twig = $app->getContainer()->get(Twig::class);
         $twigEnvironment = $twig->getEnvironment();

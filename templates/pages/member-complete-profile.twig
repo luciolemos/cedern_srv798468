@@ -8,11 +8,23 @@
   <main class="nc-main nc-home-flow">
     <section class="nc-section" aria-label="Completar perfil do membro" data-aos="fade-up" data-aos-delay="0">
       <div class="nc-container">
-        {% include 'components/section-header.twig' with {
-          kicker: 'Área do Membro',
-          title: 'Complete seu perfil',
-          lead: 'Finalize seu cadastro com contatos, nascimento e foto para liberar sua área de membro.'
-        } %}
+        <div class="nc-member-profile-header">
+          {% include 'components/section-header.twig' with {
+            kicker: 'Área do Membro',
+            title: 'Complete seu perfil',
+            lead: 'Finalize seu cadastro com os dados obrigatórios para liberar sua área de membro com segurança.'
+          } %}
+        </div>
+
+        <div class="nc-member-profile-notice" role="note" aria-label="Orientações sobre dados do perfil">
+          <strong>Dados necessários para ativar sua área do membro</strong>
+          <p>Usamos essas informações para identificar seu cadastro, manter contato com você e proteger o acesso à área restrita do CEDE.</p>
+          <ul class="nc-member-profile-notice-list">
+            <li><span>Obrigatórios:</span> foto de perfil, celular e data de nascimento.</li>
+            <li><span>Opcional:</span> telefone fixo.</li>
+            <li class="nc-member-profile-notice-line"><span>Transparência:</span> o tratamento segue a <a class="nc-link" href="/politica-de-privacidade">Política de Privacidade</a> do CEDE.</li>
+          </ul>
+        </div>
 
         <article class="nc-card nc-admin-login-card nc-member-profile-card">
           {% if member_profile_errors %}
@@ -37,7 +49,7 @@
 
           <form class="nc-admin-login-form nc-member-profile-form" method="post" action="/membro/perfil/completar" enctype="multipart/form-data">
             <div class="nc-member-photo-field">
-              <p class="nc-admin-login-label">Foto de perfil</p>
+              <p class="nc-admin-login-label">Foto de perfil <span class="nc-member-profile-tag is-required">Obrigatório</span></p>
               <div class="nc-member-photo-preview-wrap">
                 {% if member_profile_form.profile_photo_path %}
                   <img class="nc-member-photo-preview" src="/{{ member_profile_form.profile_photo_path }}" alt="Foto atual do perfil">
@@ -45,31 +57,34 @@
                   <div class="nc-member-photo-placeholder" aria-hidden="true">Sem foto</div>
                 {% endif %}
               </div>
-              <input class="nc-admin-login-input" id="profile_photo" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp">
-              <small class="nc-member-profile-help">Formatos aceitos: JPG, PNG ou WEBP (máx. 2MB).</small>
+              <input class="nc-admin-login-input" id="profile_photo" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp"{% if not member_profile_form.profile_photo_path %} required{% endif %}>
+              <small class="nc-member-profile-help">Formatos aceitos: JPG, PNG ou WEBP (máx. 2MB). A foto é necessária para concluir o cadastro.</small>
             </div>
 
             <div class="nc-member-profile-fields">
-              <div class="nc-admin-login-field nc-member-profile-field-full">
+              <div class="nc-admin-login-field nc-member-profile-field-name">
                 <label class="nc-admin-login-label" for="full_name">Nome completo</label>
                 <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_profile_form.full_name|default('') }}" autocomplete="name" required>
-                {% if member_profile_form.email|default('') %}
-                  <small class="nc-member-profile-help">E-mail: {{ member_profile_form.email }}</small>
-                {% endif %}
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-birth-date">
+                <label class="nc-admin-login-label" for="birth_date">Data de nascimento <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="birth_date" name="birth_date" type="date" value="{{ member_profile_form.birth_date|default('') }}" required>
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-admin-login-label" for="email">E-mail cadastrado</label>
+                <input class="nc-admin-login-input" id="email" type="email" value="{{ member_profile_form.email|default('') }}" autocomplete="email" readonly aria-readonly="true">
+                <small class="nc-member-profile-help">O e-mail de acesso é exibido aqui apenas para conferência.</small>
               </div>
 
               <div class="nc-admin-login-field">
-                <label class="nc-admin-login-label" for="phone_mobile">Celular</label>
+                <label class="nc-admin-login-label" for="phone_mobile">Celular <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
                 <input class="nc-admin-login-input" id="phone_mobile" name="phone_mobile" type="text" value="{{ member_profile_form.phone_mobile|default('') }}" autocomplete="tel" inputmode="numeric" maxlength="15" placeholder="(84) 99999-9999" required>
               </div>
 
               <div class="nc-admin-login-field">
-                <label class="nc-admin-login-label" for="birth_date">Data de nascimento</label>
-                <input class="nc-admin-login-input" id="birth_date" name="birth_date" type="date" value="{{ member_profile_form.birth_date|default('') }}" required>
-              </div>
-
-              <div class="nc-admin-login-field">
-                <label class="nc-admin-login-label" for="phone_landline">Telefone fixo</label>
+                <label class="nc-admin-login-label" for="phone_landline">Telefone fixo <span class="nc-member-profile-tag is-optional">Opcional</span></label>
                 <input class="nc-admin-login-input" id="phone_landline" name="phone_landline" type="text" value="{{ member_profile_form.phone_landline|default('') }}" autocomplete="tel-national" inputmode="numeric" maxlength="14" placeholder="(84) 3210-1234">
               </div>
 
@@ -115,8 +130,23 @@
                 <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
               </div>
 
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                {% if member_profile_privacy_notice_required %}
+                  <label class="nc-member-profile-consent" for="privacy_notice_acknowledged">
+                    <input id="privacy_notice_acknowledged" name="privacy_notice_acknowledged" type="checkbox" value="1"{% if member_profile_form.privacy_notice_acknowledged|default('') == '1' %} checked{% endif %} required>
+                    <span>Declaro ciência do aviso acima e da <a class="nc-link" href="/politica-de-privacidade" target="_blank" rel="noopener">Política de Privacidade</a> do CEDE para tratamento dos meus dados nesta etapa de ativação da área do membro.</span>
+                  </label>
+                  <small class="nc-member-profile-help">Ao salvar, o sistema registrará a ciência deste aviso para a versão {{ member_profile_privacy_notice_version }}.</small>
+                {% elseif member_profile_privacy_notice_acknowledged_at %}
+                  <div class="nc-member-profile-consent-status" role="status">
+                    Ciência do aviso de privacidade já registrada anteriormente para este cadastro.
+                  </div>
+                {% endif %}
+              </div>
+
               <div class="nc-actions nc-admin-login-actions nc-member-profile-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
                 <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Salvar e continuar</button>
+                <a class="nc-btn nc-btn-secondary" href="/membro/sair">Sair e continuar depois</a>
               </div>
             </div>
           </form>

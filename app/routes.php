@@ -26,6 +26,7 @@ use App\Application\Actions\Admin\AdminPracticalGuidePageAction;
 use App\Application\Actions\Admin\AdminStatutePageAction;
 use App\Application\Actions\Admin\AdminTermsOfUsePageAction;
 use App\Application\Actions\Admin\AdminUserGuidePageAction;
+use App\Application\Actions\Admin\AdminVisitCounterResetAction;
 use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
@@ -152,6 +153,7 @@ return function (App $app) {
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/visitas/nova-contagem', AdminVisitCounterResetAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/guia-do-usuario', AdminUserGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/guia-pratico', AdminPracticalGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->map(['GET', 'POST'], '/institucional/estatuto', AdminStatutePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
