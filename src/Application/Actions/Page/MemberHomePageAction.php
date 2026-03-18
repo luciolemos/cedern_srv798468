@@ -13,6 +13,8 @@ use Slim\Views\Twig;
 
 class MemberHomePageAction extends AbstractMemberGuardedPageAction
 {
+    public const FLASH_KEY = 'member_home';
+
     private AgendaRepository $agendaRepository;
 
     public function __construct(
@@ -33,8 +35,8 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             return $member;
         }
 
-        $queryParams = $request->getQueryParams();
-        $status = trim((string) ($queryParams['status'] ?? ''));
+        $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+        $status = trim((string) ($flash['status'] ?? ''));
         $roleKey = (string) ($member['role_key'] ?? 'member');
         $memberId = (int) ($member['id'] ?? 0);
 

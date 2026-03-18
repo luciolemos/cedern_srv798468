@@ -44,4 +44,43 @@ abstract class AbstractPageAction
 
         return $this->twig->render($response, $template, $context);
     }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    protected function storeSessionFlash(string $key, array $payload): void
+    {
+        $this->ensureSessionStarted();
+
+        if (!isset($_SESSION['_codex_flash']) || !is_array($_SESSION['_codex_flash'])) {
+            $_SESSION['_codex_flash'] = [];
+        }
+
+        $_SESSION['_codex_flash'][$key] = $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function consumeSessionFlash(string $key): array
+    {
+        $this->ensureSessionStarted();
+
+        $flashBag = $_SESSION['_codex_flash'] ?? [];
+        if (!is_array($flashBag)) {
+            return [];
+        }
+
+        $payload = $flashBag[$key] ?? [];
+        unset($_SESSION['_codex_flash'][$key]);
+
+        return is_array($payload) ? $payload : [];
+    }
+
+    protected function ensureSessionStarted(): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+    }
 }

@@ -17,6 +17,7 @@ class AdminTermsOfUsePageAction extends AbstractPageAction
     private const FORM_ACTION_PATH = '/painel/institucional/termos-de-uso';
     private const PUBLIC_PAGE_PATH = '/termos-de-uso';
     private const DEFAULT_CONTENT_PATH = '/app/content/terms-of-use.php';
+    private const FLASH_KEY = 'admin_document_terms_of_use';
 
     private InstitutionalContentRepository $institutionalContentRepository;
 
@@ -31,13 +32,30 @@ class AdminTermsOfUsePageAction extends AbstractPageAction
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $queryParams = $request->getQueryParams();
-        $status = trim((string) ($queryParams['status'] ?? ''));
+        $method = strtoupper($request->getMethod());
+        $status = '';
+        $errors = [];
 
         $record = $this->loadDocumentRecord();
 
-        if (strtoupper($request->getMethod()) !== 'POST') {
-            return $this->renderForm($response, $status, $record, []);
+        if ($method !== 'POST') {
+            $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+            $status = trim((string) ($flash['status'] ?? ''));
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+            $flashForm = (array) ($flash['form'] ?? []);
+            if ($flashForm !== []) {
+                $record['title'] = trim((string) ($flashForm['title'] ?? $record['title']));
+                $record['body'] = str_replace(
+                    ["\r\n", "\r"],
+                    "\n",
+                    (string) ($flashForm['body'] ?? $record['body'])
+                );
+            }
+
+            return $this->renderForm($response, $status, $record, $errors);
         }
 
         $body = (array) ($request->getParsedBody() ?? []);
@@ -54,9 +72,13 @@ class AdminTermsOfUsePageAction extends AbstractPageAction
                 );
 
                 if ($saved) {
-                    return $response
-                        ->withHeader('Location', self::FORM_ACTION_PATH . '?status=saved')
-                        ->withStatus(302);
+                    $this->storeSessionFlash(self::FLASH_KEY, [
+                        'status' => 'saved',
+                        'errors' => [],
+                        'form' => [],
+                    ]);
+
+                    return $response->withHeader('Location', self::FORM_ACTION_PATH)->withStatus(303);
                 }
 
                 $errors[] = 'Não foi possível salvar os Termos de Uso. Tente novamente.';
@@ -69,10 +91,16 @@ class AdminTermsOfUsePageAction extends AbstractPageAction
             }
         }
 
-        $record['title'] = (string) $payload['title'];
-        $record['body'] = (string) $payload['body'];
+        $this->storeSessionFlash(self::FLASH_KEY, [
+            'status' => 'save-error',
+            'errors' => $errors,
+            'form' => [
+                'title' => (string) $payload['title'],
+                'body' => (string) $payload['body'],
+            ],
+        ]);
 
-        return $this->renderForm($response, 'save-error', $record, $errors);
+        return $response->withHeader('Location', self::FORM_ACTION_PATH)->withStatus(303);
     }
 
     /**

@@ -7,7 +7,7 @@
         {% include 'components/section-header.twig' with {
           kicker: 'Área do Membro',
           title: 'Bem-vindo, ' ~ (member_data.full_name|default(member_name|default('Membro'))),
-          lead: 'Sua área pessoal está ativa. Perfil: ' ~ (member_data.role_name|default(member_role_name|default('Membro'))) ~ ' • Função no CEDE: ' ~ (member_data.institutional_role|default('Sem função definida')) ~ '.'
+          lead: 'Sua área pessoal está ativa. Perfil: ' ~ (member_data.role_name|default(member_role_name|default('Membro'))) ~ ' • Tipo de Sócio: ' ~ (member_data.member_type_label|default(member_data.member_type|default('Não definido'))) ~ ' • Função no CEDE: ' ~ (member_data.institutional_role|default('Sem função definida')) ~ '.'
         } %}
 
         {% if member_home_status == 'forbidden' %}
@@ -206,6 +206,7 @@
 
             <dl class="nc-member-grid">
               <div><dt>Perfil</dt><dd>{{ member_data.role_name|default('Membro') }}</dd></div>
+              <div><dt>Tipo de Sócio</dt><dd>{{ member_data.member_type_label|default(member_data.member_type|default('Não definido')) }}</dd></div>
               <div><dt>E-mail</dt><dd>{{ member_data.email|default('-') }}</dd></div>
               <div><dt>Celular</dt><dd>{{ member_data.phone_mobile|default('-') }}</dd></div>
               <div><dt>Telefone</dt><dd>{{ member_data.phone_landline|default('-') }}</dd></div>
@@ -214,7 +215,7 @@
               <div><dt>Função no CEDE</dt><dd>{{ member_data.institutional_role|default('Sem função definida') }}</dd></div>
             </dl>
 
-            <div class="nc-actions nc-admin-login-actions nc-member-actions" data-aos="fade-up" data-aos-delay="80">
+            <div class="nc-actions nc-admin-login-actions nc-member-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
               <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Editar dados do perfil</a>
               <a class="nc-btn nc-btn-secondary" href="/">Voltar ao site</a>
               <form method="post" action="/membro/sair" onsubmit="return confirm('Deseja realmente encerrar sua sessão?');">

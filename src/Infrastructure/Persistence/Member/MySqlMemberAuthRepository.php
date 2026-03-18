@@ -104,6 +104,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.birth_date,
                     u.birth_place,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
+                    u.member_type,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.role_id,
@@ -144,6 +145,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.birth_date,
                         u.birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.role_id,
@@ -171,9 +173,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS birth_date,
                         NULL AS birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
-                        NULL AS role_id
+                        u.role_id,
+                        NULL AS role_key,
+                        NULL AS role_name
                     FROM member_users u
                     WHERE u.email = :email
                     LIMIT 1
@@ -207,6 +212,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.birth_date,
                     u.birth_place,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
+                    u.member_type,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.role_id,
@@ -247,6 +253,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.birth_date,
                         u.birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.role_id,
@@ -274,9 +281,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS birth_date,
                         NULL AS birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
-                        NULL AS role_id
+                        u.role_id,
+                        NULL AS role_key,
+                        NULL AS role_name
                     FROM member_users u
                     WHERE u.id = :id
                     LIMIT 1
@@ -413,15 +423,21 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
-    public function approveAndAssignRole(int $id, int $roleId, ?string $institutionalRole = null): bool
-    {
+    public function approveAndAssignRole(
+        int $id,
+        int $roleId,
+        ?string $institutionalRole = null,
+        ?string $memberType = null
+    ): bool {
         $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedMemberType = $this->nullableText($memberType);
 
         $sql = <<<SQL
             UPDATE member_users
             SET
                 role_id = :role_id,
                 institutional_role = :institutional_role,
+                member_type = :member_type,
                 status = 'active',
                 approved_at = NOW()
             WHERE id = :id
@@ -435,6 +451,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 'id' => $id,
                 'role_id' => $roleId,
                 'institutional_role' => $normalizedInstitutionalRole,
+                'member_type' => $normalizedMemberType,
             ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
         } catch (\Throwable $exception) {
             $this->ensureMemberSchemaCompatibility();
@@ -446,6 +463,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     'id' => $id,
                     'role_id' => $roleId,
                     'institutional_role' => $normalizedInstitutionalRole,
+                    'member_type' => $normalizedMemberType,
                 ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
             } catch (\Throwable $innerException) {
                 $fallbackSql = <<<SQL
@@ -560,10 +578,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.birth_date,
                     u.birth_place,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
+                    u.member_type,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.created_at,
                     u.updated_at,
+                    u.role_id,
                     r.role_key,
                     r.name AS role_name
                 FROM member_users u
@@ -597,10 +617,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.birth_date,
                         u.birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.created_at,
                         u.updated_at,
+                        u.role_id,
                         r.role_key,
                         r.name AS role_name
                     FROM member_users u
@@ -622,10 +644,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS birth_date,
                         NULL AS birth_place,
                         NULL AS institutional_role,
+                        NULL AS member_type,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS created_at,
                         NULL AS updated_at,
+                        u.role_id,
                         NULL AS role_key,
                         NULL AS role_name
                     FROM member_users u
@@ -673,6 +697,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['birth_date'] = $row['birth_date'] ?? null;
         $row['birth_place'] = $row['birth_place'] ?? null;
         $row['institutional_role'] = $row['institutional_role'] ?? null;
+        $row['member_type'] = $row['member_type'] ?? null;
+        $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
         $row['profile_photo_path'] = $row['profile_photo_path'] ?? null;
         $row['profile_completed'] = (int) ($row['profile_completed'] ?? 0);
 
@@ -688,6 +714,15 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    private function resolveMemberTypeLabel(string $memberType): string
+    {
+        return match (strtolower(trim($memberType))) {
+            'fundador' => 'Fundador',
+            'efetivo' => 'Efetivo',
+            default => 'Não definido',
+        };
     }
 
     private function ensureMemberSchemaCompatibility(): void
@@ -716,6 +751,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 birth_date DATE NULL,
                 birth_place VARCHAR(140) NULL,
                 institutional_role VARCHAR(120) NULL,
+                member_type VARCHAR(20) NULL,
                 profile_photo_path VARCHAR(255) NULL,
                 profile_completed TINYINT(1) NOT NULL DEFAULT 0,
                 approved_at DATETIME NULL,
@@ -806,6 +842,11 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_users',
             'institutional_role',
             'ALTER TABLE member_users ADD COLUMN institutional_role VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'member_type',
+            'ALTER TABLE member_users ADD COLUMN member_type VARCHAR(20) NULL'
         );
         $this->ensureColumn(
             'member_users',

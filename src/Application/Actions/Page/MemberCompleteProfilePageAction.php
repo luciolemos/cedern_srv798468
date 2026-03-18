@@ -14,6 +14,8 @@ use Throwable;
 
 class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 {
+    private const FLASH_KEY = 'member_complete_profile';
+
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
     {
         parent::__construct($logger, $twig, $memberAuthRepository);
@@ -52,6 +54,32 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'birth_place' => (string) ($member['birth_place'] ?? ''),
             'profile_photo_path' => (string) ($member['profile_photo_path'] ?? ''),
         ];
+
+        if (strtoupper($request->getMethod()) !== 'POST') {
+            $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+            $warnings = array_values(array_filter(
+                (array) ($flash['warnings'] ?? []),
+                static fn (mixed $warning): bool => is_string($warning) && trim($warning) !== ''
+            ));
+            $flashForm = (array) ($flash['form'] ?? []);
+            if ($flashForm !== []) {
+                $form = array_merge($form, [
+                    'full_name' => trim((string) ($flashForm['full_name'] ?? $form['full_name'])),
+                    'email' => (string) ($flashForm['email'] ?? $form['email']),
+                    'phone_mobile' => trim((string) ($flashForm['phone_mobile'] ?? $form['phone_mobile'])),
+                    'phone_landline' => trim((string) ($flashForm['phone_landline'] ?? $form['phone_landline'])),
+                    'birth_date' => trim((string) ($flashForm['birth_date'] ?? $form['birth_date'])),
+                    'birth_state' => strtoupper(trim((string) ($flashForm['birth_state'] ?? $form['birth_state']))),
+                    'birth_city' => trim((string) ($flashForm['birth_city'] ?? $form['birth_city'])),
+                    'birth_place' => trim((string) ($flashForm['birth_place'] ?? $form['birth_place'])),
+                    'profile_photo_path' => (string) ($flashForm['profile_photo_path'] ?? $form['profile_photo_path']),
+                ]);
+            }
+        }
 
         if (strtoupper($request->getMethod()) === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
@@ -161,13 +189,39 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $_SESSION['member_profile_photo_path'] = $photoPath;
 
                 if (!empty($warnings)) {
+                    $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+                        'status' => 'profile-updated-no-photo',
+                    ]);
+
                     return $response
-                        ->withHeader('Location', '/membro?status=profile-updated-no-photo')
-                        ->withStatus(302);
+                        ->withHeader('Location', '/membro')
+                        ->withStatus(303);
                 }
 
-                return $response->withHeader('Location', '/membro?status=profile-updated')->withStatus(302);
+                $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+                    'status' => 'profile-updated',
+                ]);
+
+                return $response->withHeader('Location', '/membro')->withStatus(303);
             }
+
+            $this->storeSessionFlash(self::FLASH_KEY, [
+                'errors' => $errors,
+                'warnings' => $warnings,
+                'form' => [
+                    'full_name' => $form['full_name'],
+                    'email' => $form['email'],
+                    'phone_mobile' => $form['phone_mobile'],
+                    'phone_landline' => $form['phone_landline'],
+                    'birth_date' => $form['birth_date'],
+                    'birth_state' => $form['birth_state'],
+                    'birth_city' => $form['birth_city'],
+                    'birth_place' => $form['birth_place'],
+                    'profile_photo_path' => $form['profile_photo_path'],
+                ],
+            ]);
+
+            return $response->withHeader('Location', '/membro/perfil/completar')->withStatus(303);
         }
 
         return $this->renderPage($response, 'pages/member-complete-profile.twig', [

@@ -82,7 +82,7 @@
     {% include 'components/check-item.twig' with {
       step: '10',
       title: 'Fluxo de e-mail no cadastro de membro',
-      description: 'Quando alguém se cadastra, o sistema primeiro valida os dados e salva o cadastro como pendente de aprovação. Em seguida, envia dois e-mails: um para a equipe do CEDE avisando que chegou um novo cadastro e outro para a pessoa confirmando que o pedido foi recebido. Se o e-mail falhar naquele momento, o cadastro continua salvo normalmente e não é perdido.',
+      description: 'Quando alguém se cadastra, o sistema primeiro valida os dados e salva o cadastro como pendente de aprovação. Em seguida, envia dois e-mails: um para a equipe do CEDE avisando que chegou um novo cadastro e outro para a pessoa confirmando que o pedido foi recebido. Quando o admin aprova um cadastro, o usuário passa a receber um terceiro e-mail com o mesmo cabeçalho institucional, mesma estrutura visual, CTAs empilhados e bloco de observações. O disparo acontece só na primeira aprovação real, para não reenviar em edições posteriores de perfil/acesso. Se algum envio falhar, o cadastro continua salvo normalmente e não é perdido.',
       href: '/painel/usuarios',
       link_label: 'Abrir Gestão de Pessoal',
       delay: 480

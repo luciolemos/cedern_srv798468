@@ -124,31 +124,34 @@
               </a>
             {% endif %}
             {% if panel_can_users %}
-              <a class="nc-link nc-dashboard-user-menu-link" href="/painel/usuarios">
-                <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  </svg>
-                </span>
-                <span>Gestão de Pessoal</span>
-              </a>
-
-              {% if panel_can_cede_management %}
-                <a class="nc-link nc-dashboard-user-menu-link" href="/painel/gestao-cede">
+              <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/usuarios' or current_path starts with '/painel/gestao-cede' %}open{% endif %}>
+                <summary class="nc-dashboard-user-menu-group-title">Pessoas</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/usuarios">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
-                      <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                   </span>
-                  <span>Gestão CEDE</span>
+                  <span>Gestão de Pessoal</span>
                 </a>
-              {% endif %}
+
+                {% if panel_can_cede_management %}
+                  <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/gestao-cede">
+                    <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                    <span>Gestão CEDE</span>
+                  </a>
+                {% endif %}
+              </details>
 
               <a class="nc-link nc-dashboard-user-menu-link" href="/painel/institucional/estatuto">
                 <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
@@ -336,31 +339,34 @@
             </details>
           {% endif %}
           {% if panel_can_users %}
-            <a class="nc-link{{ current_path starts with '/painel/usuarios' ? ' is-active' : '' }}" href="/painel/usuarios">
-              <span class="nc-admin-link-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.8"/>
-                  <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <span class="nc-admin-link-label">Gestão de Pessoal</span>
-            </a>
-
-            {% if panel_can_cede_management %}
-              <a class="nc-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">
+            <details class="nc-admin-nav-group" aria-label="Seção pessoas" {% if current_path starts with '/painel/usuarios' or current_path starts with '/painel/gestao-cede' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">PESSOAS</summary>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/usuarios' ? ' is-active' : '' }}" href="/painel/usuarios">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Gestão CEDE</span>
+                <span class="nc-admin-link-label">Gestão de Pessoal</span>
               </a>
-            {% endif %}
+
+              {% if panel_can_cede_management %}
+                <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">
+                  <span class="nc-admin-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span class="nc-admin-link-label">Gestão CEDE</span>
+                </a>
+              {% endif %}
+            </details>
 
             <a class="nc-link{{ current_path starts with '/painel/guia-pratico' ? ' is-active' : '' }}" href="/painel/guia-pratico">
               <span class="nc-admin-link-icon" aria-hidden="true">

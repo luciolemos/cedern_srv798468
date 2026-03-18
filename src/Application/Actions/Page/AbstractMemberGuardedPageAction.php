@@ -73,7 +73,11 @@ abstract class AbstractMemberGuardedPageAction extends AbstractPageAction
         $requiredWeight = (int) ($weights[$requiredRoleKey] ?? PHP_INT_MAX);
 
         if ($memberWeight < $requiredWeight) {
-            return $response->withHeader('Location', '/membro?status=forbidden')->withStatus(302);
+            $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+                'status' => 'forbidden',
+            ]);
+
+            return $response->withHeader('Location', '/membro')->withStatus(303);
         }
 
         return null;

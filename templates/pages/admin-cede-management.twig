@@ -89,6 +89,7 @@
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.institutional_role.active %} is-active{% endif %}" href="{{ sort_links.institutional_role.url }}">Função no CEDE <span aria-hidden="true">{{ sort_links.institutional_role.indicator }}</span></a>
               </th>
+              <th>Tipo de Sócio</th>
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil no sistema <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
               </th>
@@ -156,6 +157,7 @@
                   {% endif %}
                 </td>
                 <td data-label="Função no CEDE">{{ user.institutional_role|default('-') }}</td>
+                <td data-label="Tipo de Sócio">{{ user.member_type_label|default('Não definido') }}</td>
                 <td data-label="Perfil no sistema">{{ user.role_name|default('-') }}</td>
                 <td data-label="Status">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>

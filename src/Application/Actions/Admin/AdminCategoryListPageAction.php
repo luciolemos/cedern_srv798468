@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AdminCategoryListPageAction extends AbstractAdminAgendaAction
 {
+    public const FLASH_KEY = 'admin_category_list';
+
     private const DEFAULT_PAGE_SIZE = 10;
 
     private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
@@ -28,7 +30,8 @@ class AdminCategoryListPageAction extends AbstractAdminAgendaAction
         }
 
         $queryParams = $request->getQueryParams();
-        $status = (string) (($queryParams['status'] ?? '') ?: '');
+        $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+        $status = trim((string) ($flash['status'] ?? ''));
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
 
         if ($searchTerm !== '') {

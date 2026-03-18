@@ -14,14 +14,22 @@ class AdminCategoryToggleStatusAction extends AbstractAdminAgendaAction
         $id = (int) ($request->getAttribute('id') ?? 0);
 
         if ($id <= 0) {
-            return $this->redirect($response, '/painel/categorias?status=invalid-id');
+            $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                'status' => 'not-found',
+            ]);
+
+            return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
         }
 
         try {
             $category = $this->agendaRepository->findCategoryByIdForAdmin($id);
 
             if ($category === null) {
-                return $this->redirect($response, '/painel/categorias?status=not-found');
+                $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                    'status' => 'not-found',
+                ]);
+
+                return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
             }
 
             $currentIsActive = ((int) ($category['is_active'] ?? 0)) === 1;
@@ -29,17 +37,22 @@ class AdminCategoryToggleStatusAction extends AbstractAdminAgendaAction
 
             $this->agendaRepository->setCategoryActive($id, $newIsActive);
 
-            return $this->redirect(
-                $response,
-                '/painel/categorias?status=' . ($newIsActive ? 'enabled' : 'disabled')
-            );
+            $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                'status' => $newIsActive ? 'enabled' : 'disabled',
+            ]);
+
+            return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
         } catch (\Throwable $exception) {
             $this->logger->warning('Falha ao alternar status da categoria no admin.', [
                 'category_id' => $id,
                 'error' => $exception->getMessage(),
             ]);
 
-            return $this->redirect($response, '/painel/categorias?status=toggle-error');
+            $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                'status' => 'toggle-error',
+            ]);
+
+            return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
         }
     }
 }

@@ -40,6 +40,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'birth_date' => null,
             'birth_place' => null,
             'institutional_role' => null,
+            'member_type' => null,
+            'member_type_label' => 'Não definido',
             'profile_photo_path' => null,
             'profile_completed' => 0,
             'role_id' => null,
@@ -58,7 +60,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
 
         foreach ($this->users as $user) {
             if ((string) ($user['email'] ?? '') === $needle) {
-                return $user;
+                return $this->withMemberTypeLabel($user);
             }
         }
 
@@ -67,7 +69,11 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
 
     public function findById(int $id): ?array
     {
-        return $this->users[$id] ?? null;
+        if (!isset($this->users[$id])) {
+            return null;
+        }
+
+        return $this->withMemberTypeLabel($this->users[$id]);
     }
 
     public function findAllRoles(): array
@@ -104,8 +110,12 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         return true;
     }
 
-    public function approveAndAssignRole(int $id, int $roleId, ?string $institutionalRole = null): bool
-    {
+    public function approveAndAssignRole(
+        int $id,
+        int $roleId,
+        ?string $institutionalRole = null,
+        ?string $memberType = null
+    ): bool {
         if (!isset($this->users[$id])) {
             return false;
         }
@@ -127,6 +137,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['role_key'] = (string) ($role['role_key'] ?? 'member');
         $this->users[$id]['role_name'] = (string) ($role['name'] ?? 'Membro');
         $this->users[$id]['institutional_role'] = $this->nullableText($institutionalRole);
+        $this->users[$id]['member_type'] = $this->nullableText($memberType);
+        $this->users[$id]['member_type_label'] = $this->resolveMemberTypeLabel((string) ($this->users[$id]['member_type'] ?? ''));
         $this->users[$id]['status'] = 'active';
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
 
@@ -160,7 +172,10 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
 
     public function findAllUsersForAdmin(): array
     {
-        return array_values($this->users);
+        return array_values(array_map(
+            fn (array $user): array => $this->withMemberTypeLabel($user),
+            $this->users
+        ));
     }
 
     private function nullableText(mixed $value): ?string
@@ -172,5 +187,26 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @return array<string, mixed>
+     */
+    private function withMemberTypeLabel(array $user): array
+    {
+        $user['member_type'] = $user['member_type'] ?? null;
+        $user['member_type_label'] = $this->resolveMemberTypeLabel((string) ($user['member_type'] ?? ''));
+
+        return $user;
+    }
+
+    private function resolveMemberTypeLabel(string $memberType): string
+    {
+        return match (strtolower(trim($memberType))) {
+            'fundador' => 'Fundador',
+            'efetivo' => 'Efetivo',
+            default => 'Não definido',
+        };
     }
 }

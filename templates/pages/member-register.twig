@@ -28,22 +28,22 @@
           <form class="nc-admin-login-form" method="post" action="/cadastro">
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="full_name">Nome completo</label>
-              <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_register_form.full_name|default('') }}" autocomplete="name" required>
+              <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_register_form.full_name|default('') }}" autocomplete="name" placeholder="Ex: Maria da Silva" required>
             </div>
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="email">E-mail</label>
-              <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ member_register_form.email|default('') }}" autocomplete="email" required>
+              <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ member_register_form.email|default('') }}" autocomplete="email" placeholder="Ex: maria@email.com" required>
             </div>
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="password">Senha</label>
-              <input class="nc-admin-login-input" id="password" name="password" type="password" autocomplete="new-password" required>
+              <input class="nc-admin-login-input" id="password" name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 8 caracteres" required>
             </div>
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="password_confirmation">Confirmar senha</label>
-              <input class="nc-admin-login-input" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required>
+              <input class="nc-admin-login-input" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" placeholder="Repita a senha cadastrada" required>
             </div>
 
             <div class="nc-actions nc-admin-login-actions nc-member-register-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">

@@ -19,6 +19,9 @@
     {% elseif admin_status == 'invalid-institutional-role' %}
       {% set toast_message = 'Selecione uma função institucional válida para continuar.' %}
       {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-member-type' %}
+      {% set toast_message = 'Selecione um tipo de sócio válido para continuar.' %}
+      {% set toast_tone = 'error' %}
     {% elseif admin_status == 'assign-error' %}
       {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
       {% set toast_tone = 'error' %}
@@ -36,28 +39,77 @@
     {% set sort_links = member_users_sort_links|default({}) %}
     {% set search_term = member_users_search|default('') %}
     {% set institutional_role_options = member_institutional_role_options|default([]) %}
+    {% set member_type_options = member_member_type_options|default([]) %}
+    {% set role_filter_options = member_users_role_filter_options|default([]) %}
+    {% set institutional_role_filter_options = member_users_institutional_role_filter_options|default(institutional_role_options) %}
+    {% set selected_role_filter = member_users_role_filter|default('') %}
+    {% set selected_member_type_filter = member_users_member_type_filter|default('') %}
+    {% set selected_institutional_role_filter = member_users_institutional_role_filter|default('') %}
+    {% set has_active_filters = search_term != '' or selected_role_filter != '' or selected_member_type_filter != '' or selected_institutional_role_filter != '' %}
 
     {% if member_users|length == 0 %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
         <label for="nc-users-search">Buscar usuários</label>
         <div class="nc-admin-table-search-controls">
-          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil...">
+          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil, função...">
+          <select name="role_filter" aria-label="Filtrar por perfil">
+            <option value="">Todos os perfis</option>
+            {% for role_option in role_filter_options %}
+              <option value="{{ role_option.value }}"{% if selected_role_filter == role_option.value %} selected{% endif %}>{{ role_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="member_type_filter" aria-label="Filtrar por tipo de sócio">
+            <option value="">Todos os tipos de sócio</option>
+            {% for member_type_option in member_type_options %}
+              <option value="{{ member_type_option.value }}"{% if selected_member_type_filter == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="institutional_role_filter" aria-label="Filtrar por função no CEDE">
+            <option value="">Todas as funções no CEDE</option>
+            {% for institutional_role_filter_option in institutional_role_filter_options %}
+              <option value="{{ institutional_role_filter_option }}"{% if selected_institutional_role_filter == institutional_role_filter_option %} selected{% endif %}>{{ institutional_role_filter_option }}</option>
+            {% endfor %}
+          </select>
           <input type="hidden" name="sort" value="{{ pagination.sort|default('id') }}">
           <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
           <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
           <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+          {% if has_active_filters %}
+            <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">Limpar filtros</a>
+          {% endif %}
         </div>
       </form>
-      <p>{{ search_term ? 'Nenhum usuário encontrado para a busca informada.' : 'Nenhum usuário cadastrado até o momento.' }}</p>
+      <p>{{ has_active_filters ? 'Nenhum usuário encontrado para os filtros informados.' : 'Nenhum usuário cadastrado até o momento.' }}</p>
     {% else %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
         <label for="nc-users-search">Buscar usuários</label>
         <div class="nc-admin-table-search-controls">
-          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil...">
+          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil, função...">
+          <select name="role_filter" aria-label="Filtrar por perfil">
+            <option value="">Todos os perfis</option>
+            {% for role_option in role_filter_options %}
+              <option value="{{ role_option.value }}"{% if selected_role_filter == role_option.value %} selected{% endif %}>{{ role_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="member_type_filter" aria-label="Filtrar por tipo de sócio">
+            <option value="">Todos os tipos de sócio</option>
+            {% for member_type_option in member_type_options %}
+              <option value="{{ member_type_option.value }}"{% if selected_member_type_filter == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="institutional_role_filter" aria-label="Filtrar por função no CEDE">
+            <option value="">Todas as funções no CEDE</option>
+            {% for institutional_role_filter_option in institutional_role_filter_options %}
+              <option value="{{ institutional_role_filter_option }}"{% if selected_institutional_role_filter == institutional_role_filter_option %} selected{% endif %}>{{ institutional_role_filter_option }}</option>
+            {% endfor %}
+          </select>
           <input type="hidden" name="sort" value="{{ pagination.sort|default('id') }}">
           <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
           <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
           <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+          {% if has_active_filters %}
+            <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">Limpar filtros</a>
+          {% endif %}
         </div>
       </form>
 
@@ -76,6 +128,9 @@
           <input type="hidden" name="sort" value="{{ pagination.sort|default('id') }}">
           <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
           <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="role_filter" value="{{ selected_role_filter }}">
+          <input type="hidden" name="member_type_filter" value="{{ selected_member_type_filter }}">
+          <input type="hidden" name="institutional_role_filter" value="{{ selected_institutional_role_filter }}">
           <noscript>
             <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
           </noscript>
@@ -93,14 +148,19 @@
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.full_name.active %} is-active{% endif %}" href="{{ sort_links.full_name.url }}">Nome <span aria-hidden="true">{{ sort_links.full_name.indicator }}</span></a>
               </th>
+              <th>Telefone</th>
               <th class="nc-admin-col-email">
                 <a class="nc-admin-sort-link{% if sort_links.email.active %} is-active{% endif %}" href="{{ sort_links.email.url }}">E-mail <span aria-hidden="true">{{ sort_links.email.indicator }}</span></a>
               </th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.member_type_label.active %} is-active{% endif %}" href="{{ sort_links.member_type_label.url }}">Tipo de Sócio <span aria-hidden="true">{{ sort_links.member_type_label.indicator }}</span></a>
               </th>
+              <th>Função CEDE</th>
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
+              </th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
               </th>
               <th>Ações</th>
             </tr>
@@ -133,7 +193,27 @@
                     </svg>
                     <span>{{ user.email|default('-') }}</span>
                   </small>
-                  {% if user.phone_mobile_display is defined and user.phone_mobile_display != '-' %}
+                </td>
+                <td data-label="Telefone">
+                  {% if user.phone_landline_display|default('-') != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-landline">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M6.5 4H9.2L10.4 7.4L8.9 8.6C9.6 10.2 10.8 11.4 12.4 12.1L13.6 10.6L17 11.8V14.5C17 15.1 16.5 15.6 15.9 15.6C10.7 15.6 6.4 11.3 6.4 6.1C6.4 5.5 6.9 5 7.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>{{ user.phone_landline_display }}</span>
+                    </small>
+                  {% elseif user.phone_mobile_display|default('-') != '-' %}
+                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-mobile">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="7" y="3.5" width="10" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
+                        <circle cx="12" cy="17.5" r="0.9" fill="currentColor"/>
+                      </svg>
+                      <span>{{ user.phone_mobile_display }}</span>
+                    </small>
+                  {% else %}
+                    <span>-</span>
+                  {% endif %}
+                  {% if user.phone_mobile_display is defined and user.phone_mobile_display != '-' and user.phone_landline_display|default('-') != '-' %}
                     <small class="nc-admin-user-email-inline nc-admin-phone-inline is-mobile">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <rect x="7" y="3.5" width="10" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
@@ -142,50 +222,16 @@
                       <span>{{ user.phone_mobile_display }}</span>
                     </small>
                   {% endif %}
-                  {% if user.phone_landline_display is defined and user.phone_landline_display != '-' %}
-                    <small class="nc-admin-user-email-inline nc-admin-phone-inline is-landline">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M6.5 4H9.2L10.4 7.4L8.9 8.6C9.6 10.2 10.8 11.4 12.4 12.1L13.6 10.6L17 11.8V14.5C17 15.1 16.5 15.6 15.9 15.6C10.7 15.6 6.4 11.3 6.4 6.1C6.4 5.5 6.9 5 7.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span>{{ user.phone_landline_display }}</span>
-                    </small>
-                  {% endif %}
                 </td>
                 <td class="nc-admin-col-email" data-label="E-mail">{{ user.email|default('-') }}</td>
+                <td data-label="Tipo de Sócio">{{ user.member_type_label|default('Não definido') }}</td>
+                <td data-label="Função CEDE">{{ user.institutional_role|default('Sem função definida') }}</td>
+                <td data-label="Perfil">{{ user.role_name|default('-') }}</td>
                 <td data-label="Status">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
-                <td data-label="Perfil">{{ user.role_name|default('-') }}</td>
                 <td class="nc-admin-table-actions" data-label="Ações">
-                  <form method="post" action="/painel/usuarios/{{ user.id }}/atribuir-papel" class="nc-admin-inline-form">
-                    <select class="nc-admin-inline-select" name="role_id" aria-label="Selecionar perfil para {{ user.full_name|default('usuário') }}">
-                      <option value="">Selecionar perfil</option>
-                      {% for role in member_roles %}
-                        <option value="{{ role.id }}"{% if user.role_key is defined and user.role_key == role.role_key %} selected{% endif %}>{{ role.name }}</option>
-                      {% endfor %}
-                    </select>
-                    <select class="nc-admin-inline-select" name="institutional_role" aria-label="Selecionar função no CEDE para {{ user.full_name|default('usuário') }}">
-                      <option value="">Função no CEDE (opcional)</option>
-                      {% for institutional_role_option in institutional_role_options %}
-                        <option value="{{ institutional_role_option }}"{% if user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
-                      {% endfor %}
-                    </select>
-                    <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" type="submit" aria-label="Salvar perfil de {{ user.full_name|default('usuário') }}" title="Salvar">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M5 4H16L20 8V20H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 4V10H16V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <rect x="8" y="14" width="8" height="6" rx="1" stroke="currentColor" stroke-width="1.8"/>
-                      </svg>
-                      <span class="nc-sr-only">Salvar</span>
-                    </button>
-                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Visualizar resumo de {{ user.full_name|default('usuário') }}" title="Visualizar">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M2 12C4.5 7.5 8 5.5 12 5.5C16 5.5 19.5 7.5 22 12C19.5 16.5 16 18.5 12 18.5C8 18.5 4.5 16.5 2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
-                      </svg>
-                      <span class="nc-sr-only">Visualizar</span>
-                    </a>
-                  </form>
+                  <a class="nc-btn nc-btn-secondary nc-admin-action-edit" href="/painel/usuarios/{{ user.id }}/resumo">Editar acesso</a>
                 </td>
               </tr>
             {% endfor %}

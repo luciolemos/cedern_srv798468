@@ -2667,6 +2667,49 @@ code {
   transform: scale(1.06);
 }
 
+.nc-dashboard-user-menu-group {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0.04rem 0;
+}
+
+.nc-dashboard-user-menu-group summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--theme-accent-1) 4%, var(--surface-main));
+}
+
+.nc-dashboard-user-menu-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.nc-dashboard-user-menu-group summary::after {
+  content: "▾";
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--text-subtle);
+  transition: transform 120ms ease;
+}
+
+.nc-dashboard-user-menu-group[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.nc-dashboard-user-menu-sublink {
+  margin-left: 0.3rem;
+}
+
 .nc-dashboard-layout {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -4129,11 +4172,20 @@ textarea.nc-admin-form-input {
   display: none;
 }
 
-.nc-admin-table-actions {
-  display: flex;
+.nc-admin-table tbody td.nc-admin-table-actions {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.nc-admin-table tbody td.nc-admin-table-actions > a,
+.nc-admin-table tbody td.nc-admin-table-actions > form {
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
+  vertical-align: middle;
+}
+
+.nc-admin-table tbody td.nc-admin-table-actions > * + * {
+  margin-left: 0.35rem;
 }
 
 .nc-btn-icon {
@@ -4740,6 +4792,10 @@ textarea.nc-admin-form-input {
     margin-top: 0.3rem;
     padding-top: 0.45rem;
     border-top: 1px dashed color-mix(in srgb, var(--surface-border) 72%, transparent);
+  }
+
+  .nc-admin-table tbody td.nc-admin-table-actions > * + * {
+    margin-left: 0;
   }
 
   .nc-admin-table tbody td.nc-admin-table-actions::before {

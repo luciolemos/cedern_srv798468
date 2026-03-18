@@ -16,15 +16,26 @@ class ContactPageAction extends AbstractPageAction
     {
         $method = strtoupper($request->getMethod());
 
-        $form = [
-            'name' => '',
-            'email' => '',
-            'subject' => '',
-            'message' => '',
-            'company' => '',
-        ];
+        $form = $this->getEmptyForm();
         $errors = [];
         $status = '';
+
+        if ($method !== 'POST') {
+            $flash = $this->consumeContactFlash();
+            $status = (string) ($flash['status'] ?? '');
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+            $flashForm = (array) ($flash['form'] ?? []);
+            $form = array_merge($form, [
+                'name' => trim((string) ($flashForm['name'] ?? '')),
+                'email' => strtolower(trim((string) ($flashForm['email'] ?? ''))),
+                'subject' => trim((string) ($flashForm['subject'] ?? '')),
+                'message' => trim((string) ($flashForm['message'] ?? '')),
+                'company' => '',
+            ]);
+        }
 
         if ($method === 'POST') {
             $body = (array) $request->getParsedBody();
@@ -36,7 +47,13 @@ class ContactPageAction extends AbstractPageAction
             $form['company'] = trim((string) ($body['company'] ?? ''));
 
             if ($form['company'] !== '') {
-                $status = 'sent';
+                $this->storeContactFlash([
+                    'status' => 'sent',
+                    'errors' => [],
+                    'form' => $this->getEmptyForm(),
+                ]);
+
+                return $response->withHeader('Location', '/contato')->withStatus(303);
             } else {
                 if ($form['name'] === '') {
                     $errors[] = 'Informe seu nome.';
@@ -57,14 +74,13 @@ class ContactPageAction extends AbstractPageAction
                 if (empty($errors)) {
                     try {
                         $this->sendContactEmail($form['name'], $form['email'], $form['subject'], $form['message']);
-                        $status = 'sent';
-                        $form = [
-                            'name' => '',
-                            'email' => '',
-                            'subject' => '',
-                            'message' => '',
-                            'company' => '',
-                        ];
+                        $this->storeContactFlash([
+                            'status' => 'sent',
+                            'errors' => [],
+                            'form' => $this->getEmptyForm(),
+                        ]);
+
+                        return $response->withHeader('Location', '/contato')->withStatus(303);
                     } catch (\Throwable $exception) {
                         $this->logger->error('Falha no envio de e-mail de contato.', [
                             'error' => $exception->getMessage(),
@@ -74,6 +90,20 @@ class ContactPageAction extends AbstractPageAction
                     }
                 }
             }
+
+            $this->storeContactFlash([
+                'status' => $status,
+                'errors' => $errors,
+                'form' => [
+                    'name' => $form['name'],
+                    'email' => $form['email'],
+                    'subject' => $form['subject'],
+                    'message' => $form['message'],
+                    'company' => '',
+                ],
+            ]);
+
+            return $response->withHeader('Location', '/contato')->withStatus(303);
         }
 
         return $this->renderPage($response, 'pages/contact.twig', [
@@ -125,11 +155,22 @@ class ContactPageAction extends AbstractPageAction
         $mailer->setFrom($fromEmail, $fromName);
         $mailer->addAddress($toEmail);
         $mailer->addReplyTo($email, $name);
+        $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
 
-        $safeName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        $safeEmail = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
-        $safeSubject = htmlspecialchars($subject, ENT_QUOTES, 'UTF-8');
-        $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+        $normalizedName = $this->normalizeSingleLineValue($name, 'Visitante');
+        $normalizedEmail = strtolower(trim($email));
+        $normalizedSubject = $this->normalizeSingleLineValue($subject, 'Contato pelo formulário do site');
+        $normalizedMessage = $this->normalizeMultilineValue($message);
+
+        $safeName = htmlspecialchars($normalizedName, ENT_QUOTES, 'UTF-8');
+        $safeEmail = htmlspecialchars($normalizedEmail, ENT_QUOTES, 'UTF-8');
+        $safeSubject = htmlspecialchars($normalizedSubject, ENT_QUOTES, 'UTF-8');
+        $safeMessage = nl2br(htmlspecialchars($normalizedMessage, ENT_QUOTES, 'UTF-8'));
+        $replyMailTo = htmlspecialchars(
+            $this->buildReplyMailToLink($normalizedEmail, $normalizedSubject),
+            ENT_QUOTES,
+            'UTF-8'
+        );
 
         $logoCid = 'cedern-logo';
         $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
@@ -139,26 +180,109 @@ class ContactPageAction extends AbstractPageAction
             $logoSrc = 'cid:' . $logoCid;
         }
 
+        $headerMetaHtml = InstitutionalEmailTemplate::buildInstitutionHeaderMeta();
+
         $htmlBody = InstitutionalEmailTemplate::buildLayout(
             'Novo contato pelo site',
-            '<p><strong>Nome:</strong> ' . $safeName . '</p>'
-            . '<p><strong>E-mail:</strong> ' . $safeEmail . '</p>'
-            . '<p><strong>Assunto:</strong> ' . $safeSubject . '</p>'
-            . '<hr style="border:none;border-top:1px solid #e2e8f0;'
-            . 'margin:14px 0;">'
-            . '<p>' . $safeMessage . '</p>',
-            $logoSrc
+            '<p style="margin:0 0 14px;">Mensagem recebida pelo formulario institucional do site do CEDE.</p>'
+            . '<div style="margin:0 0 16px;padding:14px 16px;border:1px solid #dbe4ee;'
+            . 'border-radius:12px;background:#f8fafc;">'
+            . '<p style="margin:0 0 8px;"><strong>Nome:</strong> ' . $safeName . '</p>'
+            . '<p style="margin:0 0 8px;"><strong>E-mail:</strong> '
+            . '<a href="mailto:' . $safeEmail . '" style="color:#1d4ed8;text-decoration:none;">' . $safeEmail . '</a></p>'
+            . '<p style="margin:0;"><strong>Assunto informado:</strong> ' . $safeSubject . '</p>'
+            . '</div>'
+            . '<div style="margin:0 0 16px;padding:16px;border-left:4px solid #2563eb;'
+            . 'border-radius:10px;background:#f8fafc;">'
+            . '<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;">Mensagem</p>'
+            . '<p style="margin:0;">' . $safeMessage . '</p>'
+            . '</div>'
+            . '<p style="margin:0 0 10px;">'
+            . '<a href="' . $replyMailTo . '" '
+            . 'style="display:inline-block;padding:11px 15px;border-radius:10px;'
+            . 'background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;">'
+            . 'Responder por e-mail</a></p>'
+            . '<p style="margin:0;font-size:12px;color:#64748b;">'
+            . 'Se preferir, use o botao de resposta do seu webmail ou escreva para ' . $safeEmail . '.</p>',
+            $logoSrc,
+            $headerMetaHtml
         );
 
         $mailer->isHTML(true);
-        $mailer->Subject = '[Contato Site] ' . $subject;
-            $mailer->Body = $htmlBody;
+        $mailer->Subject = '[Contato Site] Novo contato recebido';
+        $mailer->Body = $htmlBody;
         $mailer->AltBody = "Novo contato pelo site\n"
-            . "Nome: {$name}\n"
-            . "E-mail: {$email}\n"
-            . "Assunto: {$subject}\n\n"
-            . $message;
+            . "Mensagem recebida pelo formulario institucional.\n\n"
+            . "Nome: {$normalizedName}\n"
+            . "E-mail: {$normalizedEmail}\n"
+            . "Assunto informado: {$normalizedSubject}\n\n"
+            . "Responder: {$this->buildReplyMailToLink($normalizedEmail, $normalizedSubject)}\n\n"
+            . $normalizedMessage;
 
         $mailer->send();
+    }
+
+    private function buildReplyMailToLink(string $email, string $subject): string
+    {
+        $replySubject = $this->normalizeSingleLineValue('Re: ' . $subject, 'Re: Contato pelo formulario do site');
+
+        return 'mailto:' . $email . '?' . http_build_query([
+            'subject' => $replySubject,
+        ], '', '&', PHP_QUERY_RFC3986);
+    }
+
+    private function normalizeSingleLineValue(string $value, string $fallback = ''): string
+    {
+        $normalized = preg_replace('/[\r\n\t]+/', ' ', $value) ?? '';
+        $normalized = preg_replace('/\s{2,}/', ' ', $normalized) ?? $normalized;
+        $normalized = trim($normalized);
+
+        if ($normalized === '') {
+            return $fallback;
+        }
+
+        return mb_substr($normalized, 0, 160);
+    }
+
+    private function normalizeMultilineValue(string $value): string
+    {
+        $normalized = str_replace(["\r\n", "\r"], "\n", $value);
+        $normalized = preg_replace("/\n{3,}/", "\n\n", $normalized) ?? $normalized;
+        $normalized = trim($normalized);
+
+        return $normalized !== '' ? $normalized : 'Mensagem nao informada.';
+    }
+
+    /**
+     * @return array{name:string,email:string,subject:string,message:string,company:string}
+     */
+    private function getEmptyForm(): array
+    {
+        return [
+            'name' => '',
+            'email' => '',
+            'subject' => '',
+            'message' => '',
+            'company' => '',
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $flash
+     */
+    private function storeContactFlash(array $flash): void
+    {
+        $_SESSION['contact_form_flash'] = $flash;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function consumeContactFlash(): array
+    {
+        $flash = (array) ($_SESSION['contact_form_flash'] ?? []);
+        unset($_SESSION['contact_form_flash']);
+
+        return $flash;
     }
 }

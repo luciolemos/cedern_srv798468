@@ -20,6 +20,11 @@ class AdminCedeManagementPageAction extends AbstractPageAction
 
     private const SORT_FIELDS = ['full_name', 'email', 'institutional_role', 'role_name', 'status'];
 
+    private const MEMBER_TYPE_OPTIONS = [
+        'fundador' => 'Fundador',
+        'efetivo' => 'Efetivo',
+    ];
+
     private MemberAuthRepository $memberAuthRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
@@ -49,6 +54,16 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 'exception' => $exception,
             ]);
         }
+
+        $users = array_map(function (array $user): array {
+            $memberType = strtolower(trim((string) ($user['member_type'] ?? '')));
+            $user['member_type'] = array_key_exists($memberType, self::MEMBER_TYPE_OPTIONS)
+                ? $memberType
+                : '';
+            $user['member_type_label'] = self::MEMBER_TYPE_OPTIONS[$user['member_type']] ?? 'Não definido';
+
+            return $user;
+        }, $users);
 
         $users = array_values(array_filter(
             $users,
@@ -99,6 +114,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
+                        (string) $user['member_type_label'],
                         (string) ($user['role_name'] ?? ''),
                         (string) ($user['status'] ?? ''),
                     ]);

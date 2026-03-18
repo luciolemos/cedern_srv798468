@@ -14,19 +14,31 @@ class AdminAgendaDeleteAction extends AbstractAdminAgendaAction
         $id = (int) ($request->getAttribute('id') ?? 0);
 
         if ($id <= 0) {
-            return $this->redirect($response, '/painel/eventos?status=invalid-id');
+            $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                'status' => 'not-found',
+            ]);
+
+            return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
         }
 
         try {
             $this->agendaRepository->deleteEvent($id);
-            return $this->redirect($response, '/painel/eventos?status=deleted');
+            $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                'status' => 'deleted',
+            ]);
+
+            return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
         } catch (\Throwable $exception) {
             $this->logger->warning('Falha ao excluir evento no admin.', [
                 'event_id' => $id,
                 'error' => $exception->getMessage(),
             ]);
 
-            return $this->redirect($response, '/painel/eventos?status=delete-error');
+            $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                'status' => 'delete-error',
+            ]);
+
+            return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
         }
     }
 }

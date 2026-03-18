@@ -6,6 +6,35 @@
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Resumo do usuário">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if summary_status == 'approved' %}
+      {% set toast_message = 'Perfil de acesso atualizado com sucesso.' %}
+    {% elseif summary_status == 'institutional-role-conflict' %}
+      {% set toast_message = summary_error_message|default('Já existe um usuário ativo com esta função institucional. Remova ou altere a função atual antes de prosseguir.') %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-role' %}
+      {% set toast_message = 'Selecione um perfil válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-institutional-role' %}
+      {% set toast_message = 'Selecione uma função institucional válida para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-member-type' %}
+      {% set toast_message = 'Selecione um tipo de sócio válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'assign-error' %}
+      {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'load-error' %}
+      {% set toast_message = summary_error_message|default('Não foi possível carregar os dados do usuário no momento.') %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
     <p>
       <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">← Voltar para Gestão de Pessoal</a>
     </p>
@@ -13,6 +42,9 @@
     {% if summary_user is empty %}
       <p>{{ summary_error_message|default('Usuário não encontrado.') }}</p>
     {% else %}
+      {% set summary_roles = summary_roles|default([]) %}
+      {% set summary_member_type_options = summary_member_type_options|default([]) %}
+      {% set summary_institutional_role_options = summary_institutional_role_options|default([]) %}
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="70">
         <div class="nc-member-header">
           <div class="nc-member-avatar-wrap" aria-hidden="true">
@@ -32,6 +64,10 @@
           <div>
             <dt>Perfil</dt>
             <dd>{{ summary_user.role_name|default('Membro') }}</dd>
+          </div>
+          <div>
+            <dt>Tipo de Sócio</dt>
+            <dd>{{ summary_user.member_type_label|default(summary_user.member_type|default('Não definido')) }}</dd>
           </div>
           <div>
             <dt>E-mail</dt>
@@ -58,6 +94,49 @@
             <dd>{{ summary_user.institutional_role|default('Sem função definida') }}</dd>
           </div>
         </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="95">
+        <h3>Editar perfil de acesso</h3>
+        <p class="nc-member-subtitle">Apenas os campos administrativos podem ser alterados pelo painel.</p>
+
+        <form class="nc-admin-login-form" method="post" action="/painel/usuarios/{{ summary_user.id }}/atribuir-papel">
+          <input type="hidden" name="redirect_to" value="/painel/usuarios">
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-role-id">Perfil no sistema</label>
+            <select class="nc-admin-login-input" id="nc-summary-role-id" name="role_id">
+              <option value="">Selecionar perfil</option>
+              {% for role in summary_roles %}
+                <option value="{{ role.id }}"{% if summary_user.role_key|default('') == role.role_key %} selected{% endif %}>{{ role.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-member-type">Tipo de sócio</label>
+            <select class="nc-admin-login-input" id="nc-summary-member-type" name="member_type">
+              <option value="">Tipo de Sócio (opcional)</option>
+              {% for member_type_option in summary_member_type_options %}
+                <option value="{{ member_type_option.value }}"{% if summary_user.member_type|default('') == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-institutional-role">Função no CEDE</label>
+            <select class="nc-admin-login-input" id="nc-summary-institutional-role" name="institutional_role">
+              <option value="">Função no CEDE (opcional)</option>
+              {% for institutional_role_option in summary_institutional_role_options %}
+                <option value="{{ institutional_role_option }}"{% if summary_user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-actions nc-admin-login-actions">
+            <button class="nc-btn nc-btn-secondary nc-admin-login-submit" type="submit">Salvar perfil de acesso</button>
+          </div>
+        </form>
       </article>
     {% endif %}
   </section>

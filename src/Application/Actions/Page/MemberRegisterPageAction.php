@@ -16,6 +16,8 @@ use Throwable;
 
 class MemberRegisterPageAction extends AbstractPageAction
 {
+    private const FLASH_KEY = 'member_register';
+
     private MemberAuthRepository $memberAuthRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
@@ -26,6 +28,7 @@ class MemberRegisterPageAction extends AbstractPageAction
 
     public function __invoke(Request $request, Response $response): Response
     {
+        $method = strtoupper($request->getMethod());
         $errors = [];
         $success = false;
         $form = [
@@ -33,7 +36,19 @@ class MemberRegisterPageAction extends AbstractPageAction
             'email' => '',
         ];
 
-        if (strtoupper($request->getMethod()) === 'POST') {
+        if ($method !== 'POST') {
+            $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+            $success = (string) ($flash['status'] ?? '') === 'sent';
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+            $flashForm = (array) ($flash['form'] ?? []);
+            $form['full_name'] = trim((string) ($flashForm['full_name'] ?? ''));
+            $form['email'] = strtolower(trim((string) ($flashForm['email'] ?? '')));
+        }
+
+        if ($method === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
             $fullName = trim((string) ($body['full_name'] ?? ''));
             $email = strtolower(trim((string) ($body['email'] ?? '')));
@@ -80,11 +95,16 @@ class MemberRegisterPageAction extends AbstractPageAction
                         ]);
                     }
 
-                    $success = true;
-                    $form = [
-                        'full_name' => '',
-                        'email' => '',
-                    ];
+                    $this->storeSessionFlash(self::FLASH_KEY, [
+                        'status' => 'sent',
+                        'errors' => [],
+                        'form' => [
+                            'full_name' => '',
+                            'email' => '',
+                        ],
+                    ]);
+
+                    return $response->withHeader('Location', '/cadastro')->withStatus(303);
                 } catch (Throwable $exception) {
                     $errorMessage = strtolower($exception->getMessage());
                     $isDuplicate = str_contains($errorMessage, 'duplicate')
@@ -102,6 +122,17 @@ class MemberRegisterPageAction extends AbstractPageAction
                         : 'Cadastro indisponível no momento. Tente novamente em instantes.';
                 }
             }
+
+            $this->storeSessionFlash(self::FLASH_KEY, [
+                'status' => $success ? 'sent' : 'error',
+                'errors' => $errors,
+                'form' => [
+                    'full_name' => $form['full_name'],
+                    'email' => $form['email'],
+                ],
+            ]);
+
+            return $response->withHeader('Location', '/cadastro')->withStatus(303);
         }
 
         return $this->renderPage($response, 'pages/member-register.twig', [
@@ -132,17 +163,73 @@ class MemberRegisterPageAction extends AbstractPageAction
             throw new \RuntimeException('Configuração SMTP incompleta para envio de e-mails de cadastro.');
         }
 
+        $headerMetaHtml = InstitutionalEmailTemplate::buildInstitutionHeaderMeta();
+        $panelReviewUrl = $siteUrl . '/painel/usuarios?sort=created_at&dir=desc&q=pending';
+        $memberLoginUrl = $siteUrl . '/entrar';
+        $contactUrl = $siteUrl . '/contato';
+        $adminReplyUrl = $this->buildMailToLink(
+            strtolower(trim($email)),
+            'Sobre sua solicitacao de cadastro no CEDE'
+        );
+        $safeFullName = htmlspecialchars(trim($fullName), ENT_QUOTES, 'UTF-8');
+        $safeEmail = htmlspecialchars(strtolower(trim($email)), ENT_QUOTES, 'UTF-8');
+        $adminActionsHtml = InstitutionalEmailTemplate::buildActionGroup([
+            [
+                'href' => $panelReviewUrl,
+                'label' => 'Abrir painel de usuarios',
+                'is_primary' => true,
+            ],
+            [
+                'href' => $adminReplyUrl,
+                'label' => 'Responder solicitante',
+                'is_primary' => false,
+            ],
+        ]);
+        $memberActionsHtml = InstitutionalEmailTemplate::buildActionGroup([
+            [
+                'href' => $memberLoginUrl,
+                'label' => 'Abrir area do membro',
+                'is_primary' => true,
+            ],
+            [
+                'href' => $contactUrl,
+                'label' => 'Falar com o CEDE',
+                'is_primary' => false,
+            ],
+        ]);
+
         if ($notifyEmail !== '') {
             $adminSubject = '[Cadastro de Membro] Nova solicitação recebida';
 
             $adminLogoSrc = $this->resolveEmbeddedLogoSrc();
             $adminBody = InstitutionalEmailTemplate::buildLayout(
                 'Nova solicitação de cadastro',
-                '<p>Um novo cadastro de membro foi realizado no site.</p>'
-                . '<p><strong>Nome:</strong> ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . '<br>'
-                . '<strong>E-mail:</strong> ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '</p>'
-                . '<p>Acesse o painel para revisar e aprovar quando necessário.</p>',
-                $adminLogoSrc
+                '<p style="margin:0 0 14px;">Uma nova solicitacao de cadastro foi enviada pela area publica do site.</p>'
+                . '<div style="margin:0 0 16px;padding:14px 16px;border:1px solid #dbe4ee;'
+                . 'border-radius:12px;background:#f8fafc;">'
+                . '<p style="margin:0 0 8px;"><strong>Nome:</strong> ' . $safeFullName . '</p>'
+                . '<p style="margin:0;"><strong>E-mail:</strong> '
+                . '<a href="mailto:' . $safeEmail . '" style="color:#1d4ed8;text-decoration:none;">'
+                . $safeEmail . '</a></p>'
+                . '</div>'
+                . '<div style="margin:0 0 16px;padding:16px;border-left:4px solid #2563eb;'
+                . 'border-radius:10px;background:#f8fafc;">'
+                . '<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;'
+                . 'text-transform:uppercase;color:#64748b;">Proxima acao</p>'
+                . '<p style="margin:0;">Acesse o painel administrativo para revisar o cadastro, definir perfil, '
+                . 'tipo de socio e funcao institucional, quando necessario.</p>'
+                . '</div>'
+                . $adminActionsHtml
+                . '<div style="margin:0;padding:14px 16px;border:1px dashed #cbd5e1;'
+                . 'border-radius:12px;background:#ffffff;">'
+                . '<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;'
+                . 'text-transform:uppercase;color:#64748b;">Observacoes</p>'
+                . '<p style="margin:0;font-size:13px;color:#475569;">'
+                . 'O cadastro ja foi salvo como pendente. Depois da aprovacao, a pessoa podera entrar '
+                . 'com este mesmo e-mail e a senha cadastrada no formulario publico.</p>'
+                . '</div>',
+                $adminLogoSrc,
+                $headerMetaHtml
             );
 
             $this->sendMail(
@@ -165,17 +252,34 @@ class MemberRegisterPageAction extends AbstractPageAction
         $memberLogoSrc = $this->resolveEmbeddedLogoSrc();
         $memberBody = InstitutionalEmailTemplate::buildLayout(
             'Boas-vindas ao CEDE',
-            '<p>Olá, <strong>' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . '</strong>.</p>'
-            . '<p>Ficamos felizes em receber sua solicitação de cadastro na área de membros do CEDE.</p>'
-            . '<p>Seu pedido entrou em análise e, após validação da equipe, '
-            . 'seu acesso será liberado com este e-mail.</p>'
-            . '<p>Enquanto isso, você já pode acompanhar nossas atividades e agenda pública no site.</p>'
-            . '<p><a href="' . htmlspecialchars($siteUrl . '/entrar', ENT_QUOTES, 'UTF-8') . '" '
-            . 'style="display:inline-block;padding:10px 14px;border-radius:8px;'
-            . 'background:#2563eb;color:#ffffff;text-decoration:none;font-weight:600;">'
-            . 'Abrir área do membro</a></p>'
-            . '<p style="margin-top:10px;color:#334155;">Com fraternidade,<br>Equipe CEDE</p>',
-            $memberLogoSrc
+            '<p style="margin:0 0 14px;">Olá, <strong>' . $safeFullName . '</strong>.</p>'
+            . '<p style="margin:0 0 14px;">Recebemos sua solicitacao de cadastro na area de membros do CEDE. '
+            . 'Seu pedido foi registrado com sucesso e agora aguarda validacao da equipe.</p>'
+            . '<div style="margin:0 0 16px;padding:14px 16px;border:1px solid #dbe4ee;'
+            . 'border-radius:12px;background:#f8fafc;">'
+            . '<p style="margin:0 0 8px;"><strong>Nome informado:</strong> ' . $safeFullName . '</p>'
+            . '<p style="margin:0 0 8px;"><strong>E-mail de acesso:</strong> ' . $safeEmail . '</p>'
+            . '<p style="margin:0;"><strong>Status atual:</strong> Cadastro em analise</p>'
+            . '</div>'
+            . '<div style="margin:0 0 16px;padding:16px;border-left:4px solid #2563eb;'
+            . 'border-radius:10px;background:#f8fafc;">'
+            . '<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;'
+            . 'text-transform:uppercase;color:#64748b;">O que acontece agora</p>'
+            . '<p style="margin:0;">Assim que a equipe concluir a validacao, seu acesso sera liberado e voce '
+            . 'podera entrar normalmente com este mesmo e-mail e a senha cadastrada.</p>'
+            . '</div>'
+            . $memberActionsHtml
+            . '<div style="margin:0;padding:14px 16px;border:1px dashed #cbd5e1;'
+            . 'border-radius:12px;background:#ffffff;">'
+            . '<p style="margin:0 0 8px;font-size:12px;letter-spacing:0.04em;'
+            . 'text-transform:uppercase;color:#64748b;">Observacoes</p>'
+            . '<p style="margin:0;font-size:13px;color:#475569;">'
+            . 'Guarde este e-mail para consulta. Enquanto a solicitacao estiver em analise, o acesso '
+            . 'permanecera pendente. Se precisar de ajuda ou quiser complementar alguma informacao, use '
+            . 'o canal oficial de contato do CEDE.</p>'
+            . '</div>',
+            $memberLogoSrc,
+            $headerMetaHtml
         );
 
         $this->sendMail(
@@ -256,5 +360,12 @@ class MemberRegisterPageAction extends AbstractPageAction
         $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
 
         return is_file($logoPath) ? 'cid:cedern-logo' : null;
+    }
+
+    private function buildMailToLink(string $email, string $subject): string
+    {
+        return 'mailto:' . $email . '?' . http_build_query([
+            'subject' => trim($subject),
+        ], '', '&', PHP_QUERY_RFC3986);
     }
 }

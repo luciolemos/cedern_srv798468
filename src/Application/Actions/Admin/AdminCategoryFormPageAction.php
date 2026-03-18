@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AdminCategoryFormPageAction extends AbstractAdminAgendaAction
 {
+    private const FLASH_KEY_PREFIX = 'admin_category_form_';
+
     private const AUDIENCE_OPTIONS = [
         'Jovens',
         'Adultos',
@@ -28,12 +30,25 @@ class AdminCategoryFormPageAction extends AbstractAdminAgendaAction
             $existingCategory = $this->agendaRepository->findCategoryByIdForAdmin($categoryId);
 
             if ($existingCategory === null) {
-                return $this->redirect($response, '/painel/categorias?status=not-found');
+                $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                    'status' => 'not-found',
+                ]);
+
+                return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
             }
         }
 
+        $formPath = $this->resolveFormPath($categoryId);
+
         if (strtoupper($request->getMethod()) !== 'POST') {
-            return $this->renderForm($response, $existingCategory, [], []);
+            $flash = $this->consumeSessionFlash($this->resolveFlashKey($categoryId));
+            $submittedPayload = (array) ($flash['payload'] ?? []);
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+
+            return $this->renderForm($response, $existingCategory, $submittedPayload, $errors);
         }
 
         $body = (array) ($request->getParsedBody() ?? []);
@@ -41,40 +56,65 @@ class AdminCategoryFormPageAction extends AbstractAdminAgendaAction
         $errors = $this->validatePayload($payload);
 
         if (!empty($errors)) {
-            return $this->renderForm($response, $existingCategory, $payload, $errors);
+            $this->storeSessionFlash($this->resolveFlashKey($categoryId), [
+                'payload' => $payload,
+                'errors' => $errors,
+            ]);
+
+            return $response->withHeader('Location', $formPath)->withStatus(303);
         }
 
         try {
             if ($isEdit) {
                 $this->agendaRepository->updateCategory($categoryId, $payload);
-                return $this->redirect($response, '/painel/categorias?status=updated');
+                $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                    'status' => 'updated',
+                ]);
+
+                return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
             }
 
             $newId = $this->agendaRepository->createCategory($payload);
 
             if ($newId <= 0) {
-                return $this->renderForm(
-                    $response,
-                    null,
-                    $payload,
-                    ['Não foi possível salvar a categoria. Verifique a conexão com banco.']
-                );
+                $this->storeSessionFlash($this->resolveFlashKey($categoryId), [
+                    'payload' => $payload,
+                    'errors' => ['Não foi possível salvar a categoria. Verifique a conexão com banco.'],
+                ]);
+
+                return $response->withHeader('Location', $formPath)->withStatus(303);
             }
 
-            return $this->redirect($response, '/painel/categorias?status=created');
+            $this->storeSessionFlash(AdminCategoryListPageAction::FLASH_KEY, [
+                'status' => 'created',
+            ]);
+
+            return $response->withHeader('Location', '/painel/categorias')->withStatus(303);
         } catch (\Throwable $exception) {
             $this->logger->warning('Falha ao salvar categoria no admin.', [
                 'error' => $exception->getMessage(),
                 'category_id' => $categoryId,
             ]);
 
-            return $this->renderForm(
-                $response,
-                $existingCategory,
-                $payload,
-                ['Erro ao salvar. Verifique se o slug já existe e tente novamente.']
-            );
+            $this->storeSessionFlash($this->resolveFlashKey($categoryId), [
+                'payload' => $payload,
+                'errors' => ['Erro ao salvar. Verifique se o slug já existe e tente novamente.'],
+            ]);
+
+            return $response->withHeader('Location', $formPath)->withStatus(303);
         }
+    }
+
+    private function resolveFlashKey(?int $categoryId): string
+    {
+        return self::FLASH_KEY_PREFIX . (($categoryId !== null && $categoryId > 0) ? (string) $categoryId : 'new');
+    }
+
+    private function resolveFormPath(?int $categoryId): string
+    {
+        return ($categoryId !== null && $categoryId > 0)
+            ? '/painel/categorias/' . $categoryId . '/editar'
+            : '/painel/categorias/nova';
     }
 
     /**

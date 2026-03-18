@@ -6,14 +6,43 @@ namespace App\Application\Support;
 
 final class InstitutionalEmailTemplate
 {
-    public static function buildLayout(string $title, string $contentHtml, ?string $logoSrc = null): string
-    {
+    public static function buildInstitutionHeaderMeta(
+        ?string $institutionName = null,
+        ?string $cnpj = null
+    ): string {
+        $resolvedInstitutionName = trim((string) $institutionName);
+        if ($resolvedInstitutionName === '') {
+            $resolvedInstitutionName = 'CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA';
+        }
+
+        $resolvedCnpj = trim((string) $cnpj);
+        if ($resolvedCnpj === '') {
+            $resolvedCnpj = '04.242.556/0001-45';
+        }
+
+        $safeInstitutionName = htmlspecialchars($resolvedInstitutionName, ENT_QUOTES, 'UTF-8');
+        $safeCnpj = htmlspecialchars($resolvedCnpj, ENT_QUOTES, 'UTF-8');
+
+        return '<p style="margin:0 0 4px;font-size:12px;line-height:1.35;'
+            . 'letter-spacing:0.03em;color:#1e293b;font-weight:700;white-space:nowrap;">'
+            . $safeInstitutionName . '</p>'
+            . '<p style="margin:0 0 10px;font-size:11px;line-height:1.3;color:#64748b;">'
+            . 'CNPJ: ' . $safeCnpj . '</p>';
+    }
+
+    public static function buildLayout(
+        string $title,
+        string $contentHtml,
+        ?string $logoSrc = null,
+        ?string $headerMetaHtml = null
+    ): string {
         $titleSafe = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $siteName = htmlspecialchars((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'), ENT_QUOTES, 'UTF-8');
         $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
         $siteUrl = htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8');
         $resolvedLogoSrc = $logoSrc ?: ($baseUrl . '/assets/img/brands/cede4_logo.png');
         $logoUrl = htmlspecialchars($resolvedLogoSrc, ENT_QUOTES, 'UTF-8');
+        $resolvedHeaderMetaHtml = trim((string) $headerMetaHtml);
 
         $institutionalEmail = trim((string) (
         $_ENV['MAIL_PUBLIC_EMAIL'] ?? ($_ENV['MAIL_FROM_ADDRESS'] ?? 'cede@cedern.org')
@@ -43,6 +72,7 @@ final class InstitutionalEmailTemplate
                       style="display:block;max-width:220px;width:100%;height:auto;margin:0 auto;"
                     >
                   </div>
+                  {$resolvedHeaderMetaHtml}
                   <h1 style="margin:8px 0 0;font-size:20px;line-height:1.25;color:#1e293b;">
                     {$titleSafe}
                   </h1>
@@ -70,5 +100,42 @@ final class InstitutionalEmailTemplate
               </div>
             </div>
         HTML;
+    }
+
+    /**
+     * @param array<int, array{href: string, label: string, is_primary?: bool}> $actions
+     */
+    public static function buildActionGroup(array $actions): string
+    {
+        $rows = [];
+
+        foreach ($actions as $action) {
+            $href = htmlspecialchars($action['href'], ENT_QUOTES, 'UTF-8');
+            $label = htmlspecialchars($action['label'], ENT_QUOTES, 'UTF-8');
+            $isPrimary = (bool) ($action['is_primary'] ?? false);
+
+            if ($href === '' || $label === '') {
+                continue;
+            }
+
+            $style = $isPrimary
+                ? 'display:block;padding:11px 15px;border-radius:10px;background:#2563eb;'
+                    . 'color:#ffffff;text-decoration:none;font-weight:600;text-align:center;'
+                : 'display:block;padding:11px 15px;border-radius:10px;border:1px solid #cbd5e1;'
+                    . 'background:#ffffff;color:#1e293b;text-decoration:none;font-weight:600;text-align:center;';
+
+            $rows[] = '<tr><td style="padding:0 0 8px;">'
+                . '<a href="' . $href . '" style="' . $style . '">' . $label . '</a>'
+                . '</td></tr>';
+        }
+
+        if ($rows === []) {
+            return '';
+        }
+
+        return '<table role="presentation" cellspacing="0" cellpadding="0" border="0" '
+            . 'style="margin:0 0 10px;width:100%;max-width:320px;">'
+            . implode('', $rows)
+            . '</table>';
     }
 }

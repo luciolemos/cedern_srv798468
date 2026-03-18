@@ -13,6 +13,8 @@ use Throwable;
 
 class MemberLoginPageAction extends AbstractPageAction
 {
+    private const FLASH_KEY = 'member_login';
+
     private MemberAuthRepository $memberAuthRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
@@ -27,10 +29,18 @@ class MemberLoginPageAction extends AbstractPageAction
             return $response->withHeader('Location', '/membro')->withStatus(302);
         }
 
+        $method = strtoupper($request->getMethod());
         $error = '';
         $form = ['identifier' => ''];
 
-        if (strtoupper($request->getMethod()) === 'POST') {
+        if ($method !== 'POST') {
+            $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+            $error = trim((string) ($flash['error'] ?? ''));
+            $flashForm = (array) ($flash['form'] ?? []);
+            $form['identifier'] = trim((string) ($flashForm['identifier'] ?? ''));
+        }
+
+        if ($method === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
             $identifier = trim((string) ($body['identifier'] ?? $body['email'] ?? ''));
             $email = strtolower($identifier);
@@ -81,6 +91,15 @@ class MemberLoginPageAction extends AbstractPageAction
             if ($error === '') {
                 $error = 'Credenciais inválidas.';
             }
+
+            $this->storeSessionFlash(self::FLASH_KEY, [
+                'error' => $error,
+                'form' => [
+                    'identifier' => $form['identifier'],
+                ],
+            ]);
+
+            return $response->withHeader('Location', '/entrar')->withStatus(303);
         }
 
         return $this->renderPage($response, 'pages/member-login.twig', [

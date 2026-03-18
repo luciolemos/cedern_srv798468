@@ -63,9 +63,10 @@ class MemberEventInterestToggleAction extends AbstractMemberGuardedPageAction
             $status = 'interest-error';
         }
 
-        $separator = str_contains($safeRedirectTo, '?') ? '&' : '?';
-        $location = $safeRedirectTo . $separator . 'status=' . $status;
+        $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+            'status' => $status,
+        ]);
 
-        return $response->withHeader('Location', $location)->withStatus(302);
+        return $response->withHeader('Location', $safeRedirectTo)->withStatus(303);
     }
 }

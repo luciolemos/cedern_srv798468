@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
 {
+    private const FLASH_KEY_PREFIX = 'admin_agenda_form_';
+
     private const AUDIENCE_OPTIONS = [
         'Jovens',
         'Adultos',
@@ -30,12 +32,25 @@ class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
             $existingEvent = $this->agendaRepository->findByIdForAdmin($eventId);
 
             if ($existingEvent === null) {
-                return $this->redirect($response, '/painel/eventos?status=not-found');
+                $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                    'status' => 'not-found',
+                ]);
+
+                return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
             }
         }
 
+        $formPath = $this->resolveFormPath($eventId);
+
         if (strtoupper($request->getMethod()) !== 'POST') {
-            return $this->renderForm($response, $categories, $existingEvent, [], []);
+            $flash = $this->consumeSessionFlash($this->resolveFlashKey($eventId));
+            $submittedPayload = (array) ($flash['payload'] ?? []);
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+
+            return $this->renderForm($response, $categories, $existingEvent, $submittedPayload, $errors);
         }
 
         $body = (array) ($request->getParsedBody() ?? []);
@@ -43,42 +58,65 @@ class AdminAgendaFormPageAction extends AbstractAdminAgendaAction
         $errors = $this->validatePayload($payload);
 
         if (!empty($errors)) {
-            return $this->renderForm($response, $categories, $existingEvent, $payload, $errors);
+            $this->storeSessionFlash($this->resolveFlashKey($eventId), [
+                'payload' => $payload,
+                'errors' => $errors,
+            ]);
+
+            return $response->withHeader('Location', $formPath)->withStatus(303);
         }
 
         try {
             if ($isEdit) {
                 $this->agendaRepository->updateEvent($eventId, $payload);
-                return $this->redirect($response, '/painel/eventos?status=updated');
+                $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                    'status' => 'updated',
+                ]);
+
+                return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
             }
 
             $newId = $this->agendaRepository->createEvent($payload);
 
             if ($newId <= 0) {
-                return $this->renderForm(
-                    $response,
-                    $categories,
-                    null,
-                    $payload,
-                    ['Não foi possível salvar o evento. Verifique a conexão com banco.']
-                );
+                $this->storeSessionFlash($this->resolveFlashKey($eventId), [
+                    'payload' => $payload,
+                    'errors' => ['Não foi possível salvar o evento. Verifique a conexão com banco.'],
+                ]);
+
+                return $response->withHeader('Location', $formPath)->withStatus(303);
             }
 
-            return $this->redirect($response, '/painel/eventos?status=created');
+            $this->storeSessionFlash(AdminAgendaListPageAction::FLASH_KEY, [
+                'status' => 'created',
+            ]);
+
+            return $response->withHeader('Location', '/painel/eventos')->withStatus(303);
         } catch (\Throwable $exception) {
             $this->logger->warning('Falha ao salvar evento no admin.', [
                 'error' => $exception->getMessage(),
                 'event_id' => $eventId,
             ]);
 
-            return $this->renderForm(
-                $response,
-                $categories,
-                $existingEvent,
-                $payload,
-                ['Erro ao salvar. Verifique se o slug já existe e tente novamente.']
-            );
+            $this->storeSessionFlash($this->resolveFlashKey($eventId), [
+                'payload' => $payload,
+                'errors' => ['Erro ao salvar. Verifique se o slug já existe e tente novamente.'],
+            ]);
+
+            return $response->withHeader('Location', $formPath)->withStatus(303);
         }
+    }
+
+    private function resolveFlashKey(?int $eventId): string
+    {
+        return self::FLASH_KEY_PREFIX . (($eventId !== null && $eventId > 0) ? (string) $eventId : 'new');
+    }
+
+    private function resolveFormPath(?int $eventId): string
+    {
+        return ($eventId !== null && $eventId > 0)
+            ? '/painel/eventos/' . $eventId . '/editar'
+            : '/painel/eventos/novo';
     }
 
     /**

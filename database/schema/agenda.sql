@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS member_users (
     birth_date DATE NULL,
     birth_place VARCHAR(140) NULL,
     institutional_role VARCHAR(120) NULL,
+    member_type VARCHAR(20) NULL,
     profile_photo_path VARCHAR(255) NULL,
     profile_completed TINYINT(1) NOT NULL DEFAULT 0,
     approved_at DATETIME NULL,

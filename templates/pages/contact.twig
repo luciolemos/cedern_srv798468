@@ -31,12 +31,12 @@
         <form class="nc-admin-login-form" method="post" action="/contato">
           <div class="nc-admin-login-field">
             <label class="nc-admin-login-label" for="name">Nome</label>
-            <input class="nc-admin-login-input" id="name" name="name" type="text" value="{{ contact_form.name|default('') }}" autocomplete="name" required>
+            <input class="nc-admin-login-input" id="name" name="name" type="text" value="{{ contact_form.name|default('') }}" placeholder="Ex: Maria da Silva" autocomplete="name" required>
           </div>
 
           <div class="nc-admin-login-field">
             <label class="nc-admin-login-label" for="email">E-mail</label>
-            <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ contact_form.email|default('') }}" autocomplete="email" required>
+            <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ contact_form.email|default('') }}" placeholder="Ex: maria@email.com" autocomplete="email" required>
           </div>
 
           <div class="nc-admin-login-field">
@@ -46,7 +46,7 @@
 
           <div class="nc-admin-login-field">
             <label class="nc-admin-login-label" for="message">Mensagem</label>
-            <textarea class="nc-admin-login-input" id="message" name="message" rows="5" required>{{ contact_form.message|default('') }}</textarea>
+            <textarea class="nc-admin-login-input" id="message" name="message" rows="5" placeholder="Escreva aqui sua mensagem, dúvida ou solicitação." required>{{ contact_form.message|default('') }}</textarea>
           </div>
 
           <div class="nc-admin-login-field" style="display:none;" aria-hidden="true">
