@@ -1770,6 +1770,25 @@ code {
   margin-top: var(--space-3);
 }
 
+.nc-check-content-action .nc-admin-action-open,
+.nc-check-content-action .nc-admin-action-create,
+.nc-check-content-action .nc-admin-action-edit {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 14%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
+.nc-check-content-action .nc-admin-action-open:hover,
+.nc-check-content-action .nc-admin-action-open:focus-visible,
+.nc-check-content-action .nc-admin-action-create:hover,
+.nc-check-content-action .nc-admin-action-create:focus-visible,
+.nc-check-content-action .nc-admin-action-edit:hover,
+.nc-check-content-action .nc-admin-action-edit:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
 .nc-statute-card {
   margin-top: var(--space-4);
 }
@@ -4722,6 +4741,19 @@ textarea.nc-admin-form-input {
 .nc-admin-action-create:hover {
   border-color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--surface-border));
   background: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-main));
+}
+
+.nc-dashboard-shortcut-btn {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 14%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
+.nc-dashboard-shortcut-btn:hover,
+.nc-dashboard-shortcut-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-main));
+  color: var(--theme-accent-1);
 }
 
 .nc-admin-pagination {
