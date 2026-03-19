@@ -87,6 +87,25 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         return (int) $this->pdo->lastInsertId();
     }
 
+    public function createPasswordResetToken(
+        int $userId,
+        string $email,
+        string $tokenHash,
+        \DateTimeImmutable $expiresAt
+    ): bool {
+        try {
+            return $this->createPasswordResetTokenInternal($userId, $email, $tokenHash, $expiresAt);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                return $this->createPasswordResetTokenInternal($userId, $email, $tokenHash, $expiresAt);
+            } catch (\Throwable $innerException) {
+                return false;
+            }
+        }
+    }
+
     public function findByEmail(string $email): ?array
     {
         $normalizedEmail = strtolower(trim($email));
@@ -317,6 +336,21 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
+    public function findActivePasswordResetByToken(string $tokenHash): ?array
+    {
+        try {
+            return $this->findActivePasswordResetByTokenInternal($tokenHash);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                return $this->findActivePasswordResetByTokenInternal($tokenHash);
+            } catch (\Throwable $innerException) {
+                return null;
+            }
+        }
+    }
+
     public function findAllRoles(): array
     {
         try {
@@ -435,6 +469,21 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     'phone_landline' => $params['phone_landline'],
                     'profile_completed' => $params['profile_completed'],
                 ]);
+            }
+        }
+    }
+
+    public function consumePasswordResetToken(int $resetId, int $userId, string $passwordHash): bool
+    {
+        try {
+            return $this->consumePasswordResetTokenInternal($resetId, $userId, $passwordHash);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                return $this->consumePasswordResetTokenInternal($resetId, $userId, $passwordHash);
+            } catch (\Throwable $innerException) {
+                return false;
             }
         }
     }
@@ -680,6 +729,144 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
+    private function createPasswordResetTokenInternal(
+        int $userId,
+        string $email,
+        string $tokenHash,
+        \DateTimeImmutable $expiresAt
+    ): bool {
+        $normalizedEmail = strtolower(trim($email));
+
+        $this->pdo->beginTransaction();
+
+        try {
+            $invalidateStatement = $this->pdo->prepare(
+                'UPDATE member_password_resets '
+                . 'SET used_at = NOW() '
+                . 'WHERE member_user_id = :member_user_id AND used_at IS NULL'
+            );
+            $invalidateStatement->execute([
+                'member_user_id' => $userId,
+            ]);
+
+            $insertStatement = $this->pdo->prepare(
+                'INSERT INTO member_password_resets (member_user_id, email, token_hash, expires_at) '
+                . 'VALUES (:member_user_id, :email, :token_hash, :expires_at)'
+            );
+            $insertStatement->execute([
+                'member_user_id' => $userId,
+                'email' => $normalizedEmail,
+                'token_hash' => $tokenHash,
+                'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            ]);
+
+            $this->pdo->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function findActivePasswordResetByTokenInternal(string $tokenHash): ?array
+    {
+        $statement = $this->pdo->prepare(<<<SQL
+            SELECT
+                pr.id,
+                pr.member_user_id,
+                pr.email,
+                pr.expires_at,
+                pr.created_at,
+                u.full_name AS user_full_name,
+                u.email AS user_email,
+                u.status AS user_status
+            FROM member_password_resets pr
+            INNER JOIN member_users u ON u.id = pr.member_user_id
+            WHERE pr.token_hash = :token_hash
+              AND pr.used_at IS NULL
+              AND pr.expires_at >= NOW()
+            ORDER BY pr.id DESC
+            LIMIT 1
+        SQL);
+        $statement->execute([
+            'token_hash' => $tokenHash,
+        ]);
+
+        $row = $statement->fetch();
+
+        return $row ?: null;
+    }
+
+    private function consumePasswordResetTokenInternal(int $resetId, int $userId, string $passwordHash): bool
+    {
+        $this->pdo->beginTransaction();
+
+        try {
+            $consumeStatement = $this->pdo->prepare(
+                'UPDATE member_password_resets '
+                . 'SET used_at = NOW() '
+                . 'WHERE id = :id '
+                . 'AND member_user_id = :member_user_id '
+                . 'AND used_at IS NULL '
+                . 'AND expires_at >= NOW() '
+                . 'LIMIT 1'
+            );
+            $consumeStatement->execute([
+                'id' => $resetId,
+                'member_user_id' => $userId,
+            ]);
+
+            if ($consumeStatement->rowCount() !== 1) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $updatePasswordStatement = $this->pdo->prepare(
+                'UPDATE member_users '
+                . 'SET password_hash = :password_hash, updated_at = CURRENT_TIMESTAMP '
+                . 'WHERE id = :id '
+                . 'LIMIT 1'
+            );
+            $updatePasswordStatement->execute([
+                'id' => $userId,
+                'password_hash' => $passwordHash,
+            ]);
+
+            if ($updatePasswordStatement->rowCount() !== 1) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $invalidateRemainingStatement = $this->pdo->prepare(
+                'UPDATE member_password_resets '
+                . 'SET used_at = NOW() '
+                . 'WHERE member_user_id = :member_user_id AND used_at IS NULL'
+            );
+            $invalidateRemainingStatement->execute([
+                'member_user_id' => $userId,
+            ]);
+
+            $this->pdo->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
     /**
      * @param array<string, mixed> $row
      * @return array<string, mixed>
@@ -813,6 +1000,23 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
 
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS member_password_resets (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                email VARCHAR(180) NOT NULL,
+                token_hash CHAR(64) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                used_at DATETIME NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_member_password_resets_token_hash (token_hash),
+                KEY idx_member_password_resets_member_user_id (member_user_id),
+                CONSTRAINT fk_member_password_resets_member
+                    FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
         $this->ensureColumn(
             'member_users',
             'full_name',
@@ -903,6 +1107,36 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'updated_at',
             'ALTER TABLE member_users ADD COLUMN updated_at TIMESTAMP NOT NULL '
             . 'DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'member_user_id',
+            'ALTER TABLE member_password_resets ADD COLUMN member_user_id BIGINT UNSIGNED NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'email',
+            'ALTER TABLE member_password_resets ADD COLUMN email VARCHAR(180) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'token_hash',
+            'ALTER TABLE member_password_resets ADD COLUMN token_hash CHAR(64) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'expires_at',
+            'ALTER TABLE member_password_resets ADD COLUMN expires_at DATETIME NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'used_at',
+            'ALTER TABLE member_password_resets ADD COLUMN used_at DATETIME NULL'
+        );
+        $this->ensureColumn(
+            'member_password_resets',
+            'created_at',
+            'ALTER TABLE member_password_resets ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
         );
 
         $this->ensureDefaultRoles();
@@ -1002,14 +1236,14 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 ends_at
             )
             SELECT
-                :management_id,
+                :management_id_insert,
                 u.id,
                 u.institutional_role,
                 COALESCE(DATE(u.approved_at), DATE(u.created_at), CURRENT_DATE),
                 NULL
             FROM member_users u
             LEFT JOIN member_management_roles mmr
-                ON mmr.management_id = :management_id
+                ON mmr.management_id = :management_id_join
                AND mmr.member_user_id = u.id
                AND mmr.ends_at IS NULL
             WHERE u.institutional_role IS NOT NULL
@@ -1019,7 +1253,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         $statement = $this->pdo->prepare($sql);
         $statement->execute([
-            'management_id' => $managementId,
+            'management_id_insert' => $managementId,
+            'management_id_join' => $managementId,
         ]);
     }
 

@@ -29,7 +29,7 @@ Cada bloco usa chaves como:
 
 Algumas seções possuem campos extras:
 
-- `hero`: `badge`, `actionsDelay`, `panelTitle`, `panelDelay`
+- `hero`: `badge`, `actionsDelay`, `panelTitle`, `panelDelay`, `qrTitle`, `qrLead`, `qrUrl`, `qrImage`, `qrAlt`
 - `socialProof`: `trustGridLabel`
 - `cta`: `actionsDelay`
 
@@ -128,6 +128,7 @@ Templates que consomem esses dados:
 | `sections.hero.badge` | Badge de destaque no Hero |
 | `sections.hero.title` | Título principal do Hero |
 | `sections.hero.lead` | Descrição principal do Hero |
+| `sections.hero.qr*` | Bloco de QR code exibido no painel lateral do Hero |
 | `heroActions[]` | Botões do Hero (label, link, estilo, estado) |
 | `heroMetrics[]` | Cards de indicadores no painel lateral do Hero |
 | `sections.features.*` | Cabeçalho da seção Estudos |

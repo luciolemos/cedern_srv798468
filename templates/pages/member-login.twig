@@ -11,6 +11,10 @@
         } %}
 
         <article class="nc-card nc-admin-login-card">
+          {% if member_login_success %}
+            <p class="nc-admin-login-success" role="status">{{ member_login_success }}</p>
+          {% endif %}
+
           {% if member_login_error %}
             <p class="nc-admin-login-error" role="alert">{{ member_login_error }}</p>
           {% endif %}
@@ -33,9 +37,22 @@
             </div>
 
             <p class="nc-admin-login-footnote">
+              Esqueci minha senha. <a class="nc-link" href="/esqueci-senha">Redefinir agora</a>
+            </p>
+
+            <p class="nc-admin-login-footnote">
               Não sou membro. <a class="nc-link" href="/cadastro">Desejo ser membro</a>
             </p>
           </form>
+        </article>
+
+        <article class="nc-card nc-member-login-support-card" data-aos="fade-up" data-aos-delay="100">
+          <h2 class="nc-member-login-support-title">Abrir recuperação no celular</h2>
+          <p class="nc-member-login-support-lead">Aponte a camera para a tela do dispositivo para abrir a página de redefinição de senha sem digitar o endereço.</p>
+          <a class="nc-member-login-qr-link" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer" aria-label="Abrir recuperação de senha no celular">
+            <img class="nc-member-login-qr-image" src="/assets/img/cedern/qr_cedern_esqueci_senha.svg" alt="QR code para abrir a página de recuperação de senha do CEDE">
+          </a>
+          <a class="nc-link nc-member-login-qr-fallback" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer">cedern.org/esqueci-senha</a>
         </article>
       </div>
     </section>

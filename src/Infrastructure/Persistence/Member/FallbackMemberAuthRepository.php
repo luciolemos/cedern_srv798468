@@ -23,7 +23,14 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
      */
     private array $users = [];
 
+    /**
+     * @var array<int, array<string, mixed>>
+     */
+    private array $passwordResets = [];
+
     private int $nextId = 1;
+
+    private int $nextPasswordResetId = 1;
 
     public function createPendingUser(array $data): int
     {
@@ -56,6 +63,43 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         return $id;
     }
 
+    public function createPasswordResetToken(
+        int $userId,
+        string $email,
+        string $tokenHash,
+        \DateTimeImmutable $expiresAt
+    ): bool {
+        if (!isset($this->users[$userId])) {
+            return false;
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        foreach ($this->passwordResets as &$passwordReset) {
+            if ((int) ($passwordReset['member_user_id'] ?? 0) !== $userId) {
+                continue;
+            }
+
+            if (($passwordReset['used_at'] ?? null) === null) {
+                $passwordReset['used_at'] = $now;
+            }
+        }
+        unset($passwordReset);
+
+        $resetId = $this->nextPasswordResetId++;
+        $this->passwordResets[$resetId] = [
+            'id' => $resetId,
+            'member_user_id' => $userId,
+            'email' => strtolower(trim($email)),
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+            'used_at' => null,
+            'created_at' => $now,
+        ];
+
+        return true;
+    }
+
     public function findByEmail(string $email): ?array
     {
         $needle = strtolower(trim($email));
@@ -76,6 +120,45 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         }
 
         return $this->withMemberTypeLabel($this->users[$id]);
+    }
+
+    public function findActivePasswordResetByToken(string $tokenHash): ?array
+    {
+        $now = new \DateTimeImmutable('now');
+
+        foreach ($this->passwordResets as $passwordReset) {
+            if ((string) ($passwordReset['token_hash'] ?? '') !== $tokenHash) {
+                continue;
+            }
+
+            if (($passwordReset['used_at'] ?? null) !== null) {
+                continue;
+            }
+
+            $expiresAt = \DateTimeImmutable::createFromFormat(
+                'Y-m-d H:i:s',
+                (string) ($passwordReset['expires_at'] ?? '')
+            );
+
+            if (!$expiresAt instanceof \DateTimeImmutable || $expiresAt < $now) {
+                continue;
+            }
+
+            $userId = (int) ($passwordReset['member_user_id'] ?? 0);
+            $user = $this->findById($userId);
+
+            if ($user === null) {
+                return null;
+            }
+
+            return array_merge($passwordReset, [
+                'user_full_name' => (string) ($user['full_name'] ?? ''),
+                'user_email' => (string) ($user['email'] ?? ''),
+                'user_status' => (string) ($user['status'] ?? ''),
+            ]);
+        }
+
+        return null;
     }
 
     public function findAllRoles(): array
@@ -110,6 +193,49 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['privacy_notice_accepted_at'] = $this->nullableText($data['privacy_notice_accepted_at'] ?? null);
         $this->users[$id]['profile_completed'] = (int) ($data['profile_completed'] ?? 0);
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
+
+        return true;
+    }
+
+    public function consumePasswordResetToken(int $resetId, int $userId, string $passwordHash): bool
+    {
+        if (!isset($this->users[$userId], $this->passwordResets[$resetId])) {
+            return false;
+        }
+
+        $passwordReset = $this->passwordResets[$resetId];
+        $now = date('Y-m-d H:i:s');
+
+        if ((int) ($passwordReset['member_user_id'] ?? 0) !== $userId) {
+            return false;
+        }
+
+        if (($passwordReset['used_at'] ?? null) !== null) {
+            return false;
+        }
+
+        $expiresAt = \DateTimeImmutable::createFromFormat(
+            'Y-m-d H:i:s',
+            (string) ($passwordReset['expires_at'] ?? '')
+        );
+
+        if (!$expiresAt instanceof \DateTimeImmutable || $expiresAt < new \DateTimeImmutable('now')) {
+            return false;
+        }
+
+        $this->users[$userId]['password_hash'] = $passwordHash;
+        $this->users[$userId]['updated_at'] = $now;
+
+        foreach ($this->passwordResets as &$activePasswordReset) {
+            if ((int) ($activePasswordReset['member_user_id'] ?? 0) !== $userId) {
+                continue;
+            }
+
+            if (($activePasswordReset['used_at'] ?? null) === null) {
+                $activePasswordReset['used_at'] = $now;
+            }
+        }
+        unset($activePasswordReset);
 
         return true;
     }
