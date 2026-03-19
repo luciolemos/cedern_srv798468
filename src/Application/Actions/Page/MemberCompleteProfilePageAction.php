@@ -31,6 +31,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
         }
 
         $memberId = (int) ($member['id'] ?? 0);
+        $queryParams = $request->getQueryParams();
+        $redirectTo = $this->sanitizeRedirectTarget((string) ($queryParams['redirect_to'] ?? ''));
 
         $errors = [];
         $warnings = [];
@@ -85,10 +87,12 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'privacy_notice_acknowledged' => (string) ($flashForm['privacy_notice_acknowledged'] ?? $form['privacy_notice_acknowledged']),
                 ]);
             }
+            $redirectTo = $this->sanitizeRedirectTarget((string) ($flash['redirect_to'] ?? $redirectTo));
         }
 
         if (strtoupper($request->getMethod()) === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
+            $redirectTo = $this->sanitizeRedirectTarget((string) ($body['redirect_to'] ?? $redirectTo));
             $form['full_name'] = trim((string) ($body['full_name'] ?? ''));
             $form['phone_mobile'] = trim((string) ($body['phone_mobile'] ?? ''));
             $form['phone_landline'] = trim((string) ($body['phone_landline'] ?? ''));
@@ -217,20 +221,18 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $_SESSION['member_profile_photo_path'] = $photoPath;
 
                 if (!empty($warnings)) {
-                    $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+                    $this->storeSessionFlash($this->resolvePostSaveFlashKey($redirectTo), [
                         'status' => 'profile-updated-no-photo',
                     ]);
 
-                    return $response
-                        ->withHeader('Location', '/membro')
-                        ->withStatus(303);
+                    return $response->withHeader('Location', $redirectTo)->withStatus(303);
                 }
 
-                $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+                $this->storeSessionFlash($this->resolvePostSaveFlashKey($redirectTo), [
                     'status' => 'profile-updated',
                 ]);
 
-                return $response->withHeader('Location', '/membro')->withStatus(303);
+                return $response->withHeader('Location', $redirectTo)->withStatus(303);
             }
 
             $this->storeSessionFlash(self::FLASH_KEY, [
@@ -248,15 +250,22 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'profile_photo_path' => $form['profile_photo_path'],
                     'privacy_notice_acknowledged' => $form['privacy_notice_acknowledged'],
                 ],
+                'redirect_to' => $redirectTo,
             ]);
 
-            return $response->withHeader('Location', '/membro/perfil/completar')->withStatus(303);
+            $profileRedirect = '/membro/perfil/completar';
+            if ($redirectTo !== '/membro') {
+                $profileRedirect .= '?redirect_to=' . rawurlencode($redirectTo);
+            }
+
+            return $response->withHeader('Location', $profileRedirect)->withStatus(303);
         }
 
         return $this->renderPage($response, 'pages/member-complete-profile.twig', [
             'member_profile_errors' => $errors,
             'member_profile_warnings' => $warnings,
             'member_profile_form' => $form,
+            'member_profile_redirect_to' => $redirectTo,
             'member_profile_privacy_notice_required' => !$privacyNoticeAlreadyAccepted,
             'member_profile_privacy_notice_version' => self::PRIVACY_NOTICE_VERSION,
             'member_profile_privacy_notice_acknowledged_at' => $privacyNoticeAcceptedAt,
@@ -264,6 +273,24 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'page_url' => 'https://cedern.org/membro/perfil/completar',
             'page_description' => 'Complete seus dados de contato para liberar a área de membro.',
         ]);
+    }
+
+    private function sanitizeRedirectTarget(string $redirectTo): string
+    {
+        $redirectTo = trim($redirectTo);
+
+        if ($redirectTo === '' || !str_starts_with($redirectTo, '/')) {
+            return '/membro';
+        }
+
+        return $redirectTo;
+    }
+
+    private function resolvePostSaveFlashKey(string $redirectTo): string
+    {
+        return str_starts_with($redirectTo, '/agenda/')
+            ? AgendaDetailPageAction::FLASH_KEY
+            : MemberHomePageAction::FLASH_KEY;
     }
 
     /**

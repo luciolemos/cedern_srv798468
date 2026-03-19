@@ -14,6 +14,7 @@ use Slim\Views\Twig;
 class MemberHomePageAction extends AbstractMemberGuardedPageAction
 {
     public const FLASH_KEY = 'member_home';
+    private const BIRTHDAY_TIMEZONE = 'America/Fortaleza';
 
     private AgendaRepository $agendaRepository;
 
@@ -209,48 +210,40 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         }
 
         $recentTimeline = [];
-        if (in_array($status, ['profile-updated', 'profile-updated-no-photo'], true)) {
+        if ($status === 'profile-updated') {
             $recentTimeline[] = [
                 'title' => 'Perfil atualizado',
-                'detail' => 'Suas informações foram salvas nesta sessão.',
-                'meta' => 'Agora',
+                'detail' => 'Seus dados cadastrais foram salvos com sucesso.',
+                'meta' => 'Nesta sessão',
             ];
         }
 
-        $recentTimeline[] = [
-            'title' => $onboardingCompleted === $onboardingTotal
-                ? 'Onboarding concluído'
-                : 'Onboarding em andamento',
-            'detail' => $onboardingCompleted . '/' . $onboardingTotal . ' itens concluídos.',
-            'meta' => 'Progresso atual',
-        ];
-
-        if (!empty($upcomingEvents[0])) {
-            $firstEvent = $upcomingEvents[0];
+        if ($status === 'profile-updated-no-photo') {
             $recentTimeline[] = [
-                'title' => 'Próximo compromisso',
-                'detail' => (string) ($firstEvent['title'] ?? 'Atividade'),
-                'meta' => (string) ($firstEvent['starts_at_label'] ?? 'Data a confirmar'),
+                'title' => 'Perfil atualizado parcialmente',
+                'detail' => 'Os dados foram salvos, mas a foto ainda precisa ser enviada novamente.',
+                'meta' => 'Nesta sessão',
             ];
         }
 
-        $recentTimeline[] = [
-            'title' => 'Perfil atual',
-            'detail' => (string) ($member['role_name'] ?? 'Membro'),
-            'meta' => 'Permissão ativa',
-        ];
+        if ($status === 'interest-added') {
+            $recentTimeline[] = [
+                'title' => 'Evento salvo no calendário pessoal',
+                'detail' => 'Uma atividade foi adicionada aos seus próximos compromissos.',
+                'meta' => 'Nesta sessão',
+            ];
+        }
+
+        if ($status === 'interest-removed') {
+            $recentTimeline[] = [
+                'title' => 'Evento removido do calendário pessoal',
+                'detail' => 'A atividade deixou de aparecer na sua agenda pessoal.',
+                'meta' => 'Nesta sessão',
+            ];
+        }
 
         $memberNotifications = [];
-
-        if ($status === 'profile-updated') {
-            $memberNotifications[] = [
-                'type' => 'success',
-                'title' => 'Perfil atualizado com sucesso',
-                'description' => 'Seus dados mais recentes já estão ativos no sistema.',
-                'href' => '/membro/perfil/completar',
-                'cta' => 'Revisar perfil',
-            ];
-        }
+        $birthdayMembers = [];
 
         if ($status === 'profile-updated-no-photo') {
             $memberNotifications[] = [
@@ -320,34 +313,41 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             ],
         ];
 
-        $weeklyNextSteps = [];
+        $weeklyFocus = [
+            'title' => 'Leitura do momento',
+            'description' => 'Seu painel está em dia. Continue acompanhando a agenda e as novidades da casa.',
+        ];
+
         if ($onboardingCompleted < $onboardingTotal) {
-            $weeklyNextSteps[] = [
-                'title' => 'Concluir cadastro do perfil',
-                'href' => '/membro/perfil/completar',
+            $weeklyFocus = [
+                'title' => 'Foco principal',
+                'description' => 'Seu próximo avanço continua sendo concluir o onboarding para liberar a experiência completa na área do membro.',
             ];
-        }
-
-        if (!empty($upcomingEvents[0])) {
+        } elseif (!empty($upcomingEvents[0])) {
             $firstEvent = $upcomingEvents[0];
-            $weeklyNextSteps[] = [
-                'title' => 'Confirmar presença em "' . (string) ($firstEvent['title'] ?? 'atividade') . '"',
-                'href' => '/agenda/' . (string) ($firstEvent['slug'] ?? ''),
+            $weeklyFocus = [
+                'title' => 'Evento em destaque',
+                'description' => 'Sua agenda já tem movimentação. Vale revisar "'
+                    . (string) ($firstEvent['title'] ?? 'atividade')
+                    . '" e confirmar sua participação.',
+            ];
+        } elseif (!empty($lockedTracks[0])) {
+            $weeklyFocus = [
+                'title' => 'Próximo degrau de acesso',
+                'description' => 'Seu perfil atual está ativo, mas ainda existem trilhas liberáveis se você assumir novas frentes na casa.',
             ];
         }
 
-        if (!empty($lockedTracks[0])) {
-            $weeklyNextSteps[] = [
-                'title' => 'Solicitar acesso para ' . (string) $lockedTracks[0]['title'],
-                'href' => '/contato',
-            ];
-        }
-
-        if (empty($weeklyNextSteps)) {
-            $weeklyNextSteps[] = [
-                'title' => 'Acompanhar agenda e novidades da casa',
-                'href' => '/agenda',
-            ];
+        try {
+            $birthdayMembers = $this->buildBirthdayMembers(
+                $this->memberAuthRepository->findAllUsersForAdmin(),
+                $memberId
+            );
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Falha ao carregar aniversariantes do dia na área do membro.', [
+                'member_id' => $memberId,
+                'error' => $exception->getMessage(),
+            ]);
         }
 
         return $this->renderPage($response, 'pages/member-home.twig', [
@@ -355,9 +355,10 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'member_home_status' => $status,
             'member_primary_action' => $primaryAction,
             'member_notifications' => array_slice($memberNotifications, 0, 3),
+            'member_birthday_members' => $birthdayMembers,
             'member_weekly_highlights' => $weeklyHighlights,
-            'member_weekly_next_steps' => array_slice($weeklyNextSteps, 0, 3),
-            'member_recent_timeline' => $recentTimeline,
+            'member_weekly_focus' => $weeklyFocus,
+            'member_recent_timeline' => array_slice($recentTimeline, 0, 3),
             'member_onboarding_checklist' => $onboardingChecklist,
             'member_onboarding_completed' => $onboardingCompleted,
             'member_onboarding_total' => $onboardingTotal,
@@ -370,5 +371,77 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'page_url' => 'https://cedern.org/membro',
             'page_description' => 'Área do membro do CEDE.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $users
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildBirthdayMembers(array $users, int $currentMemberId): array
+    {
+        $today = new \DateTimeImmutable('now', new \DateTimeZone(self::BIRTHDAY_TIMEZONE));
+        $todayMonthDay = $today->format('m-d');
+        $birthdayMembers = [];
+
+        foreach ($users as $user) {
+            $status = strtolower(trim((string) ($user['status'] ?? '')));
+            $birthDateValue = trim((string) ($user['birth_date'] ?? ''));
+
+            if ($status !== 'active' || $birthDateValue === '') {
+                continue;
+            }
+
+            $birthDate = \DateTimeImmutable::createFromFormat('Y-m-d', $birthDateValue);
+            if (!$birthDate instanceof \DateTimeImmutable || $birthDate->format('Y-m-d') !== $birthDateValue) {
+                continue;
+            }
+
+            if ($birthDate->format('m-d') !== $todayMonthDay) {
+                continue;
+            }
+
+            $fullName = trim((string) ($user['full_name'] ?? 'Membro'));
+            $institutionalRole = trim((string) ($user['institutional_role'] ?? ''));
+            $isCurrentMember = (int) ($user['id'] ?? 0) === $currentMemberId;
+
+            $birthdayMembers[] = [
+                'id' => (int) ($user['id'] ?? 0),
+                'full_name' => $fullName,
+                'display_name' => $this->extractFirstName($fullName),
+                'profile_photo_path' => trim((string) ($user['profile_photo_path'] ?? '')),
+                'initial' => mb_strtoupper(mb_substr($fullName, 0, 1, 'UTF-8'), 'UTF-8'),
+                'institutional_role' => $institutionalRole,
+                'is_current_member' => $isCurrentMember,
+                'caption' => $isCurrentMember
+                    ? 'Hoje e o seu aniversario.'
+                    : ($institutionalRole !== '' ? $institutionalRole : 'Aniversaria hoje.'),
+            ];
+        }
+
+        usort($birthdayMembers, static function (array $first, array $second): int {
+            if (!empty($first['is_current_member']) && empty($second['is_current_member'])) {
+                return -1;
+            }
+
+            if (empty($first['is_current_member']) && !empty($second['is_current_member'])) {
+                return 1;
+            }
+
+            return strnatcasecmp((string) $first['full_name'], (string) $second['full_name']);
+        });
+
+        return $birthdayMembers;
+    }
+
+    private function extractFirstName(string $fullName): string
+    {
+        $normalized = trim(preg_replace('/\s+/', ' ', $fullName) ?? $fullName);
+        if ($normalized === '') {
+            return 'Membro';
+        }
+
+        $parts = explode(' ', $normalized);
+
+        return $parts[0] !== '' ? $parts[0] : $normalized;
     }
 }

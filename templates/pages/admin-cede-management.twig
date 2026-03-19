@@ -18,7 +18,21 @@
     } %}
 
     <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
-      <a class="nc-btn nc-btn-secondary" href="/painel">← Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-icon" href="/painel" aria-label="Voltar ao painel" title="Voltar ao painel">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="nc-sr-only">Voltar ao painel</span>
+      </a>
+      <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios" aria-label="Abrir Gestão de Pessoal" title="Abrir Gestão de Pessoal">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="nc-sr-only">Abrir Gestão de Pessoal</span>
+      </a>
     </div>
 
     {% set pagination = cede_management_pagination|default({}) %}

@@ -63,7 +63,11 @@ class MemberEventInterestToggleAction extends AbstractMemberGuardedPageAction
             $status = 'interest-error';
         }
 
-        $this->storeSessionFlash(MemberHomePageAction::FLASH_KEY, [
+        $flashKey = str_starts_with($safeRedirectTo, '/agenda/')
+            ? AgendaDetailPageAction::FLASH_KEY
+            : MemberHomePageAction::FLASH_KEY;
+
+        $this->storeSessionFlash($flashKey, [
             'status' => $status,
         ]);
 

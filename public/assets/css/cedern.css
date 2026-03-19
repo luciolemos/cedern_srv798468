@@ -1085,6 +1085,14 @@ h3 {
   font-weight: var(--font-weight-semibold);
 }
 
+.nc-hero-tagline {
+  margin: calc(-1 * var(--space-1)) 0 var(--space-3);
+  font-size: var(--font-size-base-plus);
+  font-weight: var(--font-weight-semibold);
+  color: var(--theme-soft-ink);
+  text-wrap: balance;
+}
+
 .nc-lead {
   margin: 0 0 var(--space-5);
   font-size: var(--font-size-base);
@@ -2539,13 +2547,25 @@ code {
 
 .nc-dashboard-sidebar-brand {
   margin-top: -0.7rem;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-4);
   display: flex;
   width: 100%;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0.05rem;
+  gap: 0;
+}
+
+.nc-dashboard-sidebar-brand-note {
+  display: block;
+  max-width: 100%;
+  color: var(--theme-soft-ink);
+  font-size: 0.64rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.05;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  margin-top: -0.34rem;
 }
 
 .nc-dashboard-sidebar-toggle {
@@ -3356,6 +3376,18 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 }
 
 @media (max-width: 700px) {
+.nc-btn-block-mobile {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+    justify-self: stretch;
+  }
+
+  .nc-agenda-detail-actions form {
+    width: 100%;
+  }
+
   .nc-actions.is-stacked-mobile {
     flex-direction: column;
     align-items: stretch;
@@ -3394,6 +3426,8 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 .nc-member-panel {
   display: grid;
   gap: var(--space-3);
+  border-color: color-mix(in srgb, var(--theme-soft-2) 46%, var(--card-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--card-bg));
 }
 
 .nc-member-primary-action {
@@ -3401,9 +3435,26 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
 }
 
+.nc-member-panel .nc-btn-secondary {
+  background: color-mix(in srgb, var(--theme-soft-1) 72%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  border-color: color-mix(in srgb, var(--theme-soft-2) 65%, var(--surface-border));
+}
+
+.nc-member-panel .nc-btn-secondary:hover,
+.nc-member-panel .nc-btn-secondary:focus-visible {
+  background: color-mix(in srgb, var(--theme-soft-1) 50%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 65%, var(--surface-border));
+  color: var(--text-main);
+}
+
 .nc-member-primary-content {
   display: grid;
   gap: 0.5rem;
+}
+
+.nc-member-primary-content .nc-btn-block-mobile {
+  justify-self: start;
 }
 
 .nc-member-primary-content strong {
@@ -3441,17 +3492,96 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 }
 
 .nc-member-notification-list li.is-success {
-  border-color: color-mix(in srgb, var(--swatch-green-1) 38%, var(--surface-border));
-  background: color-mix(in srgb, var(--swatch-green-1) 10%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 18%, var(--surface-main));
 }
 
 .nc-member-notification-list li.is-warning {
-  border-color: color-mix(in srgb, var(--swatch-amber-1) 42%, var(--surface-border));
-  background: color-mix(in srgb, var(--swatch-amber-1) 10%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-soft-2) 72%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 24%, var(--surface-main));
 }
 
 .nc-member-notification-list li.is-info {
   border-color: color-mix(in srgb, var(--theme-accent-1) 35%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 12%, var(--surface-main));
+}
+
+.nc-member-birthday-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.nc-member-birthday-list li {
+  padding: 0.58rem 0.66rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 8%, var(--surface-main));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.nc-member-birthday-list li.is-current-member {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 18%, var(--surface-main));
+}
+
+.nc-member-birthday-person {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.nc-member-birthday-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 58%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 22%, var(--surface-main));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  color: var(--theme-soft-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-member-birthday-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nc-member-birthday-person strong,
+.nc-member-birthday-person p {
+  margin: 0;
+}
+
+.nc-member-birthday-person p {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  margin-top: 0.16rem;
+}
+
+.nc-member-birthday-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.24rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 68%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 40%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 
 .nc-member-weekly-highlights {
@@ -3482,21 +3612,23 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   font-size: 0.92rem;
 }
 
-.nc-member-weekly-next-steps {
+.nc-member-weekly-focus {
   display: grid;
   gap: 0.45rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 52%, var(--surface-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
 }
 
-.nc-member-weekly-next-steps h4 {
+.nc-member-weekly-focus h4 {
   margin: 0;
   font-size: 0.95rem;
 }
 
-.nc-member-weekly-next-steps ul {
+.nc-member-weekly-focus p {
   margin: 0;
-  padding-left: 1rem;
-  display: grid;
-  gap: 0.32rem;
+  color: var(--text-muted);
 }
 
 .nc-member-header {
@@ -3580,10 +3712,18 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .nc-member-actions form {
   margin: 0;
+  display: flex;
+}
+
+.nc-member-actions .nc-btn {
+  min-height: 2.7rem;
+  font-size: inherit;
+  line-height: 1.2;
 }
 
 .nc-member-subtitle {
@@ -3637,7 +3777,8 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 }
 
 .nc-member-checklist li.is-done {
-  border-color: color-mix(in srgb, var(--swatch-green-1) 35%, var(--surface-border));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 38%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
 }
 
 .nc-member-check-indicator {
@@ -3693,6 +3834,11 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 .nc-link-button:hover,
 .nc-link-button:focus-visible {
   color: var(--theme-accent-2);
+}
+
+.nc-agenda-detail-actions form {
+  margin: 0;
+  display: flex;
 }
 
 .nc-member-upcoming-block {
@@ -3834,7 +3980,21 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
 }
 
 .nc-member-permission-list li.is-unlocked {
-  border-color: color-mix(in srgb, var(--swatch-green-1) 35%, var(--surface-border));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 38%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
+}
+
+.nc-member-actions .nc-admin-action-delete {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 14%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
+.nc-member-actions .nc-admin-action-delete:hover,
+.nc-member-actions .nc-admin-action-delete:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-main));
+  color: var(--theme-accent-1);
 }
 
 .nc-member-profile-card {

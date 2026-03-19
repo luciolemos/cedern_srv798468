@@ -31,7 +31,7 @@
             <div class="nc-member-primary-content">
               <strong>{{ member_primary_action.title|default('Revise seu painel') }}</strong>
               <p>{{ member_primary_action.description|default('Seu painel está pronto para uso.') }}</p>
-              <a class="nc-btn nc-btn-secondary" href="{{ member_primary_action.href|default('/membro') }}">
+              <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="{{ member_primary_action.href|default('/membro') }}">
                 {{ member_primary_action.button_label|default('Continuar') }}
               </a>
             </div>
@@ -54,8 +54,40 @@
           </article>
 
           <article class="nc-card nc-member-panel">
+            <h3>Aniversariantes do dia</h3>
+            <p class="nc-member-subtitle">Celebre com fraternidade os membros que fazem aniversario hoje.</p>
+
+            {% if member_birthday_members|default([])|length > 0 %}
+              <ul class="nc-member-birthday-list">
+                {% for birthday_member in member_birthday_members %}
+                  <li class="{{ birthday_member.is_current_member ? 'is-current-member' : '' }}">
+                    <div class="nc-member-birthday-person">
+                      <span class="nc-member-birthday-avatar" aria-hidden="true">
+                        {% if birthday_member.profile_photo_path|default('') %}
+                          <img src="/{{ birthday_member.profile_photo_path }}" alt="">
+                        {% else %}
+                          <span>{{ birthday_member.initial|default('M') }}</span>
+                        {% endif %}
+                      </span>
+                      <div>
+                        <strong>{{ birthday_member.display_name|default(birthday_member.full_name|default('Membro')) }}</strong>
+                        <p>{{ birthday_member.caption|default('Aniversaria hoje.') }}</p>
+                      </div>
+                    </div>
+                    {% if birthday_member.is_current_member %}
+                      <span class="nc-member-birthday-badge">Voce</span>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="nc-member-empty">Hoje nao ha aniversariantes cadastrados na area do membro.</p>
+            {% endif %}
+          </article>
+
+          <article class="nc-card nc-member-panel">
             <h3>Resumo semanal</h3>
-            <p class="nc-member-subtitle">Veja o que você avançou e qual deve ser seu foco nos próximos dias.</p>
+            <p class="nc-member-subtitle">Veja rapidamente como está seu momento atual na área do membro.</p>
 
             <ul class="nc-member-weekly-highlights">
               {% for highlight in member_weekly_highlights|default([]) %}
@@ -66,13 +98,9 @@
               {% endfor %}
             </ul>
 
-            <div class="nc-member-weekly-next-steps">
-              <h4>Próximos passos recomendados</h4>
-              <ul>
-                {% for step in member_weekly_next_steps|default([]) %}
-                  <li><a class="nc-link" href="{{ step.href|default('/membro') }}">{{ step.title }}</a></li>
-                {% endfor %}
-              </ul>
+            <div class="nc-member-weekly-focus">
+              <h4>{{ member_weekly_focus.title|default('Leitura do momento') }}</h4>
+              <p>{{ member_weekly_focus.description|default('Seu painel está em dia. Continue acompanhando a agenda e as novidades da casa.') }}</p>
             </div>
           </article>
 
@@ -123,7 +151,7 @@
             </ul>
 
             <div class="nc-actions nc-admin-login-actions nc-member-actions">
-              <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Completar perfil</a>
+              <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="/membro/perfil/completar">Completar perfil</a>
             </div>
           </article>
 
@@ -174,19 +202,23 @@
           </article>
 
           <article class="nc-card nc-member-panel">
-            <h3>Histórico recente</h3>
-            <p class="nc-member-subtitle">Resumo das últimas movimentações relevantes da sua conta.</p>
-            <ul class="nc-member-history-list">
-              {% for entry in member_recent_timeline|default([]) %}
-                <li>
-                  <div>
-                    <strong>{{ entry.title }}</strong>
-                    <p>{{ entry.detail }}</p>
-                  </div>
-                  <span>{{ entry.meta }}</span>
-                </li>
-              {% endfor %}
-            </ul>
+            <h3>Últimas movimentações</h3>
+            <p class="nc-member-subtitle">Acompanhe aqui apenas as ações que você acabou de realizar na sua conta.</p>
+            {% if member_recent_timeline|default([])|length > 0 %}
+              <ul class="nc-member-history-list">
+                {% for entry in member_recent_timeline|default([]) %}
+                  <li>
+                    <div>
+                      <strong>{{ entry.title }}</strong>
+                      <p>{{ entry.detail }}</p>
+                    </div>
+                    <span>{{ entry.meta }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="nc-member-empty">Nenhuma movimentação recente registrada nesta sessão.</p>
+            {% endif %}
           </article>
 
           <article class="nc-card nc-member-panel">

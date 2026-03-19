@@ -6,8 +6,13 @@
   <div class="nc-hero-grid">
     <div data-aos="fade-up" data-aos-delay="80">
       <p class="nc-section-kicker">{{ hero.kicker|default('Início') }}</p>
-      <span class="nc-badge">{{ hero.badge|default('Empresa local • Software e Sistemas') }}</span>
+      {% if hero.badge|default('') %}
+        <span class="nc-badge">{{ hero.badge }}</span>
+      {% endif %}
       <h1 class="nc-title">{{ hero.title|default('CEDE: Centro de Estudos da Doutrina Espírita') }}</h1>
+      {% if hero.tagline|default('') %}
+        <p class="nc-hero-tagline">{{ hero.tagline }}</p>
+      {% endif %}
       <p class="nc-lead">
         {{ hero.lead|default('Desenvolvemos sistemas sob medida para melhorar operação, produtividade e resultado. Unimos tecnologia, usabilidade e estratégia para entregar valor de forma prática e contínua.') }}
       </p>

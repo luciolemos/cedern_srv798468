@@ -36,7 +36,21 @@
     } %}
 
     <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
-      <a class="nc-btn nc-btn-secondary" href="/painel">← Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-icon" href="/painel" aria-label="Voltar ao painel" title="Voltar ao painel">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="nc-sr-only">Voltar ao painel</span>
+      </a>
+      <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/gestao-cede" aria-label="Abrir Gestão CEDE" title="Abrir Gestão CEDE">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M6 20C6 16.6863 8.68629 14 12 14C15.3137 14 18 16.6863 18 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M3 11H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="nc-sr-only">Abrir Gestão CEDE</span>
+      </a>
     </div>
 
     {% set pagination = member_users_pagination|default({}) %}

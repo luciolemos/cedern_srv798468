@@ -6,8 +6,8 @@ return [
     'sections' => [
         'hero' => [
             'kicker' => 'Espiritualidade com Razão',
-            'badge' => 'Sejam bem-vindos ao CEDE',
             'title' => 'Centro de Estudos da Doutrina Espírita',
+            'tagline' => 'Iluminando consciências, transformando vidas.',
             'lead' => 'Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.',
             'actionsDelay' => 140,
             'panelTitle' => 'Nossas Atividades',

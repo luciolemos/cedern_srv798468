@@ -24,7 +24,7 @@ return [
     ],
     'institutional' => [
         'statuteExcerpt' => 'O Centro de Estudos da Doutrina Espírita - CEDE, fundado em 09 de janeiro de 2001, '
-            . 'neste Estatuto denominado simplesmente "CEDE", é uma associação civil de caráter religioso, '
+            . 'é uma associação civil de caráter religioso, '
             . 'filosófico, científico, cultural e filantrópico, sem fins lucrativos, com sede e foro na cidade de '
             . 'Parnamirim/RN, localizada à Rua Frejó, nº 44, bairro Nova Parnamirim.',
         'contactSummary' => 'Fundado em 09 de janeiro de 2001, o CEDE é uma associação civil sem fins lucrativos '

@@ -48,6 +48,8 @@
           {% endif %}
 
           <form class="nc-admin-login-form nc-member-profile-form" method="post" action="/membro/perfil/completar" enctype="multipart/form-data">
+            <input type="hidden" name="redirect_to" value="{{ member_profile_redirect_to|default('/membro') }}">
+
             <div class="nc-member-photo-field">
               <p class="nc-admin-login-label">Foto de perfil <span class="nc-member-profile-tag is-required">Obrigatório</span></p>
               <div class="nc-member-photo-preview-wrap">

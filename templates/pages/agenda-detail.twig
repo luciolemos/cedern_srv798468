@@ -4,11 +4,25 @@
   <main class="nc-main nc-container nc-home-flow">
     <section class="nc-section" aria-label="Detalhes da agenda" data-aos="fade-up" data-aos-delay="0">
       {% set current_event = agenda_event|default(null) %}
+      {% set is_internal_event = current_event and current_event.audience|default('') == 'Público interno' %}
+      {% set has_public_online_access = current_event and current_event.meeting_url and current_event.mode|default('') in ['online', 'hibrido'] and not is_internal_event %}
       {% include 'components/section-header.twig' with {
         kicker: current_event.category_name|default(agenda.kicker|default('Agenda')),
         title: current_event.title|default(agenda.title|default('Atividade do CEDE')),
         lead: current_event.description|default(agenda.lead|default('Veja os detalhes deste encontro e organize sua participação na rotina fraterna da casa.'))
       } %}
+
+      {% if agenda_event_status == 'profile-updated' %}
+        <p class="nc-admin-login-success" role="status">Perfil atualizado com sucesso. Agora você já pode salvar este evento na sua área do membro.</p>
+      {% elseif agenda_event_status == 'profile-updated-no-photo' %}
+        <p class="nc-admin-login-success" role="status">Perfil atualizado. Sua foto não foi salva agora, mas você já pode salvar este evento na sua área do membro.</p>
+      {% elseif agenda_event_status == 'interest-added' %}
+        <p class="nc-admin-login-success" role="status">Evento salvo na sua área do membro. Ele agora aparece no seu calendário pessoal.</p>
+      {% elseif agenda_event_status == 'interest-removed' %}
+        <p class="nc-admin-login-success" role="status">Evento removido da sua área do membro.</p>
+      {% elseif agenda_event_status == 'interest-error' %}
+        <p class="nc-admin-login-error" role="alert">Não foi possível atualizar o salvamento deste evento na sua área do membro agora. Tente novamente.</p>
+      {% endif %}
 
       <ul class="nc-checklist">
         {% if current_event %}
@@ -64,11 +78,35 @@
         {% endif %}
       </ul>
 
-      <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="160">
+      <div class="nc-actions is-stacked-mobile nc-agenda-detail-actions" data-aos="fade-up" data-aos-delay="160">
         <a class="nc-btn nc-btn-secondary" href="/agenda">Voltar para Agenda</a>
-        {% if current_event and current_event.meeting_url %}
+        {% if has_public_online_access %}
+          <a class="nc-btn nc-btn-primary" href="{{ current_event.meeting_url }}" target="_blank" rel="noopener noreferrer">Participar online</a>
+        {% endif %}
+        {% if current_event %}
+          {% if current_event.member_authenticated|default(false) %}
+            {% if current_event.member_profile_completed|default(false) %}
+              <form method="post" action="/membro/eventos/{{ current_event.id|default(0) }}/participacao">
+                <input type="hidden" name="redirect_to" value="/agenda/{{ current_event.slug|default('') }}">
+                <input type="hidden" name="intent" value="{{ current_event.member_interested|default(false) ? 'remove' : 'add' }}">
+                <button class="nc-btn nc-btn-secondary nc-btn-block-mobile" type="submit">
+                  {{ current_event.member_interested|default(false) ? 'Remover da minha área' : 'Salvar na minha área' }}
+                </button>
+              </form>
+            {% else %}
+              <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="/membro/perfil/completar?redirect_to={{ ('/agenda/' ~ current_event.slug|default(''))|url_encode }}">
+                Completar perfil para salvar
+              </a>
+            {% endif %}
+          {% else %}
+            <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="/entrar?redirect_to={{ ('/agenda/' ~ current_event.slug|default(''))|url_encode }}">
+              Entrar para salvar na minha área
+            </a>
+          {% endif %}
+        {% endif %}
+        {% if current_event and current_event.meeting_url and not has_public_online_access %}
           <a class="nc-btn nc-btn-primary" href="{{ current_event.meeting_url }}" target="_blank" rel="noopener noreferrer">Entrar na atividade</a>
-        {% else %}
+        {% elseif not has_public_online_access %}
           <a class="nc-btn nc-btn-primary" href="/contato">Entrar em contato</a>
         {% endif %}
       </div>

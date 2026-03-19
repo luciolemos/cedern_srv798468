@@ -16,6 +16,8 @@
           {% endif %}
 
           <form class="nc-admin-login-form" method="post" action="/entrar">
+            <input type="hidden" name="redirect_to" value="{{ member_login_redirect_to|default('/membro') }}">
+
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="identifier">E-mail ou usuário</label>
               <input class="nc-admin-login-input" id="identifier" name="identifier" type="text" value="{{ member_login_form.identifier|default('') }}" autocomplete="username" required>
