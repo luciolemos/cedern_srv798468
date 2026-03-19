@@ -21,6 +21,7 @@ return [
         'palestra-publica' => 'Palestra Pública',
         'juventude-espirita' => 'Juventude Espírita',
         'faq' => 'FAQ',
+        'biblioteca' => 'BIBLIOTECA',
         'doutrina' => 'Doutrina Espírita',
         'participacao' => 'Participação',
         'praticas' => 'Práticas da Casa',
@@ -79,6 +80,10 @@ return [
         ],
     ],
     'links_after_groups' => [
+        [
+            'path' => '#',
+            'key' => 'biblioteca',
+        ],
         [
             'path' => '/contato',
             'key' => 'contato',

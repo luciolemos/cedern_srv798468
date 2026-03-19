@@ -2,6 +2,8 @@
   {% set hero = homeContent.sections.hero|default({}) %}
   {% set hero_actions = homeContent.heroActions|default([]) %}
   {% set hero_metrics = homeContent.heroMetrics|default([]) %}
+  {% set hero_qr_url = hero.qrUrl|default('') %}
+  {% set hero_qr_image = hero.qrImage|default('') %}
 
   <div class="nc-hero-grid">
     <div data-aos="fade-up" data-aos-delay="80">
@@ -37,6 +39,16 @@
           </li>
         {% endfor %}
       </ul>
+      {% if hero_qr_url and hero_qr_image %}
+        <div class="nc-hero-qr" data-aos="fade-up" data-aos-delay="{{ hero.qrDelay|default(460) }}">
+          <h3 class="nc-hero-qr-title">{{ hero.qrTitle|default('Acesse no celular') }}</h3>
+          <p class="nc-hero-qr-lead">{{ hero.qrLead|default('Aponte a camera para a tela do dispositivo para abrir o site sem digitar na barra do navegador.') }}</p>
+          <a class="nc-hero-qr-link" href="{{ hero_qr_url }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir {{ hero_qr_url }} em uma nova aba">
+            <img class="nc-hero-qr-image" src="{{ hero_qr_image }}" alt="{{ hero.qrAlt|default('QR code para abrir o site no celular') }}">
+          </a>
+          <a class="nc-link nc-hero-qr-fallback" href="{{ hero_qr_url }}" target="_blank" rel="noopener noreferrer">{{ hero_qr_url|replace({'https://': '', 'http://': ''}) }}</a>
+        </div>
+      {% endif %}
     </aside>
   </div>
 </section>

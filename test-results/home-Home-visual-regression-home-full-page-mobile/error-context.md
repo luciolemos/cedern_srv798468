@@ -1,0 +1,210 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "CEDE - Início" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "CEDE (tema claro)" [ref=e6]
+      - button "Abrir menu" [ref=e7] [cursor=pointer]
+      - text: ▾ ▾ ▾ ▾
+  - main [ref=e11]:
+    - region "Hero principal" [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: Espiritualidade com Razão
+          - heading "Centro de Estudos da Doutrina Espírita" [level=1] [ref=e16]
+          - paragraph [ref=e17]: Iluminando consciências, transformando vidas.
+          - paragraph [ref=e18]: Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.
+          - generic [ref=e19]:
+            - link "Ver Horários" [ref=e20] [cursor=pointer]:
+              - /url: /agenda
+            - link "Falar Conosco" [ref=e21] [cursor=pointer]:
+              - /url: /contato
+        - complementary "Indicadores da plataforma" [ref=e22]:
+          - heading "Nossas Atividades" [level=2] [ref=e23]
+          - list [ref=e24]:
+            - listitem [ref=e25]:
+              - generic [ref=e26]: 100%
+              - generic [ref=e27]: Gratuito
+            - listitem [ref=e28]:
+              - generic [ref=e29]: 5 Obras
+              - generic [ref=e30]: Pentateuco Kardequiano
+            - listitem [ref=e31]:
+              - generic [ref=e32]: 3 Grupos
+              - generic [ref=e33]: Estudo Sistematizado
+            - listitem [ref=e34]:
+              - generic [ref=e35]: Semanal
+              - generic [ref=e36]: Palestras Públicas
+          - generic [ref=e37]:
+            - heading "Acesse no celular" [level=3] [ref=e38]
+            - paragraph [ref=e39]: Aponte a camera para a tela do dispositivo para abrir o site sem digitar na barra do navegador.
+            - link "Abrir https://cedern.org em uma nova aba" [ref=e40] [cursor=pointer]:
+              - /url: https://cedern.org
+              - img "QR code para abrir o site cedern.org no celular" [ref=e41]
+            - link "cedern.org" [ref=e42] [cursor=pointer]:
+              - /url: https://cedern.org
+    - region "Depoimentos" [ref=e43]:
+      - paragraph [ref=e44]: Quem Somos
+      - heading "Depoimentos e testemunhos" [level=2] [ref=e45]
+      - paragraph [ref=e46]: Relatos de quem participa das atividades e vivencia o acolhimento fraterno do CEDE.
+      - generic [ref=e47]:
+        - article [ref=e48]:
+          - generic [ref=e49]:
+            - img "Maria Silva" [ref=e50]
+            - generic [ref=e51]:
+              - strong [ref=e52]: Maria Silva
+              - generic [ref=e53]: Frequentadora
+          - paragraph [ref=e54]: "\"O CEDE mudou minha visão sobre a vida. Encontrei respostas lógicas e consoladoras para minhas dúvidas.\""
+        - article [ref=e55]:
+          - generic [ref=e56]:
+            - img "João Souza" [ref=e57]
+            - generic [ref=e58]:
+              - strong [ref=e59]: João Souza
+              - generic [ref=e60]: Estudante do ESDE
+          - paragraph [ref=e61]: "\"Os estudos são muito bem organizados e o ambiente é acolhedor. Recomendo a todos que buscam conhecimento.\""
+        - article [ref=e62]:
+          - generic [ref=e63]:
+            - img "Ana Pereira" [ref=e64]
+            - generic [ref=e65]:
+              - strong [ref=e66]: Ana Pereira
+              - generic [ref=e67]: Voluntária
+          - paragraph [ref=e68]: "\"Servir no CEDE é uma alegria. A caridade e o amor ao próximo são praticados aqui todos os dias.\""
+      - button "Ver mais depoimentos" [ref=e70] [cursor=pointer]
+    - region "Acesso rápido" [ref=e71]:
+      - paragraph [ref=e72]: Caminhos
+      - heading "Encontre o que você busca no CEDE" [level=2] [ref=e73]
+      - paragraph [ref=e74]: Reunimos aqui os principais caminhos para acolhimento, estudo, participação e contato fraterno.
+      - generic [ref=e75]:
+        - article [ref=e76]:
+          - heading "Quem Somos" [level=3] [ref=e77]
+          - paragraph [ref=e78]: Conheça nossa identidade, missão, valores, história e o significado da marca institucional.
+          - link "Conhecer o CEDE" [ref=e80] [cursor=pointer]:
+            - /url: /quem-somos
+        - article [ref=e81]:
+          - heading "Estudos" [level=3] [ref=e82]
+          - paragraph [ref=e83]: Participe das frentes de estudo da Doutrina Espírita e acompanhe os conteúdos formativos da casa.
+          - link "Ver estudos" [ref=e85] [cursor=pointer]:
+            - /url: /estudos
+        - article [ref=e86]:
+          - heading "Agenda" [level=3] [ref=e87]
+          - paragraph [ref=e88]: Consulte os dias e horários das atividades públicas e dos encontros semanais do CEDE.
+          - link "Ver agenda" [ref=e90] [cursor=pointer]:
+            - /url: /agenda
+        - article [ref=e91]:
+          - heading "FAQ" [level=3] [ref=e92]
+          - paragraph [ref=e93]: Tire dúvidas frequentes sobre doutrina, participação e práticas da casa espírita.
+          - link "Ler FAQ" [ref=e95] [cursor=pointer]:
+            - /url: /faq
+        - article [ref=e96]:
+          - heading "Contato" [level=3] [ref=e97]
+          - paragraph [ref=e98]: Entre em contato conosco, consulte o endereço e acesse nossos canais oficiais de comunicação.
+          - link "Falar com o CEDE" [ref=e100] [cursor=pointer]:
+            - /url: /contato
+    - region "Gestão CEDE" [ref=e101]:
+      - paragraph [ref=e102]: Transparência
+      - heading "Gestão CEDE" [level=2] [ref=e103]
+      - paragraph [ref=e104]: Consulte a diretoria e as funções institucionais atualizadas na página Quem Somos.
+      - link "Ver gestão completa" [ref=e106] [cursor=pointer]:
+        - /url: /quem-somos/gestao-cede
+    - region "Chamada final" [ref=e107]:
+      - paragraph [ref=e108]: Participe
+      - heading "Junte-se a nós nesta jornada de luz" [level=2] [ref=e109]
+      - paragraph [ref=e110]: Venha conhecer o CEDE e permita-se sentir a serenidade de um ambiente onde o conhecimento ilumina, o acolhimento conforta e a verdade espiritual se revela com simplicidade e amor. Aqui, cada encontro é um convite à reflexão, cada palavra é um passo na jornada interior, e cada experiência é uma oportunidade de reencontro consigo mesmo e com o propósito maior da vida.
+      - link "Conheça nossa Biblioteca" [ref=e112] [cursor=pointer]:
+        - /url: /estudos
+    - region "Faça sua doação" [ref=e113]:
+      - paragraph [ref=e114]: Apoie o CEDE
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - heading "Faça sua doação" [level=2] [ref=e117]
+          - paragraph [ref=e118]: Sua contribuição é essencial para que o CEDE – Centro de Estudos da Doutrina Espírita continue promovendo estudos, atendimentos fraternos e ações de acolhimento, levando conhecimento, consolo e orientação a todos que buscam crescimento espiritual.
+          - paragraph [ref=e119]: Cada gesto de apoio fortalece essa missão e permite que a casa permaneça ativa, organizada e acessível à comunidade.
+        - article [ref=e121]:
+          - heading "Doação via PIX (ASAAS)" [level=3] [ref=e122]
+          - paragraph [ref=e123]: Escaneie o QR Code do PIX para contribuir de forma rápida e segura.
+          - img "QR Code para doação via PIX" [ref=e124]
+          - generic [ref=e125]:
+            - paragraph [ref=e126]:
+              - strong [ref=e127]: "Chave PIX:"
+              - text: 04.242.556/0001-45
+            - button "Copiar chave PIX" [ref=e128] [cursor=pointer]: Copiar chave
+  - complementary "Ferramentas de interface":
+    - region "Paleta de cores do site" [ref=e129]:
+      - button "Cores ▾" [ref=e130]:
+        - generic [ref=e131]: Cores
+        - text: ▾
+  - contentinfo [ref=e132]:
+    - generic [ref=e133]:
+      - generic [ref=e134]:
+        - region "Identidade institucional" [ref=e135]:
+          - link "CEDE - Início" [ref=e136] [cursor=pointer]:
+            - /url: /
+            - img "CEDE" [ref=e137]
+          - paragraph [ref=e138]: Presença e acolhimento
+          - paragraph [ref=e139]: Centro de Estudos da Doutrina Espírita (CEDE)
+          - paragraph [ref=e140]: O CEDE mantém suas portas abertas à comunidade, oferecendo estudo doutrinário, atendimento fraterno e convivência cristã, com seriedade, organização e acolhimento.
+        - generic [ref=e141]:
+          - navigation "Institucional" [ref=e142]:
+            - heading "Institucional" [level=3] [ref=e143]
+            - list [ref=e144]:
+              - listitem [ref=e145]:
+                - link "Início" [ref=e146] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e147]:
+                - link "Quem Somos" [ref=e148] [cursor=pointer]:
+                  - /url: /quem-somos
+              - listitem [ref=e149]:
+                - link "Estatuto" [ref=e150] [cursor=pointer]:
+                  - /url: /quem-somos/estatuto
+              - listitem [ref=e151]:
+                - link "Gestão CEDE" [ref=e152] [cursor=pointer]:
+                  - /url: /quem-somos/gestao-cede
+              - listitem [ref=e153]:
+                - link "Contato" [ref=e154] [cursor=pointer]:
+                  - /url: /contato
+              - listitem [ref=e155]:
+                - link "Política de Privacidade" [ref=e156] [cursor=pointer]:
+                  - /url: /politica-de-privacidade
+              - listitem [ref=e157]:
+                - link "Termos de Uso" [ref=e158] [cursor=pointer]:
+                  - /url: /termos-de-uso
+          - navigation "Atividades" [ref=e159]:
+            - heading "Atividades" [level=3] [ref=e160]
+            - list [ref=e161]:
+              - listitem [ref=e162]:
+                - link "Estudos" [ref=e163] [cursor=pointer]:
+                  - /url: /estudos
+              - listitem [ref=e164]:
+                - link "Agenda" [ref=e165] [cursor=pointer]:
+                  - /url: /agenda
+              - listitem [ref=e166]:
+                - link "FAQ" [ref=e167] [cursor=pointer]:
+                  - /url: /faq
+        - generic [ref=e168]:
+          - paragraph [ref=e169]: Visite o CEDE
+          - region "Informações de contato" [ref=e170]:
+            - heading "Fale conosco ou venha nos conhecer" [level=3] [ref=e171]
+            - paragraph [ref=e172]: Acompanhe a agenda pública, envie sua mensagem ou trace sua rota até a casa.
+            - paragraph [ref=e173]: Fundado em 09 de janeiro de 2001 • Associação civil sem fins lucrativos • Parnamirim/RN
+            - generic [ref=e174]:
+              - paragraph [ref=e175]:
+                - link "R. Frejó, 44 - Nova Parnamirim, Parnamirim - RN, 59150-663." [ref=e176] [cursor=pointer]:
+                  - /url: https://www.google.com/maps/search/?api=1&query=R.%20Frej%C3%B3%2C%2044%20-%20Nova%20Parnamirim%2C%20Parnamirim%20-%20RN%2C%2059150-663
+              - paragraph [ref=e177]:
+                - link "cede@cedern.org" [ref=e178] [cursor=pointer]:
+                  - /url: mailto:cede@cedern.org
+              - paragraph [ref=e179]:
+                - 'link "Instagram oficial: @cedeoficialrn" [ref=e180] [cursor=pointer]':
+                  - /url: https://www.instagram.com/cedeoficialrn/
+            - generic [ref=e181]:
+              - link "Falar com o CEDE" [ref=e182] [cursor=pointer]:
+                - /url: /contato
+              - link "Ver no mapa" [ref=e183] [cursor=pointer]:
+                - /url: https://www.google.com/maps/search/?api=1&query=R.%20Frej%C3%B3%2C%2044%20-%20Nova%20Parnamirim%2C%20Parnamirim%20-%20RN%2C%2059150-663
+      - generic [ref=e184]:
+        - paragraph [ref=e185]: © 2026 CEDE. Todos os direitos reservados.
+        - paragraph [ref=e186]: "CNPJ: 04.242.556/0001-45"
+        - paragraph [ref=e187]: Parnamirim/RN
+```

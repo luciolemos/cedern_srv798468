@@ -13,7 +13,7 @@ use Throwable;
 
 class MemberLoginPageAction extends AbstractPageAction
 {
-    private const FLASH_KEY = 'member_login';
+    public const FLASH_KEY = 'member_login';
 
     private MemberAuthRepository $memberAuthRepository;
 
@@ -34,11 +34,13 @@ class MemberLoginPageAction extends AbstractPageAction
 
         $method = strtoupper($request->getMethod());
         $error = '';
+        $success = '';
         $form = ['identifier' => ''];
 
         if ($method !== 'POST') {
             $flash = $this->consumeSessionFlash(self::FLASH_KEY);
             $error = trim((string) ($flash['error'] ?? ''));
+            $success = trim((string) ($flash['success'] ?? ''));
             $flashForm = (array) ($flash['form'] ?? []);
             $form['identifier'] = trim((string) ($flashForm['identifier'] ?? ''));
             $redirectTo = $this->sanitizeRedirectTarget((string) ($flash['redirect_to'] ?? $redirectTo));
@@ -115,6 +117,7 @@ class MemberLoginPageAction extends AbstractPageAction
 
         return $this->renderPage($response, 'pages/member-login.twig', [
             'member_login_error' => $error,
+            'member_login_success' => $success,
             'member_login_form' => $form,
             'member_login_redirect_to' => $redirectTo,
             'page_title' => 'Acessar área do membro | CEDE',

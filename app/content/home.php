@@ -12,6 +12,11 @@ return [
             'actionsDelay' => 140,
             'panelTitle' => 'Nossas Atividades',
             'panelDelay' => 180,
+            'qrTitle' => 'Acesse no celular',
+            'qrLead' => 'Aponte a camera para a tela do dispositivo para abrir o site sem digitar na barra do navegador.',
+            'qrUrl' => 'https://cedern.org',
+            'qrImage' => '/assets/img/cedern/qr_cedern_org.svg',
+            'qrAlt' => 'QR code para abrir o site cedern.org no celular',
         ],
         'features' => [
             'kicker' => 'Estudos',
