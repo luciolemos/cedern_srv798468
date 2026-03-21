@@ -12,6 +12,11 @@ use Slim\Views\Twig;
 
 abstract class AbstractAdminLibraryAction extends AbstractPageAction
 {
+    private const DEFAULT_LIBRARY_UPLOAD_DIR = 'public/assets/docs/library';
+    private const DEFAULT_LIBRARY_UPLOAD_PUBLIC_PREFIX = 'assets/docs/library';
+    private const DEFAULT_LIBRARY_COVER_UPLOAD_DIR = 'public/assets/img/library-covers';
+    private const DEFAULT_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX = 'assets/img/library-covers';
+
     protected LibraryRepository $libraryRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, LibraryRepository $libraryRepository)
@@ -51,23 +56,25 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
             return ['error' => 'Formato inválido. Envie um arquivo PDF.'];
         }
 
-        $projectRoot = dirname(__DIR__, 4);
-        $targetDirectory = $projectRoot . '/public/assets/docs/library';
+        $targetDirectory = $this->resolveLibraryUploadDirectory();
+        $publicPrefix = $this->resolveLibraryUploadPublicPrefix();
 
         if (!is_dir($targetDirectory) && !@mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
             $this->logger->warning('Diretório de PDFs da biblioteca indisponível.', [
                 'directory' => $targetDirectory,
+                'public_prefix' => $publicPrefix,
             ]);
 
-            return ['error' => 'Não foi possível preparar o diretório de PDFs no servidor.'];
+            return ['error' => 'Não foi possível preparar o armazenamento de PDFs da biblioteca no servidor.'];
         }
 
         if (!is_writable($targetDirectory)) {
             $this->logger->warning('Diretório de PDFs da biblioteca sem permissão de escrita.', [
                 'directory' => $targetDirectory,
+                'public_prefix' => $publicPrefix,
             ]);
 
-            return ['error' => 'O servidor não possui permissão para salvar o PDF enviado.'];
+            return ['error' => 'O armazenamento de PDFs da biblioteca está sem permissão de escrita no servidor.'];
         }
 
         try {
@@ -96,25 +103,248 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         }
 
         return [
-            'path' => 'assets/docs/library/' . $fileName,
+            'path' => $this->buildManagedLibraryPdfRelativePath($fileName),
             'mime_type' => $clientMimeType !== '' ? $clientMimeType : 'application/pdf',
+            'size_bytes' => $size,
+        ];
+    }
+
+    /**
+     * @return array{path?: string, mime_type?: string, size_bytes?: int, error?: string}
+     */
+    protected function storeBookCover(UploadedFileInterface $file): array
+    {
+        if ($file->getError() !== UPLOAD_ERR_OK) {
+            return ['error' => 'Não foi possível enviar a capa do livro. Tente novamente.'];
+        }
+
+        $size = (int) $file->getSize();
+        if ($size <= 0 || $size > (5 * 1024 * 1024)) {
+            return ['error' => 'A capa deve ter no máximo 5MB.'];
+        }
+
+        $clientMimeType = strtolower((string) $file->getClientMediaType());
+        $clientFilename = strtolower(trim((string) $file->getClientFilename()));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+        $allowedMimeTypes = [
+            'image/jpeg' => 'jpg',
+            'image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+
+        $fileExtension = strtolower((string) pathinfo($clientFilename, PATHINFO_EXTENSION));
+
+        if (!isset($allowedMimeTypes[$clientMimeType]) && !in_array($fileExtension, $allowedExtensions, true)) {
+            return ['error' => 'Formato inválido para a capa. Use JPG, PNG ou WEBP.'];
+        }
+
+        $targetDirectory = $this->resolveLibraryCoverUploadDirectory();
+        $publicPrefix = $this->resolveLibraryCoverUploadPublicPrefix();
+
+        if (!is_dir($targetDirectory) && !@mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
+            $this->logger->warning('Diretório de capas da biblioteca indisponível.', [
+                'directory' => $targetDirectory,
+                'public_prefix' => $publicPrefix,
+            ]);
+
+            return ['error' => 'Não foi possível preparar o armazenamento de capas da biblioteca no servidor.'];
+        }
+
+        if (!is_writable($targetDirectory)) {
+            $this->logger->warning('Diretório de capas da biblioteca sem permissão de escrita.', [
+                'directory' => $targetDirectory,
+                'public_prefix' => $publicPrefix,
+            ]);
+
+            return ['error' => 'O armazenamento de capas da biblioteca está sem permissão de escrita no servidor.'];
+        }
+
+        try {
+            $timestamp = date('YmdHis');
+            $randomSuffix = bin2hex(random_bytes(4));
+            $resolvedExtension = $allowedMimeTypes[$clientMimeType] ?? ($fileExtension !== '' ? $fileExtension : 'jpg');
+            $fileName = sprintf('cover_%s_%s.%s', $timestamp, $randomSuffix, $resolvedExtension);
+        } catch (\Throwable $exception) {
+            $this->logger->error('Falha ao gerar nome de arquivo para capa da biblioteca.', [
+                'exception' => $exception,
+            ]);
+
+            return ['error' => 'Falha ao processar a capa enviada.'];
+        }
+
+        $targetPath = $targetDirectory . '/' . $fileName;
+
+        try {
+            $file->moveTo($targetPath);
+        } catch (\Throwable $exception) {
+            $this->logger->error('Falha ao gravar capa da biblioteca.', [
+                'exception' => $exception,
+                'target_path' => $targetPath,
+            ]);
+
+            return ['error' => 'Não foi possível salvar a capa no servidor.'];
+        }
+
+        return [
+            'path' => $this->buildManagedLibraryCoverRelativePath($fileName),
+            'mime_type' => $clientMimeType !== '' ? $clientMimeType : 'image/jpeg',
             'size_bytes' => $size,
         ];
     }
 
     protected function deleteStoredPdfIfManaged(?string $relativePath): void
     {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-
-        if ($normalizedPath === '' || !str_starts_with($normalizedPath, 'assets/docs/library/')) {
+        $absolutePath = $this->resolveManagedLibraryPdfAbsolutePath($relativePath);
+        if ($absolutePath === null) {
             return;
         }
-
-        $projectRoot = dirname(__DIR__, 4);
-        $absolutePath = $projectRoot . '/public/' . $normalizedPath;
 
         if (is_file($absolutePath)) {
             @unlink($absolutePath);
         }
+    }
+
+    protected function deleteStoredBookCoverIfManaged(?string $relativePath): void
+    {
+        $absolutePath = $this->resolveManagedLibraryCoverAbsolutePath($relativePath);
+        if ($absolutePath === null) {
+            return;
+        }
+
+        if (is_file($absolutePath)) {
+            @unlink($absolutePath);
+        }
+    }
+
+    protected function resolveLibraryUploadDirectory(): string
+    {
+        $configuredDirectory = trim((string) ($_ENV['LIBRARY_UPLOAD_DIR'] ?? ''));
+        $normalizedDirectory = $configuredDirectory !== ''
+            ? $configuredDirectory
+            : self::DEFAULT_LIBRARY_UPLOAD_DIR;
+
+        $normalizedDirectory = str_replace('\\', '/', $normalizedDirectory);
+
+        if ($this->isAbsolutePath($normalizedDirectory)) {
+            return rtrim($normalizedDirectory, '/');
+        }
+
+        return $this->resolveProjectRoot() . '/' . ltrim($normalizedDirectory, '/');
+    }
+
+    protected function resolveLibraryUploadPublicPrefix(): string
+    {
+        $configuredPrefix = trim((string) ($_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'] ?? ''));
+        $normalizedPrefix = $configuredPrefix !== ''
+            ? $configuredPrefix
+            : self::DEFAULT_LIBRARY_UPLOAD_PUBLIC_PREFIX;
+
+        return trim(str_replace('\\', '/', $normalizedPrefix), '/');
+    }
+
+    protected function buildManagedLibraryPdfRelativePath(string $fileName): string
+    {
+        return $this->resolveLibraryUploadPublicPrefix() . '/' . ltrim($fileName, '/');
+    }
+
+    protected function resolveLibraryCoverUploadDirectory(): string
+    {
+        return $this->resolveConfiguredUploadDirectory(
+            'LIBRARY_COVER_UPLOAD_DIR',
+            self::DEFAULT_LIBRARY_COVER_UPLOAD_DIR
+        );
+    }
+
+    protected function resolveLibraryCoverUploadPublicPrefix(): string
+    {
+        return $this->resolveConfiguredUploadPublicPrefix(
+            'LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX
+        );
+    }
+
+    protected function buildManagedLibraryCoverRelativePath(string $fileName): string
+    {
+        return $this->resolveLibraryCoverUploadPublicPrefix() . '/' . ltrim($fileName, '/');
+    }
+
+    protected function resolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedAbsolutePath(
+            $relativePath,
+            $this->resolveLibraryUploadPublicPrefix(),
+            $this->resolveLibraryUploadDirectory()
+        );
+    }
+
+    protected function resolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedAbsolutePath(
+            $relativePath,
+            $this->resolveLibraryCoverUploadPublicPrefix(),
+            $this->resolveLibraryCoverUploadDirectory()
+        );
+    }
+
+    private function resolveProjectRoot(): string
+    {
+        return dirname(__DIR__, 4);
+    }
+
+    private function resolveConfiguredUploadDirectory(string $envKey, string $defaultDirectory): string
+    {
+        $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
+        $normalizedDirectory = $configuredDirectory !== ''
+            ? $configuredDirectory
+            : $defaultDirectory;
+
+        $normalizedDirectory = str_replace('\\', '/', $normalizedDirectory);
+
+        if ($this->isAbsolutePath($normalizedDirectory)) {
+            return rtrim($normalizedDirectory, '/');
+        }
+
+        return $this->resolveProjectRoot() . '/' . ltrim($normalizedDirectory, '/');
+    }
+
+    private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
+    {
+        $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
+        $normalizedPrefix = $configuredPrefix !== ''
+            ? $configuredPrefix
+            : $defaultPrefix;
+
+        return trim(str_replace('\\', '/', $normalizedPrefix), '/');
+    }
+
+    private function resolveManagedAbsolutePath(?string $relativePath, string $publicPrefix, string $directory): ?string
+    {
+        $normalizedPath = ltrim(trim((string) $relativePath), '/');
+
+        if (
+            $normalizedPath === ''
+            || $publicPrefix === ''
+            || !str_starts_with($normalizedPath, $publicPrefix . '/')
+        ) {
+            return null;
+        }
+
+        $relativeFilePath = ltrim(substr($normalizedPath, strlen($publicPrefix)), '/');
+        if (
+            $relativeFilePath === ''
+            || str_contains($relativeFilePath, '../')
+            || str_contains($relativeFilePath, '..\\')
+        ) {
+            return null;
+        }
+
+        return $directory . '/' . $relativeFilePath;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, '/')
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
 }

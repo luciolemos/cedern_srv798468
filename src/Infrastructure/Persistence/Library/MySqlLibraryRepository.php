@@ -93,6 +93,9 @@ class MySqlLibraryRepository implements LibraryRepository
                     page_count,
                     language,
                     description,
+                    cover_image_path,
+                    cover_image_mime_type,
+                    cover_image_size_bytes,
                     pdf_path,
                     pdf_mime_type,
                     pdf_size_bytes,
@@ -113,6 +116,9 @@ class MySqlLibraryRepository implements LibraryRepository
                     :page_count,
                     :language,
                     :description,
+                    :cover_image_path,
+                    :cover_image_mime_type,
+                    :cover_image_size_bytes,
                     :pdf_path,
                     :pdf_mime_type,
                     :pdf_size_bytes,
@@ -150,6 +156,9 @@ class MySqlLibraryRepository implements LibraryRepository
                     page_count = :page_count,
                     language = :language,
                     description = :description,
+                    cover_image_path = :cover_image_path,
+                    cover_image_mime_type = :cover_image_mime_type,
+                    cover_image_size_bytes = :cover_image_size_bytes,
                     pdf_path = :pdf_path,
                     pdf_mime_type = :pdf_mime_type,
                     pdf_size_bytes = :pdf_size_bytes,
@@ -353,6 +362,9 @@ class MySqlLibraryRepository implements LibraryRepository
                 b.page_count,
                 b.language,
                 b.description,
+                b.cover_image_path,
+                b.cover_image_mime_type,
+                b.cover_image_size_bytes,
                 b.pdf_path,
                 b.pdf_mime_type,
                 b.pdf_size_bytes,
@@ -390,6 +402,9 @@ class MySqlLibraryRepository implements LibraryRepository
             'page_count' => $this->nullableInteger($data['page_count'] ?? null),
             'language' => $this->nullableText($data['language'] ?? null),
             'description' => $this->nullableText($data['description'] ?? null),
+            'cover_image_path' => $this->nullableText($data['cover_image_path'] ?? null),
+            'cover_image_mime_type' => $this->nullableText($data['cover_image_mime_type'] ?? null),
+            'cover_image_size_bytes' => $this->nullableInteger($data['cover_image_size_bytes'] ?? null),
             'pdf_path' => (string) ($data['pdf_path'] ?? ''),
             'pdf_mime_type' => $this->nullableText($data['pdf_mime_type'] ?? null),
             'pdf_size_bytes' => $this->nullableInteger($data['pdf_size_bytes'] ?? null),
@@ -440,12 +455,16 @@ class MySqlLibraryRepository implements LibraryRepository
      */
     private function normalizeBook(array $book): array
     {
+        $coverImagePath = ltrim((string) ($book['cover_image_path'] ?? ''), '/');
         $pdfPath = ltrim((string) ($book['pdf_path'] ?? ''), '/');
         $publicationYear = isset($book['publication_year']) && $book['publication_year'] !== null
             ? (int) $book['publication_year']
             : null;
         $pageCount = isset($book['page_count']) && $book['page_count'] !== null
             ? (int) $book['page_count']
+            : null;
+        $coverImageSizeBytes = isset($book['cover_image_size_bytes']) && $book['cover_image_size_bytes'] !== null
+            ? (int) $book['cover_image_size_bytes']
             : null;
         $pdfSizeBytes = isset($book['pdf_size_bytes']) && $book['pdf_size_bytes'] !== null
             ? (int) $book['pdf_size_bytes']
@@ -454,6 +473,8 @@ class MySqlLibraryRepository implements LibraryRepository
         return array_merge($book, [
             'publication_year' => $publicationYear,
             'page_count' => $pageCount,
+            'cover_image_size_bytes' => $coverImageSizeBytes,
+            'cover_image_url' => $coverImagePath !== '' ? '/' . $coverImagePath : '',
             'pdf_size_bytes' => $pdfSizeBytes,
             'pdf_url' => $pdfPath !== '' ? '/' . $pdfPath : '',
             'pdf_size_label' => $pdfSizeBytes !== null ? $this->formatBytes($pdfSizeBytes) : '',
@@ -561,6 +582,9 @@ class MySqlLibraryRepository implements LibraryRepository
                 page_count INT UNSIGNED NULL,
                 language VARCHAR(80) NULL,
                 description TEXT NULL,
+                cover_image_path VARCHAR(255) NULL,
+                cover_image_mime_type VARCHAR(120) NULL,
+                cover_image_size_bytes BIGINT UNSIGNED NULL,
                 pdf_path VARCHAR(255) NOT NULL,
                 pdf_mime_type VARCHAR(120) NULL,
                 pdf_size_bytes BIGINT UNSIGNED NULL,
@@ -593,6 +617,42 @@ class MySqlLibraryRepository implements LibraryRepository
                 is_active = VALUES(is_active)
         SQL);
 
+        $this->ensureColumn(
+            'library_books',
+            'cover_image_path',
+            'ALTER TABLE library_books ADD COLUMN cover_image_path VARCHAR(255) NULL AFTER description'
+        );
+        $this->ensureColumn(
+            'library_books',
+            'cover_image_mime_type',
+            'ALTER TABLE library_books ADD COLUMN cover_image_mime_type VARCHAR(120) NULL AFTER cover_image_path'
+        );
+        $this->ensureColumn(
+            'library_books',
+            'cover_image_size_bytes',
+            'ALTER TABLE library_books ADD COLUMN cover_image_size_bytes BIGINT UNSIGNED NULL AFTER cover_image_mime_type'
+        );
+
         $this->schemaEnsured = true;
+    }
+
+    private function ensureColumn(string $tableName, string $columnName, string $alterSql): void
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS '
+            . 'WHERE TABLE_SCHEMA = DATABASE() '
+            . 'AND TABLE_NAME = :table_name '
+            . 'AND COLUMN_NAME = :column_name'
+        );
+        $statement->execute([
+            'table_name' => $tableName,
+            'column_name' => $columnName,
+        ]);
+
+        $exists = (int) $statement->fetchColumn() > 0;
+
+        if (!$exists) {
+            $this->pdo->exec($alterSql);
+        }
     }
 }

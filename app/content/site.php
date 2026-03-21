@@ -56,6 +56,14 @@ return [
                     ['path' => '/faq', 'key' => 'faq'],
                 ],
             ],
+            [
+                'title' => 'Loja',
+                'links' => [
+                    ['path' => '/loja', 'key' => 'loja'],
+                    ['path' => '/loja/bazar', 'key' => 'bazar'],
+                    ['path' => '/loja/livraria', 'key' => 'livraria'],
+                ],
+            ],
         ],
         'contactKicker' => 'Visite o CEDE',
         'contactTitle' => 'Fale conosco ou venha nos conhecer',

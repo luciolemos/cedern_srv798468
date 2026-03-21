@@ -1,0 +1,32 @@
+{% set bookplate_modifier_class = bookplate_modifier_class|default('')|trim %}
+{% set bookplate_title = bookplate_title|default('')|trim %}
+{% set bookplate_display_title = bookplate_title %}
+{% set bookplate_author = bookplate_author|default('')|trim %}
+{% if bookplate_display_title == '' or bookplate_display_title == 'livro' %}
+  {% set bookplate_display_title = 'Acervo CEDE' %}
+{% endif %}
+<div class="nc-library-bookplate-default{% if bookplate_modifier_class %} {{ bookplate_modifier_class }}{% endif %}" role="img" aria-label="Capa padrão institucional para {{ bookplate_display_title }}">
+  <div class="nc-library-bookplate-default-panel">
+    <div class="nc-library-bookplate-default-top">
+      <span class="nc-library-bookplate-default-mark">Coleção CEDE</span>
+      <span class="nc-library-bookplate-default-book-title">{{ bookplate_display_title }}</span>
+    </div>
+    <span class="nc-library-bookplate-default-portrait-frame">
+      <img
+        class="nc-library-bookplate-default-portrait"
+        src="/assets/img/brands/cede1_logo.png"
+        alt=""
+        loading="lazy"
+      >
+    </span>
+    <span class="nc-library-bookplate-default-rule"></span>
+    <div class="nc-library-bookplate-default-copy">
+      <span class="nc-library-bookplate-default-title">Biblioteca</span>
+      <span class="nc-library-bookplate-default-subtitle">Centro de Estudos</span>
+      <span class="nc-library-bookplate-default-subtitle">da Doutrina Espirita</span>
+    </div>
+    {% if bookplate_author %}
+      <span class="nc-library-bookplate-default-author">{{ bookplate_author }}</span>
+    {% endif %}
+  </div>
+</div>

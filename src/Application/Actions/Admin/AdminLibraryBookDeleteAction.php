@@ -34,6 +34,7 @@ class AdminLibraryBookDeleteAction extends AbstractAdminLibraryAction
 
             $this->libraryRepository->deleteBook($id);
             $this->deleteStoredPdfIfManaged((string) ($book['pdf_path'] ?? ''));
+            $this->deleteStoredBookCoverIfManaged((string) ($book['cover_image_path'] ?? ''));
 
             $this->storeSessionFlash(AdminLibraryBookListPageAction::FLASH_KEY, [
                 'status' => 'deleted',

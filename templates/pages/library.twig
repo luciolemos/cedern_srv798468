@@ -1,5 +1,10 @@
 {% extends 'layouts/base.twig' %}
 
+{% block head %}
+  {{ parent() }}
+  <script src="/assets/js/cedern-library-lightbox.js?v={{ app_asset_version|default('1') }}" defer></script>
+{% endblock %}
+
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     <section class="nc-section nc-about-detail-copy" aria-label="Biblioteca do CEDE">
@@ -11,114 +16,191 @@
 
       {% set filters = library_filters|default({}) %}
       {% set pagination = library_pagination|default({}) %}
+      {% set library_base_path = filters.base_path|default('/biblioteca') %}
+      {% set active_filter_count = 0 %}
+      {% set has_active_toolbar_filters = false %}
+      {% if filters.search|default('') %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% set has_active_toolbar_filters = true %}
+      {% endif %}
+      {% if filters.category|default('') %}
+        {% set active_filter_count = active_filter_count + 1 %}
+        {% set has_active_toolbar_filters = true %}
+      {% endif %}
+      {% if filters.sort|default('title_asc') != 'title_asc' %}
+        {% set has_active_toolbar_filters = true %}
+      {% endif %}
+      {% if filters.page_size|default(12) != 12 %}
+        {% set has_active_toolbar_filters = true %}
+      {% endif %}
 
-      <form class="nc-admin-table-search nc-library-filter-form" method="get" action="/biblioteca">
-        <label for="nc-library-search">Buscar livros</label>
-        <div class="nc-admin-table-search-controls">
-          <input id="nc-library-search" name="q" type="search" value="{{ filters.search|default('') }}" placeholder="Título, autor, editora, ISBN, categoria...">
+      <div class="nc-library-overview">
+        <article class="nc-card nc-library-overview-card nc-library-overview-card-primary">
+          <p class="nc-library-overview-kicker">Leitura, pesquisa e estudo</p>
+          <h3 class="nc-library-overview-title">Uma biblioteca pensada para consulta espiritual e editorial</h3>
+          <p class="nc-library-overview-copy">
+            Explore o acervo por autoria, categoria e referência de publicação. Cada livro reúne dados editoriais e acesso direto ao PDF quando disponível.
+          </p>
+        </article>
 
-          <select name="category" aria-label="Filtrar por categoria">
-            <option value="">Todas as categorias</option>
-            {% for option in library_categories|default([]) %}
-              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
-            {% endfor %}
-          </select>
-
-          <select name="sort" aria-label="Ordenar livros">
-            {% for option in filters.sort_options|default([]) %}
-              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
-            {% endfor %}
-          </select>
-
-          <select name="per_page" aria-label="Quantidade de livros por página">
-            {% for option in filters.page_size_options|default([]) %}
-              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }} por página</option>
-            {% endfor %}
-          </select>
-
-          <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+        <div class="nc-library-overview-grid">
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ pagination.total_items|default(0) }}</p>
+            <p class="nc-library-stat-label">titulos encontrados</p>
+          </article>
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ library_categories|default([])|length }}</p>
+            <p class="nc-library-stat-label">categorias ativas</p>
+          </article>
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ active_filter_count }}</p>
+            <p class="nc-library-stat-label">filtros em uso</p>
+          </article>
         </div>
-      </form>
+      </div>
+
+      <article class="nc-card nc-library-filter-shell">
+        <div class="nc-library-filter-copy">
+          <p class="nc-library-overview-kicker">Refinar o acervo</p>
+          <h3 class="nc-library-filter-title">Busque por obra, autor, editora ou categoria</h3>
+          <p class="nc-library-filter-lead">Use os filtros para localizar um título específico ou navegar pelas áreas de estudo disponíveis.</p>
+        </div>
+
+        <form class="nc-library-filter-form nc-admin-login-form" method="get" action="{{ library_base_path }}">
+          <div class="nc-admin-table-search nc-library-filter-toolbar">
+            <label class="nc-admin-login-label" for="nc-library-search">Buscar livros</label>
+            <div class="nc-admin-table-search-controls nc-library-filter-toolbar-controls">
+              <input class="nc-admin-login-input nc-library-filter-toolbar-input" id="nc-library-search" name="q" type="search" value="{{ filters.search|default('') }}" placeholder="Título, autor, editora, ISBN, categoria...">
+              <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Aplicar filtros</button>
+              {% if has_active_toolbar_filters %}
+                <a class="nc-btn nc-btn-secondary nc-admin-login-back" href="{{ library_base_path }}">Limpar</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="nc-library-filter-grid">
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-library-category">Categoria</label>
+              <select class="nc-admin-login-input" id="nc-library-category" name="category" aria-label="Filtrar por categoria">
+                <option value="">Todas as categorias</option>
+                {% for option in library_categories|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-library-sort">Ordenação</label>
+              <select class="nc-admin-login-input" id="nc-library-sort" name="sort" aria-label="Ordenar livros">
+                {% for option in filters.sort_options|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-library-page-size">Quantidade</label>
+              <select class="nc-admin-login-input" id="nc-library-page-size" name="per_page" aria-label="Quantidade de livros por página">
+                {% for option in filters.page_size_options|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }} por página</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
+      </article>
 
       {% if library_books|default([])|length > 0 %}
-        <div class="nc-admin-table-toolbar nc-library-filter-summary">
-          <p class="nc-admin-table-counter">
+        <div class="nc-library-results-bar">
+          <div>
+            <p class="nc-library-results-title">Obras disponíveis</p>
+            <p class="nc-library-results-count">
             Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} livros
-          </p>
+            </p>
+          </div>
+
+          <div class="nc-library-active-filters">
+            {% if filters.search|default('') %}
+              <span class="nc-library-active-chip">Busca: {{ filters.search }}</span>
+            {% endif %}
+            {% if filters.category|default('') %}
+              {% for option in library_categories|default([]) %}
+                {% if option.selected %}
+                  <span class="nc-library-active-chip">Categoria: {{ option.label }}</span>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
         </div>
 
         <div class="nc-list nc-library-list">
           {% for book in library_books %}
             {% set category_color = book.category_color|default('')|trim %}
-            <article class="nc-list-item nc-library-card" id="livro-{{ book.slug|default('item-' ~ loop.index) }}">
-              <div class="nc-library-card-header">
-                <div class="nc-library-card-copy">
-                  <span class="nc-library-category-badge{% if category_color %} is-colored{% endif %}"{% if category_color %} style="--nc-library-category-color: {{ category_color|e('html_attr') }};"{% endif %}>
+            {% set cover_image_url = book.cover_image_url|default('')|trim %}
+            <article class="nc-card nc-library-card{% if category_color %} is-colored{% endif %}" id="livro-{{ book.slug|default('item-' ~ loop.index) }}"{% if category_color %} style="--nc-library-category-color: {{ category_color|e('html_attr') }};"{% endif %}>
+              <div class="nc-library-card-shell">
+                <button
+                  class="nc-library-bookplate-trigger"
+                  type="button"
+                  aria-label="Ampliar capa de {{ book.title }}"
+                  aria-haspopup="dialog"
+                  data-library-cover-trigger
+                  data-library-cover-title="{{ book.title|e('html_attr') }}"
+                  data-library-cover-author="{{ book.author_name|default('')|e('html_attr') }}"
+                >
+                  <div class="nc-library-bookplate{% if not cover_image_url %} is-default{% endif %}">
+                    {% if cover_image_url %}
+                      <img
+                        class="nc-library-bookplate-image"
+                        src="{{ cover_image_url }}"
+                        alt="Capa de {{ book.title }}"
+                        loading="lazy"
+                      >
+                    {% else %}
+                      {% include 'components/library-bookplate-fallback.twig' with {
+                        bookplate_title: book.title,
+                        bookplate_author: book.author_name|default('')
+                      } only %}
+                    {% endif %}
+                  </div>
+                </button>
+
+                <div class="nc-library-card-body">
+                  <div class="nc-library-card-topline">
+                    <span class="nc-library-category-badge{% if category_color %} is-colored{% endif %}">
                     {{ book.category_name|default('Biblioteca') }}
-                  </span>
+                    </span>
+                  {% if book.publication_year|default('') or book.page_count|default(0) or book.language|default('') %}
+                    <p class="nc-library-card-facts">
+                      {% if book.publication_year|default('') %}<span>{{ book.publication_year }}</span>{% endif %}
+                      {% if book.page_count|default(0) %}<span>{{ book.page_count }} pags.</span>{% endif %}
+                      {% if book.language|default('') %}<span>{{ book.language }}</span>{% endif %}
+                    </p>
+                  {% endif %}
+                  </div>
+
                   <h3 class="nc-library-card-title">{{ book.title }}</h3>
                   {% if book.subtitle|default('') %}
                     <p class="nc-library-card-subtitle">{{ book.subtitle }}</p>
                   {% endif %}
                   <p class="nc-library-card-author">{{ book.author_name }}</p>
-                </div>
 
-                <div class="nc-actions nc-library-card-actions">
+                  {% if book.description|default('') %}
+                    <p class="nc-library-card-summary">{{ book.description }}</p>
+                  {% endif %}
+
+                  {% if book.editorial_reference|default('') %}
+                    <p class="nc-library-editorial-reference">{{ book.editorial_reference }}</p>
+                  {% endif %}
+
                   {% if book.pdf_url|default('') %}
-                    <a class="nc-btn nc-btn-primary" href="{{ book.pdf_url }}" target="_blank" rel="noopener">Abrir PDF</a>
-                    <a class="nc-btn nc-btn-secondary" href="{{ book.pdf_url }}" download>Baixar</a>
+                    <div class="nc-actions nc-library-card-actions is-stacked-mobile">
+                      <a class="nc-btn nc-btn-primary nc-btn-block-mobile" href="{{ book.pdf_url }}" target="_blank" rel="noopener">Ler no navegador</a>
+                      <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="{{ book.pdf_url }}" download>Baixar PDF</a>
+                    </div>
                   {% endif %}
                 </div>
               </div>
-
-              {% if book.description|default('') %}
-                <p class="nc-library-card-summary">{{ book.description }}</p>
-              {% endif %}
-
-              <dl class="nc-library-meta-grid">
-                {% if book.editorial_reference|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>Referência editorial</dt>
-                    <dd>{{ book.editorial_reference }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.organizer_name|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>Organização</dt>
-                    <dd>{{ book.organizer_name }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.translator_name|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>Tradução</dt>
-                    <dd>{{ book.translator_name }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.isbn|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>ISBN</dt>
-                    <dd>{{ book.isbn }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.page_count|default(0) %}
-                  <div class="nc-library-meta-item">
-                    <dt>Páginas</dt>
-                    <dd>{{ book.page_count }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.language|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>Idioma</dt>
-                    <dd>{{ book.language }}</dd>
-                  </div>
-                {% endif %}
-                {% if book.pdf_size_label|default('') %}
-                  <div class="nc-library-meta-item">
-                    <dt>Arquivo</dt>
-                    <dd>{{ book.pdf_size_label }}</dd>
-                  </div>
-                {% endif %}
-              </dl>
             </article>
           {% endfor %}
         </div>
@@ -145,10 +227,20 @@
           </nav>
         {% endif %}
       {% else %}
-        <p class="nc-library-empty">
-          {{ filters.search|default('') or filters.category|default('') ? 'Nenhum livro encontrado para os filtros informados.' : 'Nenhum livro publicado na biblioteca no momento.' }}
-        </p>
+        <article class="nc-card nc-library-empty-state">
+          <p class="nc-library-empty">
+            {{ filters.search|default('') or filters.category|default('') ? 'Nenhum livro encontrado para os filtros informados.' : 'Nenhum livro publicado na biblioteca no momento.' }}
+          </p>
+        </article>
       {% endif %}
+
+      <dialog class="nc-library-cover-dialog" data-library-cover-dialog aria-label="Visualizador de capa">
+        <div class="nc-library-cover-dialog-shell">
+          <button class="nc-library-cover-dialog-close" type="button" data-library-cover-close aria-label="Fechar visualização da capa">Fechar</button>
+          <div class="nc-library-cover-dialog-stage" data-library-cover-stage></div>
+          <p class="nc-library-cover-dialog-caption" data-library-cover-caption hidden></p>
+        </div>
+      </dialog>
     </section>
 
     {% include 'home/final-cta.twig' %}

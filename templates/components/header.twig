@@ -4,6 +4,8 @@
   {% set nav_groups = navigation_menu|default([]) %}
   {% set nav_links_before = navigation_links_before_groups|default([]) %}
   {% set nav_links_after = navigation_links_after_groups|default([]) %}
+  {% set member_is_logged = member_is_authenticated|default(false) %}
+  {% set member_library_path = '/loja/biblioteca' %}
 
   <div class="nc-container nc-header-row">
     <a class="nc-brand" href="/" aria-label="CEDE - Início">
@@ -44,6 +46,9 @@
 
       {% for group in nav_groups %}
         {% set is_group_active = path starts with group.base %}
+        {% if group.key == 'loja' and member_is_logged and path == member_library_path %}
+          {% set is_group_active = false %}
+        {% endif %}
         <div class="nc-nav-group{{ is_group_active ? ' is-active' : '' }}" data-nav-group>
           <button class="nc-nav-group-toggle{{ is_group_active ? ' is-active' : '' }}" type="button" aria-expanded="false" aria-controls="nc-submenu-{{ group.key }}" {% if is_group_active %}aria-current="page"{% endif %}>
             <span class="nc-nav-link-content">
@@ -101,10 +106,10 @@
         {% endif %}
       {% endif %}
 
-      {% set member_is_logged = member_is_authenticated|default(false) %}
       {% if member_is_logged %}
         {% set member_has_panel_access = dashboard_is_authenticated|default(false) %}
-        {% set member_area_active = path starts with '/membro' or path starts with '/painel' %}
+        {% set member_library_active = path == member_library_path %}
+        {% set member_area_active = path starts with '/membro' or path starts with '/painel' or member_library_active %}
         {% set member_display_name = member_name|default('Membro') %}
         {% set member_role_label = member_role_name|default('Membro') %}
         {% set member_photo_path = member_profile_photo_path|default('') %}
@@ -135,6 +140,12 @@
               <span class="nc-nav-link-content">
                 {% include 'components/nav-icon.twig' with { icon_key: 'member-area' } only %}
                 <span>Minha Área</span>
+              </span>
+            </a>
+            <a class="nc-nav-submenu-link{{ member_library_active ? ' is-active' : '' }}" href="{{ member_library_path }}" {% if member_library_active %}aria-current="page"{% endif %}>
+              <span class="nc-nav-link-content">
+                {% include 'components/nav-icon.twig' with { icon_key: 'biblioteca' } only %}
+                <span>{{ labels['biblioteca']|default('BIBLIOTECA') }}</span>
               </span>
             </a>
             <a class="nc-nav-submenu-link{{ path starts with '/membro/perfil' ? ' is-active' : '' }}" href="/membro/perfil/completar" {% if path starts with '/membro/perfil' %}aria-current="page"{% endif %}>

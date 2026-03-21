@@ -60,19 +60,39 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
         $existingPdfPath = (string) ($existingBook['pdf_path'] ?? '');
         $existingPdfMimeType = (string) ($existingBook['pdf_mime_type'] ?? '');
         $existingPdfSizeBytes = (int) ($existingBook['pdf_size_bytes'] ?? 0);
+        $existingCoverImagePath = (string) ($existingBook['cover_image_path'] ?? '');
+        $existingCoverImageMimeType = (string) ($existingBook['cover_image_mime_type'] ?? '');
+        $existingCoverImageSizeBytes = (int) ($existingBook['cover_image_size_bytes'] ?? 0);
+        $removeCoverImageRequested = !empty($body['remove_cover_image']);
 
         $payload['pdf_path'] = $existingPdfPath;
         $payload['pdf_mime_type'] = $existingPdfMimeType !== '' ? $existingPdfMimeType : null;
         $payload['pdf_size_bytes'] = $existingPdfSizeBytes > 0 ? $existingPdfSizeBytes : null;
+        $payload['cover_image_path'] = $existingCoverImagePath;
+        $payload['cover_image_mime_type'] = $existingCoverImageMimeType !== '' ? $existingCoverImageMimeType : null;
+        $payload['cover_image_size_bytes'] = $existingCoverImageSizeBytes > 0 ? $existingCoverImageSizeBytes : null;
+        $payload['remove_cover_image'] = $removeCoverImageRequested;
+
+        if ($removeCoverImageRequested) {
+            $payload['cover_image_path'] = '';
+            $payload['cover_image_mime_type'] = null;
+            $payload['cover_image_size_bytes'] = null;
+        }
 
         $newPdfPath = '';
+        $newCoverImagePath = '';
+        $pdfUploadAttempted = false;
+        $pdfUploadFailed = false;
         $uploadedFiles = $request->getUploadedFiles();
         $pdfUpload = $uploadedFiles['pdf_file'] ?? null;
+        $coverUpload = $uploadedFiles['cover_image_file'] ?? null;
 
         if ($pdfUpload instanceof UploadedFileInterface && $pdfUpload->getError() !== UPLOAD_ERR_NO_FILE) {
+            $pdfUploadAttempted = true;
             $uploadResult = $this->storeBookPdf($pdfUpload);
 
             if (!empty($uploadResult['error'])) {
+                $pdfUploadFailed = true;
                 $errors[] = (string) $uploadResult['error'];
             } else {
                 $newPdfPath = (string) ($uploadResult['path'] ?? '');
@@ -82,7 +102,22 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             }
         }
 
-        if ((string) $payload['pdf_path'] === '') {
+        if ($coverUpload instanceof UploadedFileInterface && $coverUpload->getError() !== UPLOAD_ERR_NO_FILE) {
+            $coverUploadResult = $this->storeBookCover($coverUpload);
+
+            if (!empty($coverUploadResult['error'])) {
+                $errors[] = (string) $coverUploadResult['error'];
+            } else {
+                $removeCoverImageRequested = false;
+                $payload['remove_cover_image'] = false;
+                $newCoverImagePath = (string) ($coverUploadResult['path'] ?? '');
+                $payload['cover_image_path'] = $newCoverImagePath;
+                $payload['cover_image_mime_type'] = (string) ($coverUploadResult['mime_type'] ?? 'image/jpeg');
+                $payload['cover_image_size_bytes'] = (int) ($coverUploadResult['size_bytes'] ?? 0);
+            }
+        }
+
+        if ((string) $payload['pdf_path'] === '' && (!$pdfUploadAttempted || !$pdfUploadFailed)) {
             $errors[] = 'Envie o PDF do livro.';
         }
 
@@ -90,9 +125,19 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             if ($newPdfPath !== '') {
                 $this->deleteStoredPdfIfManaged($newPdfPath);
             }
+            if ($newCoverImagePath !== '') {
+                $this->deleteStoredBookCoverIfManaged($newCoverImagePath);
+            }
 
             $flashPayload = $payload;
-            unset($flashPayload['pdf_path'], $flashPayload['pdf_mime_type'], $flashPayload['pdf_size_bytes']);
+            unset(
+                $flashPayload['pdf_path'],
+                $flashPayload['pdf_mime_type'],
+                $flashPayload['pdf_size_bytes'],
+                $flashPayload['cover_image_path'],
+                $flashPayload['cover_image_mime_type'],
+                $flashPayload['cover_image_size_bytes']
+            );
 
             $this->storeSessionFlash($this->resolveFlashKey($bookId), [
                 'payload' => $flashPayload,
@@ -109,6 +154,13 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
                 if ($newPdfPath !== '' && $existingPdfPath !== '' && $existingPdfPath !== $newPdfPath) {
                     $this->deleteStoredPdfIfManaged($existingPdfPath);
                 }
+                if (
+                    ($newCoverImagePath !== '' || $removeCoverImageRequested)
+                    && $existingCoverImagePath !== ''
+                    && $existingCoverImagePath !== $newCoverImagePath
+                ) {
+                    $this->deleteStoredBookCoverIfManaged($existingCoverImagePath);
+                }
 
                 $this->storeSessionFlash(AdminLibraryBookListPageAction::FLASH_KEY, [
                     'status' => 'updated',
@@ -123,9 +175,19 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
                 if ($newPdfPath !== '') {
                     $this->deleteStoredPdfIfManaged($newPdfPath);
                 }
+                if ($newCoverImagePath !== '') {
+                    $this->deleteStoredBookCoverIfManaged($newCoverImagePath);
+                }
 
                 $flashPayload = $payload;
-                unset($flashPayload['pdf_path'], $flashPayload['pdf_mime_type'], $flashPayload['pdf_size_bytes']);
+                unset(
+                    $flashPayload['pdf_path'],
+                    $flashPayload['pdf_mime_type'],
+                    $flashPayload['pdf_size_bytes'],
+                    $flashPayload['cover_image_path'],
+                    $flashPayload['cover_image_mime_type'],
+                    $flashPayload['cover_image_size_bytes']
+                );
 
                 $this->storeSessionFlash($this->resolveFlashKey($bookId), [
                     'payload' => $flashPayload,
@@ -144,6 +206,9 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             if ($newPdfPath !== '') {
                 $this->deleteStoredPdfIfManaged($newPdfPath);
             }
+            if ($newCoverImagePath !== '') {
+                $this->deleteStoredBookCoverIfManaged($newCoverImagePath);
+            }
 
             $this->logger->warning('Falha ao salvar livro da biblioteca no admin.', [
                 'error' => $exception->getMessage(),
@@ -151,7 +216,14 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             ]);
 
             $flashPayload = $payload;
-            unset($flashPayload['pdf_path'], $flashPayload['pdf_mime_type'], $flashPayload['pdf_size_bytes']);
+            unset(
+                $flashPayload['pdf_path'],
+                $flashPayload['pdf_mime_type'],
+                $flashPayload['pdf_size_bytes'],
+                $flashPayload['cover_image_path'],
+                $flashPayload['cover_image_mime_type'],
+                $flashPayload['cover_image_size_bytes']
+            );
 
             $this->storeSessionFlash($this->resolveFlashKey($bookId), [
                 'payload' => $flashPayload,
@@ -209,6 +281,10 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             'language' => trim((string) ($input['language'] ?? '')),
             'description' => trim((string) ($input['description'] ?? '')),
             'status' => $status,
+            'cover_image_path' => '',
+            'cover_image_mime_type' => null,
+            'cover_image_size_bytes' => null,
+            'remove_cover_image' => !empty($input['remove_cover_image']),
         ];
     }
 
@@ -292,6 +368,9 @@ class AdminLibraryBookFormPageAction extends AbstractAdminLibraryAction
             'pdf_path' => $existingBook['pdf_path'] ?? '',
             'pdf_url' => $existingBook['pdf_url'] ?? '',
             'pdf_size_label' => $existingBook['pdf_size_label'] ?? '',
+            'cover_image_path' => $existingBook['cover_image_path'] ?? '',
+            'cover_image_url' => $existingBook['cover_image_url'] ?? '',
+            'remove_cover_image' => !empty($submittedPayload['remove_cover_image']),
         ];
 
         $categoryOptions = array_map(static function (array $category) use ($form): array {

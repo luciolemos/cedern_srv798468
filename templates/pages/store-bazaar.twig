@@ -1,0 +1,28 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section" aria-label="Bazar do CEDE" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Loja',
+        title: 'Bazar em preparação',
+        lead: 'Esta área ainda não foi publicada. O Bazar do CEDE está reservado no menu, mas segue em organização para uma futura liberação.'
+      } %}
+
+      <article class="nc-card nc-store-card nc-store-card-notice" data-aos="fade-up" data-aos-delay="90">
+        <span class="nc-store-status is-error">404</span>
+        <h2 class="nc-store-card-title">Página temporariamente indisponível</h2>
+        <p>Você chegou ao endereço reservado para o bazar. Mantivemos esta rota ativa com status <code>404</code> para sinalizar que a seção existe no planejamento do site, mas ainda não foi aberta ao público.</p>
+        <ul class="nc-store-card-list">
+          <li>O endereço já está incorporado à navegação principal.</li>
+          <li>Quando o bazar estiver pronto, esta página poderá ser substituída pela versão definitiva.</li>
+        </ul>
+        <div class="nc-actions is-stacked-mobile">
+          <a class="nc-btn nc-btn-primary" href="/loja/livraria">Ir para a Livraria</a>
+          <a class="nc-btn nc-btn-secondary" href="/loja">Voltar para Loja</a>
+          <a class="nc-btn nc-btn-secondary" href="/contato">Falar com o CEDE</a>
+        </div>
+      </article>
+    </section>
+  </main>
+{% endblock %}

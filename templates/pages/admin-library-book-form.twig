@@ -2,7 +2,7 @@
 
 {% set dashboard_page_kicker = 'Dashboard' %}
 {% set dashboard_page_title = library_book_form_is_edit ? 'Editar livro' : 'Novo livro' %}
-{% set dashboard_page_lead = 'Preencha os dados editoriais e envie o PDF do livro para a biblioteca pública.' %}
+{% set dashboard_page_lead = 'Preencha os dados editoriais, envie o PDF e opcionalmente inclua uma capa para enriquecer a vitrine pública.' %}
 
 {% block admin_content %}
     <section class="nc-section" aria-label="Formulário de livro da biblioteca" data-aos="fade-up" data-aos-delay="0">
@@ -117,6 +117,37 @@
           </div>
 
           <div class="nc-admin-form-grid">
+            <div class="nc-admin-form-field nc-library-admin-cover-field">
+              <label class="nc-admin-form-label" for="cover_image_file">Capa do livro</label>
+              <div class="nc-library-admin-cover-preview-wrap">
+                {% set admin_cover_image_url = library_book_form.cover_image_url|default('')|trim %}
+                {% set admin_cover_remove_requested = library_book_form.remove_cover_image|default(false) %}
+                {% if admin_cover_image_url and not admin_cover_remove_requested %}
+                  <img
+                    class="nc-library-admin-cover-preview"
+                    src="{{ admin_cover_image_url }}"
+                    alt="Pré-visualização da capa de {{ library_book_form.title|default('livro') }}"
+                  >
+                {% else %}
+                  {% include 'components/library-bookplate-fallback.twig' with {
+                    bookplate_title: library_book_form.title|default('livro'),
+                    bookplate_author: library_book_form.author_name|default(''),
+                    bookplate_modifier_class: 'is-admin-preview'
+                  } only %}
+                {% endif %}
+              </div>
+              <input class="nc-admin-form-input" id="cover_image_file" name="cover_image_file" type="file" accept="image/jpeg,image/png,image/webp">
+              {% if admin_cover_image_url %}
+                <label class="nc-admin-form-checkbox nc-library-admin-cover-remove-option">
+                  <input id="remove_cover_image" name="remove_cover_image" type="checkbox" value="1" {{ admin_cover_remove_requested ? 'checked' : '' }}>
+                  <span>Usar capa padrão do acervo neste livro</span>
+                </label>
+              {% endif %}
+              <p class="nc-admin-statute-meta">
+                Envie uma imagem JPG, PNG ou WEBP com até 5MB. Se nenhuma capa for cadastrada, ou se a opção acima for marcada, a vitrine exibirá a capa padrão do acervo.
+              </p>
+            </div>
+
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="language">Idioma</label>
               <input class="nc-admin-form-input" id="language" name="language" type="text" placeholder="Ex: Português" value="{{ library_book_form.language|default('') }}">

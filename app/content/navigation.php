@@ -9,6 +9,7 @@ return [
         'missao' => 'Missão',
         'valores' => 'Valores',
         'historia' => 'História',
+        'fundador' => 'Fundador',
         'estatuto' => 'Estatuto',
         'nossa-marca' => 'Nossa Marca',
         'gestao-cede' => 'Gestão CEDE',
@@ -20,6 +21,9 @@ return [
         'estudo-do-evangelho' => 'Estudo do Evangelho',
         'palestra-publica' => 'Palestra Pública',
         'juventude-espirita' => 'Juventude Espírita',
+        'loja' => 'LOJA',
+        'bazar' => 'BAZAR',
+        'livraria' => 'LIVRARIA',
         'faq' => 'FAQ',
         'biblioteca' => 'BIBLIOTECA',
         'doutrina' => 'Doutrina Espírita',
@@ -38,6 +42,7 @@ return [
                 ['path' => '/quem-somos/missao', 'key' => 'missao'],
                 ['path' => '/quem-somos/valores', 'key' => 'valores'],
                 ['path' => '/quem-somos/historia', 'key' => 'historia'],
+                ['path' => '/quem-somos/fundador', 'key' => 'fundador'],
                 ['path' => '/quem-somos/estatuto', 'key' => 'estatuto'],
                 ['path' => '/quem-somos/nossa-marca', 'key' => 'nossa-marca'],
                 ['path' => '/quem-somos/gestao-cede', 'key' => 'gestao-cede'],
@@ -63,6 +68,15 @@ return [
                 ['path' => '/agenda/juventude-espirita', 'key' => 'juventude-espirita'],
             ],
         ],
+        [
+            'key' => 'loja',
+            'base' => '/loja',
+            'items' => [
+                ['path' => '/loja', 'label' => 'Visão geral'],
+                ['path' => '/loja/bazar', 'key' => 'bazar'],
+                ['path' => '/loja/livraria', 'key' => 'livraria'],
+            ],
+        ],
     ],
     'links_before_groups' => [
         [
@@ -71,10 +85,6 @@ return [
         ],
     ],
     'links_after_groups' => [
-        [
-            'path' => '/biblioteca',
-            'key' => 'biblioteca',
-        ],
         [
             'path' => '/contato',
             'key' => 'contato',

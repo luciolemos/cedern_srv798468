@@ -1,0 +1,43 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section" aria-label="Loja do CEDE" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Loja',
+        title: 'Loja do CEDE',
+        lead: 'Organizamos nesta área as frentes públicas da loja institucional. As seções de bazar e livraria seguem em preparação.'
+      } %}
+
+      <div class="nc-store-grid" data-aos="fade-up" data-aos-delay="80">
+        <article class="nc-card nc-store-card">
+          <span class="nc-store-status is-soon">Em preparação</span>
+          <h2 class="nc-store-card-title">Bazar</h2>
+          <p>O bazar público ainda está sendo estruturado no site. Por enquanto, esta área funciona como uma página institucional de espera.</p>
+          <ul class="nc-store-card-list">
+            <li>Espaço reservado para futuras ofertas e campanhas.</li>
+            <li>Página dedicada já prevista no menu principal.</li>
+          </ul>
+          <div class="nc-actions is-stacked-mobile">
+            <a class="nc-btn nc-btn-secondary" href="/loja/bazar">Abrir Bazar</a>
+          </div>
+        </article>
+
+        <article class="nc-card nc-store-card">
+          <span class="nc-store-status is-soon">Em preparação</span>
+          <h2 class="nc-store-card-title">Livraria</h2>
+          <p>A área pública da livraria já está reservada na navegação, mas ainda está em organização para receber seus conteúdos e produtos.</p>
+          <ul class="nc-store-card-list">
+            <li>Espaço previsto para catálogo e novidades editoriais.</li>
+            <li>Estrutura pública pronta para futura publicação.</li>
+          </ul>
+          <div class="nc-actions is-stacked-mobile">
+            <a class="nc-btn nc-btn-primary" href="/loja/livraria">Abrir Livraria</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    {% include 'home/final-cta.twig' %}
+  </main>
+{% endblock %}

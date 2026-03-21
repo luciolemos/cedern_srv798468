@@ -3,18 +3,32 @@
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     {% set institutional = site.institutional|default({}) %}
+    {% set founder = homeContent.aboutPages.fundador|default({}) %}
 
     <section class="nc-section" aria-label="Detalhes institucionais">
       {% include 'components/section-header.twig' with {
         kicker: 'Quem Somos',
         title: 'Conheça nossa identidade',
-        lead: 'Acesse conteúdos específicos sobre missão, valores, história e estatuto do CEDE.'
+        lead: 'Acesse conteúdos específicos sobre missão, valores, história, fundador e estatuto do CEDE.'
       } %}
       <div class="nc-actions nc-tonal-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="120">
         <a class="nc-btn nc-btn-secondary" href="/quem-somos/missao">Missão</a>
         <a class="nc-btn nc-btn-secondary" href="/quem-somos/valores">Valores</a>
         <a class="nc-btn nc-btn-secondary" href="/quem-somos/historia">História</a>
+        <a class="nc-btn nc-btn-secondary" href="/quem-somos/fundador">Fundador</a>
         <a class="nc-btn nc-btn-secondary" href="/quem-somos/estatuto">Estatuto</a>
+      </div>
+    </section>
+
+    <section class="nc-section" aria-label="Fundador do CEDE" data-aos="fade-up" data-aos-delay="30">
+      {% include 'components/section-header.twig' with {
+        kicker: founder.kicker|default('Quem Somos'),
+        title: founder.title|default('Nosso Fundador'),
+        lead: founder.lead|default('Conheça a origem humana e espiritual que ajudou a dar início ao CEDE.')
+      } %}
+
+      <div class="nc-actions nc-tonal-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="140">
+        <a class="nc-btn nc-btn-primary" href="/quem-somos/fundador">Abrir página do fundador</a>
       </div>
     </section>
 

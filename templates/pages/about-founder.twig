@@ -1,0 +1,83 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    {% set founder_name = founder.name|default('')|trim %}
+    {% set founder_role = founder.role|default('Fundador do CEDE')|trim %}
+    {% set founder_photo = founder.photo|default('')|trim %}
+    {% set founder_intro = founder.intro|default([]) %}
+    {% set founder_topics = founder.topics|default([]) %}
+    {% set founder_quote = founder.quote|default('')|trim %}
+    {% set founder_quote_attribution = founder.quote_attribution|default('')|trim %}
+    {% set founder_display_name = founder_name != '' ? founder_name : founder.title|default('Nosso Fundador') %}
+    {% set founder_avatar_label = founder_name != '' ? founder_name : founder_display_name %}
+
+    <section class="nc-section nc-about-founder-page" aria-label="Página dedicada ao fundador" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: founder.kicker|default('Quem Somos'),
+        title: founder.title|default('Nosso Fundador'),
+        lead: founder.lead|default('Conheça mais sobre a pessoa que inspirou a origem do CEDE.')
+      } %}
+
+      <article class="nc-card nc-about-founder-profile" data-aos="fade-up" data-aos-delay="80">
+        <div class="nc-about-founder-profile-shell">
+          <div class="nc-about-founder-portrait-wrap">
+            {% if founder_photo %}
+              <img
+                class="nc-about-founder-portrait"
+                src="{{ founder_photo }}"
+                alt="{{ founder.photo_alt|default('Retrato do fundador do CEDE') }}"
+              >
+            {% else %}
+              <span class="nc-about-founder-portrait nc-about-founder-portrait-fallback" aria-hidden="true">
+                {{ founder_avatar_label|slice(0, 1)|upper }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="nc-about-founder-copy">
+            <div class="nc-about-founder-meta">
+              <h2 class="nc-about-founder-name">{{ founder_display_name }}</h2>
+              <p class="nc-about-founder-role">{{ founder_role }}</p>
+            </div>
+
+            <div class="nc-about-founder-intro">
+              {% for paragraph in founder_intro %}
+                <p>{{ paragraph }}</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {% if founder_quote %}
+        <blockquote class="nc-card nc-about-founder-quote" data-aos="fade-up" data-aos-delay="120">
+          <p>"{{ founder_quote }}"</p>
+          {% if founder_quote_attribution %}
+            <footer>{{ founder_quote_attribution }}</footer>
+          {% endif %}
+        </blockquote>
+      {% endif %}
+
+      {% if founder_topics|length > 0 %}
+        <section class="nc-section nc-about-founder-legacy" aria-label="Legado do fundador" data-aos="fade-up" data-aos-delay="140">
+          <ul class="nc-checklist">
+            {% for topic in founder_topics %}
+              {% include 'components/check-item.twig' with {
+                step: topic.step,
+                title: topic.title,
+                description: topic.description,
+                delay: topic.delay|default(160)
+              } %}
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="180">
+        <a class="nc-btn nc-btn-secondary" href="/quem-somos">Voltar para Quem Somos</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

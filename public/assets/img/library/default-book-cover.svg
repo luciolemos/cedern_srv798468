@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" role="img" aria-labelledby="title desc">
+  <title id="title">Capa padrão da Biblioteca do CEDE</title>
+  <desc id="desc">Capa institucional usada quando um livro da biblioteca não possui imagem própria.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4ecd7"/>
+      <stop offset="52%" stop-color="#ead8a6"/>
+      <stop offset="100%" stop-color="#c7902f"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff9eb" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#f3e5b9" stop-opacity="0.76"/>
+    </linearGradient>
+    <clipPath id="portraitClip">
+      <circle cx="300" cy="216" r="82"/>
+    </clipPath>
+  </defs>
+  <rect width="600" height="800" rx="36" fill="url(#bg)"/>
+  <rect x="38" y="38" width="524" height="724" rx="30" fill="none" stroke="#7d5415" stroke-opacity="0.5" stroke-width="4"/>
+  <rect x="78" y="94" width="444" height="612" rx="28" fill="url(#panel)" stroke="#8a6321" stroke-opacity="0.22" stroke-width="2"/>
+  <circle cx="300" cy="216" r="84" fill="#fffdf7" fill-opacity="0.82" stroke="#8a6321" stroke-opacity="0.22" stroke-width="3"/>
+  <image
+    href="/assets/img/allan_kardec.png"
+    x="218"
+    y="134"
+    width="164"
+    height="164"
+    preserveAspectRatio="xMidYMid slice"
+    clip-path="url(#portraitClip)"
+  />
+  <circle cx="300" cy="216" r="82" fill="none" stroke="#fff9eb" stroke-opacity="0.72" stroke-width="4"/>
+  <path d="M198 372h204" stroke="#a7741f" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+  <path d="M168 418h264" stroke="#a7741f" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+  <path d="M214 466h172" stroke="#a7741f" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+  <text x="300" y="565" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="54" fill="#5e3d0e" font-weight="700">BIBLIOTECA</text>
+  <text x="300" y="622" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" letter-spacing="5" fill="#7b5318">CENTRO DE ESTUDOS</text>
+  <text x="300" y="654" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="24" letter-spacing="5" fill="#7b5318">DA DOUTRINA ESPIRITA</text>
+</svg>

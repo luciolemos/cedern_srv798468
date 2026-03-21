@@ -6,6 +6,7 @@ use App\Application\Actions\Page\AboutPageAction;
 use App\Application\Actions\Page\AboutMissionPageAction;
 use App\Application\Actions\Page\AboutValuesPageAction;
 use App\Application\Actions\Page\AboutHistoryPageAction;
+use App\Application\Actions\Page\AboutFounderPageAction;
 use App\Application\Actions\Page\AboutStatutePageAction;
 use App\Application\Actions\Page\AboutBrandPageAction;
 use App\Application\Actions\Page\AboutManagementPageAction;
@@ -46,6 +47,9 @@ use App\Application\Actions\Page\FaqPracticesPageAction;
 use App\Application\Actions\Page\FraternalServicePageAction;
 use App\Application\Actions\Page\HomePageAction;
 use App\Application\Actions\Page\LibraryPageAction;
+use App\Application\Actions\Page\StoreBazaarPageAction;
+use App\Application\Actions\Page\StoreBookshopPageAction;
+use App\Application\Actions\Page\StorePageAction;
 use App\Application\Actions\Page\MemberCompleteProfilePageAction;
 use App\Application\Actions\Page\MemberEventInterestToggleAction;
 use App\Application\Actions\Page\MemberAdminAreaPageAction;
@@ -117,6 +121,31 @@ return function (App $app) {
         };
     };
 
+    $memberSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app): Response {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+
+        if (!empty($_SESSION['member_authenticated'])) {
+            return $handler->handle($request);
+        }
+
+        $requestedPath = trim($request->getUri()->getPath());
+        $requestedQuery = trim($request->getUri()->getQuery());
+        $redirectTarget = $requestedPath !== '' ? $requestedPath : '/';
+
+        if ($requestedQuery !== '') {
+            $redirectTarget .= '?' . $requestedQuery;
+        }
+
+        $response = $app->getResponseFactory()->createResponse(302);
+
+        return $response->withHeader(
+            'Location',
+            '/entrar?redirect_to=' . rawurlencode($redirectTarget)
+        );
+    };
+
     $app->options('/{routes:.*}', function (Request $request, Response $response) {
         // CORS Pre-Flight OPTIONS Request Handler
         return $response;
@@ -127,6 +156,7 @@ return function (App $app) {
     $app->get('/quem-somos/missao', AboutMissionPageAction::class);
     $app->get('/quem-somos/valores', AboutValuesPageAction::class);
     $app->get('/quem-somos/historia', AboutHistoryPageAction::class);
+    $app->get('/quem-somos/fundador', AboutFounderPageAction::class);
     $app->get('/quem-somos/estatuto', AboutStatutePageAction::class);
     $app->get('/quem-somos/nossa-marca', AboutBrandPageAction::class);
     $app->get('/quem-somos/gestao-cede', AboutManagementPageAction::class);
@@ -137,7 +167,16 @@ return function (App $app) {
     $app->get('/agenda', AgendaPageAction::class);
     $app->get('/agenda/{slug}', AgendaDetailPageAction::class);
     $app->get('/agenda/{slug}/ics', AgendaEventIcsDownloadAction::class);
-    $app->get('/biblioteca', LibraryPageAction::class);
+    $app->get('/loja', StorePageAction::class);
+    $app->get('/loja/bazar', StoreBazaarPageAction::class);
+    $app->get('/loja/livraria', StoreBookshopPageAction::class);
+    $app->get('/loja/biblioteca', LibraryPageAction::class)->add($memberSessionAuthMiddleware);
+    $app->get('/biblioteca', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/loja/biblioteca' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
     $app->map(['GET', 'POST'], '/cadastro', MemberRegisterPageAction::class);
     $app->map(['GET', 'POST'], '/entrar', MemberLoginPageAction::class);
     $app->map(['GET', 'POST'], '/esqueci-senha', MemberForgotPasswordPageAction::class);
@@ -335,6 +374,7 @@ return function (App $app) {
             ['template' => 'pages/about.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/about-detail.twig', 'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['missao'] ?? []]],
             ['template' => 'pages/about-detail.twig', 'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['estatuto'] ?? []]],
+            ['template' => 'pages/about-founder.twig', 'context' => ['homeContent' => $homeContent, 'founder' => $homeContent['aboutPages']['fundador'] ?? []]],
             ['template' => 'pages/about-statute.twig', 'context' => ['homeContent' => $homeContent, 'statute' => (require __DIR__ . '/content/statute.php')]],
             ['template' => 'pages/legal-document.twig', 'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/privacy-policy.php')]],
             ['template' => 'pages/legal-document.twig', 'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/terms-of-use.php')]],
@@ -348,6 +388,9 @@ return function (App $app) {
             ['template' => 'pages/admin-library-category-form.twig', 'context' => ['library_category_form' => []]],
             ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
+            ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],
+            ['template' => 'pages/store-bazaar.twig', 'context' => ['homeContent' => $homeContent]],
+            ['template' => 'pages/store-bookshop.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/faq.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/faq-category.twig', 'context' => ['homeContent' => $homeContent, 'faq_category_slug' => 'doutrina']],
             ['template' => 'pages/contact.twig', 'context' => ['homeContent' => $homeContent]],

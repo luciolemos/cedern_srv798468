@@ -1,15 +1,27 @@
-<section class="nc-section nc-home-hero" aria-label="Hero principal" data-aos="fade-up" data-aos-delay="0">
-  {% set hero = homeContent.sections.hero|default({}) %}
-  {% set hero_actions = homeContent.heroActions|default([]) %}
-  {% set hero_metrics = homeContent.heroMetrics|default([]) %}
-  {% set hero_qr_url = hero.qrUrl|default('') %}
-  {% set hero_qr_image = hero.qrImage|default('') %}
-  {% set hero_panel_enabled = hero.showPanel is defined ? hero.showPanel : true %}
-  {% set hero_panel_has_content = hero_metrics|length > 0 or (hero_qr_url and hero_qr_image) %}
-  {% set show_hero_panel = hero_panel_enabled and hero_panel_has_content %}
+{% set hero = homeContent.sections.hero|default({}) %}
+{% set hero_actions = homeContent.heroActions|default([]) %}
+{% set hero_metrics = homeContent.heroMetrics|default([]) %}
+{% set hero_qr_url = hero.qrUrl|default('') %}
+{% set hero_qr_image = hero.qrImage|default('') %}
+{% set hero_image_src = hero.imageSrc|default('') %}
+{% set hero_image_alt = hero.imageAlt|default(hero.title|default('CEDE')) %}
+{% set hero_panel_enabled = hero.showPanel is defined ? hero.showPanel : true %}
+{% set hero_panel_has_content = hero_metrics|length > 0 or (hero_qr_url and hero_qr_image) %}
+{% set show_hero_panel = hero_panel_enabled and hero_panel_has_content %}
+
+<section
+  class="nc-section nc-home-hero{% if hero_image_src %} has-background-image{% endif %}"
+  aria-label="Hero principal"
+  data-aos="fade-up"
+  data-aos-delay="0"
+  {% if hero_image_src %}style="--nc-hero-bg-image: url('{{ hero_image_src|e('html_attr') }}');"{% endif %}
+>
 
   <div class="nc-hero-grid{% if not show_hero_panel %} is-single-column{% endif %}">
     <div data-aos="fade-up" data-aos-delay="80">
+      {% if hero_image_src %}
+        <span class="nc-sr-only">{{ hero_image_alt }}</span>
+      {% endif %}
       <p class="nc-section-kicker">{{ hero.kicker|default('Início') }}</p>
       {% if hero.badge|default('') %}
         <span class="nc-badge">{{ hero.badge }}</span>

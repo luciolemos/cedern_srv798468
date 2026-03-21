@@ -159,6 +159,10 @@ APP_DEFAULT_THEME=amber
 APP_DEFAULT_MODE=light
 APP_DEFAULT_DARK_INTENSITY=neutral
 APP_AGENDA_PUBLIC_LIMIT=12
+LIBRARY_UPLOAD_DIR=public/assets/docs/library
+LIBRARY_UPLOAD_PUBLIC_PREFIX=assets/docs/library
+LIBRARY_COVER_UPLOAD_DIR=public/assets/img/library-covers
+LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX=assets/img/library-covers
 ```
 
 Valores válidos:
@@ -167,6 +171,10 @@ Valores válidos:
 - `APP_DEFAULT_MODE`: `light | dark`
 - `APP_DEFAULT_DARK_INTENSITY`: `neutral | vivid`
 - `APP_AGENDA_PUBLIC_LIMIT`: quantidade de eventos futuros exibidos em `/agenda` (mínimo `1`, máximo `100`)
+- `LIBRARY_UPLOAD_DIR`: diretório físico onde os PDFs da Biblioteca serão gravados; pode ser relativo ao projeto ou absoluto
+- `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `pdf_path` e usado nas URLs do site, por exemplo `assets/docs/library`
+- `LIBRARY_COVER_UPLOAD_DIR`: diretório físico onde as capas da Biblioteca serão gravadas; pode ser relativo ao projeto ou absoluto
+- `LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `assets/img/library-covers`
 
 ## Acesso administrativo via membros
 

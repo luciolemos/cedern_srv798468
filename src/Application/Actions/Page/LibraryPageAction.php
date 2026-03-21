@@ -40,6 +40,9 @@ class LibraryPageAction extends AbstractPageAction
     {
         $books = [];
         $categories = [];
+        $basePath = rtrim((string) $request->getUri()->getPath(), '/');
+        $basePath = $basePath !== '' ? $basePath : '/biblioteca';
+        $pageUrlBase = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
 
         try {
             $books = $this->libraryRepository->findPublishedBooks();
@@ -125,7 +128,6 @@ class LibraryPageAction extends AbstractPageAction
         $startItem = $totalBooks > 0 ? $offset + 1 : 0;
         $endItem = $totalBooks > 0 ? min($offset + count($books), $totalBooks) : 0;
 
-        $basePath = '/biblioteca';
         $baseQuery = [
             'q' => $searchTerm,
             'category' => $selectedCategory,
@@ -177,6 +179,8 @@ class LibraryPageAction extends AbstractPageAction
                 'search' => $searchTerm,
                 'category' => $selectedCategory,
                 'sort' => $selectedSort,
+                'page_size' => $pageSize,
+                'base_path' => $basePath,
                 'sort_options' => $sortOptions,
                 'page_size_options' => $pageSizeOptions,
             ],
@@ -191,8 +195,10 @@ class LibraryPageAction extends AbstractPageAction
                 'next_url' => $nextPageUrl,
             ],
             'page_title' => 'Biblioteca | CEDE',
-            'page_url' => 'https://cedern.org/biblioteca',
-            'page_description' => 'Consulte o acervo digital da biblioteca do CEDE e acesse livros em PDF para estudo doutrinário.',
+            'page_url' => $pageUrlBase . $basePath,
+            'page_description' =>
+                'Consulte o acervo digital da biblioteca do CEDE '
+                . 'e acesse livros em PDF para estudo doutrinário.',
         ]);
     }
 }
