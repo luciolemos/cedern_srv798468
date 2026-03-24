@@ -1,0 +1,60 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = bookshop_category_form_is_edit ? 'Editar categoria da livraria' : 'Nova categoria da livraria' %}
+{% set dashboard_page_lead = 'Defina as categorias de estudo usadas para organizar o acervo físico da livraria.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário de categoria da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% if bookshop_category_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in bookshop_category_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/categorias">Voltar</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <form class="nc-admin-form" method="post" action="{{ bookshop_category_form_is_edit ? '/painel/livraria/categorias/' ~ bookshop_category_id ~ '/editar' : '/painel/livraria/categorias/nova' }}">
+        <div class="nc-admin-form-grid nc-admin-form-grid-triplet">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="name">Nome da categoria</label>
+            <input class="nc-admin-form-input" id="name" name="name" type="text" required placeholder="Ex: Obras básicas" value="{{ bookshop_category_form.name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="slug">Slug</label>
+            <input class="nc-admin-form-input" id="slug" name="slug" type="text" placeholder="Ex: obras-basicas" value="{{ bookshop_category_form.slug|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="is_active">Status</label>
+            <select class="nc-admin-form-input" id="is_active" name="is_active" required>
+              <option value="" {% if bookshop_category_form.is_active|default('') == '' %}selected{% endif %} disabled>Selecione status</option>
+              <option value="1" {{ bookshop_category_form.is_active == '1' ? 'selected' : '' }}>Ativa</option>
+              <option value="0" {{ bookshop_category_form.is_active == '0' ? 'selected' : '' }}>Inativa</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">Descrição</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="4" placeholder="Explique o tipo de obras que pertencem a esta categoria.">{{ bookshop_category_form.description|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_category_form_is_edit ? 'Salvar alterações' : 'Criar categoria' }}</button>
+          <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/livraria/categorias">Voltar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

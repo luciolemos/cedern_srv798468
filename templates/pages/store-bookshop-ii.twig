@@ -1,0 +1,446 @@
+{% extends 'layouts/base.twig' %}
+
+{% block head %}
+  {{ parent() }}
+  <script src="/assets/js/cedern-library-lightbox.js?v={{ app_asset_version|default('1') }}" defer></script>
+  <script src="/assets/js/cedern-library-knowledge.js?v={{ app_asset_version|default('1') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    {% set site_contact = site.contact|default({}) %}
+    {% set filters = bookshop_filters|default({}) %}
+    {% set pagination = bookshop_pagination|default({}) %}
+    {% set catalog_stats = bookshop_catalog_stats|default({}) %}
+    {% set bookshop_base_path = filters.base_path|default('/loja/livraria-ii') %}
+    {% set active_filter_count = 0 %}
+    {% set has_active_toolbar_filters = false %}
+    {% if filters.search|default('') %}
+      {% set active_filter_count = active_filter_count + 1 %}
+      {% set has_active_toolbar_filters = true %}
+    {% endif %}
+    {% if filters.category|default('') %}
+      {% set active_filter_count = active_filter_count + 1 %}
+      {% set has_active_toolbar_filters = true %}
+    {% endif %}
+    {% if filters.genre|default('') %}
+      {% set active_filter_count = active_filter_count + 1 %}
+      {% set has_active_toolbar_filters = true %}
+    {% endif %}
+    {% if filters.sort|default('title_asc') != 'title_asc' %}
+      {% set has_active_toolbar_filters = true %}
+    {% endif %}
+    {% if filters.page_size|default(12) != 12 %}
+      {% set has_active_toolbar_filters = true %}
+    {% endif %}
+
+    <section class="nc-section nc-about-detail-copy" aria-label="Livraria II do CEDE">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Loja | Livraria II',
+        title: 'Livraria do CEDE',
+        lead: 'Uma segunda visualização da vitrine, em lista, para consultar obras, disponibilidade e ficha técnica com leitura mais direta.'
+      } %}
+
+      <div class="nc-library-overview nc-bookshop-overview">
+        <article class="nc-card nc-library-overview-card nc-library-overview-card-primary nc-bookshop-overview-card-primary">
+          <p class="nc-library-overview-kicker">Leitura em lista</p>
+          <h3 class="nc-library-overview-title">Uma versão alternativa da vitrine para comparar títulos com mais rapidez</h3>
+          <p class="nc-library-overview-copy">
+            Esta versão organiza o catálogo em linhas, com acesso rápido aos dados principais de cada obra e uma ficha técnica expansível para aprofundar a consulta.
+          </p>
+          {% if site_contact.address|default('') %}
+            <p class="nc-bookshop-presential-note">{{ site_contact.address }}</p>
+          {% endif %}
+          <div class="nc-actions is-stacked-mobile">
+            <a class="nc-btn nc-btn-primary" href="/loja/livraria">Ver vitrine atual</a>
+            <a class="nc-btn nc-btn-secondary" href="/contato">Falar com o CEDE</a>
+          </div>
+        </article>
+
+        <div class="nc-library-overview-grid">
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ pagination.total_items|default(0) }}</p>
+            <p class="nc-library-stat-label">titulos no catalogo</p>
+          </article>
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ bookshop_categories|default([])|length }}</p>
+            <p class="nc-library-stat-label">categorias ativas</p>
+          </article>
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ bookshop_genres|default([])|length }}</p>
+            <p class="nc-library-stat-label">gêneros ativos</p>
+          </article>
+          <article class="nc-card nc-library-overview-card">
+            <p class="nc-library-stat-value">{{ catalog_stats.available_titles|default(0) }}</p>
+            <p class="nc-library-stat-label">titulos com disponibilidade</p>
+          </article>
+        </div>
+      </div>
+
+      <article class="nc-card nc-library-filter-shell">
+        <div class="nc-library-filter-copy">
+          <p class="nc-library-overview-kicker">Refinar o catálogo</p>
+          <h3 class="nc-library-filter-title">Busque por obra, autor, coleção, categoria ou gênero</h3>
+          <p class="nc-library-filter-lead">Use os filtros para encontrar um título e depois venha ao balcão do CEDE para adquirir seu exemplar.</p>
+        </div>
+
+        <form class="nc-library-filter-form nc-admin-login-form" method="get" action="{{ bookshop_base_path }}">
+          <div class="nc-admin-table-search nc-library-filter-toolbar">
+            <label class="nc-admin-login-label" for="nc-bookshop-ii-search">Buscar livros</label>
+            <div class="nc-admin-table-search-controls nc-library-filter-toolbar-controls">
+              <input class="nc-admin-login-input nc-library-filter-toolbar-input" id="nc-bookshop-ii-search" name="q" type="search" value="{{ filters.search|default('') }}" placeholder="Título, autor, coleção, editora, ISBN, gênero ou categoria...">
+              <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Aplicar filtros</button>
+              {% if has_active_toolbar_filters %}
+                <a class="nc-btn nc-btn-secondary nc-admin-login-back" href="{{ bookshop_base_path }}">Limpar</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="nc-library-filter-grid">
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-bookshop-ii-genre">Gênero</label>
+              <select class="nc-admin-login-input" id="nc-bookshop-ii-genre" name="genre" aria-label="Filtrar por gênero">
+                <option value="">Todos os gêneros</option>
+                {% for option in bookshop_genres|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-bookshop-ii-category">Categoria</label>
+              <select class="nc-admin-login-input" id="nc-bookshop-ii-category" name="category" aria-label="Filtrar por categoria">
+                <option value="">Todas as categorias</option>
+                {% for option in bookshop_categories|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-bookshop-ii-sort">Ordenação</label>
+              <select class="nc-admin-login-input" id="nc-bookshop-ii-sort" name="sort" aria-label="Ordenar livros">
+                {% for option in filters.sort_options|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-login-field">
+              <label class="nc-admin-login-label" for="nc-bookshop-ii-page-size">Quantidade</label>
+              <select class="nc-admin-login-input" id="nc-bookshop-ii-page-size" name="per_page" aria-label="Quantidade de livros por página">
+                {% for option in filters.page_size_options|default([]) %}
+                  <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }} por página</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
+      </article>
+
+      {% if bookshop_books|default([])|length > 0 %}
+        <div class="nc-library-results-bar">
+          <div>
+            <p class="nc-library-results-title">Catálogo disponível</p>
+            <p class="nc-library-results-count">
+              Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} títulos
+            </p>
+          </div>
+
+          <div class="nc-library-active-filters">
+            {% if filters.search|default('') %}
+              <span class="nc-library-active-chip">Busca: {{ filters.search }}</span>
+            {% endif %}
+            {% if filters.category|default('') %}
+              {% for option in bookshop_categories|default([]) %}
+                {% if option.selected %}
+                  <span class="nc-library-active-chip">Categoria: {{ option.label }}</span>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if filters.genre|default('') %}
+              {% for option in bookshop_genres|default([]) %}
+                {% if option.selected %}
+                  <span class="nc-library-active-chip">Gênero: {{ option.label }}</span>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if active_filter_count > 0 %}
+              <span class="nc-library-active-chip">{{ active_filter_count }} filtro{% if active_filter_count > 1 %}s{% endif %} ativo{% if active_filter_count > 1 %}s{% endif %}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="nc-knowledge-list-head nc-bookshop-ii-list-head" aria-hidden="true">
+          <span>Capa</span>
+          <span>Livro</span>
+          <span>Atendimento</span>
+        </div>
+
+        <div class="nc-list nc-library-list nc-knowledge-list nc-bookshop-ii-list">
+          {% for book in bookshop_books %}
+            {% set cover_image_url = book.cover_image_url|default('')|trim %}
+            {% set volume_label = '' %}
+            {% if book.volume_number|default(null) %}
+              {% set volume_label = 'Vol. ' ~ book.volume_number %}
+            {% endif %}
+            {% if book.volume_label|default('') %}
+              {% set volume_label = volume_label ? volume_label ~ ' · ' ~ book.volume_label : book.volume_label %}
+            {% endif %}
+            <article class="nc-card nc-library-card nc-knowledge-row nc-bookshop-ii-row" id="livraria-{{ book.slug|default('item-' ~ loop.index) }}">
+              <div class="nc-library-card-shell nc-knowledge-row-shell nc-bookshop-ii-row-shell">
+                <button
+                  class="nc-library-bookplate-trigger nc-knowledge-row-cover nc-bookshop-ii-row-cover"
+                  type="button"
+                  aria-label="Ampliar capa de {{ book.title }}"
+                  aria-haspopup="dialog"
+                  data-library-cover-trigger
+                  data-library-cover-title="{{ book.title|e('html_attr') }}"
+                  data-library-cover-author="{{ book.author_name|default('')|e('html_attr') }}"
+                >
+                  <div class="nc-library-bookplate{% if not cover_image_url %} is-default{% endif %}">
+                    {% if cover_image_url %}
+                      <img
+                        class="nc-library-bookplate-image"
+                        src="{{ cover_image_url }}"
+                        alt="Capa de {{ book.title }}"
+                        loading="lazy"
+                      >
+                    {% else %}
+                      {% include 'components/library-bookplate-fallback.twig' with {
+                        bookplate_title: book.title,
+                        bookplate_author: book.author_name|default(''),
+                        bookplate_collection_label: 'Livraria CEDE',
+                        bookplate_section_title: 'Livraria'
+                      } only %}
+                    {% endif %}
+                  </div>
+                </button>
+
+                <div class="nc-knowledge-row-main">
+                  <div class="nc-library-card-topline">
+                    <span class="nc-library-category-badge">{{ book.category_name|default('Categoria não informada') }}</span>
+                  </div>
+
+                  <h3 class="nc-library-card-title">{{ book.title }}</h3>
+                  {% if book.subtitle|default('') %}
+                    <p class="nc-library-card-subtitle">{{ book.subtitle }}</p>
+                  {% endif %}
+                  <p class="nc-library-card-author">{{ book.author_name|default('Autoria não informada') }}</p>
+
+                  {% if book.collection_name|default('') or book.genre_name|default('') or book.publisher_name|default('') or book.publication_year|default('') or book.isbn|default('') %}
+                    <dl class="nc-knowledge-data-list">
+                      {% if book.collection_name|default('') %}
+                        <div>
+                          <dt>Coleção</dt>
+                          <dd>{{ book.collection_name }}{% if volume_label %} · {{ volume_label }}{% endif %}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.genre_name|default('') %}
+                        <div>
+                          <dt>Gênero</dt>
+                          <dd>{{ book.genre_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.publisher_name|default('') or book.publication_year|default('') %}
+                        <div>
+                          <dt>Publicação</dt>
+                          <dd>{{ book.publisher_name|default('Editora não informada') }}{% if book.publication_year|default('') %} · {{ book.publication_year }}{% endif %}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.isbn|default('') %}
+                        <div>
+                          <dt>ISBN</dt>
+                          <dd class="nc-knowledge-data-mono">{{ book.isbn }}</dd>
+                        </div>
+                      {% endif %}
+                    </dl>
+                  {% endif %}
+                </div>
+
+                <div class="nc-actions nc-library-card-actions nc-knowledge-row-actions nc-bookshop-ii-actions is-stacked-mobile">
+                  <p class="nc-knowledge-row-column-title">Atendimento</p>
+                  {% if book.has_reference_price %}
+                    <p class="nc-knowledge-row-file-meta">Valor de referência {{ book.sale_price_label }}</p>
+                  {% else %}
+                    <p class="nc-knowledge-row-file-meta">Valor informado presencialmente no balcão</p>
+                  {% endif %}
+                  <p class="nc-knowledge-row-file-meta">
+                    <span class="nc-store-status {{ book.store_availability_class|default('is-live') }}">{{ book.store_availability_label|default('Disponível no balcão') }}</span>
+                  </p>
+                  <button
+                    class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn nc-knowledge-toggle"
+                    type="button"
+                    data-knowledge-toggle
+                    aria-expanded="false"
+                    aria-controls="nc-bookshop-ii-details-{{ book.id|default(loop.index) }}"
+                  >
+                    <span class="nc-knowledge-toggle-icon" aria-hidden="true">+</span>
+                    <span class="nc-knowledge-toggle-label">Ficha técnica</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="nc-knowledge-details-panel" id="nc-bookshop-ii-details-{{ book.id|default(loop.index) }}" hidden>
+                <div class="nc-knowledge-details-grid">
+                  <article class="nc-knowledge-details-card">
+                    <h4 class="nc-knowledge-details-title">Dados da obra</h4>
+                    <dl class="nc-knowledge-details-list">
+                      <div>
+                        <dt>Título</dt>
+                        <dd>{{ book.title }}</dd>
+                      </div>
+                      {% if book.subtitle|default('') %}
+                        <div>
+                          <dt>Subtítulo</dt>
+                          <dd>{{ book.subtitle }}</dd>
+                        </div>
+                      {% endif %}
+                      <div>
+                        <dt>Autor</dt>
+                        <dd>{{ book.author_name|default('Não informado') }}</dd>
+                      </div>
+                      <div>
+                        <dt>Categoria</dt>
+                        <dd>{{ book.category_name|default('Não informada') }}</dd>
+                      </div>
+                      {% if book.genre_name|default('') %}
+                        <div>
+                          <dt>Gênero</dt>
+                          <dd>{{ book.genre_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.collection_name|default('') %}
+                        <div>
+                          <dt>Coleção</dt>
+                          <dd>{{ book.collection_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if volume_label %}
+                        <div>
+                          <dt>Volume</dt>
+                          <dd>{{ volume_label }}</dd>
+                        </div>
+                      {% endif %}
+                    </dl>
+                  </article>
+
+                  <article class="nc-knowledge-details-card">
+                    <h4 class="nc-knowledge-details-title">Edição e venda</h4>
+                    <dl class="nc-knowledge-details-list">
+                      {% if book.publisher_name|default('') %}
+                        <div>
+                          <dt>Editora</dt>
+                          <dd>{{ book.publisher_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.edition_label|default('') %}
+                        <div>
+                          <dt>Edição</dt>
+                          <dd>{{ book.edition_label }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.publication_year|default('') %}
+                        <div>
+                          <dt>Ano</dt>
+                          <dd>{{ book.publication_year }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.page_count|default(0) %}
+                        <div>
+                          <dt>Páginas</dt>
+                          <dd>{{ book.page_count }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.language|default('') %}
+                        <div>
+                          <dt>Idioma</dt>
+                          <dd>{{ book.language }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.isbn|default('') %}
+                        <div>
+                          <dt>ISBN</dt>
+                          <dd class="nc-knowledge-data-mono">{{ book.isbn }}</dd>
+                        </div>
+                      {% endif %}
+                      <div>
+                        <dt>Situação</dt>
+                        <dd>{{ book.store_availability_label|default('Disponível no balcão') }}</dd>
+                      </div>
+                      <div>
+                        <dt>Preço</dt>
+                        <dd>{{ book.has_reference_price ? book.sale_price_label : 'Informado presencialmente no balcão' }}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  {% if book.description|default('') %}
+                    <article class="nc-knowledge-details-card is-full">
+                      <h4 class="nc-knowledge-details-title">Sinopse</h4>
+                      <p class="nc-knowledge-details-copy">{{ book.description }}</p>
+                    </article>
+                  {% endif %}
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+
+        {% if pagination.total_pages|default(1) > 1 %}
+          <nav class="nc-admin-pagination nc-bookshop-pagination" aria-label="Paginação da livraria II">
+            {% if pagination.previous_url %}
+              <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+            {% else %}
+              <span class="is-disabled">← Anterior</span>
+            {% endif %}
+
+            <div class="nc-admin-pagination-pages">
+              {% for link in pagination.links|default([]) %}
+                <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+              {% endfor %}
+            </div>
+
+            {% if pagination.next_url %}
+              <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+            {% else %}
+              <span class="is-disabled">Próxima →</span>
+            {% endif %}
+          </nav>
+        {% endif %}
+      {% else %}
+        <article class="nc-card nc-library-empty-state">
+          <p class="nc-library-empty">
+            {{ filters.search|default('') or filters.category|default('') or filters.genre|default('') ? 'Nenhum título encontrado para os filtros informados.' : 'A vitrine da livraria ainda não possui títulos publicados no momento.' }}
+          </p>
+          <div class="nc-actions is-stacked-mobile">
+            <a class="nc-btn nc-btn-primary" href="/loja/livraria">Ver vitrine atual</a>
+            <a class="nc-btn nc-btn-secondary" href="/loja">Voltar para Loja</a>
+          </div>
+        </article>
+      {% endif %}
+
+      <article class="nc-card nc-bookshop-presential-card">
+        <span class="nc-store-status is-live">Venda presencial</span>
+        <h3 class="nc-store-card-title">Atendimento no balcão da Livraria do CEDE</h3>
+        <p>A vitrine é apenas informativa. A compra, a conferência final de disponibilidade e a retirada do livro acontecem diretamente no CEDE.</p>
+        <div class="nc-actions is-stacked-mobile">
+          <a class="nc-btn nc-btn-primary" href="/contato">Tirar dúvidas</a>
+          {% if site_contact.mapUrl|default('') %}
+            <a class="nc-btn nc-btn-secondary" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
+          {% endif %}
+        </div>
+      </article>
+
+      <dialog class="nc-library-cover-dialog" data-library-cover-dialog aria-label="Visualizador de capa">
+        <div class="nc-library-cover-dialog-shell">
+          <button class="nc-library-cover-dialog-close" type="button" data-library-cover-close aria-label="Fechar visualização da capa">Fechar</button>
+          <div class="nc-library-cover-dialog-stage" data-library-cover-stage></div>
+          <p class="nc-library-cover-dialog-caption" data-library-cover-caption hidden></p>
+        </div>
+      </dialog>
+    </section>
+
+    {% include 'home/final-cta.twig' %}
+  </main>
+{% endblock %}

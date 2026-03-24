@@ -1,0 +1,265 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = bookshop_book_form_is_edit ? 'Editar item do acervo' : 'Novo item do acervo' %}
+{% set dashboard_page_lead = 'Preencha os dados do livro vendido no balcão, envie opcionalmente a capa e mantenha o estoque alinhado com o controle operacional.' %}
+
+{% block head %}
+  <script src="/assets/js/cedern-bookshop-cover-preview.js?v={{ app_asset_version|default('1') }}" defer></script>
+{% endblock %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário do acervo da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% if bookshop_book_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in bookshop_book_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar">Importar CSV</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Ver vendas</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      {% if bookshop_book_form_is_edit %}
+        <div class="nc-bookshop-form-metrics">
+          <div class="nc-bookshop-form-metric">
+            <span class="nc-metric-label">Saldo em custo</span>
+            <strong>{{ bookshop_book_form.inventory_value_label|default('R$ 0,00') }}</strong>
+          </div>
+          <div class="nc-bookshop-form-metric">
+            <span class="nc-metric-label">Potencial de venda</span>
+            <strong>{{ bookshop_book_form.potential_revenue_label|default('R$ 0,00') }}</strong>
+          </div>
+        </div>
+      {% endif %}
+
+      <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="{{ bookshop_book_form_is_edit ? '/painel/livraria/acervo/' ~ bookshop_book_id ~ '/editar' : '/painel/livraria/acervo/novo' }}" data-bookshop-cover-preview-form>
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-header">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="sku">SKU <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="sku" name="sku" type="text" required placeholder="Ex: CEDE-LIV-001" value="{{ bookshop_book_form.sku|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="slug">Slug</label>
+            <input class="nc-admin-form-input" id="slug" name="slug" type="text" placeholder="Ex: livro-dos-espiritos-kardec-001" value="{{ bookshop_book_form.slug|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="status">Status <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <select class="nc-admin-form-input" id="status" name="status" required>
+              <option value="active" {{ bookshop_book_form.status|default('active') == 'active' ? 'selected' : '' }}>Ativo</option>
+              <option value="inactive" {{ bookshop_book_form.status|default('active') == 'inactive' ? 'selected' : '' }}>Inativo</option>
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="language">Idioma</label>
+            <select class="nc-admin-form-input" id="language" name="language">
+              <option value="" {% if bookshop_book_form.language|default('') == '' %}selected{% endif %}>Selecione um idioma</option>
+              {% for language in bookshop_book_language_options|default([]) %}
+                <option value="{{ language }}" {{ bookshop_book_form.language|default('') == language ? 'selected' : '' }}>{{ language }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="title">Título <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="title" name="title" type="text" required placeholder="Ex: O Livro dos Espíritos" value="{{ bookshop_book_form.title|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="subtitle">Subtítulo</label>
+            <input class="nc-admin-form-input" id="subtitle" name="subtitle" type="text" placeholder="Ex: Filosofia espiritualista" value="{{ bookshop_book_form.subtitle|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-classification">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="author_name">Autor <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="author_name" name="author_name" type="text" required placeholder="Ex: Allan Kardec" value="{{ bookshop_book_form.author_name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="collection_id">Coleção</label>
+            <select class="nc-admin-form-input" id="collection_id" name="collection_id">
+              <option value="" {% if bookshop_book_form.collection_id|default('0') in ['0', ''] %}selected{% endif %}>Selecione uma coleção</option>
+              {% for collection in bookshop_book_collections|default([]) %}
+                <option value="{{ collection.id }}" {{ bookshop_book_form.collection_id|default('0') == collection.id ? 'selected' : '' }}>{{ collection.label }}</option>
+              {% endfor %}
+            </select>
+            {% if bookshop_book_collections|default([])|length == 0 %}
+              <small>Cadastre coleções se quiser vincular séries e volumes do acervo.</small>
+            {% endif %}
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="genre_id">Gênero</label>
+            <select class="nc-admin-form-input" id="genre_id" name="genre_id">
+              <option value="" {% if bookshop_book_form.genre_id|default('0') in ['0', ''] %}selected{% endif %}>Selecione um gênero</option>
+              {% for genre in bookshop_book_genres|default([]) %}
+                <option value="{{ genre.id }}" {{ bookshop_book_form.genre_id|default('0') == genre.id ? 'selected' : '' }}>{{ genre.label }}</option>
+              {% endfor %}
+            </select>
+            {% if bookshop_book_genres|default([])|length == 0 %}
+              <small>Cadastre gêneros se quiser classificar o item por linha editorial.</small>
+            {% endif %}
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="category_id">Categoria <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <select class="nc-admin-form-input" id="category_id" name="category_id" required>
+              <option value="" {% if bookshop_book_form.category_id|default('0') in ['0', ''] %}selected{% endif %} disabled>Selecione uma categoria</option>
+              {% for category in bookshop_book_categories|default([]) %}
+                <option value="{{ category.id }}" {{ bookshop_book_form.category_id|default('0') == category.id ? 'selected' : '' }}>{{ category.label }}</option>
+              {% endfor %}
+            </select>
+            {% if bookshop_book_categories|default([])|length == 0 %}
+              <small>Cadastre uma categoria antes de criar o item.</small>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-volume">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="volume_number">Nº do volume</label>
+            <input class="nc-admin-form-input" id="volume_number" name="volume_number" type="number" min="1" max="999" placeholder="Ex: 1" value="{{ bookshop_book_form.volume_number|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="volume_label">Rótulo do volume</label>
+            <input class="nc-admin-form-input" id="volume_label" name="volume_label" type="text" placeholder="Ex: Vol. 1 ou Tomo II" value="{{ bookshop_book_form.volume_label|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-metadata">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="isbn">ISBN</label>
+            <input class="nc-admin-form-input" id="isbn" name="isbn" type="text" placeholder="Ex: 978-85-7328-728-8" value="{{ bookshop_book_form.isbn|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="barcode">Código de barras</label>
+            <input class="nc-admin-form-input" id="barcode" name="barcode" type="text" inputmode="numeric" placeholder="Ex: 9788594661920" value="{{ bookshop_book_form.barcode|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="publisher_name">Editora</label>
+            <input class="nc-admin-form-input" id="publisher_name" name="publisher_name" type="text" placeholder="Ex: FEB" value="{{ bookshop_book_form.publisher_name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="edition_label">Edição</label>
+            <input class="nc-admin-form-input" id="edition_label" name="edition_label" type="text" placeholder="Ex: 2ª edição" value="{{ bookshop_book_form.edition_label|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="publication_year">Ano</label>
+            <input class="nc-admin-form-input" id="publication_year" name="publication_year" type="number" min="1400" max="2100" placeholder="Ex: 2024" value="{{ bookshop_book_form.publication_year|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="page_count">Nº páginas</label>
+            <input class="nc-admin-form-input" id="page_count" name="page_count" type="number" min="1" placeholder="Ex: 320" value="{{ bookshop_book_form.page_count|default('') }}">
+          </div>
+
+        </div>
+
+        <div class="nc-admin-form-grid">
+          <div class="nc-admin-form-field nc-admin-form-field-full nc-library-admin-cover-field">
+            <label class="nc-admin-form-label" for="cover_image_file">Capa do item</label>
+            <div class="nc-library-admin-cover-preview-wrap" data-bookshop-cover-preview-wrap>
+              {% set admin_cover_image_url = bookshop_book_form.cover_image_url|default('')|trim %}
+              {% set admin_cover_remove_requested = bookshop_book_form.remove_cover_image|default(false) %}
+              {% if admin_cover_image_url and not admin_cover_remove_requested %}
+                <img
+                  class="nc-library-admin-cover-preview"
+                  src="{{ admin_cover_image_url }}"
+                  alt="Pré-visualização da capa de {{ bookshop_book_form.title|default('livro') }}"
+                >
+              {% else %}
+                {% include 'components/library-bookplate-fallback.twig' with {
+                  bookplate_title: bookshop_book_form.title|default('livro'),
+                  bookplate_author: bookshop_book_form.author_name|default(''),
+                  bookplate_collection_label: 'Livraria CEDE',
+                  bookplate_section_title: 'Livraria',
+                  bookplate_modifier_class: 'is-admin-preview'
+                } only %}
+              {% endif %}
+            </div>
+            <template data-bookshop-cover-fallback-template>
+              {% include 'components/library-bookplate-fallback.twig' with {
+                bookplate_title: bookshop_book_form.title|default('livro'),
+                bookplate_author: bookshop_book_form.author_name|default(''),
+                bookplate_collection_label: 'Livraria CEDE',
+                bookplate_section_title: 'Livraria',
+                bookplate_modifier_class: 'is-admin-preview'
+              } only %}
+            </template>
+            <input class="nc-admin-form-input" id="cover_image_file" name="cover_image_file" type="file" accept="image/jpeg,image/png,image/webp" data-bookshop-cover-input>
+            {% if admin_cover_image_url %}
+              <label class="nc-admin-form-checkbox nc-library-admin-cover-remove-option">
+                <input id="remove_cover_image" name="remove_cover_image" type="checkbox" value="1" {{ admin_cover_remove_requested ? 'checked' : '' }} data-bookshop-cover-remove>
+                <span>Usar a capa padrão institucional neste item</span>
+              </label>
+            {% endif %}
+            <p class="nc-admin-statute-meta">
+              Envie uma imagem JPG, PNG ou WEBP com até 5MB. O sistema ajusta a capa automaticamente para o padrão da vitrine, removendo margens excessivas quando necessário. Se nenhuma capa for cadastrada, a Livraria exibirá a capa padrão institucional.
+            </p>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-pricing">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="stock_quantity">Estoque atual</label>
+            <input class="nc-admin-form-input" id="stock_quantity" name="stock_quantity" type="number" min="0" placeholder="Ex: 12" value="{{ bookshop_book_form.stock_quantity|default('0') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="stock_minimum">Estoque mínimo</label>
+            <input class="nc-admin-form-input" id="stock_minimum" name="stock_minimum" type="number" min="0" placeholder="Ex: 2" value="{{ bookshop_book_form.stock_minimum|default('0') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="cost_price">Preço de custo</label>
+            <input class="nc-admin-form-input" id="cost_price" name="cost_price" type="text" inputmode="decimal" placeholder="Ex: 28,90" value="{{ bookshop_book_form.cost_price|default('0.00') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="sale_price">Preço de venda</label>
+            <input class="nc-admin-form-input" id="sale_price" name="sale_price" type="text" inputmode="decimal" placeholder="Ex: 39,90" value="{{ bookshop_book_form.sale_price|default('0.00') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="location_label">Localização</label>
+            <input class="nc-admin-form-input" id="location_label" name="location_label" type="text" placeholder="Ex: Estante A / Prateleira 2" value="{{ bookshop_book_form.location_label|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">SINOPSE</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="5" placeholder="Sinopse curta da obra para identificação interna e apoio ao atendimento.">{{ bookshop_book_form.description|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_book_form_is_edit ? 'Salvar alterações' : 'Criar item' }}</button>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

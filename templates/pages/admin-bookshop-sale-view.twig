@@ -1,0 +1,353 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Resumo da venda' %}
+{% set dashboard_page_lead = 'Conferência detalhada dos itens, valores e estorno de estoque quando necessário.' %}
+{% set brand = site.brand|default({}) %}
+{% set site_contact = site.contact|default({}) %}
+{% set footer = site.footer|default({}) %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Resumo da venda da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if admin_status == 'created' %}
+      {% set toast_message = 'Venda registrada com sucesso.' %}
+    {% elseif admin_status == 'cancelled' %}
+      {% set toast_message = 'Venda cancelada e estoque estornado com sucesso.' %}
+    {% elseif admin_status == 'cancel-error' %}
+      {% set toast_message = 'Não foi possível cancelar esta venda.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-bookshop-toolbar nc-print-hidden" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/vendas">Voltar às vendas</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Ver acervo</a>
+      <button class="nc-btn nc-btn-secondary" type="button" onclick="window.print()">Imprimir comprovante</button>
+      <a class="nc-btn nc-btn-primary" href="/painel/livraria/vendas/nova">Nova venda</a>
+      {% if bookshop_sale.status == 'completed' %}
+        <form method="post" action="/painel/livraria/vendas/{{ bookshop_sale.id }}/cancelar" onsubmit="return confirm('Cancelar esta venda e devolver os itens ao estoque?');">
+          <button class="nc-btn nc-btn-secondary" type="submit">Cancelar venda</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <article class="nc-card nc-bookshop-sale-summary-card nc-print-hidden" data-aos="fade-up" data-aos-delay="100">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Panorama da venda</h3>
+          <p>Resumo rápido da operação antes do comprovante.</p>
+        </div>
+        <span class="nc-admin-featured-flag{{ bookshop_sale.status == 'completed' ? ' is-on' : ' is-off' }}">{{ bookshop_sale.status_label|default('-') }}</span>
+      </div>
+
+      <div class="nc-bookshop-sale-summary-grid">
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Código</span>
+          <strong>{{ bookshop_sale.sale_code }}</strong>
+          <p>{{ bookshop_sale.sold_at_label|default('-') ?: '-' }}</p>
+        </article>
+
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Cliente</span>
+          <strong>{{ bookshop_sale.customer_name|default('Balcão') ?: 'Balcão' }}</strong>
+          <p>
+            {% if bookshop_sale.customer_phone_display|default('') %}
+              {{ bookshop_sale.customer_phone_display }}
+            {% elseif bookshop_sale.customer_email|default('') %}
+              {{ bookshop_sale.customer_email }}
+            {% else %}
+              Atendimento de balcão
+            {% endif %}
+          </p>
+        </article>
+
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Itens</span>
+          <strong>{{ bookshop_sale.item_count|default(0) }}</strong>
+          <p>{{ bookshop_sale.payment_method_label|default('-') }}</p>
+        </article>
+
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Total final</span>
+          <strong>{{ bookshop_sale.total_amount_label|default('R$ 0,00') }}</strong>
+          <p>Desconto: {{ bookshop_sale.discount_amount_label|default('R$ 0,00') }}</p>
+        </article>
+      </div>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card nc-print-hidden" data-aos="fade-up" data-aos-delay="130">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Dados da operação</h3>
+          <p>Valores, contato do cliente e registro administrativo da venda.</p>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-sale-data-grid">
+        <section class="nc-bookshop-sale-data-group nc-bookshop-sale-data-group-compact" aria-label="Dados financeiros da venda">
+          <h4>Financeiro</h4>
+          <dl class="nc-bookshop-sale-facts nc-bookshop-sale-facts-compact">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ bookshop_sale.subtotal_amount_label|default('R$ 0,00') }}</dd>
+            </div>
+            <div>
+              <dt>Desconto</dt>
+              <dd>{{ bookshop_sale.discount_amount_label|default('R$ 0,00') }}</dd>
+            </div>
+            <div>
+              <dt>Total final</dt>
+              <dd>{{ bookshop_sale.total_amount_label|default('R$ 0,00') }}</dd>
+            </div>
+            <div>
+              <dt>Pagamento</dt>
+              <dd>{{ bookshop_sale.payment_method_label|default('-') }}</dd>
+            </div>
+            {% if bookshop_sale.received_amount is not null %}
+              <div>
+                <dt>Valor recebido</dt>
+                <dd>{{ bookshop_sale.received_amount_label|default('R$ 0,00') }}</dd>
+              </div>
+            {% endif %}
+            {% if bookshop_sale.change_amount is not null %}
+              <div>
+                <dt>Troco</dt>
+                <dd>{{ bookshop_sale.change_amount_label|default('R$ 0,00') }}</dd>
+              </div>
+            {% endif %}
+          </dl>
+        </section>
+
+        <section class="nc-bookshop-sale-data-group nc-bookshop-sale-data-group-compact" aria-label="Dados do cliente">
+          <h4>Cliente</h4>
+          <dl class="nc-bookshop-sale-facts nc-bookshop-sale-facts-compact">
+            <div>
+              <dt>Cliente</dt>
+              <dd>{{ bookshop_sale.customer_name|default('Balcão') ?: 'Balcão' }}</dd>
+            </div>
+            {% if bookshop_sale.customer_phone_display|default('') %}
+              <div>
+                <dt>Telefone</dt>
+                <dd>{{ bookshop_sale.customer_phone_display }}</dd>
+              </div>
+            {% endif %}
+            {% if bookshop_sale.customer_email|default('') %}
+              <div>
+                <dt>E-mail</dt>
+                <dd>{{ bookshop_sale.customer_email }}</dd>
+              </div>
+            {% endif %}
+            {% if bookshop_sale.customer_cpf_display|default('') %}
+              <div>
+                <dt>CPF</dt>
+                <dd>{{ bookshop_sale.customer_cpf_display }}</dd>
+              </div>
+            {% endif %}
+          </dl>
+        </section>
+
+        <section class="nc-bookshop-sale-data-group" aria-label="Dados de registro da venda">
+          <h4>Registro da venda</h4>
+          <dl class="nc-bookshop-sale-inline-row" aria-label="Dados de registro da venda">
+            <div>
+              <dt>Lançada em</dt>
+              <dd>{{ bookshop_sale.sold_at_label|default('-') ?: '-' }}</dd>
+            </div>
+            <div>
+              <dt>Registrada por</dt>
+              <dd>{{ bookshop_sale.created_by_name|default('Admin') ?: 'Admin' }}</dd>
+            </div>
+            <div>
+              <dt>Cancelamento</dt>
+              <dd>{{ bookshop_sale.cancelled_at_label|default('') ?: 'Não cancelada' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      {% if bookshop_sale.notes|default('') %}
+        <p class="nc-bookshop-inline-copy"><strong>Observações:</strong> {{ bookshop_sale.notes }}</p>
+      {% endif %}
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card nc-bookshop-receipt-card" data-aos="fade-up" data-aos-delay="145">
+      <div class="nc-bookshop-receipt-brand">
+        <div class="nc-bookshop-receipt-brand-mark">
+          <img
+            src="{{ (base_url ?? '') ~ '/assets/img/brands/selo_cede.png' }}"
+            alt="{{ brand.logoAlt|default(site.name|default('CEDE')) }}"
+            class="nc-bookshop-receipt-logo"
+          >
+        </div>
+        <div class="nc-bookshop-receipt-brand-copy">
+          <p class="nc-bookshop-receipt-kicker">Comprovante institucional</p>
+          <h3>{{ site.legalName|default(site.name|default('CEDE')) }}</h3>
+          {% if site_contact.address|default('') %}
+            <p>{{ site_contact.address }}</p>
+          {% endif %}
+          <p class="nc-bookshop-receipt-brand-inline">
+            {% if site_contact.email|default('') %}
+              <span>{{ site_contact.email }}</span>
+            {% endif %}
+            <span>www.cedern.org</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-receipt-head">
+        <div>
+          <p class="nc-bookshop-receipt-kicker">Livraria do CEDE</p>
+          <h3>Comprovante de balcão</h3>
+        </div>
+        <div class="nc-bookshop-receipt-code">
+          <span class="nc-metric-label">Venda</span>
+          <strong>{{ bookshop_sale.sale_code }}</strong>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-receipt-meta">
+        <div>
+          <span class="nc-metric-label">Data</span>
+          <strong>{{ bookshop_sale.sold_at_label|default('-') ?: '-' }}</strong>
+        </div>
+        <div>
+          <span class="nc-metric-label">Cliente</span>
+          <strong>{{ bookshop_sale.customer_name|default('Balcão') ?: 'Balcão' }}</strong>
+        </div>
+        {% if bookshop_sale.customer_phone_display|default('') %}
+          <div>
+            <span class="nc-metric-label">Telefone</span>
+            <strong>{{ bookshop_sale.customer_phone_display }}</strong>
+          </div>
+        {% endif %}
+        {% if bookshop_sale.customer_email|default('') %}
+          <div>
+            <span class="nc-metric-label">E-mail</span>
+            <strong>{{ bookshop_sale.customer_email }}</strong>
+          </div>
+        {% endif %}
+        {% if bookshop_sale.customer_cpf_display|default('') %}
+          <div>
+            <span class="nc-metric-label">CPF</span>
+            <strong>{{ bookshop_sale.customer_cpf_display }}</strong>
+          </div>
+        {% endif %}
+        <div>
+          <span class="nc-metric-label">Pagamento</span>
+          <strong>{{ bookshop_sale.payment_method_label|default('-') }}</strong>
+        </div>
+        <div>
+          <span class="nc-metric-label">Status</span>
+          <strong>{{ bookshop_sale.status_label|default('-') }}</strong>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-receipt-items" aria-label="Itens do comprovante">
+        {% for item in bookshop_sale.items|default([]) %}
+          <article class="nc-bookshop-receipt-item">
+            <div class="nc-bookshop-receipt-item-head">
+              <strong>{{ item.title_snapshot }}</strong>
+              <span>{{ item.line_total_label|default('R$ 0,00') }}</span>
+            </div>
+            <div class="nc-bookshop-receipt-item-meta">
+              <span>{{ item.sku_snapshot }}</span>
+              {% if item.stock_lot_code_snapshot|default('') %}
+                <span>{{ item.stock_lot_code_snapshot }}</span>
+              {% endif %}
+              {% if item.author_snapshot|default('') %}
+                <span>{{ item.author_snapshot }}</span>
+              {% endif %}
+              <span>{{ item.quantity|default(0) }} x {{ item.unit_price_label|default('R$ 0,00') }}</span>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+
+      <div class="nc-bookshop-receipt-totals">
+        <div>
+          <span>Subtotal</span>
+          <strong>{{ bookshop_sale.subtotal_amount_label|default('R$ 0,00') }}</strong>
+        </div>
+        <div>
+          <span>Desconto</span>
+          <strong>{{ bookshop_sale.discount_amount_label|default('R$ 0,00') }}</strong>
+        </div>
+        {% if bookshop_sale.received_amount is not null %}
+          <div>
+            <span>Valor recebido</span>
+            <strong>{{ bookshop_sale.received_amount_label|default('R$ 0,00') }}</strong>
+          </div>
+        {% endif %}
+        {% if bookshop_sale.change_amount is not null %}
+          <div>
+            <span>Troco</span>
+            <strong>{{ bookshop_sale.change_amount_label|default('R$ 0,00') }}</strong>
+          </div>
+        {% endif %}
+        <div class="is-total">
+          <span>Total final</span>
+          <strong>{{ bookshop_sale.total_amount_label|default('R$ 0,00') }}</strong>
+        </div>
+      </div>
+
+      <footer class="nc-bookshop-receipt-footer">
+        {% if bookshop_sale.notes|default('') %}
+          <p class="nc-bookshop-inline-copy"><strong>Observações:</strong> {{ bookshop_sale.notes }}</p>
+        {% endif %}
+
+        <p class="nc-bookshop-receipt-note">Venda presencial registrada na Livraria do CEDE.</p>
+        {% if footer.cnpj|default('') %}
+          <p class="nc-bookshop-receipt-footer-meta">CNPJ: {{ footer.cnpj }}</p>
+        {% endif %}
+        <p class="nc-bookshop-receipt-motto">{{ brand.motto|default('Iluminando consciências, transformando vidas.') }}</p>
+      </footer>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card nc-print-hidden" data-aos="fade-up" data-aos-delay="160">
+      <h3>Itens da venda</h3>
+
+      <div class="nc-admin-table-wrap">
+        <table class="nc-admin-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Título</th>
+              <th>Lote</th>
+              <th>Quantidade</th>
+              <th>Custo</th>
+              <th>Preço unitário</th>
+              <th>Total</th>
+              <th>Saldo atual</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in bookshop_sale.items|default([]) %}
+              <tr>
+                <td data-label="SKU"><strong>{{ item.sku_snapshot }}</strong></td>
+                <td class="nc-agenda-activity-cell" data-label="Título">
+                  <strong>{{ item.title_snapshot }}</strong>
+                  {% if item.author_snapshot|default('') %}
+                    <small>{{ item.author_snapshot }}</small>
+                  {% endif %}
+                </td>
+                <td data-label="Lote">{{ item.stock_lot_code_snapshot|default('-') ?: '-' }}</td>
+                <td data-label="Quantidade">{{ item.quantity|default(0) }}</td>
+                <td data-label="Custo">{{ item.unit_cost_snapshot_label|default('-') }}</td>
+                <td data-label="Preço unitário">{{ item.unit_price_label|default('R$ 0,00') }}</td>
+                <td data-label="Total">{{ item.line_total_label|default('R$ 0,00') }}</td>
+                <td data-label="Saldo atual">{{ item.book_stock_quantity|default(0) }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+{% endblock %}

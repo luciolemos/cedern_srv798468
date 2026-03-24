@@ -15,6 +15,28 @@ use App\Application\Actions\Admin\AdminAgendaDeleteAction;
 use App\Application\Actions\Admin\AdminAgendaFormPageAction;
 use App\Application\Actions\Admin\AdminLoginPageAction;
 use App\Application\Actions\Admin\AdminAgendaListPageAction;
+use App\Application\Actions\Admin\AdminBookshopBookDeleteAction;
+use App\Application\Actions\Admin\AdminBookshopBookFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopBookListPageAction;
+use App\Application\Actions\Admin\AdminBookshopCollectionFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopCollectionListPageAction;
+use App\Application\Actions\Admin\AdminBookshopCollectionToggleStatusAction;
+use App\Application\Actions\Admin\AdminBookshopCategoryFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopCategoryListPageAction;
+use App\Application\Actions\Admin\AdminBookshopCategoryToggleStatusAction;
+use App\Application\Actions\Admin\AdminBookshopDashboardPageAction;
+use App\Application\Actions\Admin\AdminBookshopGenreFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopGenreListPageAction;
+use App\Application\Actions\Admin\AdminBookshopGenreToggleStatusAction;
+use App\Application\Actions\Admin\AdminBookshopImportPageAction;
+use App\Application\Actions\Admin\AdminBookshopManualPageAction;
+use App\Application\Actions\Admin\AdminBookshopReportsPageAction;
+use App\Application\Actions\Admin\AdminBookshopSaleCancelAction;
+use App\Application\Actions\Admin\AdminBookshopSaleFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopSaleListPageAction;
+use App\Application\Actions\Admin\AdminBookshopSaleViewPageAction;
+use App\Application\Actions\Admin\AdminBookshopStockMovementFormPageAction;
+use App\Application\Actions\Admin\AdminBookshopStockMovementListPageAction;
 use App\Application\Actions\Admin\AdminCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminCategoryListPageAction;
 use App\Application\Actions\Admin\AdminCategoryToggleStatusAction;
@@ -38,6 +60,7 @@ use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
+use App\Application\Actions\Page\BookshopCoverImagePageAction;
 use App\Application\Actions\Page\ContactPageAction;
 use App\Application\Actions\Page\EsdePageAction;
 use App\Application\Actions\Page\FaqPageAction;
@@ -48,6 +71,7 @@ use App\Application\Actions\Page\FraternalServicePageAction;
 use App\Application\Actions\Page\HomePageAction;
 use App\Application\Actions\Page\LibraryPageAction;
 use App\Application\Actions\Page\StoreBazaarPageAction;
+use App\Application\Actions\Page\StoreBookshopIiPageAction;
 use App\Application\Actions\Page\StoreBookshopPageAction;
 use App\Application\Actions\Page\StorePageAction;
 use App\Application\Actions\Page\MemberCompleteProfilePageAction;
@@ -91,12 +115,26 @@ return function (App $app) {
         return !empty($_SESSION['member_authenticated']) && $memberWeight >= $requiredWeight;
     };
 
-    $adminSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasMinimumRole): Response {
+    $memberHasAnyRole = static function (array $allowedRoleKeys): bool {
+        if (empty($_SESSION['member_authenticated'])) {
+            return false;
+        }
+
+        $memberRoleKey = trim((string) ($_SESSION['member_role_key'] ?? 'member'));
+
+        return in_array($memberRoleKey, $allowedRoleKeys, true);
+    };
+
+    $memberHasPanelAccess = static function () use ($memberHasAnyRole, $memberHasMinimumRole): bool {
+        return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator']);
+    };
+
+    $adminSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasPanelAccess): Response {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             @session_start();
         }
 
-        if ($memberHasMinimumRole('operator')) {
+        if ($memberHasPanelAccess()) {
             return $handler->handle($request);
         }
 
@@ -119,6 +157,34 @@ return function (App $app) {
 
             return $response->withHeader('Location', '/entrar');
         };
+    };
+
+    $panelDashboardAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasPanelAccess): Response {
+        if ($memberHasPanelAccess()) {
+            return $handler->handle($request);
+        }
+
+        $response = $app->getResponseFactory()->createResponse(302);
+
+        if (!empty($_SESSION['member_authenticated'])) {
+            return $response->withHeader('Location', '/membro?status=forbidden');
+        }
+
+        return $response->withHeader('Location', '/entrar');
+    };
+
+    $panelBookshopAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasAnyRole): Response {
+        if ($memberHasAnyRole(['bookshop_operator', 'admin'])) {
+            return $handler->handle($request);
+        }
+
+        $response = $app->getResponseFactory()->createResponse(302);
+
+        if (!empty($_SESSION['member_authenticated'])) {
+            return $response->withHeader('Location', '/membro?status=forbidden');
+        }
+
+        return $response->withHeader('Location', '/entrar');
     };
 
     $memberSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app): Response {
@@ -167,13 +233,33 @@ return function (App $app) {
     $app->get('/agenda', AgendaPageAction::class);
     $app->get('/agenda/{slug}', AgendaDetailPageAction::class);
     $app->get('/agenda/{slug}/ics', AgendaEventIcsDownloadAction::class);
+    $app->get('/media/livraria/capas/{file}', BookshopCoverImagePageAction::class);
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
     $app->get('/loja/livraria', StoreBookshopPageAction::class);
-    $app->get('/loja/biblioteca', LibraryPageAction::class)->add($memberSessionAuthMiddleware);
+    $app->get('/loja/livraria-ii', StoreBookshopIiPageAction::class);
+    $app->get('/livraria', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
+    $app->get('/livraria-ii', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
+    $app->get('/quem-somos/base-de-conhecimento', LibraryPageAction::class);
+    $app->get('/loja/biblioteca', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/quem-somos/base-de-conhecimento' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
     $app->get('/biblioteca', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
-        $target = '/loja/biblioteca' . ($queryString !== '' ? '?' . $queryString : '');
+        $target = '/quem-somos/base-de-conhecimento' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });
@@ -190,8 +276,8 @@ return function (App $app) {
     $app->get('/membro/administracao', MemberAdminAreaPageAction::class);
     $app->map(['GET', 'POST'], '/painel/login', AdminLoginPageAction::class);
     $app->get('/painel/logout', AdminLogoutAction::class);
-    $app->group('/painel', function (Group $group) use ($panelRoleMiddlewareFactory) {
-        $group->get('', AdminDashboardPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
+    $app->group('/painel', function (Group $group) use ($panelBookshopAccessMiddleware, $panelDashboardAccessMiddleware, $panelRoleMiddlewareFactory) {
+        $group->get('', AdminDashboardPageAction::class)->add($panelDashboardAccessMiddleware);
         $group->get('/eventos', AdminAgendaListPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
         $group->map(['GET', 'POST'], '/eventos/novo', AdminAgendaFormPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
         $group->map(['GET', 'POST'], '/eventos/{id}/editar', AdminAgendaFormPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
@@ -208,6 +294,58 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/biblioteca/categorias/nova', AdminLibraryCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->map(['GET', 'POST'], '/biblioteca/categorias/{id}/editar', AdminLibraryCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->post('/biblioteca/categorias/{id}/alternar-status', AdminLibraryCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/livraria', AdminBookshopDashboardPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/manual', AdminBookshopManualPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/relatorios', AdminBookshopReportsPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/movimentacoes', AdminBookshopStockMovementListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/movimentacoes/nova', AdminBookshopStockMovementFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/colecoes', AdminBookshopCollectionListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/colecoes/nova', AdminBookshopCollectionFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/colecoes/{id}/editar', AdminBookshopCollectionFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->post('/livraria/colecoes/{id}/alternar-status', AdminBookshopCollectionToggleStatusAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/categorias', AdminBookshopCategoryListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/categorias/nova', AdminBookshopCategoryFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/categorias/{id}/editar', AdminBookshopCategoryFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->post('/livraria/categorias/{id}/alternar-status', AdminBookshopCategoryToggleStatusAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/generos', AdminBookshopGenreListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/generos/novo', AdminBookshopGenreFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/generos/{id}/editar', AdminBookshopGenreFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->post('/livraria/generos/{id}/alternar-status', AdminBookshopGenreToggleStatusAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/acervo', AdminBookshopBookListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/acervo/novo', AdminBookshopBookFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/acervo/{id}/editar', AdminBookshopBookFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->post('/livraria/acervo/{id}/excluir', AdminBookshopBookDeleteAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/importar', AdminBookshopImportPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/vendas', AdminBookshopSaleListPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->map(['GET', 'POST'], '/livraria/vendas/nova', AdminBookshopSaleFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/vendas/{id}', AdminBookshopSaleViewPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->post('/livraria/vendas/{id}/cancelar', AdminBookshopSaleCancelAction::class)
+            ->add($panelBookshopAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
@@ -290,6 +428,66 @@ return function (App $app) {
 
         return $response->withHeader('Location', '/painel/biblioteca/categorias/' . $id . '/alternar-status')->withStatus(307);
     });
+    $app->get('/admin/livraria', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/livraria')->withStatus(302);
+    });
+    $app->get('/admin/livraria/colecoes', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/livraria/colecoes')->withStatus(302);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/colecoes/nova', function (Request $request, Response $response) {
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/colecoes/nova')->withStatus($statusCode);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/colecoes/{id}/editar', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/colecoes/' . $id . '/editar')->withStatus($statusCode);
+    });
+    $app->post('/admin/livraria/colecoes/{id}/alternar-status', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/livraria/colecoes/' . $id . '/alternar-status')->withStatus(307);
+    });
+    $app->get('/admin/livraria/categorias', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/livraria/categorias')->withStatus(302);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/categorias/nova', function (Request $request, Response $response) {
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/categorias/nova')->withStatus($statusCode);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/categorias/{id}/editar', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/categorias/' . $id . '/editar')->withStatus($statusCode);
+    });
+    $app->post('/admin/livraria/categorias/{id}/alternar-status', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/livraria/categorias/' . $id . '/alternar-status')->withStatus(307);
+    });
+    $app->get('/admin/livraria/generos', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/livraria/generos')->withStatus(302);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/generos/nova', function (Request $request, Response $response) {
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/generos/nova')->withStatus($statusCode);
+    });
+    $app->map(['GET', 'POST'], '/admin/livraria/generos/{id}/editar', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/livraria/generos/' . $id . '/editar')->withStatus($statusCode);
+    });
+    $app->post('/admin/livraria/generos/{id}/alternar-status', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/livraria/generos/' . $id . '/alternar-status')->withStatus(307);
+    });
     $app->map(['GET', 'POST'], '/admin/categorias/nova', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/categorias/nova')->withStatus(302);
     });
@@ -365,6 +563,7 @@ return function (App $app) {
             ['template' => 'home/hero.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'home/features.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'home/social-proof.twig', 'context' => ['homeContent' => $homeContent]],
+            ['template' => 'home/testimonials.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'home/roadmap.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'home/faq.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'home/final-cta.twig', 'context' => ['homeContent' => $homeContent]],
@@ -372,12 +571,30 @@ return function (App $app) {
             ['template' => 'components/footer.twig', 'context' => []],
             ['template' => 'home.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/about.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/about-detail.twig', 'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['missao'] ?? []]],
-            ['template' => 'pages/about-detail.twig', 'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['estatuto'] ?? []]],
-            ['template' => 'pages/about-founder.twig', 'context' => ['homeContent' => $homeContent, 'founder' => $homeContent['aboutPages']['fundador'] ?? []]],
-            ['template' => 'pages/about-statute.twig', 'context' => ['homeContent' => $homeContent, 'statute' => (require __DIR__ . '/content/statute.php')]],
-            ['template' => 'pages/legal-document.twig', 'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/privacy-policy.php')]],
-            ['template' => 'pages/legal-document.twig', 'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/terms-of-use.php')]],
+            [
+                'template' => 'pages/about-detail.twig',
+                'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['missao'] ?? []],
+            ],
+            [
+                'template' => 'pages/about-detail.twig',
+                'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['estatuto'] ?? []],
+            ],
+            [
+                'template' => 'pages/about-founder.twig',
+                'context' => ['homeContent' => $homeContent, 'founder' => $homeContent['aboutPages']['fundador'] ?? []],
+            ],
+            [
+                'template' => 'pages/about-statute.twig',
+                'context' => ['homeContent' => $homeContent, 'statute' => (require __DIR__ . '/content/statute.php')],
+            ],
+            [
+                'template' => 'pages/legal-document.twig',
+                'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/privacy-policy.php')],
+            ],
+            [
+                'template' => 'pages/legal-document.twig',
+                'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/terms-of-use.php')],
+            ],
             ['template' => 'pages/about-brand.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/studies.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/study-detail.twig', 'context' => ['homeContent' => $homeContent, 'study' => $homeContent['studiesPages']['esde'] ?? []]],
@@ -386,11 +603,41 @@ return function (App $app) {
             ['template' => 'pages/admin-library-book-form.twig', 'context' => ['library_book_form' => [], 'library_book_categories' => []]],
             ['template' => 'pages/admin-library-categories.twig', 'context' => ['library_categories' => []]],
             ['template' => 'pages/admin-library-category-form.twig', 'context' => ['library_category_form' => []]],
+            ['template' => 'pages/admin-bookshop-dashboard.twig', 'context' => ['bookshop_metrics' => []]],
+            ['template' => 'pages/admin-bookshop-books.twig', 'context' => ['bookshop_books' => []]],
+            ['template' => 'pages/admin-bookshop-collections.twig', 'context' => ['bookshop_collections' => []]],
+            ['template' => 'pages/admin-bookshop-collection-form.twig', 'context' => ['bookshop_collection_form' => []]],
+            ['template' => 'pages/admin-bookshop-categories.twig', 'context' => ['bookshop_categories' => []]],
+            ['template' => 'pages/admin-bookshop-category-form.twig', 'context' => ['bookshop_category_form' => []]],
+            ['template' => 'pages/admin-bookshop-genres.twig', 'context' => ['bookshop_genres' => []]],
+            ['template' => 'pages/admin-bookshop-genre-form.twig', 'context' => ['bookshop_genre_form' => []]],
+            [
+                'template' => 'pages/admin-bookshop-book-form.twig',
+                'context' => [
+                    'bookshop_book_form' => [],
+                    'bookshop_book_collections' => [],
+                    'bookshop_book_categories' => [],
+                    'bookshop_book_genres' => [],
+                    'bookshop_book_language_options' => [],
+                ],
+            ],
+            ['template' => 'pages/admin-bookshop-manual.twig', 'context' => []],
+            ['template' => 'pages/admin-bookshop-reports.twig', 'context' => []],
+            ['template' => 'pages/admin-bookshop-stock-movements.twig', 'context' => ['bookshop_stock_movements' => []]],
+            ['template' => 'pages/admin-bookshop-stock-movement-form.twig', 'context' => ['bookshop_stock_movement_book_options' => [], 'bookshop_stock_movement_type_options' => []]],
+            ['template' => 'pages/admin-bookshop-import.twig', 'context' => []],
+            ['template' => 'pages/admin-bookshop-sales.twig', 'context' => ['bookshop_sales' => []]],
+            [
+                'template' => 'pages/admin-bookshop-sale-form.twig',
+                'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
+            ],
+            ['template' => 'pages/admin-bookshop-sale-view.twig', 'context' => ['bookshop_sale' => ['items' => []]]],
             ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
             ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/store-bazaar.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/store-bookshop.twig', 'context' => ['homeContent' => $homeContent]],
+            ['template' => 'pages/store-bookshop-ii.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/faq.twig', 'context' => ['homeContent' => $homeContent]],
             ['template' => 'pages/faq-category.twig', 'context' => ['homeContent' => $homeContent, 'faq_category_slug' => 'doutrina']],
             ['template' => 'pages/contact.twig', 'context' => ['homeContent' => $homeContent]],

@@ -2,9 +2,13 @@
 
 {% set dashboard_page_kicker = 'Admin' %}
 {% set dashboard_page_title = 'Guia Prático' %}
-{% set dashboard_page_lead = 'Manual rápido para operação diária da agenda e gestão administrativa.' %}
+{% set dashboard_page_lead = 'Manual rápido para operação diária da agenda e das rotinas administrativas.' %}
 
 {% block admin_content %}
+  <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+    <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+  </div>
+
   <ul class="nc-checklist">
     {% include 'components/check-item.twig' with {
       step: '01',

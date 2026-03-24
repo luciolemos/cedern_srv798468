@@ -16,7 +16,7 @@ class StorePageAction extends AbstractPageAction
             'page_url' => 'https://cedern.org/loja',
             'page_description' =>
                 'Acesse a área de loja do CEDE '
-                . 'e conheça as seções de bazar e livraria em preparação.',
+                . 'e consulte o catalogo da livraria com venda presencial no balcao da casa.',
         ]);
     }
 }

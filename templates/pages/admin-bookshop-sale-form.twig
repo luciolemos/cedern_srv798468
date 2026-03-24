@@ -1,0 +1,1176 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Nova venda PDV' %}
+{% set dashboard_page_lead = 'Monte a venda no balcão, confirme os itens e o sistema baixa o estoque automaticamente.' %}
+{% set received_amount_error = bookshop_sale_form_field_errors.received_amount|default('') %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário de venda da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% if bookshop_sale_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in bookshop_sale_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Histórico de vendas</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Ver acervo</a>
+    </div>
+
+    {% if bookshop_sale_book_options|length == 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Nenhum item disponível para venda.</strong>
+        <ul>
+          <li>Cadastre itens ativos no acervo e mantenha estoque acima de zero para abrir o PDV.</li>
+        </ul>
+      </article>
+    {% endif %}
+
+    <article class="nc-card nc-admin-form-card">
+      <form class="nc-admin-form" method="post" action="/painel/livraria/vendas/nova" data-bookshop-sale-builder data-bookshop-options="{{ bookshop_sale_book_options|json_encode|e('html_attr') }}">
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="sold_at">Data e hora</label>
+            <input class="nc-admin-form-input" id="sold_at" name="sold_at" type="datetime-local" value="{{ bookshop_sale_form.sold_at|default('')|replace({' ':'T'})|slice(0, 16) }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="customer_name">Cliente</label>
+            <input class="nc-admin-form-input" id="customer_name" name="customer_name" type="text" placeholder="Opcional" value="{{ bookshop_sale_form.customer_name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="customer_phone">Telefone</label>
+            <input class="nc-admin-form-input" id="customer_phone" name="customer_phone" type="text" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(84) 99999-9999" value="{{ bookshop_sale_form.customer_phone|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer-extra">
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer-extra">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="customer_email">E-mail</label>
+            <input class="nc-admin-form-input" id="customer_email" name="customer_email" type="email" autocomplete="email" placeholder="cliente@email.com" value="{{ bookshop_sale_form.customer_email|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="customer_cpf">CPF</label>
+            <input class="nc-admin-form-input" id="customer_cpf" name="customer_cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" value="{{ bookshop_sale_form.customer_cpf|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-payment">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="payment_method">Pagamento</label>
+            <select class="nc-admin-form-input" id="payment_method" name="payment_method" required>
+              <option value="pix" {{ bookshop_sale_form.payment_method|default('pix') == 'pix' ? 'selected' : '' }}>PIX</option>
+              <option value="cash" {{ bookshop_sale_form.payment_method|default('pix') == 'cash' ? 'selected' : '' }}>Dinheiro</option>
+              <option value="debit" {{ bookshop_sale_form.payment_method|default('pix') == 'debit' ? 'selected' : '' }}>Cartão de débito</option>
+              <option value="credit" {{ bookshop_sale_form.payment_method|default('pix') == 'credit' ? 'selected' : '' }}>Cartão de crédito</option>
+              <option value="transfer" {{ bookshop_sale_form.payment_method|default('pix') == 'transfer' ? 'selected' : '' }}>Transferência</option>
+              <option value="other" {{ bookshop_sale_form.payment_method|default('pix') == 'other' ? 'selected' : '' }}>Outro</option>
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="discount_amount">Desconto</label>
+            <input class="nc-admin-form-input" id="discount_amount" name="discount_amount" type="text" inputmode="decimal" placeholder="0,00" value="{{ bookshop_sale_form.discount_amount|default('0.00') }}">
+          </div>
+
+          <div class="nc-admin-form-field" data-bookshop-received-field {% if bookshop_sale_form.payment_method|default('pix') != 'cash' %}hidden{% endif %}>
+            <label class="nc-admin-form-label" for="received_amount">Valor recebido</label>
+            <input class="nc-admin-form-input" id="received_amount" name="received_amount" type="text" inputmode="decimal" placeholder="0,00" value="{{ bookshop_sale_form.received_amount|default('') }}" aria-invalid="{{ received_amount_error ? 'true' : 'false' }}" data-bookshop-received-input>
+            <p class="nc-bookshop-inline-copy{{ received_amount_error ? ' nc-bookshop-inline-copy-error' : '' }}" data-bookshop-received-note data-default-message="Use este campo quando o pagamento for em dinheiro.">{{ received_amount_error ?: 'Use este campo quando o pagamento for em dinheiro.' }}</p>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="notes">Observações</label>
+            <textarea class="nc-admin-form-input" id="notes" name="notes" rows="3" placeholder="Opcional">{{ bookshop_sale_form.notes|default('') }}</textarea>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <div class="nc-bookshop-sale-head">
+            <div>
+              <label class="nc-admin-form-label" for="bookshop-sale-items">Itens da venda</label>
+              <p class="nc-bookshop-inline-copy">Busque no catálogo, selecione o lote certo e ajuste quantidade e preço se necessário.</p>
+            </div>
+            <button class="nc-btn nc-btn-secondary" type="button" data-bookshop-add-line>Adicionar item</button>
+          </div>
+
+          <div class="nc-bookshop-sale-quick-search">
+            <label class="nc-admin-form-label" for="bookshop-sale-quick-search">Busca rápida do catálogo</label>
+            <input class="nc-admin-form-input" id="bookshop-sale-quick-search" type="search" placeholder="Título, autor, SKU, ISBN, código de barras ou coleção..." autocomplete="off" data-bookshop-quick-search {% if bookshop_sale_book_options|length == 0 %}disabled{% endif %}>
+            <p class="nc-bookshop-inline-copy">Digite ao menos 2 caracteres e clique no resultado para adicionar o livro à venda.</p>
+            <div class="nc-bookshop-sale-quick-results" data-bookshop-quick-results hidden></div>
+          </div>
+
+          <div class="nc-bookshop-sale-lines" id="bookshop-sale-items" data-bookshop-lines>
+            {% for item in bookshop_sale_form.items|default([]) %}
+              <div class="nc-bookshop-sale-line" data-bookshop-line>
+                <div class="nc-bookshop-sale-line-grid">
+                  <div class="nc-admin-form-field nc-bookshop-sale-line-book">
+                    <label class="nc-admin-form-label">Livro</label>
+                    <select class="nc-admin-form-input" name="items[{{ loop.index0 }}][book_id]" data-bookshop-book-select>
+                      <option value="">Selecione um item ou use a busca rápida</option>
+                      {% for option in bookshop_sale_book_options %}
+                        <option value="{{ option.value }}"{% if option.value == item.book_id %} selected{% endif %}>{{ option.label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <div class="nc-admin-form-field">
+                    <label class="nc-admin-form-label">Lote</label>
+                    <select class="nc-admin-form-input" name="items[{{ loop.index0 }}][lot_id]" data-bookshop-lot-select data-selected-lot="{{ item.lot_id|default('') }}">
+                      <option value="">Selecione o lote</option>
+                    </select>
+                  </div>
+
+                  <div class="nc-admin-form-field">
+                    <label class="nc-admin-form-label">Quantidade</label>
+                    <input class="nc-admin-form-input" name="items[{{ loop.index0 }}][quantity]" type="number" min="1" value="{{ item.quantity|default('1') }}" data-bookshop-quantity-input>
+                  </div>
+
+                  <div class="nc-admin-form-field">
+                    <label class="nc-admin-form-label">Preço unitário</label>
+                    <input class="nc-admin-form-input" name="items[{{ loop.index0 }}][unit_price]" type="text" inputmode="decimal" value="{{ item.unit_price|default('0.00') }}" data-bookshop-price-input>
+                  </div>
+
+                  <div class="nc-admin-form-field nc-bookshop-sale-line-actions">
+                    <label class="nc-admin-form-label">Ação</label>
+                    <button class="nc-btn nc-btn-secondary" type="button" data-bookshop-remove-line>Remover</button>
+                  </div>
+                </div>
+                <p class="nc-bookshop-inline-copy" data-bookshop-stock-hint></p>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="nc-bookshop-form-metrics nc-bookshop-sale-live-summary" data-bookshop-sale-summary>
+            <article class="nc-bookshop-form-metric">
+              <span class="nc-metric-label">Títulos selecionados</span>
+              <strong data-bookshop-summary-lines>0</strong>
+            </article>
+            <article class="nc-bookshop-form-metric">
+              <span class="nc-metric-label">Unidades</span>
+              <strong data-bookshop-summary-units>0</strong>
+            </article>
+            <article class="nc-bookshop-form-metric">
+              <span class="nc-metric-label">Subtotal</span>
+              <strong data-bookshop-summary-subtotal>R$ 0,00</strong>
+            </article>
+            <article class="nc-bookshop-form-metric">
+              <span class="nc-metric-label">Desconto</span>
+              <strong data-bookshop-summary-discount>R$ 0,00</strong>
+            </article>
+            <article class="nc-bookshop-form-metric" data-bookshop-summary-received-card {% if bookshop_sale_form.payment_method|default('pix') != 'cash' %}hidden{% endif %}>
+              <span class="nc-metric-label">Valor recebido</span>
+              <strong data-bookshop-summary-received>R$ 0,00</strong>
+            </article>
+            <article class="nc-bookshop-form-metric" data-bookshop-summary-change-card {% if bookshop_sale_form.payment_method|default('pix') != 'cash' %}hidden{% endif %}>
+              <span class="nc-metric-label">Troco</span>
+              <strong data-bookshop-summary-change>R$ 0,00</strong>
+            </article>
+            <article class="nc-bookshop-form-metric">
+              <span class="nc-metric-label">Total final</span>
+              <strong data-bookshop-summary-total>R$ 0,00</strong>
+            </article>
+          </div>
+        </div>
+
+        <template data-bookshop-line-template>
+          <div class="nc-bookshop-sale-line" data-bookshop-line>
+            <div class="nc-bookshop-sale-line-grid">
+              <div class="nc-admin-form-field nc-bookshop-sale-line-book">
+                <label class="nc-admin-form-label">Livro</label>
+                <select class="nc-admin-form-input" data-bookshop-book-select></select>
+              </div>
+
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label">Lote</label>
+                <select class="nc-admin-form-input" data-bookshop-lot-select></select>
+              </div>
+
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label">Quantidade</label>
+                <input class="nc-admin-form-input" type="number" min="1" value="1" data-bookshop-quantity-input>
+              </div>
+
+              <div class="nc-admin-form-field">
+                <label class="nc-admin-form-label">Preço unitário</label>
+                <input class="nc-admin-form-input" type="text" inputmode="decimal" value="0.00" data-bookshop-price-input>
+              </div>
+
+              <div class="nc-admin-form-field nc-bookshop-sale-line-actions">
+                <label class="nc-admin-form-label">Ação</label>
+                <button class="nc-btn nc-btn-secondary" type="button" data-bookshop-remove-line>Remover</button>
+              </div>
+            </div>
+            <p class="nc-bookshop-inline-copy" data-bookshop-stock-hint></p>
+          </div>
+        </template>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary" type="submit" {% if bookshop_sale_book_options|length == 0 %}disabled{% endif %}>Concluir venda</button>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <script>
+    (function () {
+      var form = document.querySelector('[data-bookshop-sale-builder]');
+      if (!form) {
+        return;
+      }
+
+      var optionsPayload = form.getAttribute('data-bookshop-options') || '[]';
+      var options;
+
+      try {
+        options = JSON.parse(optionsPayload);
+      } catch (error) {
+        options = [];
+      }
+
+      var addButton = form.querySelector('[data-bookshop-add-line]');
+      var linesContainer = form.querySelector('[data-bookshop-lines]');
+      var template = form.querySelector('[data-bookshop-line-template]');
+      var quickSearchInput = form.querySelector('[data-bookshop-quick-search]');
+      var quickResults = form.querySelector('[data-bookshop-quick-results]');
+      var customerPhoneInput = form.querySelector('#customer_phone');
+      var customerEmailInput = form.querySelector('#customer_email');
+      var customerCpfInput = form.querySelector('#customer_cpf');
+      var discountInput = form.querySelector('#discount_amount');
+      var paymentMethodInput = form.querySelector('#payment_method');
+      var receivedAmountInput = form.querySelector('#received_amount');
+      var receivedAmountField = form.querySelector('[data-bookshop-received-field]');
+      var receivedAmountNote = form.querySelector('[data-bookshop-received-note]');
+      var summaryLines = form.querySelector('[data-bookshop-summary-lines]');
+      var summaryUnits = form.querySelector('[data-bookshop-summary-units]');
+      var summarySubtotal = form.querySelector('[data-bookshop-summary-subtotal]');
+      var summaryDiscount = form.querySelector('[data-bookshop-summary-discount]');
+      var summaryReceived = form.querySelector('[data-bookshop-summary-received]');
+      var summaryChange = form.querySelector('[data-bookshop-summary-change]');
+      var summaryReceivedCard = form.querySelector('[data-bookshop-summary-received-card]');
+      var summaryChangeCard = form.querySelector('[data-bookshop-summary-change-card]');
+      var summaryTotal = form.querySelector('[data-bookshop-summary-total]');
+      var integerFormatter = typeof Intl !== 'undefined' && Intl.NumberFormat
+        ? new Intl.NumberFormat('pt-BR')
+        : null;
+      var currencyFormatter = typeof Intl !== 'undefined' && Intl.NumberFormat
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+        : null;
+
+      function normalizeText(value) {
+        var normalized = String(value || '').toLowerCase();
+
+        if (typeof normalized.normalize === 'function') {
+          normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        return normalized;
+      }
+
+      function parseMoney(value) {
+        var raw = String(value || '').trim();
+        var parsed;
+
+        if (!raw) {
+          return 0;
+        }
+
+        raw = raw.replace(/[R$\s]/g, '');
+
+        if (raw.indexOf(',') >= 0) {
+          raw = raw.replace(/\./g, '').replace(',', '.');
+        } else {
+          raw = raw.replace(/,/g, '');
+        }
+
+        parsed = parseFloat(raw);
+
+        return isNaN(parsed) ? 0 : parsed;
+      }
+
+      function formatInteger(value) {
+        var integerValue = Math.max(0, Math.round(Number(value) || 0));
+
+        if (integerFormatter) {
+          return integerFormatter.format(integerValue);
+        }
+
+        return String(integerValue);
+      }
+
+      function formatCurrency(value) {
+        var numericValue = Number(value) || 0;
+
+        if (currencyFormatter) {
+          return currencyFormatter.format(numericValue);
+        }
+
+        return 'R$ ' + numericValue.toFixed(2).replace('.', ',');
+      }
+
+      function formatMoneyInputValue(value, emptyFallback) {
+        var raw = String(value || '').trim();
+
+        if (!raw) {
+          return typeof emptyFallback === 'string' ? emptyFallback : '';
+        }
+
+        return parseMoney(raw).toFixed(2).replace('.', ',');
+      }
+
+      function formatPhoneInputValue(value) {
+        var digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+
+        if (!digits) {
+          return '';
+        }
+
+        if (digits.length <= 2) {
+          return '(' + digits;
+        }
+
+        if (digits.length <= 6) {
+          return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+        }
+
+        if (digits.length <= 10) {
+          return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
+        }
+
+        return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
+      }
+
+      function formatCpfInputValue(value) {
+        var digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+
+        if (!digits) {
+          return '';
+        }
+
+        if (digits.length <= 3) {
+          return digits;
+        }
+
+        if (digits.length <= 6) {
+          return digits.slice(0, 3) + '.' + digits.slice(3);
+        }
+
+        if (digits.length <= 9) {
+          return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6);
+        }
+
+        return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9);
+      }
+
+      function isValidEmailInputValue(value) {
+        var normalized = String(value || '').trim();
+        var probe;
+
+        if (!normalized) {
+          return true;
+        }
+
+        probe = document.createElement('input');
+        probe.type = 'email';
+        probe.value = normalized;
+
+        return probe.checkValidity();
+      }
+
+      function syncEmailValidity() {
+        var normalizedValue;
+        var isValid;
+
+        if (!customerEmailInput) {
+          return true;
+        }
+
+        normalizedValue = String(customerEmailInput.value || '').trim();
+        isValid = isValidEmailInputValue(normalizedValue);
+
+        customerEmailInput.value = normalizedValue;
+        customerEmailInput.setCustomValidity(isValid ? '' : 'Informe um e-mail válido ou deixe em branco.');
+        customerEmailInput.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+
+        return isValid;
+      }
+
+      function buildSearchText(option) {
+        return normalizeText([
+          option.title,
+          option.author_name,
+          option.sku,
+          option.isbn,
+          option.barcode,
+          option.publisher_name,
+          option.collection_name,
+          option.volume_number,
+          option.volume_label
+        ].join(' '));
+      }
+
+      function buildQuickMeta(option) {
+        var fragments = [];
+
+        if (option.author_name) {
+          fragments.push(option.author_name);
+        }
+
+        if (option.sku) {
+          fragments.push('SKU ' + option.sku);
+        }
+
+        if (option.isbn) {
+          fragments.push('ISBN ' + option.isbn);
+        } else if (option.barcode) {
+          fragments.push('Cód. ' + option.barcode);
+        }
+
+        if (option.collection_name) {
+          fragments.push(
+            option.collection_name
+              + (option.volume_number ? ' · Vol. ' + option.volume_number : '')
+              + (option.volume_label ? ' · ' + option.volume_label : '')
+          );
+        }
+
+        fragments.push('Estoque ' + (option.stock_quantity || 0));
+
+        if (Array.isArray(option.stock_lots) && option.stock_lots.length > 0) {
+          fragments.push(option.stock_lots.length === 1 ? '1 lote' : option.stock_lots.length + ' lotes');
+        }
+
+        return fragments.join(' · ');
+      }
+
+      options = Array.isArray(options) ? options.map(function (option) {
+        option.stock_lots = Array.isArray(option.stock_lots) ? option.stock_lots : [];
+        option.searchText = buildSearchText(option);
+        option.quickMeta = buildQuickMeta(option);
+        return option;
+      }) : [];
+
+      var optionsByValue = {};
+      options.forEach(function (option) {
+        optionsByValue[String(option.value)] = option;
+      });
+
+      function buildOptions(select, selectedValue) {
+        select.innerHTML = '';
+
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Selecione um item ou use a busca rápida';
+        select.appendChild(placeholder);
+
+        options.forEach(function (option) {
+          var element = document.createElement('option');
+          element.value = option.value;
+          element.textContent = option.label;
+          element.dataset.salePrice = option.sale_price;
+          element.dataset.stockQuantity = option.stock_quantity;
+          if (selectedValue && selectedValue === option.value) {
+            element.selected = true;
+          }
+          select.appendChild(element);
+        });
+      }
+
+      function buildLotOptions(lotSelect, option, selectedLotValue) {
+        lotSelect.innerHTML = '';
+
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = option ? 'Selecione o lote' : 'Selecione primeiro o livro';
+        lotSelect.appendChild(placeholder);
+
+        if (!option || !Array.isArray(option.stock_lots) || option.stock_lots.length === 0) {
+          lotSelect.disabled = true;
+          return;
+        }
+
+        lotSelect.disabled = false;
+
+        option.stock_lots.forEach(function (lot) {
+          var element = document.createElement('option');
+          var normalizedLotId = String(lot.id || '');
+
+          element.value = normalizedLotId;
+          element.textContent = lot.label || (lot.lot_code || 'Lote');
+          element.dataset.stockQuantity = String(lot.quantity_available || 0);
+          element.dataset.salePrice = String(lot.unit_sale_price || '0.00');
+          element.dataset.costLabel = String(lot.unit_cost_label || '-');
+          element.dataset.salePriceLabel = String(lot.unit_sale_price_label || 'R$ 0,00');
+          element.dataset.occurredAtLabel = String(lot.occurred_at_label || '');
+
+          if (selectedLotValue && normalizedLotId === String(selectedLotValue)) {
+            element.selected = true;
+          }
+
+          lotSelect.appendChild(element);
+        });
+
+        if (!lotSelect.value && option.stock_lots.length === 1) {
+          lotSelect.value = String(option.stock_lots[0].id || '');
+        }
+      }
+
+      function resolveLineBookOption(line) {
+        var select = line.querySelector('[data-bookshop-book-select]');
+        return select ? (optionsByValue[String(select.value || '')] || null) : null;
+      }
+
+      function resolveSelectedLotOption(line) {
+        var lotSelect = line.querySelector('[data-bookshop-lot-select]');
+
+        if (!lotSelect || !lotSelect.value) {
+          return null;
+        }
+
+        return lotSelect.options[lotSelect.selectedIndex] || null;
+      }
+
+      function hideQuickResults() {
+        if (!quickResults) {
+          return;
+        }
+
+        quickResults.innerHTML = '';
+        quickResults.hidden = true;
+      }
+
+      function renderQuickResults(query) {
+        if (!quickResults) {
+          return;
+        }
+
+        var normalizedQuery = normalizeText(query);
+        if (normalizedQuery.length < 2) {
+          hideQuickResults();
+          return;
+        }
+
+        var matches = options
+          .map(function (option) {
+            return {
+              option: option,
+              rank: option.searchText.indexOf(normalizedQuery)
+            };
+          })
+          .filter(function (entry) {
+            return entry.rank >= 0;
+          })
+          .sort(function (left, right) {
+            if (left.rank !== right.rank) {
+              return left.rank - right.rank;
+            }
+
+            return String(left.option.title || left.option.label).localeCompare(
+              String(right.option.title || right.option.label),
+              'pt-BR'
+            );
+          })
+          .slice(0, 8);
+
+        quickResults.innerHTML = '';
+        quickResults.hidden = false;
+
+        if (!matches.length) {
+          var empty = document.createElement('div');
+          empty.className = 'nc-bookshop-sale-quick-empty';
+          empty.textContent = 'Nenhum título encontrado para essa busca.';
+          quickResults.appendChild(empty);
+          return;
+        }
+
+        matches.forEach(function (entry) {
+          var button = document.createElement('button');
+          var title = document.createElement('strong');
+          var meta = document.createElement('span');
+
+          button.type = 'button';
+          button.className = 'nc-bookshop-sale-quick-result';
+          button.setAttribute('data-bookshop-quick-result', '');
+          button.setAttribute('data-book-value', String(entry.option.value));
+
+          title.textContent = entry.option.title || entry.option.label || 'Livro';
+          meta.textContent = entry.option.quickMeta;
+
+          button.appendChild(title);
+          button.appendChild(meta);
+          quickResults.appendChild(button);
+        });
+      }
+
+      function refreshNames() {
+        var lines = linesContainer.querySelectorAll('[data-bookshop-line]');
+
+        lines.forEach(function (line, index) {
+          var select = line.querySelector('[data-bookshop-book-select]');
+          var lot = line.querySelector('[data-bookshop-lot-select]');
+          var quantity = line.querySelector('[data-bookshop-quantity-input]');
+          var price = line.querySelector('[data-bookshop-price-input]');
+
+          select.name = 'items[' + index + '][book_id]';
+          lot.name = 'items[' + index + '][lot_id]';
+          quantity.name = 'items[' + index + '][quantity]';
+          price.name = 'items[' + index + '][unit_price]';
+        });
+      }
+
+      function syncCashFields() {
+        var isCash = paymentMethodInput && paymentMethodInput.value === 'cash';
+
+        if (receivedAmountField) {
+          receivedAmountField.hidden = !isCash;
+        }
+
+        if (summaryReceivedCard) {
+          summaryReceivedCard.hidden = !isCash;
+        }
+
+        if (summaryChangeCard) {
+          summaryChangeCard.hidden = !isCash;
+        }
+      }
+
+      function setReceivedAmountState(isInvalid, message) {
+        var defaultMessage;
+
+        if (!receivedAmountInput) {
+          return;
+        }
+
+        defaultMessage = receivedAmountNote
+          ? (receivedAmountNote.getAttribute('data-default-message') || '')
+          : '';
+
+        receivedAmountInput.setCustomValidity(isInvalid ? message : '');
+        receivedAmountInput.setAttribute('aria-invalid', isInvalid ? 'true' : 'false');
+
+        if (receivedAmountNote) {
+          receivedAmountNote.textContent = isInvalid ? message : defaultMessage;
+          receivedAmountNote.classList.toggle('nc-bookshop-inline-copy-error', isInvalid);
+        }
+      }
+
+      function syncReceivedAmountValidity(force) {
+        var subtotal = 0;
+        var discount = parseMoney(discountInput ? discountInput.value : '0');
+        var receivedRaw = receivedAmountInput ? String(receivedAmountInput.value || '').trim() : '';
+        var received = parseMoney(receivedRaw);
+        var isCash = paymentMethodInput && paymentMethodInput.value === 'cash';
+        var totalAfterDiscount;
+        var lines;
+
+        if (!receivedAmountInput) {
+          return true;
+        }
+
+        if (!isCash) {
+          setReceivedAmountState(false, '');
+          return true;
+        }
+
+        lines = linesContainer.querySelectorAll('[data-bookshop-line]');
+        lines.forEach(function (line) {
+          var select = line.querySelector('[data-bookshop-book-select]');
+          var quantity = line.querySelector('[data-bookshop-quantity-input]');
+          var price = line.querySelector('[data-bookshop-price-input]');
+          var quantityValue = Math.max(0, parseInt(quantity && quantity.value ? quantity.value : '0', 10) || 0);
+          var priceValue = Math.max(0, parseMoney(price ? price.value : '0'));
+
+          if (!select || !select.value) {
+            return;
+          }
+
+          subtotal += quantityValue * priceValue;
+        });
+
+        totalAfterDiscount = Math.max(0, subtotal - discount);
+
+        if (receivedRaw === '') {
+          if (force) {
+            setReceivedAmountState(true, 'Informe o valor recebido para pagamento em dinheiro.');
+            return false;
+          }
+
+          setReceivedAmountState(false, '');
+          return true;
+        }
+
+        if (received < totalAfterDiscount) {
+          setReceivedAmountState(true, 'O valor recebido em dinheiro não pode ser menor do que o total da venda.');
+          return false;
+        }
+
+        setReceivedAmountState(false, '');
+        return true;
+      }
+
+      function recalculateSummary() {
+        var lines = linesContainer.querySelectorAll('[data-bookshop-line]');
+        var activeLines = 0;
+        var totalUnits = 0;
+        var subtotal = 0;
+        var discount = parseMoney(discountInput ? discountInput.value : '0');
+        var received = parseMoney(receivedAmountInput ? receivedAmountInput.value : '0');
+        var isCash = paymentMethodInput && paymentMethodInput.value === 'cash';
+        var totalAfterDiscount;
+        var changeAmount;
+
+        lines.forEach(function (line) {
+          var select = line.querySelector('[data-bookshop-book-select]');
+          var quantity = line.querySelector('[data-bookshop-quantity-input]');
+          var price = line.querySelector('[data-bookshop-price-input]');
+          var quantityValue = Math.max(0, parseInt(quantity && quantity.value ? quantity.value : '0', 10) || 0);
+          var priceValue = Math.max(0, parseMoney(price ? price.value : '0'));
+
+          if (!select || !select.value) {
+            return;
+          }
+
+          activeLines += 1;
+          totalUnits += quantityValue;
+          subtotal += quantityValue * priceValue;
+        });
+
+        if (summaryLines) {
+          summaryLines.textContent = formatInteger(activeLines);
+        }
+
+        if (summaryUnits) {
+          summaryUnits.textContent = formatInteger(totalUnits);
+        }
+
+        if (summarySubtotal) {
+          summarySubtotal.textContent = formatCurrency(subtotal);
+        }
+
+        if (summaryDiscount) {
+          summaryDiscount.textContent = formatCurrency(discount);
+        }
+
+        totalAfterDiscount = Math.max(0, subtotal - discount);
+        changeAmount = isCash ? Math.max(0, received - totalAfterDiscount) : 0;
+
+        if (summaryReceived) {
+          summaryReceived.textContent = formatCurrency(received);
+        }
+
+        if (summaryChange) {
+          summaryChange.textContent = formatCurrency(changeAmount);
+        }
+
+        if (summaryTotal) {
+          summaryTotal.textContent = formatCurrency(totalAfterDiscount);
+        }
+      }
+
+      function findLineByBookAndLotValue(bookValue, lotValue) {
+        var normalizedValue = String(bookValue || '');
+        var normalizedLotValue = String(lotValue || '');
+        var lines = linesContainer.querySelectorAll('[data-bookshop-line]');
+
+        for (var index = 0; index < lines.length; index += 1) {
+          var line = lines[index];
+          var select = line.querySelector('[data-bookshop-book-select]');
+          var lotSelect = line.querySelector('[data-bookshop-lot-select]');
+
+          if (
+            select
+            && lotSelect
+            && String(select.value || '') === normalizedValue
+            && String(lotSelect.value || '') === normalizedLotValue
+          ) {
+            return line;
+          }
+        }
+
+        return null;
+      }
+
+      function findReusableEmptyLine() {
+        var lines = linesContainer.querySelectorAll('[data-bookshop-line]');
+
+        for (var index = 0; index < lines.length; index += 1) {
+          var line = lines[index];
+          var select = line.querySelector('[data-bookshop-book-select]');
+
+          if (select && !select.value) {
+            return line;
+          }
+        }
+
+        return null;
+      }
+
+      function revealLine(line) {
+        var select;
+
+        if (!line) {
+          return;
+        }
+
+        select = line.querySelector('[data-bookshop-book-select]');
+
+        line.scrollIntoView({ block: 'center', behavior: 'smooth' });
+
+        if (select) {
+          window.setTimeout(function () {
+            select.focus({ preventScroll: true });
+          }, 160);
+        }
+      }
+
+      function refreshLine(line, forceLotPrice) {
+        var select = line.querySelector('[data-bookshop-book-select]');
+        var lotSelect = line.querySelector('[data-bookshop-lot-select]');
+        var price = line.querySelector('[data-bookshop-price-input]');
+        var quantity = line.querySelector('[data-bookshop-quantity-input]');
+        var hint = line.querySelector('[data-bookshop-stock-hint]');
+        var selectedOption = select.options[select.selectedIndex];
+        var bookOption = resolveLineBookOption(line);
+        var selectedLotOption;
+
+        if (!selectedOption || !selectedOption.value || !bookOption) {
+          if (lotSelect) {
+            buildLotOptions(lotSelect, null, '');
+          }
+          hint.textContent = '';
+          recalculateSummary();
+          return;
+        }
+
+        if (lotSelect) {
+          buildLotOptions(
+            lotSelect,
+            bookOption,
+            lotSelect.value || lotSelect.getAttribute('data-selected-lot') || ''
+          );
+          lotSelect.setAttribute('data-selected-lot', lotSelect.value || '');
+        }
+
+        selectedLotOption = resolveSelectedLotOption(line);
+
+        if (forceLotPrice && price) {
+          price.value = selectedLotOption
+            ? formatMoneyInputValue(selectedLotOption.dataset.salePrice || '0.00', '0,00')
+            : formatMoneyInputValue(selectedOption.dataset.salePrice || '0.00', '0,00');
+        } else if (!price.value || price.value === '0.00') {
+          price.value = selectedLotOption
+            ? formatMoneyInputValue(selectedLotOption.dataset.salePrice || '0.00', '0,00')
+            : formatMoneyInputValue(selectedOption.dataset.salePrice || '0.00', '0,00');
+        }
+
+        hint.textContent = 'Estoque disponível: '
+          + (selectedLotOption ? (selectedLotOption.dataset.stockQuantity || '0') : (selectedOption.dataset.stockQuantity || '0'))
+          + (selectedLotOption ? ' no ' + selectedLotOption.textContent : '')
+          + ' · Estoque total do título: '
+          + (selectedOption.dataset.stockQuantity || '0')
+          + ' · Total da linha: '
+          + formatCurrency(
+            Math.max(0, parseMoney(price.value))
+              * Math.max(0, parseInt(quantity && quantity.value ? quantity.value : '0', 10) || 0)
+          );
+        recalculateSummary();
+      }
+
+      function createLine(selectedValue, selectedLotValue, quantityValue, priceValue) {
+        if (!template || !template.content) {
+          return null;
+        }
+
+        var fragment = template.content.cloneNode(true);
+        var line = fragment.querySelector('[data-bookshop-line]');
+        var select = line.querySelector('[data-bookshop-book-select]');
+        var lotSelect = line.querySelector('[data-bookshop-lot-select]');
+        var quantity = line.querySelector('[data-bookshop-quantity-input]');
+        var price = line.querySelector('[data-bookshop-price-input]');
+
+        buildOptions(select, selectedValue || '');
+        if (lotSelect && selectedLotValue) {
+          lotSelect.setAttribute('data-selected-lot', selectedLotValue || '');
+        }
+        quantity.value = quantityValue || '1';
+        price.value = priceValue || '0.00';
+
+        linesContainer.appendChild(fragment);
+        refreshNames();
+        refreshLine(linesContainer.lastElementChild, true);
+
+        return linesContainer.lastElementChild;
+      }
+
+      function applyOptionToLine(line, optionValue, lotValue, quantityValue, unitPriceValue) {
+        var select = line.querySelector('[data-bookshop-book-select]');
+        var lotSelect = line.querySelector('[data-bookshop-lot-select]');
+        var quantity = line.querySelector('[data-bookshop-quantity-input]');
+        var price = line.querySelector('[data-bookshop-price-input]');
+        var option = optionsByValue[String(optionValue)] || null;
+
+        if (!select) {
+          return;
+        }
+
+        if (select.options.length === 0) {
+          buildOptions(select, String(optionValue || ''));
+        } else {
+          select.value = String(optionValue || '');
+        }
+
+        if (lotSelect) {
+          lotSelect.setAttribute('data-selected-lot', String(lotValue || ''));
+        }
+
+        if (quantity) {
+          quantity.value = quantityValue || '1';
+        }
+
+        if (price) {
+          price.value = unitPriceValue || (option ? option.sale_price : '0.00') || '0.00';
+        }
+
+        refreshLine(line, true);
+      }
+
+      function addQuickSelection(bookValue) {
+        var option = optionsByValue[String(bookValue)] || null;
+        var defaultLot = option && Array.isArray(option.stock_lots) && option.stock_lots.length > 0
+          ? option.stock_lots[0]
+          : null;
+        if (!option) {
+          return;
+        }
+
+        var existingLine = findLineByBookAndLotValue(bookValue, defaultLot ? defaultLot.id : '');
+        if (existingLine) {
+          var quantity = existingLine.querySelector('[data-bookshop-quantity-input]');
+          var currentValue = quantity ? parseInt(quantity.value || '0', 10) : 0;
+
+          if (quantity) {
+            quantity.value = String((isNaN(currentValue) ? 0 : currentValue) + 1);
+          }
+
+          refreshLine(existingLine);
+          revealLine(existingLine);
+          return;
+        }
+
+        var emptyLine = findReusableEmptyLine();
+        if (emptyLine) {
+          applyOptionToLine(
+            emptyLine,
+            bookValue,
+            defaultLot ? defaultLot.id : '',
+            '1',
+            defaultLot ? defaultLot.unit_sale_price || option.sale_price || '0.00' : option.sale_price || '0.00'
+          );
+          revealLine(emptyLine);
+          return;
+        }
+
+        revealLine(createLine(
+          String(bookValue),
+          defaultLot ? String(defaultLot.id || '') : '',
+          '1',
+          defaultLot ? defaultLot.unit_sale_price || option.sale_price || '0.00' : option.sale_price || '0.00'
+        ));
+      }
+
+      linesContainer.querySelectorAll('[data-bookshop-line]').forEach(function (line) {
+        var select = line.querySelector('[data-bookshop-book-select]');
+        var price = line.querySelector('[data-bookshop-price-input]');
+        buildOptions(select, select.value);
+        refreshLine(
+          line,
+          !price || !String(price.value || '').trim() || parseMoney(price.value) === 0
+        );
+      });
+
+      refreshNames();
+
+      linesContainer.addEventListener('change', function (event) {
+        var target = event.target;
+        if (target.matches('[data-bookshop-book-select], [data-bookshop-lot-select]')) {
+          refreshLine(target.closest('[data-bookshop-line]'), true);
+        }
+      });
+
+      linesContainer.addEventListener('input', function (event) {
+        var target = event.target;
+
+        if (target.matches('[data-bookshop-quantity-input], [data-bookshop-price-input]')) {
+          refreshLine(target.closest('[data-bookshop-line]'));
+        }
+      });
+
+      linesContainer.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-bookshop-remove-line]');
+        if (!button) {
+          return;
+        }
+
+        var line = button.closest('[data-bookshop-line]');
+        if (linesContainer.querySelectorAll('[data-bookshop-line]').length === 1) {
+          line.querySelector('[data-bookshop-book-select]').value = '';
+          line.querySelector('[data-bookshop-lot-select]').setAttribute('data-selected-lot', '');
+          line.querySelector('[data-bookshop-quantity-input]').value = '1';
+          line.querySelector('[data-bookshop-price-input]').value = '0.00';
+          refreshLine(line, true);
+          return;
+        }
+
+        line.remove();
+        refreshNames();
+        recalculateSummary();
+      });
+
+      if (addButton) {
+        addButton.addEventListener('click', function () {
+          var emptyLine = findReusableEmptyLine();
+
+          if (emptyLine) {
+            revealLine(emptyLine);
+            return;
+          }
+
+          revealLine(createLine('', '', '1', '0.00'));
+        });
+      }
+
+      if (discountInput) {
+        discountInput.value = formatMoneyInputValue(discountInput.value, '0,00');
+        discountInput.addEventListener('input', function () {
+          recalculateSummary();
+          syncReceivedAmountValidity(false);
+        });
+        discountInput.addEventListener('blur', function () {
+          discountInput.value = formatMoneyInputValue(discountInput.value, '0,00');
+          recalculateSummary();
+          syncReceivedAmountValidity(false);
+        });
+      }
+
+      if (receivedAmountInput) {
+        receivedAmountInput.value = formatMoneyInputValue(receivedAmountInput.value, '');
+        receivedAmountInput.addEventListener('input', function () {
+          recalculateSummary();
+          syncReceivedAmountValidity(false);
+        });
+        receivedAmountInput.addEventListener('blur', function () {
+          receivedAmountInput.value = formatMoneyInputValue(receivedAmountInput.value, '');
+          if (!syncReceivedAmountValidity(true)) {
+            receivedAmountInput.reportValidity();
+          }
+        });
+      }
+
+      if (paymentMethodInput) {
+        paymentMethodInput.addEventListener('change', function () {
+          syncCashFields();
+          recalculateSummary();
+          syncReceivedAmountValidity(false);
+        });
+      }
+
+      if (customerPhoneInput) {
+        customerPhoneInput.value = formatPhoneInputValue(customerPhoneInput.value);
+        customerPhoneInput.addEventListener('input', function () {
+          customerPhoneInput.value = formatPhoneInputValue(customerPhoneInput.value);
+        });
+      }
+
+      if (customerCpfInput) {
+        customerCpfInput.value = formatCpfInputValue(customerCpfInput.value);
+        customerCpfInput.addEventListener('input', function () {
+          customerCpfInput.value = formatCpfInputValue(customerCpfInput.value);
+        });
+      }
+
+      if (customerEmailInput) {
+        syncEmailValidity();
+        customerEmailInput.addEventListener('input', syncEmailValidity);
+        customerEmailInput.addEventListener('blur', function () {
+          if (!syncEmailValidity()) {
+            customerEmailInput.reportValidity();
+          }
+        });
+      }
+
+      if (quickSearchInput && quickResults) {
+        quickSearchInput.addEventListener('input', function () {
+          renderQuickResults(quickSearchInput.value || '');
+        });
+
+        quickSearchInput.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter') {
+            return;
+          }
+
+          var firstResult = quickResults.querySelector('[data-bookshop-quick-result]');
+          if (!firstResult) {
+            return;
+          }
+
+          event.preventDefault();
+          firstResult.click();
+        });
+
+        quickResults.addEventListener('click', function (event) {
+          var button = event.target.closest('[data-bookshop-quick-result]');
+          if (!button) {
+            return;
+          }
+
+          addQuickSelection(button.getAttribute('data-book-value') || '');
+          quickSearchInput.value = '';
+          hideQuickResults();
+          quickSearchInput.focus();
+        });
+      }
+
+      form.addEventListener('submit', function (event) {
+        if (discountInput) {
+          discountInput.value = formatMoneyInputValue(discountInput.value, '0,00');
+        }
+
+        if (receivedAmountInput) {
+          receivedAmountInput.value = formatMoneyInputValue(receivedAmountInput.value, '');
+        }
+
+        if (customerEmailInput && !syncEmailValidity()) {
+          event.preventDefault();
+          customerEmailInput.reportValidity();
+          customerEmailInput.focus();
+          return;
+        }
+
+        if (!syncReceivedAmountValidity(true)) {
+          event.preventDefault();
+          receivedAmountInput.reportValidity();
+          receivedAmountInput.focus();
+        }
+      });
+
+      syncCashFields();
+      recalculateSummary();
+      syncReceivedAmountValidity(false);
+    }());
+  </script>
+{% endblock %}

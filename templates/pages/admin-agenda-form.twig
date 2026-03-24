@@ -17,6 +17,11 @@
         </article>
       {% endif %}
 
+      <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/eventos">Voltar</a>
+      </div>
+
       <article class="nc-card nc-admin-form-card">
         <form class="nc-admin-form" method="post" action="{{ agenda_form_is_edit ? '/painel/eventos/' ~ agenda_event_id ~ '/editar' : '/painel/eventos/novo' }}">
           <div class="nc-admin-form-grid nc-admin-form-grid-identity">
@@ -125,7 +130,7 @@
 
           <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
             <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ agenda_form_is_edit ? 'Salvar alterações' : 'Criar evento' }}</button>
-            <a class="nc-btn nc-btn-secondary nc-admin-action-edit" href="/painel/eventos">Voltar</a>
+            <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/eventos">Voltar</a>
           </div>
         </form>
       </article>

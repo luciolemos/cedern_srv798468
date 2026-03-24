@@ -1,0 +1,230 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = bookshop_stock_movement_mode == 'adjustment' ? 'Novo ajuste de estoque' : 'Nova entrada de estoque' %}
+{% set dashboard_page_lead = bookshop_stock_movement_mode == 'adjustment'
+  ? 'Ajuste o saldo físico do acervo sempre que houver divergência, perda, avaria ou correção operacional.'
+  : 'Registre a entrada de novos exemplares ou doações recebidas para manter o saldo físico da livraria atualizado.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário de movimentação de estoque da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% if bookshop_stock_movement_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in bookshop_stock_movement_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/movimentacoes">Voltar ao histórico</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry">Nova entrada</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=adjustment">Novo ajuste</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Abrir acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas PDV</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <div class="nc-bookshop-form-metrics">
+        <div class="nc-bookshop-form-metric">
+          <span class="nc-metric-label">Livro selecionado</span>
+          <strong data-bookshop-movement-summary-title>Nenhum livro</strong>
+        </div>
+        <div class="nc-bookshop-form-metric">
+          <span class="nc-metric-label">Saldo atual</span>
+          <strong data-bookshop-movement-summary-stock>0</strong>
+        </div>
+        <div class="nc-bookshop-form-metric">
+          <span class="nc-metric-label">Impacto da movimentação</span>
+          <strong data-bookshop-movement-summary-delta>+0</strong>
+        </div>
+        <div class="nc-bookshop-form-metric">
+          <span class="nc-metric-label">Saldo projetado</span>
+          <strong data-bookshop-movement-summary-projected>0</strong>
+        </div>
+      </div>
+
+      <form class="nc-admin-form" method="post" action="/painel/livraria/movimentacoes/nova?mode={{ bookshop_stock_movement_mode }}" data-bookshop-stock-movement-form>
+        <input type="hidden" name="mode" value="{{ bookshop_stock_movement_form.mode|default(bookshop_stock_movement_mode) }}">
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-stock-movement-head">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="book_id">Livro do acervo</label>
+            <select class="nc-admin-form-input" id="book_id" name="book_id" required data-bookshop-movement-book-select>
+              <option value="" {% if bookshop_stock_movement_form.book_id|default(0) == 0 %}selected{% endif %} disabled>Selecione um livro</option>
+              {% for book in bookshop_stock_movement_book_options|default([]) %}
+                <option
+                  value="{{ book.id }}"
+                  data-title="{{ book.title }}"
+                  data-author="{{ book.author_name }}"
+                  data-sku="{{ book.sku }}"
+                  data-stock="{{ book.stock_quantity }}"
+                  data-location="{{ book.location_label }}"
+                  data-cost-label="{{ book.cost_price_label }}"
+                  data-sale-label="{{ book.sale_price_label }}"
+                  data-status="{{ book.status_label }}"
+                  {{ bookshop_stock_movement_form.book_id|default(0) == book.id ? 'selected' : '' }}
+                >{{ book.label }}</option>
+              {% endfor %}
+            </select>
+            <p class="nc-bookshop-movement-book-hint" data-bookshop-movement-book-hint>Selecione um item do acervo para atualizar o saldo.</p>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="occurred_at">Data e hora</label>
+            <input class="nc-admin-form-input" id="occurred_at" name="occurred_at" type="datetime-local" required value="{{ bookshop_stock_movement_form.occurred_at|default('') ? bookshop_stock_movement_form.occurred_at|replace({' ': 'T'})|slice(0, 16) : '' }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="movement_type">Tipo da movimentação</label>
+            <select class="nc-admin-form-input" id="movement_type" name="movement_type" required data-bookshop-movement-type-select>
+              {% for value, label in bookshop_stock_movement_type_options|default({}) %}
+                <option value="{{ value }}" {{ bookshop_stock_movement_form.movement_type|default('') == value ? 'selected' : '' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="quantity">Quantidade</label>
+            <input class="nc-admin-form-input" id="quantity" name="quantity" type="number" min="1" step="1" required value="{{ bookshop_stock_movement_form.quantity|default(1) }}" data-bookshop-movement-quantity-input>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-stock-movement-meta">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="unit_cost">Custo unitário</label>
+            <input class="nc-admin-form-input" id="unit_cost" name="unit_cost" type="text" inputmode="decimal" placeholder="Ex: 18,90" value="{{ bookshop_stock_movement_form.unit_cost|default('') }}" data-bookshop-movement-cost-input>
+            <small>
+              Campo opcional. Quando informado em entradas, o custo atual do item também é atualizado.
+            </small>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="sale_price">Preço de venda do lote</label>
+            <input class="nc-admin-form-input" id="sale_price" name="sale_price" type="text" inputmode="decimal" placeholder="Ex: 55,00" value="{{ bookshop_stock_movement_form.sale_price|default('') }}">
+            <small>
+              Este valor define o preço de venda das unidades que estão entrando neste lote.
+            </small>
+          </div>
+
+          <div class="nc-admin-form-field nc-admin-form-field-full">
+            <label class="nc-admin-form-label" for="notes">Observações</label>
+            <textarea class="nc-admin-form-input" id="notes" name="notes" rows="4" placeholder="Ex: reposição recebida da distribuidora, ajuste após conferência física, exemplar avariado...">{{ bookshop_stock_movement_form.notes|default('') }}</textarea>
+          </div>
+        </div>
+
+        <div class="nc-actions">
+          <button class="nc-btn nc-btn-primary" type="submit">{{ bookshop_stock_movement_mode == 'adjustment' ? 'Registrar ajuste' : 'Registrar entrada' }}</button>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <script>
+    (function () {
+      var form = document.querySelector('[data-bookshop-stock-movement-form]');
+      if (!form) {
+        return;
+      }
+
+      var summaryScope = form.closest('.nc-admin-form-card') || document;
+      var bookSelect = form.querySelector('[data-bookshop-movement-book-select]');
+      var typeSelect = form.querySelector('[data-bookshop-movement-type-select]');
+      var quantityInput = form.querySelector('[data-bookshop-movement-quantity-input]');
+      var titleOutput = summaryScope.querySelector('[data-bookshop-movement-summary-title]');
+      var stockOutput = summaryScope.querySelector('[data-bookshop-movement-summary-stock]');
+      var deltaOutput = summaryScope.querySelector('[data-bookshop-movement-summary-delta]');
+      var projectedOutput = summaryScope.querySelector('[data-bookshop-movement-summary-projected]');
+      var hintOutput = form.querySelector('[data-bookshop-movement-book-hint]');
+
+      if (!bookSelect || !typeSelect || !quantityInput || !titleOutput || !stockOutput || !deltaOutput || !projectedOutput || !hintOutput) {
+        return;
+      }
+
+      function resolveSelectedOption() {
+        if (!bookSelect.value) {
+          return null;
+        }
+
+        return bookSelect.options[bookSelect.selectedIndex] || null;
+      }
+
+      function resolveDelta(quantity, movementType) {
+        if (movementType === 'adjustment_remove' || movementType === 'loss') {
+          return quantity * -1;
+        }
+
+        return quantity;
+      }
+
+      function refreshSummary() {
+        var option = resolveSelectedOption();
+        var quantity = parseInt(quantityInput.value || '0', 10);
+        var safeQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : 0;
+        var movementType = typeSelect.value || '';
+        var delta = resolveDelta(safeQuantity, movementType);
+
+        if (!option) {
+          titleOutput.textContent = 'Nenhum livro';
+          stockOutput.textContent = '0';
+          deltaOutput.textContent = '+0';
+          projectedOutput.textContent = '0';
+          hintOutput.textContent = 'Selecione um item do acervo para atualizar o saldo.';
+          return;
+        }
+
+        var currentStock = parseInt(option.dataset.stock || '0', 10);
+        var safeCurrentStock = Number.isFinite(currentStock) ? currentStock : 0;
+        var projectedStock = safeCurrentStock + delta;
+        var author = option.dataset.author || '';
+        var sku = option.dataset.sku || '';
+        var location = option.dataset.location || '';
+        var status = option.dataset.status || '';
+        var currentCost = option.dataset.costLabel || '';
+        var currentSale = option.dataset.saleLabel || '';
+        var title = option.dataset.title || option.textContent || 'Livro';
+        var fragments = [];
+
+        if (author) {
+          fragments.push(author);
+        }
+
+        if (sku) {
+          fragments.push('SKU ' + sku);
+        }
+
+        if (location) {
+          fragments.push(location);
+        }
+
+        if (status) {
+          fragments.push(status);
+        }
+
+        if (currentCost) {
+          fragments.push('Custo atual ' + currentCost);
+        }
+
+        if (currentSale) {
+          fragments.push('Venda atual ' + currentSale);
+        }
+
+        titleOutput.textContent = title;
+        stockOutput.textContent = String(safeCurrentStock);
+        deltaOutput.textContent = (delta >= 0 ? '+' : '') + String(delta);
+        projectedOutput.textContent = String(projectedStock);
+        hintOutput.textContent = fragments.length > 0 ? fragments.join(' · ') : 'Livro selecionado para movimentação.';
+      }
+
+      bookSelect.addEventListener('change', refreshSummary);
+      typeSelect.addEventListener('change', refreshSummary);
+      quantityInput.addEventListener('input', refreshSummary);
+      refreshSummary();
+    })();
+  </script>
+{% endblock %}

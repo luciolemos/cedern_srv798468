@@ -1,0 +1,82 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Importar Acervo por CSV' %}
+{% set dashboard_page_lead = 'Use a planilha do Excel como origem, exporte para CSV e sincronize o acervo da livraria sem digitação manual.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Importação do acervo da livraria" data-aos="fade-up" data-aos-delay="0">
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Abrir acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Ver vendas</a>
+    </div>
+
+    <div class="nc-bookshop-overview-grid" data-aos="fade-up" data-aos-delay="90">
+      <article class="nc-card nc-bookshop-overview-card">
+        <h3>Como usar</h3>
+        <ol class="nc-bookshop-flow-list">
+          <li>Abra a planilha no Excel.</li>
+          <li>Exporte em formato CSV UTF-8.</li>
+          <li>Envie o arquivo aqui no painel.</li>
+          <li>O sistema cria ou atualiza itens pelo SKU e, na falta dele, pelo ISBN.</li>
+        </ol>
+      </article>
+
+      <article class="nc-card nc-bookshop-overview-card">
+        <h3>Colunas aceitas</h3>
+        <p class="nc-bookshop-inline-copy">Use preferencialmente: <code>sku</code>, <code>titulo</code>, <code>autor</code>, <code>colecao</code>, <code>volume</code>, <code>rotulo_volume</code>, <code>categoria</code>, <code>genero</code>, <code>editora</code>, <code>isbn</code>, <code>codigo_barra</code>, <code>preco_venda</code>, <code>custo</code>, <code>estoque</code>, <code>estoque_minimo</code>, <code>status</code> e <code>localizacao</code>.</p>
+        <p>Se usar campos de volume, informe também a coleção correspondente para o vínculo ficar consistente no acervo.</p>
+      </article>
+    </div>
+
+    <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="120">
+      <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="/painel/livraria/importar">
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="inventory_file">Arquivo CSV</label>
+          <input class="nc-admin-form-input" id="inventory_file" name="inventory_file" type="file" accept=".csv,text/csv" required>
+          <p class="nc-admin-statute-meta">Arquivos XLSX ainda não entram diretamente neste fluxo. Exporte o Excel para CSV antes do envio.</p>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions">
+          <button class="nc-btn nc-btn-primary" type="submit">Importar acervo</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
+        </div>
+      </form>
+    </article>
+
+    {% if bookshop_import_summary|default({}) %}
+      <div class="nc-bookshop-kpi-grid" data-aos="fade-up" data-aos-delay="150">
+        <article class="nc-card nc-bookshop-kpi-card">
+          <span class="nc-metric-label">Linhas processadas</span>
+          <strong class="nc-metric-value">{{ bookshop_import_summary.processed|default(0) }}</strong>
+        </article>
+        <article class="nc-card nc-bookshop-kpi-card">
+          <span class="nc-metric-label">Criados</span>
+          <strong class="nc-metric-value">{{ bookshop_import_summary.created|default(0) }}</strong>
+        </article>
+        <article class="nc-card nc-bookshop-kpi-card">
+          <span class="nc-metric-label">Atualizados</span>
+          <strong class="nc-metric-value">{{ bookshop_import_summary.updated|default(0) }}</strong>
+        </article>
+        <article class="nc-card nc-bookshop-kpi-card">
+          <span class="nc-metric-label">Erros</span>
+          <strong class="nc-metric-value">{{ bookshop_import_summary.errors|default(0) }}</strong>
+        </article>
+      </div>
+    {% endif %}
+
+    {% if bookshop_import_errors|default([])|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert" data-aos="fade-up" data-aos-delay="180">
+        <strong>Ocorrências da última importação:</strong>
+        <ul>
+          {% for error in bookshop_import_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

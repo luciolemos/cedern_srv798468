@@ -35,9 +35,10 @@
       tone: toast_tone
     } %}
 
-    <p>
-      <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">← Voltar para Gestão de Pessoal</a>
-    </p>
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Gestão de pessoal</a>
+    </div>
 
     {% if summary_user is empty %}
       <p>{{ summary_error_message|default('Usuário não encontrado.') }}</p>

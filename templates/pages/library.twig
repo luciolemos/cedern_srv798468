@@ -3,20 +3,21 @@
 {% block head %}
   {{ parent() }}
   <script src="/assets/js/cedern-library-lightbox.js?v={{ app_asset_version|default('1') }}" defer></script>
+  <script src="/assets/js/cedern-library-knowledge.js?v={{ app_asset_version|default('1') }}" defer></script>
 {% endblock %}
 
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
-    <section class="nc-section nc-about-detail-copy" aria-label="Biblioteca do CEDE">
+    <section class="nc-section nc-about-detail-copy" aria-label="Base de conhecimento do CEDE">
       {% include 'components/section-header.twig' with {
-        kicker: 'Biblioteca',
-        title: 'Acervo Digital',
-        lead: 'Consulte o acervo da biblioteca do CEDE, filtre por categoria e acesse os PDFs disponíveis para estudo doutrinário.'
+        kicker: 'Base de conhecimento',
+        title: 'Base de conhecimento do CEDE',
+        lead: 'Consulte obras, referências editoriais e materiais em PDF organizados para estudo, pesquisa e aprofundamento doutrinário.'
       } %}
 
       {% set filters = library_filters|default({}) %}
       {% set pagination = library_pagination|default({}) %}
-      {% set library_base_path = filters.base_path|default('/biblioteca') %}
+      {% set library_base_path = filters.base_path|default('/quem-somos/base-de-conhecimento') %}
       {% set active_filter_count = 0 %}
       {% set has_active_toolbar_filters = false %}
       {% if filters.search|default('') %}
@@ -36,41 +37,41 @@
 
       <div class="nc-library-overview">
         <article class="nc-card nc-library-overview-card nc-library-overview-card-primary">
-          <p class="nc-library-overview-kicker">Leitura, pesquisa e estudo</p>
-          <h3 class="nc-library-overview-title">Uma biblioteca pensada para consulta espiritual e editorial</h3>
+          <p class="nc-library-overview-kicker">Consulta, estudo e referência</p>
+          <h3 class="nc-library-overview-title">Um ambiente digital organizado para formação, pesquisa e leitura orientada</h3>
           <p class="nc-library-overview-copy">
-            Explore o acervo por autoria, categoria e referência de publicação. Cada livro reúne dados editoriais e acesso direto ao PDF quando disponível.
+            Explore a base por autoria, categoria e referência editorial. Cada item reúne dados bibliográficos essenciais e acesso direto ao PDF quando disponível.
           </p>
         </article>
 
         <div class="nc-library-overview-grid">
           <article class="nc-card nc-library-overview-card">
             <p class="nc-library-stat-value">{{ pagination.total_items|default(0) }}</p>
-            <p class="nc-library-stat-label">titulos encontrados</p>
+            <p class="nc-library-stat-label">títulos indexados</p>
           </article>
           <article class="nc-card nc-library-overview-card">
             <p class="nc-library-stat-value">{{ library_categories|default([])|length }}</p>
-            <p class="nc-library-stat-label">categorias ativas</p>
+            <p class="nc-library-stat-label">áreas temáticas</p>
           </article>
           <article class="nc-card nc-library-overview-card">
             <p class="nc-library-stat-value">{{ active_filter_count }}</p>
-            <p class="nc-library-stat-label">filtros em uso</p>
+            <p class="nc-library-stat-label">filtros ativos</p>
           </article>
         </div>
       </div>
 
       <article class="nc-card nc-library-filter-shell">
         <div class="nc-library-filter-copy">
-          <p class="nc-library-overview-kicker">Refinar o acervo</p>
-          <h3 class="nc-library-filter-title">Busque por obra, autor, editora ou categoria</h3>
-          <p class="nc-library-filter-lead">Use os filtros para localizar um título específico ou navegar pelas áreas de estudo disponíveis.</p>
+          <p class="nc-library-overview-kicker">Refinar a base</p>
+          <h3 class="nc-library-filter-title">Busque por obra, autoria, editora ou área temática</h3>
+          <p class="nc-library-filter-lead">Use os filtros para localizar um conteúdo específico ou navegar pelas frentes de estudo disponíveis.</p>
         </div>
 
         <form class="nc-library-filter-form nc-admin-login-form" method="get" action="{{ library_base_path }}">
           <div class="nc-admin-table-search nc-library-filter-toolbar">
-            <label class="nc-admin-login-label" for="nc-library-search">Buscar livros</label>
+            <label class="nc-admin-login-label" for="nc-library-search">Buscar conteúdos</label>
             <div class="nc-admin-table-search-controls nc-library-filter-toolbar-controls">
-              <input class="nc-admin-login-input nc-library-filter-toolbar-input" id="nc-library-search" name="q" type="search" value="{{ filters.search|default('') }}" placeholder="Título, autor, editora, ISBN, categoria...">
+              <input class="nc-admin-login-input nc-library-filter-toolbar-input" id="nc-library-search" name="q" type="search" value="{{ filters.search|default('') }}" placeholder="Título, autor, editora, ISBN ou categoria...">
               <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Aplicar filtros</button>
               {% if has_active_toolbar_filters %}
                 <a class="nc-btn nc-btn-secondary nc-admin-login-back" href="{{ library_base_path }}">Limpar</a>
@@ -91,7 +92,7 @@
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="nc-library-sort">Ordenação</label>
-              <select class="nc-admin-login-input" id="nc-library-sort" name="sort" aria-label="Ordenar livros">
+              <select class="nc-admin-login-input" id="nc-library-sort" name="sort" aria-label="Ordenar conteúdos">
                 {% for option in filters.sort_options|default([]) %}
                   <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
                 {% endfor %}
@@ -100,7 +101,7 @@
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="nc-library-page-size">Quantidade</label>
-              <select class="nc-admin-login-input" id="nc-library-page-size" name="per_page" aria-label="Quantidade de livros por página">
+              <select class="nc-admin-login-input" id="nc-library-page-size" name="per_page" aria-label="Quantidade de itens por página">
                 {% for option in filters.page_size_options|default([]) %}
                   <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }} por página</option>
                 {% endfor %}
@@ -113,9 +114,9 @@
       {% if library_books|default([])|length > 0 %}
         <div class="nc-library-results-bar">
           <div>
-            <p class="nc-library-results-title">Obras disponíveis</p>
+            <p class="nc-library-results-title">Conteúdos disponíveis</p>
             <p class="nc-library-results-count">
-            Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} livros
+            Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} itens
             </p>
           </div>
 
@@ -133,14 +134,20 @@
           </div>
         </div>
 
-        <div class="nc-list nc-library-list">
+        <div class="nc-knowledge-list-head" aria-hidden="true">
+          <span>Capa</span>
+          <span>Conteúdo</span>
+          <span>Acesso</span>
+        </div>
+
+        <div class="nc-list nc-library-list nc-knowledge-list">
           {% for book in library_books %}
             {% set category_color = book.category_color|default('')|trim %}
             {% set cover_image_url = book.cover_image_url|default('')|trim %}
-            <article class="nc-card nc-library-card{% if category_color %} is-colored{% endif %}" id="livro-{{ book.slug|default('item-' ~ loop.index) }}"{% if category_color %} style="--nc-library-category-color: {{ category_color|e('html_attr') }};"{% endif %}>
-              <div class="nc-library-card-shell">
+            <article class="nc-card nc-library-card nc-knowledge-row{% if category_color %} is-colored{% endif %}" id="livro-{{ book.slug|default('item-' ~ loop.index) }}"{% if category_color %} style="--nc-library-category-color: {{ category_color|e('html_attr') }};"{% endif %}>
+              <div class="nc-library-card-shell nc-knowledge-row-shell">
                 <button
-                  class="nc-library-bookplate-trigger"
+                  class="nc-library-bookplate-trigger nc-knowledge-row-cover"
                   type="button"
                   aria-label="Ampliar capa de {{ book.title }}"
                   aria-haspopup="dialog"
@@ -165,18 +172,11 @@
                   </div>
                 </button>
 
-                <div class="nc-library-card-body">
+                <div class="nc-knowledge-row-main">
                   <div class="nc-library-card-topline">
                     <span class="nc-library-category-badge{% if category_color %} is-colored{% endif %}">
-                    {{ book.category_name|default('Biblioteca') }}
+                      {{ book.category_name|default('Base do CEDE') }}
                     </span>
-                  {% if book.publication_year|default('') or book.page_count|default(0) or book.language|default('') %}
-                    <p class="nc-library-card-facts">
-                      {% if book.publication_year|default('') %}<span>{{ book.publication_year }}</span>{% endif %}
-                      {% if book.page_count|default(0) %}<span>{{ book.page_count }} pags.</span>{% endif %}
-                      {% if book.language|default('') %}<span>{{ book.language }}</span>{% endif %}
-                    </p>
-                  {% endif %}
                   </div>
 
                   <h3 class="nc-library-card-title">{{ book.title }}</h3>
@@ -184,20 +184,143 @@
                     <p class="nc-library-card-subtitle">{{ book.subtitle }}</p>
                   {% endif %}
                   <p class="nc-library-card-author">{{ book.author_name }}</p>
+                </div>
+
+                <div class="nc-actions nc-library-card-actions nc-knowledge-row-actions is-stacked-mobile">
+                  <p class="nc-knowledge-row-column-title">Acesso</p>
+                  {% if book.pdf_url|default('') %}
+                    {% if book.pdf_size_label|default('') %}
+                      <p class="nc-knowledge-row-file-meta">PDF {{ book.pdf_size_label }}</p>
+                    {% endif %}
+                    <a class="nc-btn nc-btn-primary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ book.pdf_url }}" target="_blank" rel="noopener">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span>Ler PDF</span>
+                    </a>
+                    <a class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ book.pdf_url }}" download>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 4V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M8 11L12 15L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="4" y="17" width="16" height="3" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span>Baixar</span>
+                    </a>
+                  {% else %}
+                    <p class="nc-knowledge-row-file-meta">PDF indisponível</p>
+                  {% endif %}
+                  <button
+                    class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn nc-knowledge-toggle"
+                    type="button"
+                    data-knowledge-toggle
+                    aria-expanded="false"
+                    aria-controls="nc-knowledge-details-{{ book.id|default(loop.index) }}"
+                  >
+                    <span class="nc-knowledge-toggle-icon" aria-hidden="true">+</span>
+                    <span class="nc-knowledge-toggle-label">Ficha técnica</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="nc-knowledge-details-panel" id="nc-knowledge-details-{{ book.id|default(loop.index) }}" hidden>
+                <div class="nc-knowledge-details-grid">
+                  <article class="nc-knowledge-details-card">
+                    <h4 class="nc-knowledge-details-title">Dados bibliográficos</h4>
+                    <dl class="nc-knowledge-details-list">
+                      <div>
+                        <dt>Título</dt>
+                        <dd>{{ book.title }}</dd>
+                      </div>
+                      {% if book.subtitle|default('') %}
+                        <div>
+                          <dt>Subtítulo</dt>
+                          <dd>{{ book.subtitle }}</dd>
+                        </div>
+                      {% endif %}
+                      <div>
+                        <dt>Autor</dt>
+                        <dd>{{ book.author_name|default('Não informado') }}</dd>
+                      </div>
+                      {% if book.organizer_name|default('') %}
+                        <div>
+                          <dt>Organização</dt>
+                          <dd>{{ book.organizer_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.translator_name|default('') %}
+                        <div>
+                          <dt>Tradução</dt>
+                          <dd>{{ book.translator_name }}</dd>
+                        </div>
+                      {% endif %}
+                      <div>
+                        <dt>Categoria</dt>
+                        <dd>{{ book.category_name|default('Base do CEDE') }}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  <article class="nc-knowledge-details-card">
+                    <h4 class="nc-knowledge-details-title">Publicação e edição</h4>
+                    <dl class="nc-knowledge-details-list">
+                      {% if book.publisher_name|default('') %}
+                        <div>
+                          <dt>Editora</dt>
+                          <dd>{{ book.publisher_name }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.publication_city|default('') %}
+                        <div>
+                          <dt>Cidade</dt>
+                          <dd>{{ book.publication_city }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.publication_year|default('') %}
+                        <div>
+                          <dt>Ano</dt>
+                          <dd>{{ book.publication_year }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.edition_label|default('') %}
+                        <div>
+                          <dt>Edição</dt>
+                          <dd>{{ book.edition_label }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.page_count|default(0) %}
+                        <div>
+                          <dt>Páginas</dt>
+                          <dd>{{ book.page_count }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.language|default('') %}
+                        <div>
+                          <dt>Idioma</dt>
+                          <dd>{{ book.language }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.isbn|default('') %}
+                        <div>
+                          <dt>ISBN</dt>
+                          <dd class="nc-knowledge-data-mono">{{ book.isbn }}</dd>
+                        </div>
+                      {% endif %}
+                      {% if book.editorial_reference|default('') %}
+                        <div>
+                          <dt>Referência</dt>
+                          <dd>{{ book.editorial_reference }}</dd>
+                        </div>
+                      {% endif %}
+                    </dl>
+                  </article>
 
                   {% if book.description|default('') %}
-                    <p class="nc-library-card-summary">{{ book.description }}</p>
-                  {% endif %}
-
-                  {% if book.editorial_reference|default('') %}
-                    <p class="nc-library-editorial-reference">{{ book.editorial_reference }}</p>
-                  {% endif %}
-
-                  {% if book.pdf_url|default('') %}
-                    <div class="nc-actions nc-library-card-actions is-stacked-mobile">
-                      <a class="nc-btn nc-btn-primary nc-btn-block-mobile" href="{{ book.pdf_url }}" target="_blank" rel="noopener">Ler no navegador</a>
-                      <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="{{ book.pdf_url }}" download>Baixar PDF</a>
-                    </div>
+                    <article class="nc-knowledge-details-card is-full">
+                      <h4 class="nc-knowledge-details-title">Sinopse</h4>
+                      <p class="nc-knowledge-details-copy">{{ book.description }}</p>
+                    </article>
                   {% endif %}
                 </div>
               </div>
@@ -206,7 +329,7 @@
         </div>
 
         {% if pagination.total_pages|default(1) > 1 %}
-          <nav class="nc-admin-pagination" aria-label="Paginação da biblioteca">
+          <nav class="nc-admin-pagination" aria-label="Paginação da base de conhecimento">
             {% if pagination.previous_url %}
               <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
             {% else %}
@@ -229,7 +352,7 @@
       {% else %}
         <article class="nc-card nc-library-empty-state">
           <p class="nc-library-empty">
-            {{ filters.search|default('') or filters.category|default('') ? 'Nenhum livro encontrado para os filtros informados.' : 'Nenhum livro publicado na biblioteca no momento.' }}
+            {{ filters.search|default('') or filters.category|default('') ? 'Nenhum conteúdo encontrado para os filtros informados.' : 'Nenhum conteúdo publicado na base de conhecimento no momento.' }}
           </p>
         </article>
       {% endif %}

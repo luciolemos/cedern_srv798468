@@ -27,28 +27,10 @@
         tone: toast_tone
       } %}
 
-      <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
-        <a class="nc-btn nc-btn-secondary nc-btn-icon" href="/painel" aria-label="Voltar ao painel" title="Voltar ao painel">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="nc-sr-only">Voltar ao painel</span>
-        </a>
-        <a class="nc-btn nc-btn-primary nc-btn-icon nc-admin-action-create" href="/painel/eventos/novo" aria-label="Novo evento" title="Novo evento">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M12 9V15M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <span class="nc-sr-only">Novo evento</span>
-        </a>
-        <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/agenda" aria-label="Ver agenda pública" title="Ver agenda pública">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
-          </svg>
-          <span class="nc-sr-only">Ver agenda pública</span>
-        </a>
+      <div class="nc-actions nc-admin-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary" href="/agenda">Ver agenda pública</a>
+        <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/eventos/novo">+ Evento</a>
       </div>
 
       {% set pagination = agenda_pagination|default({}) %}

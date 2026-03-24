@@ -1,0 +1,168 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Categorias da Livraria' %}
+{% set dashboard_page_lead = 'Cadastre e organize as categorias usadas no acervo físico da livraria.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Administração de categorias da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if admin_status == 'created' %}
+      {% set toast_message = 'Categoria criada com sucesso.' %}
+    {% elseif admin_status == 'updated' %}
+      {% set toast_message = 'Categoria atualizada com sucesso.' %}
+    {% elseif admin_status == 'enabled' %}
+      {% set toast_message = 'Categoria ativada com sucesso.' %}
+    {% elseif admin_status == 'disabled' %}
+      {% set toast_message = 'Categoria inativada com sucesso.' %}
+    {% elseif admin_status == 'not-found' %}
+      {% set toast_message = 'Categoria não encontrada.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'toggle-error' %}
+      {% set toast_message = 'Não foi possível alterar o status da categoria.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-bookshop-toolbar nc-bookshop-toolbar-paired is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/categorias/nova" aria-label="Nova categoria" title="Nova categoria">
+        + Categoria
+      </a>
+    </div>
+
+    {% set pagination = bookshop_categories_pagination|default({}) %}
+    {% set sort_links = bookshop_categories_sort_links|default({}) %}
+    {% set search_term = bookshop_categories_search|default('') %}
+
+    {% if bookshop_categories|length == 0 %}
+      <form class="nc-admin-table-search" method="get" action="/painel/livraria/categorias" data-aos="fade-up" data-aos-delay="95">
+        <label for="nc-bookshop-categories-search">Buscar categorias</label>
+        <div class="nc-admin-table-search-controls">
+          <input id="nc-bookshop-categories-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, status...">
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+          <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+          <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+        </div>
+      </form>
+      <p>{{ search_term ? 'Nenhuma categoria encontrada para a busca informada.' : 'Nenhuma categoria cadastrada.' }}</p>
+    {% else %}
+      <form class="nc-admin-table-search" method="get" action="/painel/livraria/categorias" data-aos="fade-up" data-aos-delay="95">
+        <label for="nc-bookshop-categories-search">Buscar categorias</label>
+        <div class="nc-admin-table-search-controls">
+          <input id="nc-bookshop-categories-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, status...">
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+          <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+          <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+        </div>
+      </form>
+
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="110">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="/painel/livraria/categorias">
+          <label for="nc-bookshop-categories-per-page">Registros por página</label>
+          <select id="nc-bookshop-categories-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <noscript>
+            <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+          </noscript>
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="140">
+        <table class="nc-admin-table">
+          <thead>
+            <tr>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.name.active %} is-active{% endif %}" href="{{ sort_links.name.url }}">Nome <span aria-hidden="true">{{ sort_links.name.indicator }}</span></a>
+              </th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.slug.active %} is-active{% endif %}" href="{{ sort_links.slug.url }}">Slug <span aria-hidden="true">{{ sort_links.slug.indicator }}</span></a>
+              </th>
+              <th>Descrição</th>
+              <th>
+                <a class="nc-admin-sort-link{% if sort_links.is_active.active %} is-active{% endif %}" href="{{ sort_links.is_active.url }}">Status <span aria-hidden="true">{{ sort_links.is_active.indicator }}</span></a>
+              </th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in bookshop_categories %}
+              <tr>
+                <td data-label="Nome">{{ category.name }}</td>
+                <td class="nc-admin-cell-slug" data-label="Slug" title="{{ category.slug }}"><span>{{ category.slug }}</span></td>
+                <td data-label="Descrição">{{ category.description|default('-') ?: '-' }}</td>
+                <td data-label="Status">
+                  <span class="nc-admin-featured-flag{{ category.is_active ? ' is-on' : ' is-off' }}">{{ category.is_active ? 'Ativa' : 'Inativa' }}</span>
+                </td>
+                <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/livraria/categorias/{{ category.id }}/editar" aria-label="Editar categoria {{ category.name }}" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="nc-sr-only">Editar</span>
+                  </a>
+                  <form method="post" action="/painel/livraria/categorias/{{ category.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status desta categoria?');">
+                    <button class="nc-btn nc-btn-secondary nc-btn-icon {{ category.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ category.is_active ? 'Inativar' : 'Ativar' }} categoria {{ category.name }}" title="{{ category.is_active ? 'Inativar' : 'Ativar' }}">
+                      {% if category.is_active %}
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                          <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                      {% else %}
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                      {% endif %}
+                      <span class="nc-sr-only">{{ category.is_active ? 'Inativar' : 'Ativar' }}</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação de categorias da livraria" data-aos="fade-up" data-aos-delay="170">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

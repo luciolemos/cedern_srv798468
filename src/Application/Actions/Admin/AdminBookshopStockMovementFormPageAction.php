@@ -1,0 +1,311 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Actions\Admin;
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
+class AdminBookshopStockMovementFormPageAction extends AbstractAdminBookshopAction
+{
+    private const FLASH_KEY = 'admin_bookshop_stock_movement_form';
+
+    private const LOCAL_TIMEZONE = 'America/Fortaleza';
+
+    /**
+     * @var array<string, string>
+     */
+    private const ENTRY_TYPE_OPTIONS = [
+        'entry' => 'Entrada',
+        'donation' => 'Doação recebida',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    private const ADJUSTMENT_TYPE_OPTIONS = [
+        'adjustment_add' => 'Ajuste positivo',
+        'adjustment_remove' => 'Ajuste negativo',
+        'loss' => 'Perda ou avaria',
+    ];
+
+    public function __invoke(Request $request, Response $response): Response
+    {
+        $books = [];
+
+        try {
+            $books = $this->bookshopRepository->findAllBooksForAdmin();
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Falha ao carregar livros para movimentação de estoque.', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        $mode = $this->resolveMode($request);
+
+        if (strtoupper($request->getMethod()) !== 'POST') {
+            $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+            $submittedPayload = (array) ($flash['payload'] ?? []);
+            $errors = array_values(array_filter(
+                (array) ($flash['errors'] ?? []),
+                static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
+            ));
+
+            if (array_key_exists('mode', $submittedPayload)) {
+                $mode = $this->normalizeMode((string) $submittedPayload['mode']);
+            }
+
+            return $this->renderForm($response, $books, $mode, $submittedPayload, $errors);
+        }
+
+        $body = (array) ($request->getParsedBody() ?? []);
+        $payload = $this->normalizePayload($body, $mode);
+        $errors = $this->validatePayload($payload, $books);
+
+        if ($errors !== []) {
+            $this->storeSessionFlash(self::FLASH_KEY, [
+                'payload' => $payload,
+                'errors' => $errors,
+            ]);
+
+            return $response
+                ->withHeader('Location', '/painel/livraria/movimentacoes/nova?mode=' . rawurlencode((string) $payload['mode']))
+                ->withStatus(303);
+        }
+
+        $actor = $this->resolveAdminActor();
+
+        try {
+            $movementId = $this->bookshopRepository->createStockMovement([
+                'book_id' => (int) $payload['book_id'],
+                'movement_type' => (string) $payload['movement_type'],
+                'quantity' => (int) $payload['quantity'],
+                'unit_cost' => (string) ($payload['unit_cost'] ?? ''),
+                'sale_price' => (string) ($payload['sale_price'] ?? ''),
+                'notes' => (string) ($payload['notes'] ?? ''),
+                'occurred_at' => $this->convertLocalDateTimeToUtc((string) $payload['occurred_at']),
+                'created_by_member_id' => $actor['member_id'],
+                'created_by_name' => $actor['member_name'],
+            ]);
+
+            if ($movementId <= 0) {
+                throw new \RuntimeException('Não foi possível registrar a movimentação.');
+            }
+
+            $updatedBook = $this->bookshopRepository->findBookByIdForAdmin((int) $payload['book_id']);
+
+            $this->storeSessionFlash(AdminBookshopStockMovementListPageAction::FLASH_KEY, [
+                'status' => 'created',
+                'movement_id' => $movementId,
+                'book_title' => (string) ($updatedBook['title'] ?? ''),
+                'stock_quantity' => (int) ($updatedBook['stock_quantity'] ?? 0),
+            ]);
+
+            return $response->withHeader('Location', '/painel/livraria/movimentacoes')->withStatus(303);
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Falha ao registrar movimentação de estoque da livraria.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            $this->storeSessionFlash(self::FLASH_KEY, [
+                'payload' => $payload,
+                'errors' => [$exception->getMessage()],
+            ]);
+
+            return $response
+                ->withHeader('Location', '/painel/livraria/movimentacoes/nova?mode=' . rawurlencode((string) $payload['mode']))
+                ->withStatus(303);
+        }
+    }
+
+    private function resolveMode(Request $request): string
+    {
+        $queryParams = $request->getQueryParams();
+
+        return $this->normalizeMode((string) ($queryParams['mode'] ?? 'entry'));
+    }
+
+    private function normalizeMode(string $mode): string
+    {
+        return in_array($mode, ['entry', 'adjustment'], true) ? $mode : 'entry';
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    private function normalizePayload(array $input, string $fallbackMode): array
+    {
+        $mode = $this->normalizeMode((string) ($input['mode'] ?? $fallbackMode));
+        $occurredAtRaw = trim((string) ($input['occurred_at'] ?? ''));
+        $occurredAt = $occurredAtRaw !== '' ? str_replace('T', ' ', $occurredAtRaw) : $this->currentLocalDateTime();
+
+        if (strlen($occurredAt) === 16) {
+            $occurredAt .= ':00';
+        }
+
+        $movementType = trim((string) ($input['movement_type'] ?? ''));
+        if ($movementType === '' || !array_key_exists($movementType, $this->resolveMovementTypeOptions($mode))) {
+            $movementType = $mode === 'adjustment' ? 'adjustment_add' : 'entry';
+        }
+
+        $unitCostRaw = trim((string) ($input['unit_cost'] ?? ''));
+
+        return [
+            'mode' => $mode,
+            'occurred_at' => $occurredAt,
+            'book_id' => $this->normalizeIntegerInput($input['book_id'] ?? 0, 0),
+            'movement_type' => $movementType,
+            'quantity' => max(0, $this->normalizeIntegerInput($input['quantity'] ?? 0, 0)),
+            'unit_cost' => $unitCostRaw !== '' ? $this->normalizeMoneyInput($unitCostRaw) : '',
+            'sale_price' => trim((string) ($input['sale_price'] ?? '')) !== ''
+                ? $this->normalizeMoneyInput($input['sale_price'] ?? '')
+                : '',
+            'notes' => trim((string) ($input['notes'] ?? '')),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<int, array<string, mixed>> $books
+     * @return array<int, string>
+     */
+    private function validatePayload(array $payload, array $books): array
+    {
+        $errors = [];
+        $booksById = [];
+
+        foreach ($books as $book) {
+            $booksById[(int) ($book['id'] ?? 0)] = $book;
+        }
+
+        try {
+            new \DateTimeImmutable((string) ($payload['occurred_at'] ?? ''), new \DateTimeZone(self::LOCAL_TIMEZONE));
+        } catch (\Throwable $exception) {
+            $errors[] = 'Informe uma data e hora válidas para a movimentação.';
+        }
+
+        $bookId = (int) ($payload['book_id'] ?? 0);
+        if ($bookId <= 0) {
+            $errors[] = 'Selecione um livro do acervo.';
+        }
+
+        $book = $booksById[$bookId] ?? null;
+        if ($bookId > 0 && $book === null) {
+            $errors[] = 'O livro selecionado não foi encontrado no acervo.';
+        }
+
+        $movementType = (string) ($payload['movement_type'] ?? '');
+        if (!array_key_exists($movementType, $this->resolveMovementTypeOptions((string) ($payload['mode'] ?? 'entry')))) {
+            $errors[] = 'Selecione um tipo de movimentação válido.';
+        }
+
+        $quantity = (int) ($payload['quantity'] ?? 0);
+        if ($quantity <= 0) {
+            $errors[] = 'Informe uma quantidade maior do que zero.';
+        }
+
+        if (
+            $book !== null
+            && in_array($movementType, ['entry', 'donation', 'adjustment_add'], true)
+            && (float) ($payload['sale_price'] ?? 0) <= 0
+        ) {
+            $errors[] = 'Informe o preço de venda do lote para esta entrada.';
+        }
+
+        if ($book !== null && in_array($movementType, ['adjustment_remove', 'loss'], true)) {
+            if ((int) ($book['stock_quantity'] ?? 0) < $quantity) {
+                $errors[] = 'O saldo atual do livro não comporta essa saída.';
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $books
+     * @param array<string, mixed> $submittedPayload
+     * @param array<int, string> $errors
+     */
+    private function renderForm(
+        Response $response,
+        array $books,
+        string $mode,
+        array $submittedPayload,
+        array $errors
+    ): Response {
+        $bookOptions = array_map(static function (array $book): array {
+            $fragments = [
+                (string) ($book['title'] ?? 'Livro'),
+                (string) ($book['author_name'] ?? ''),
+                'estoque ' . (int) ($book['stock_quantity'] ?? 0),
+            ];
+
+            return [
+                'id' => (int) ($book['id'] ?? 0),
+                'label' => implode(' · ', array_values(array_filter($fragments, static fn (mixed $fragment): bool => is_string($fragment) && trim($fragment) !== ''))),
+                'title' => (string) ($book['title'] ?? 'Livro'),
+                'author_name' => (string) ($book['author_name'] ?? ''),
+                'sku' => (string) ($book['sku'] ?? ''),
+                'stock_quantity' => (int) ($book['stock_quantity'] ?? 0),
+                'cost_price_label' => (string) ($book['cost_price_label'] ?? 'R$ 0,00'),
+                'sale_price_label' => (string) ($book['sale_price_label'] ?? 'R$ 0,00'),
+                'location_label' => (string) ($book['location_label'] ?? ''),
+                'status_label' => (string) ($book['status_label'] ?? ''),
+            ];
+        }, $books);
+
+        $form = [
+            'mode' => $submittedPayload['mode'] ?? $mode,
+            'occurred_at' => $submittedPayload['occurred_at'] ?? $this->currentLocalDateTime(),
+            'book_id' => $submittedPayload['book_id'] ?? 0,
+            'movement_type' => $submittedPayload['movement_type'] ?? ($mode === 'adjustment' ? 'adjustment_add' : 'entry'),
+            'quantity' => $submittedPayload['quantity'] ?? 1,
+            'unit_cost' => $submittedPayload['unit_cost'] ?? '',
+            'sale_price' => $submittedPayload['sale_price'] ?? '',
+            'notes' => $submittedPayload['notes'] ?? '',
+        ];
+
+        $modeLabel = $mode === 'adjustment' ? 'ajuste' : 'entrada';
+
+        return $this->renderPage($response, 'pages/admin-bookshop-stock-movement-form.twig', [
+            'bookshop_stock_movement_form' => $form,
+            'bookshop_stock_movement_form_errors' => $errors,
+            'bookshop_stock_movement_mode' => $mode,
+            'bookshop_stock_movement_mode_label' => $modeLabel,
+            'bookshop_stock_movement_type_options' => $this->resolveMovementTypeOptions($mode),
+            'bookshop_stock_movement_book_options' => $bookOptions,
+            'page_title' => ($mode === 'adjustment' ? 'Novo ajuste de estoque' : 'Nova entrada de estoque') . ' | Dashboard',
+            'page_url' => 'https://cedern.org/painel/livraria/movimentacoes/nova?mode=' . rawurlencode($mode),
+            'page_description' => 'Formulário do dashboard para registrar entradas e ajustes de estoque da livraria.',
+        ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function resolveMovementTypeOptions(string $mode): array
+    {
+        if ($mode === 'adjustment') {
+            return self::ADJUSTMENT_TYPE_OPTIONS;
+        }
+
+        return self::ENTRY_TYPE_OPTIONS;
+    }
+
+    private function currentLocalDateTime(): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone(self::LOCAL_TIMEZONE)))
+            ->format('Y-m-d H:i:s');
+    }
+
+    private function convertLocalDateTimeToUtc(string $value): string
+    {
+        $localDate = new \DateTimeImmutable($value, new \DateTimeZone(self::LOCAL_TIMEZONE));
+
+        return $localDate
+            ->setTimezone(new \DateTimeZone('UTC'))
+            ->format('Y-m-d H:i:s');
+    }
+}

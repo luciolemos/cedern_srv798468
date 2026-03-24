@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domain\Agenda\AgendaRepository;
 use App\Domain\Analytics\SiteVisitRepository;
+use App\Domain\Bookshop\BookshopRepository;
 use App\Domain\Institutional\InstitutionalContentRepository;
 use App\Domain\Library\LibraryRepository;
 use App\Domain\Member\MemberAuthRepository;
@@ -12,6 +13,8 @@ use App\Infrastructure\Persistence\Agenda\FallbackAgendaRepository;
 use App\Infrastructure\Persistence\Agenda\MySqlAgendaRepository;
 use App\Infrastructure\Persistence\Analytics\FallbackSiteVisitRepository;
 use App\Infrastructure\Persistence\Analytics\MySqlSiteVisitRepository;
+use App\Infrastructure\Persistence\Bookshop\FallbackBookshopRepository;
+use App\Infrastructure\Persistence\Bookshop\MySqlBookshopRepository;
 use App\Infrastructure\Persistence\Institutional\FallbackInstitutionalContentRepository;
 use App\Infrastructure\Persistence\Institutional\MySqlInstitutionalContentRepository;
 use App\Infrastructure\Persistence\Library\FallbackLibraryRepository;
@@ -51,6 +54,13 @@ return function (ContainerBuilder $containerBuilder) {
                 return new MySqlLibraryRepository($c->get(\PDO::class));
             } catch (\Throwable $exception) {
                 return new FallbackLibraryRepository();
+            }
+        },
+        BookshopRepository::class => function (ContainerInterface $c): BookshopRepository {
+            try {
+                return new MySqlBookshopRepository($c->get(\PDO::class));
+            } catch (\Throwable $exception) {
+                return new FallbackBookshopRepository();
             }
         },
         SiteVisitRepository::class => function (ContainerInterface $c): SiteVisitRepository {

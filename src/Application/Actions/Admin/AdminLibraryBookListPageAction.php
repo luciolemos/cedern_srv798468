@@ -174,9 +174,9 @@ class AdminLibraryBookListPageAction extends AbstractAdminLibraryAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Livros da Biblioteca | Dashboard',
+            'page_title' => 'Conteúdos da Central de conteúdo | Dashboard',
             'page_url' => 'https://cedern.org/painel/biblioteca/livros',
-            'page_description' => 'Painel para gestão do acervo digital da biblioteca do CEDE.',
+            'page_description' => 'Painel para gestão da central de conteúdo do CEDE.',
         ]);
     }
 }

@@ -17,6 +17,7 @@ Em `sections`:
 - `hero`
 - `features`
 - `socialProof`
+- `testimonials`
 - `roadmap`
 - `faq`
 - `cta`
@@ -30,7 +31,6 @@ Cada bloco usa chaves como:
 Algumas seções possuem campos extras:
 
 - `hero`: `badge`, `actionsDelay`, `panelTitle`, `panelDelay`, `qrTitle`, `qrLead`, `qrUrl`, `qrImage`, `qrAlt`
-- `socialProof`: `trustGridLabel`
 - `cta`: `actionsDelay`
 
 ## Listas de itens
@@ -40,7 +40,6 @@ No mesmo arquivo `home.php`:
 - `heroActions`: botões do Hero
 - `heroMetrics`: indicadores do Hero
 - `featuresItems`: cards de Estudos
-- `socialProofTrustCards`: cards de confiança
 - `socialProofTestimonials`: depoimentos
 - `roadmapItems`: passos da Agenda
 - `faqItems`: perguntas e respostas
@@ -116,6 +115,7 @@ Templates que consomem esses dados:
 - `templates/home/hero.twig`
 - `templates/home/features.twig`
 - `templates/home/social-proof.twig`
+- `templates/home/testimonials.twig`
 - `templates/home/roadmap.twig`
 - `templates/home/faq.twig`
 - `templates/home/final-cta.twig`
@@ -133,8 +133,8 @@ Templates que consomem esses dados:
 | `heroMetrics[]` | Cards de indicadores no painel lateral do Hero |
 | `sections.features.*` | Cabeçalho da seção Estudos |
 | `featuresItems[]` | Cards da seção Estudos |
-| `sections.socialProof.*` | Cabeçalho da seção Prova Social |
-| `socialProofTrustCards[]` | Cards com imagem e texto de confiança |
+| `sections.socialProof.*` | Cabeçalho da seção Quem Somos |
+| `sections.testimonials.*` | Cabeçalho da seção Testemunhos |
 | `socialProofTestimonials[]` | Depoimentos (avatar, nome, cargo, frase) |
 | `sections.roadmap.*` | Cabeçalho da seção Agenda |
 | `roadmapItems[]` | Itens numerados da Agenda |

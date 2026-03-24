@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Gerenciar Biblioteca' %}
-{% set dashboard_page_lead = 'Cadastre, edite e exclua livros com PDF para exibição na biblioteca pública.' %}
+{% set dashboard_page_title = 'Gerenciar Central de conteúdo' %}
+{% set dashboard_page_lead = 'Cadastre, edite e exclua obras com PDF para exibição na central de conteúdo pública.' %}
 
 {% block admin_content %}
-    <section class="nc-section" aria-label="Administração da biblioteca" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section" aria-label="Administração da central de conteúdo" data-aos="fade-up" data-aos-delay="0">
       {% set toast_message = '' %}
       {% set toast_tone = 'success' %}
       {% if admin_status == 'created' %}
@@ -27,39 +27,11 @@
         tone: toast_tone
       } %}
 
-      <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
-        <a class="nc-btn nc-btn-secondary nc-btn-icon" href="/painel" aria-label="Voltar ao painel" title="Voltar ao painel">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="nc-sr-only">Voltar ao painel</span>
-        </a>
-        <a class="nc-btn nc-btn-primary nc-btn-icon nc-admin-action-create" href="/painel/biblioteca/livros/novo" aria-label="Novo livro" title="Novo livro">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M12 9V15M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <span class="nc-sr-only">Novo livro</span>
-        </a>
-        <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/biblioteca/categorias" aria-label="Categorias de livros" title="Categorias de livros">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
-            <circle cx="4" cy="12" r="1" fill="currentColor"/>
-            <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
-          </svg>
-          <span class="nc-sr-only">Categorias de livros</span>
-        </a>
-        <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/loja/biblioteca" aria-label="Abrir biblioteca pública" title="Abrir biblioteca pública">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
-          </svg>
-          <span class="nc-sr-only">Abrir biblioteca pública</span>
-        </a>
+      <div class="nc-actions nc-admin-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary" href="/painel/biblioteca/categorias">Categorias</a>
+        <a class="nc-btn nc-btn-secondary" href="/quem-somos/base-de-conhecimento">Abrir página pública</a>
+        <a class="nc-btn nc-btn-primary nc-admin-action-create nc-actions-edge-button" href="/painel/biblioteca/livros/novo" aria-label="Nova obra" title="Nova obra">+ Conteúdo</a>
       </div>
 
       {% set pagination = library_books_pagination|default({}) %}
@@ -68,7 +40,7 @@
 
       {% if library_books|length == 0 %}
         <form class="nc-admin-table-search" method="get" action="/painel/biblioteca/livros" data-aos="fade-up" data-aos-delay="95">
-          <label for="nc-library-books-search">Buscar livros</label>
+          <label for="nc-library-books-search">Buscar conteúdos</label>
           <div class="nc-admin-table-search-controls">
             <input id="nc-library-books-search" name="q" type="search" value="{{ search_term }}" placeholder="Título, autor, editora, ISBN, categoria...">
             <input type="hidden" name="sort" value="{{ pagination.sort|default('title') }}">
@@ -77,10 +49,10 @@
             <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
           </div>
         </form>
-        <p>{{ search_term ? 'Nenhum livro encontrado para a busca informada.' : 'Nenhum livro cadastrado.' }}</p>
+        <p>{{ search_term ? 'Nenhum conteúdo encontrado para a busca informada.' : 'Nenhum conteúdo cadastrado.' }}</p>
       {% else %}
         <form class="nc-admin-table-search" method="get" action="/painel/biblioteca/livros" data-aos="fade-up" data-aos-delay="95">
-          <label for="nc-library-books-search">Buscar livros</label>
+          <label for="nc-library-books-search">Buscar conteúdos</label>
           <div class="nc-admin-table-search-controls">
             <input id="nc-library-books-search" name="q" type="search" value="{{ search_term }}" placeholder="Título, autor, editora, ISBN, categoria...">
             <input type="hidden" name="sort" value="{{ pagination.sort|default('title') }}">
@@ -155,14 +127,14 @@
                   </td>
                   <td data-label="PDF">{{ book.pdf_size_label|default('') ?: 'Sem arquivo' }}</td>
                   <td class="nc-admin-table-actions" data-label="Ações">
-                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/biblioteca/livros/{{ book.id }}/editar" aria-label="Editar livro {{ book.title }}" title="Editar">
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/biblioteca/livros/{{ book.id }}/editar" aria-label="Editar conteúdo {{ book.title }}" title="Editar">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                       <span class="nc-sr-only">Editar</span>
                     </a>
-                    <form method="post" action="/painel/biblioteca/livros/{{ book.id }}/excluir" onsubmit="return confirm('Tem certeza que deseja excluir este livro?');">
-                      <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-delete" type="submit" aria-label="Excluir livro {{ book.title }}" title="Excluir">
+                    <form method="post" action="/painel/biblioteca/livros/{{ book.id }}/excluir" onsubmit="return confirm('Tem certeza que deseja excluir este conteúdo?');">
+                      <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-delete" type="submit" aria-label="Excluir conteúdo {{ book.title }}" title="Excluir">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                           <path d="M9 11V17M15 11V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -190,7 +162,7 @@
         </div>
 
         {% if pagination.total_pages > 1 %}
-          <nav class="nc-admin-pagination" aria-label="Paginação da biblioteca" data-aos="fade-up" data-aos-delay="170">
+          <nav class="nc-admin-pagination" aria-label="Paginação da central de conteúdo" data-aos="fade-up" data-aos-delay="170">
             {% if pagination.previous_url %}
               <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
             {% else %}

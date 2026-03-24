@@ -25,8 +25,15 @@
 
       <div class="nc-footer-nav-grid">
         {% for group in footer_nav_groups %}
-          <nav class="nc-footer-block" aria-label="{{ group.title|default('Navegação do rodapé') }}">
-            <h3 class="nc-footer-title">{{ group.title|default('Links') }}</h3>
+          {% set group_title = group.title|default('Links') %}
+          {% set group_modifier = '' %}
+          {% if group_title == 'Institucional' %}
+            {% set group_modifier = ' is-institutional' %}
+          {% elseif group_title == 'Loja' %}
+            {% set group_modifier = ' is-store' %}
+          {% endif %}
+          <nav class="nc-footer-block nc-footer-nav-column{{ group_modifier }}" aria-label="{{ group_title|default('Navegação do rodapé') }}">
+            <h3 class="nc-footer-title">{{ group_title|default('Links') }}</h3>
             {% if group.links|default([]) %}
               <ul class="nc-footer-links">
                 {% for link in group.links %}
@@ -75,12 +82,6 @@
             {% endif %}
           </address>
 
-          <div class="nc-actions nc-footer-actions is-stacked-mobile">
-            <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
-            {% if site_contact.mapUrl|default('') %}
-              <a class="nc-btn nc-btn-secondary" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">Ver no mapa</a>
-            {% endif %}
-          </div>
         </section>
       </div>
     </div>

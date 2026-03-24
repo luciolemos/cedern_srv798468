@@ -2,10 +2,10 @@
 
 {% set dashboard_page_kicker = 'Dashboard' %}
 {% set dashboard_page_title = library_book_form_is_edit ? 'Editar livro' : 'Novo livro' %}
-{% set dashboard_page_lead = 'Preencha os dados editoriais, envie o PDF e opcionalmente inclua uma capa para enriquecer a vitrine pública.' %}
+{% set dashboard_page_lead = 'Preencha os dados editoriais, envie o PDF e opcionalmente inclua uma capa para enriquecer a central de conteúdo pública.' %}
 
 {% block admin_content %}
-    <section class="nc-section" aria-label="Formulário de livro da biblioteca" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section" aria-label="Formulário de conteúdo da central de conteúdo" data-aos="fade-up" data-aos-delay="0">
       {% if library_book_form_errors|length > 0 %}
         <article class="nc-admin-form-errors" role="alert">
           <strong>Corrija os campos abaixo:</strong>
@@ -17,11 +17,16 @@
         </article>
       {% endif %}
 
+      <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/biblioteca/livros">Voltar</a>
+      </div>
+
       {% if library_book_categories|length == 0 %}
         <article class="nc-admin-form-errors" role="alert">
           <strong>Nenhuma categoria disponível.</strong>
           <ul>
-            <li>Cadastre ao menos uma categoria de livros antes de salvar o acervo.</li>
+            <li>Cadastre ao menos uma categoria antes de salvar este conteúdo.</li>
           </ul>
         </article>
       {% endif %}
@@ -140,11 +145,11 @@
               {% if admin_cover_image_url %}
                 <label class="nc-admin-form-checkbox nc-library-admin-cover-remove-option">
                   <input id="remove_cover_image" name="remove_cover_image" type="checkbox" value="1" {{ admin_cover_remove_requested ? 'checked' : '' }}>
-                  <span>Usar capa padrão do acervo neste livro</span>
+                  <span>Usar a capa padrão do acervo neste conteúdo</span>
                 </label>
               {% endif %}
               <p class="nc-admin-statute-meta">
-                Envie uma imagem JPG, PNG ou WEBP com até 5MB. Se nenhuma capa for cadastrada, ou se a opção acima for marcada, a vitrine exibirá a capa padrão do acervo.
+                Envie uma imagem JPG, PNG ou WEBP com até 5MB. Se nenhuma capa for cadastrada, ou se a opção acima for marcada, a central de conteúdo exibirá a capa padrão do acervo.
               </p>
             </div>
 
@@ -168,8 +173,8 @@
           </div>
 
           <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
-            <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ library_book_form_is_edit ? 'Salvar alterações' : 'Criar livro' }}</button>
-            <a class="nc-btn nc-btn-secondary nc-admin-action-edit" href="/painel/biblioteca/livros">Voltar</a>
+            <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ library_book_form_is_edit ? 'Salvar alterações' : 'Criar conteúdo' }}</button>
+            <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/biblioteca/livros">Voltar</a>
           </div>
         </form>
       </article>

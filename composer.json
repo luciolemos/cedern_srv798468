@@ -59,6 +59,7 @@
     },
     "scripts": {
         "start": "php -S localhost:8080 -t public",
+        "seed:bookshop": "php scripts/seed_bookshop_catalog.php",
         "test": "phpunit"
     }
 }

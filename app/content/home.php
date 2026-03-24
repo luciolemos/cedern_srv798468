@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'sections' => [
         'hero' => [
-            'kicker' => 'Espiritualidade com Razão',
+            'kicker' => 'Conhecer, compreender e evoluir',
             'title' => 'Centro de Estudos da Doutrina Espírita',
             'tagline' => 'Iluminando consciências, transformando vidas.',
             'lead' => 'Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.',
@@ -29,10 +29,15 @@ return [
         ],
         'socialProof' => [
             'kicker' => 'Quem Somos',
-            'title' => 'Centro de Estudos da Doutrina Espírita (CEDE)',
-            'lead' => 'O Centro de Estudos da Doutrina Espírita (CEDE) é uma instituição filantrópica dedicada ao estudo sistemático, à prática e à divulgação da Doutrina Espírita, fundamentada nas obras de Allan Kardec.',
-            'leadSecondary' => 'Por meio de atividades de estudo, reflexão, acolhimento e assistência fraterna, buscamos contribuir para o desenvolvimento espiritual do indivíduo, incentivar valores como caridade, fraternidade e responsabilidade moral, além de oferecer apoio e orientação a todos que buscam compreensão, consolo e crescimento interior.',
+            'title' => 'Centro de Estudos da Doutrina Espírita - CEDE',
+            'lead' => 'Fundado em 09 de janeiro de 2001, o Centro de Estudos da Doutrina Espírita - CEDE é uma casa dedicada ao estudo, ao acolhimento e à vivência da Doutrina Espírita. Estamos em Parnamirim/RN, na Rua Frejó, nº 44, em Nova Parnamirim, com as portas abertas para todos que buscam aprendizado, serenidade e crescimento interior.',
+            'leadSecondary' => 'Venha conhecer o CEDE e permita-se sentir a serenidade de um ambiente onde o conhecimento ilumina, o acolhimento conforta e a verdade espiritual se revela com simplicidade e amor. Aqui, cada encontro é um convite à reflexão, cada palavra é um passo na jornada interior, e cada experiência é uma oportunidade de reencontro consigo mesmo e com o propósito maior da vida.',
             'trustGridLabel' => 'Frentes de trabalho',
+        ],
+        'testimonials' => [
+            'kicker' => 'Testemunhos',
+            'title' => 'Depoimentos de quem vive o CEDE',
+            'lead' => 'Relatos de quem participa das atividades e experimenta o acolhimento fraterno da casa.',
         ],
         'roadmap' => [
             'kicker' => 'Agenda',

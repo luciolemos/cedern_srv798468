@@ -1,0 +1,142 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Vendas PDV' %}
+{% set dashboard_page_lead = 'Histórico de vendas de balcão registradas apenas pelo admin, com estorno de estoque via cancelamento.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Histórico de vendas da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if admin_status == 'not-found' %}
+      {% set toast_message = 'Venda não encontrada.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Relatórios</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar">Importar CSV</a>
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/vendas/nova">+ Nova venda</a>
+    </div>
+
+    {% set pagination = bookshop_sales_pagination|default({}) %}
+    {% set sort_links = bookshop_sales_sort_links|default({}) %}
+    {% set search_term = bookshop_sales_search|default('') %}
+    {% set filters = bookshop_sales_filters|default({}) %}
+
+    <form class="nc-admin-table-search" method="get" action="/painel/livraria/vendas" data-aos="fade-up" data-aos-delay="95">
+      <label for="nc-bookshop-sales-search">Buscar vendas</label>
+      <div class="nc-admin-table-search-controls nc-bookshop-table-filters">
+        <input id="nc-bookshop-sales-search" name="q" type="search" value="{{ search_term }}" placeholder="Código, cliente, pagamento ou usuário...">
+        <select name="status_filter" aria-label="Filtrar por status">
+          <option value="all" {{ filters.status_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os status</option>
+          <option value="completed" {{ filters.status_filter|default('all') == 'completed' ? 'selected' : '' }}>Concluídas</option>
+          <option value="cancelled" {{ filters.status_filter|default('all') == 'cancelled' ? 'selected' : '' }}>Canceladas</option>
+        </select>
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('sold_at') }}">
+        <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+        <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+      </div>
+    </form>
+
+    {% if bookshop_sales|length == 0 %}
+      <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="120">
+        <p>{{ search_term or filters.status_filter != 'all' ? 'Nenhuma venda encontrada para os filtros informados.' : 'Nenhuma venda registrada ainda.' }}</p>
+      </article>
+    {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="120">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="/painel/livraria/vendas">
+          <label for="nc-bookshop-sales-per-page">Registros por página</label>
+          <select id="nc-bookshop-sales-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('sold_at') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('all') }}">
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="140">
+        <table class="nc-admin-table">
+          <thead>
+            <tr>
+              <th><a class="nc-admin-sort-link{% if sort_links.sale_code.active %} is-active{% endif %}" href="{{ sort_links.sale_code.url }}">Código <span aria-hidden="true">{{ sort_links.sale_code.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.sold_at.active %} is-active{% endif %}" href="{{ sort_links.sold_at.url }}">Data <span aria-hidden="true">{{ sort_links.sold_at.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.customer_name.active %} is-active{% endif %}" href="{{ sort_links.customer_name.url }}">Cliente <span aria-hidden="true">{{ sort_links.customer_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.created_by_name.active %} is-active{% endif %}" href="{{ sort_links.created_by_name.url }}">Usuário <span aria-hidden="true">{{ sort_links.created_by_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.item_count.active %} is-active{% endif %}" href="{{ sort_links.item_count.url }}">Itens <span aria-hidden="true">{{ sort_links.item_count.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.total_amount.active %} is-active{% endif %}" href="{{ sort_links.total_amount.url }}">Total <span aria-hidden="true">{{ sort_links.total_amount.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.payment_method.active %} is-active{% endif %}" href="{{ sort_links.payment_method.url }}">Pagamento <span aria-hidden="true">{{ sort_links.payment_method.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a></th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in bookshop_sales %}
+              <tr>
+                <td data-label="Código"><strong>{{ sale.sale_code }}</strong></td>
+                <td data-label="Data">{{ sale.sold_at_label|default('-') ?: '-' }}</td>
+                <td data-label="Cliente">{{ sale.customer_name|default('-') ?: 'Balcão' }}</td>
+                <td data-label="Usuário">{{ sale.created_by_name|default('-') ?: 'Não informado' }}</td>
+                <td data-label="Itens">{{ sale.item_count|default(0) }}</td>
+                <td data-label="Total">{{ sale.total_amount_label|default('R$ 0,00') }}</td>
+                <td data-label="Pagamento">{{ sale.payment_method_label|default('-') }}</td>
+                <td data-label="Status">
+                  <span class="nc-admin-featured-flag{{ sale.status == 'completed' ? ' is-on' : ' is-off' }}">{{ sale.status_label|default('-') }}</span>
+                </td>
+                <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/livraria/vendas/{{ sale.id }}" aria-label="Abrir venda {{ sale.sale_code }}" title="Abrir venda">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span class="nc-sr-only">Abrir venda</span>
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação de vendas" data-aos="fade-up" data-aos-delay="170">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

@@ -32,6 +32,11 @@
       </article>
     {% endif %}
 
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ admin_document_public_url|default('/') }}" target="_blank" rel="noopener">Ver página pública</a>
+    </div>
+
     <article class="nc-card nc-admin-form-card">
       <form class="nc-admin-form" method="post" action="{{ admin_document_form_action|default('/painel') }}">
         <div class="nc-admin-form-grid">

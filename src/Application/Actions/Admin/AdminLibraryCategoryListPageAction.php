@@ -172,9 +172,9 @@ class AdminLibraryCategoryListPageAction extends AbstractAdminLibraryAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Categorias da Biblioteca | Dashboard',
+            'page_title' => 'Categorias da Central de conteúdo | Dashboard',
             'page_url' => 'https://cedern.org/painel/biblioteca/categorias',
-            'page_description' => 'Painel para gestão de categorias da biblioteca do CEDE.',
+            'page_description' => 'Painel para gestão de categorias da central de conteúdo do CEDE.',
         ]);
     }
 }

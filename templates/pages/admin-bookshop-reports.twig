@@ -1,0 +1,367 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Relatórios da Livraria' %}
+{% set dashboard_page_lead = 'Visão consolidada de vendas, estoque, catálogo e operação da livraria física do CEDE.' %}
+
+{% block admin_content %}
+  {% set metrics = bookshop_report_metrics|default({}) %}
+  {% set payment_rows = bookshop_report_payments|default([]) %}
+  {% set operator_rows = bookshop_report_operators|default([]) %}
+  {% set stock_alerts = bookshop_report_stock_alerts|default([]) %}
+  {% set recent_cancelled = bookshop_report_recent_cancelled|default([]) %}
+  {% set category_rows = bookshop_report_category_summary|default([]) %}
+  {% set genre_rows = bookshop_report_genre_summary|default([]) %}
+  {% set collection_rows = bookshop_report_collection_summary|default([]) %}
+
+  <section class="nc-section" aria-label="Relatórios da livraria" data-aos="fade-up" data-aos-delay="0">
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas PDV</a>
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/vendas/nova">Nova venda</a>
+    </div>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="100">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Panorama consolidado</h3>
+          <p>Leitura rápida dos principais números da operação da livraria.</p>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-report-grid">
+        <div class="nc-bookshop-report-table-block">
+          <h4>Vendas e estoque</h4>
+          <div class="nc-admin-table-wrap">
+            <table class="nc-admin-table nc-bookshop-report-table">
+              <thead>
+                <tr>
+                  <th>Indicador</th>
+                  <th>Volume</th>
+                  <th>Recorte</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Indicador"><strong>Vendas concluídas</strong></td>
+                  <td data-label="Volume">{{ metrics.completed_sales_count|default(0) }}</td>
+                  <td data-label="Recorte">{{ metrics.completed_sales_total_label|default('R$ 0,00') }}</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Movimento de hoje</strong></td>
+                  <td data-label="Volume">{{ metrics.sales_today_count|default(0) }} venda{{ metrics.sales_today_count|default(0) == 1 ? '' : 's' }}</td>
+                  <td data-label="Recorte">{{ metrics.sales_today_total_label|default('R$ 0,00') }}</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Mês atual</strong></td>
+                  <td data-label="Volume">{{ metrics.sales_month_count|default(0) }} venda{{ metrics.sales_month_count|default(0) == 1 ? '' : 's' }}</td>
+                  <td data-label="Recorte">{{ metrics.sales_month_total_label|default('R$ 0,00') }}</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Ticket médio</strong></td>
+                  <td data-label="Volume">{{ metrics.average_ticket_label|default('R$ 0,00') }}</td>
+                  <td data-label="Recorte">por venda concluída</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Cancelamentos</strong></td>
+                  <td data-label="Volume">{{ metrics.cancelled_sales_count|default(0) }}</td>
+                  <td data-label="Recorte">com devolução ao estoque</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Estoque crítico</strong></td>
+                  <td data-label="Volume">{{ metrics.low_stock_titles|default(0) }} em alerta</td>
+                  <td data-label="Recorte">{{ metrics.out_of_stock_titles|default(0) }} títulos zerados</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="nc-bookshop-report-table-block">
+          <h4>Catálogo e acervo</h4>
+          <div class="nc-admin-table-wrap">
+            <table class="nc-admin-table nc-bookshop-report-table">
+              <thead>
+                <tr>
+                  <th>Indicador</th>
+                  <th>Volume</th>
+                  <th>Recorte</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Indicador"><strong>Títulos cadastrados</strong></td>
+                  <td data-label="Volume">{{ metrics.total_titles|default(0) }}</td>
+                  <td data-label="Recorte">{{ metrics.active_titles|default(0) }} ativos · {{ metrics.inactive_titles|default(0) }} inativos</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Unidades em estoque</strong></td>
+                  <td data-label="Volume">{{ metrics.total_units|default(0) }}</td>
+                  <td data-label="Recorte">saldo físico consolidado</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Valor de custo</strong></td>
+                  <td data-label="Volume">{{ metrics.inventory_value_label|default('R$ 0,00') }}</td>
+                  <td data-label="Recorte">investido no acervo</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Potencial bruto</strong></td>
+                  <td data-label="Volume">{{ metrics.potential_revenue_label|default('R$ 0,00') }}</td>
+                  <td data-label="Recorte">valor de venda estimado</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Editoras</strong></td>
+                  <td data-label="Volume">{{ metrics.publishers_count|default(0) }}</td>
+                  <td data-label="Recorte">marcas editoriais ativas no acervo</td>
+                </tr>
+                <tr>
+                  <td data-label="Indicador"><strong>Classificações</strong></td>
+                  <td data-label="Volume">{{ metrics.categories_count|default(0) }} categorias</td>
+                  <td data-label="Recorte">{{ metrics.genres_count|default(0) }} gêneros · {{ metrics.collections_count|default(0) }} coleções</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="140">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Movimento consolidado</h3>
+          <p>Distribuição das vendas por forma de pagamento e por usuário.</p>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-report-grid">
+        <div class="nc-bookshop-report-table-block">
+          <h4>Formas de pagamento</h4>
+          {% if payment_rows|length == 0 %}
+            <p class="nc-bookshop-report-empty">Nenhuma venda concluída para consolidar.</p>
+          {% else %}
+            <div class="nc-admin-table-wrap">
+              <table class="nc-admin-table nc-bookshop-report-table">
+                <thead>
+                  <tr>
+                    <th>Pagamento</th>
+                    <th>Vendas</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in payment_rows %}
+                    <tr>
+                      <td data-label="Pagamento"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Vendas">{{ row.count }}</td>
+                      <td data-label="Total">{{ row.total_label }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="nc-bookshop-report-table-block">
+          <h4>Usuários que registram vendas</h4>
+          {% if operator_rows|length == 0 %}
+            <p class="nc-bookshop-report-empty">Nenhuma movimentação registrada ainda.</p>
+          {% else %}
+            <div class="nc-admin-table-wrap">
+              <table class="nc-admin-table nc-bookshop-report-table">
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Vendas</th>
+                    <th>Total</th>
+                    <th>Última venda</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in operator_rows %}
+                    <tr>
+                      <td data-label="Usuário"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Vendas">{{ row.count }}</td>
+                      <td data-label="Total">{{ row.total_label }}</td>
+                      <td data-label="Última venda">{{ row.last_sale_label ?: '-' }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="180">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Estoque crítico</h3>
+          <p>Itens que pedem atenção imediata no acervo físico.</p>
+        </div>
+        <a class="nc-link" href="/painel/livraria/acervo">Abrir acervo</a>
+      </div>
+
+      {% if stock_alerts|length == 0 %}
+        <p class="nc-bookshop-report-empty">Nenhum item em nível crítico no momento.</p>
+      {% else %}
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table nc-bookshop-report-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>SKU</th>
+                <th>Localização</th>
+                <th>Saldo</th>
+                <th>Mínimo</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in stock_alerts %}
+                <tr>
+                  <td data-label="Título"><strong>{{ item.title }}</strong></td>
+                  <td class="nc-admin-cell-code" data-label="SKU">{{ item.sku ?: '-' }}</td>
+                  <td data-label="Localização">{{ item.location_label ?: '-' }}</td>
+                  <td data-label="Saldo">{{ item.stock_quantity }}</td>
+                  <td data-label="Mínimo">{{ item.stock_minimum }}</td>
+                  <td data-label="Situação"><span class="nc-bookshop-stock-pill is-{{ item.stock_state }}">{{ item.stock_state_label }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="220">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Distribuição do catálogo</h3>
+          <p>Recorte atual por categoria, gênero e coleção.</p>
+        </div>
+      </div>
+
+      <div class="nc-bookshop-report-grid is-thirds">
+        <div class="nc-bookshop-report-table-block">
+          <h4>Categorias</h4>
+          {% if category_rows|length == 0 %}
+            <p class="nc-bookshop-report-empty">Nenhuma categoria consolidada.</p>
+          {% else %}
+            <div class="nc-admin-table-wrap">
+              <table class="nc-admin-table nc-bookshop-report-table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Títulos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in category_rows %}
+                    <tr>
+                      <td data-label="Categoria"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Títulos">{{ row.count }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="nc-bookshop-report-table-block">
+          <h4>Gêneros</h4>
+          {% if genre_rows|length == 0 %}
+            <p class="nc-bookshop-report-empty">Nenhum gênero consolidado.</p>
+          {% else %}
+            <div class="nc-admin-table-wrap">
+              <table class="nc-admin-table nc-bookshop-report-table">
+                <thead>
+                  <tr>
+                    <th>Gênero</th>
+                    <th>Títulos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in genre_rows %}
+                    <tr>
+                      <td data-label="Gênero"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Títulos">{{ row.count }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="nc-bookshop-report-table-block">
+          <h4>Coleções</h4>
+          {% if collection_rows|length == 0 %}
+            <p class="nc-bookshop-report-empty">Nenhum volume vinculado a coleções ainda.</p>
+          {% else %}
+            <div class="nc-admin-table-wrap">
+              <table class="nc-admin-table nc-bookshop-report-table">
+                <thead>
+                  <tr>
+                    <th>Coleção</th>
+                    <th>Volumes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in collection_rows %}
+                    <tr>
+                      <td data-label="Coleção"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Volumes">{{ row.count }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="260">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Cancelamentos recentes</h3>
+          <p>Conferência rápida das vendas canceladas com devolução ao estoque.</p>
+        </div>
+        <a class="nc-link" href="/painel/livraria/vendas">Abrir histórico de vendas</a>
+      </div>
+
+      {% if recent_cancelled|length == 0 %}
+        <p class="nc-bookshop-report-empty">Nenhum cancelamento recente registrado.</p>
+      {% else %}
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table nc-bookshop-report-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Cancelado em</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sale in recent_cancelled %}
+                <tr>
+                  <td data-label="Código"><strong>{{ sale.sale_code }}</strong></td>
+                  <td data-label="Cliente">{{ sale.customer_name ?: 'Balcão' }}</td>
+                  <td data-label="Cancelado em">{{ sale.cancelled_at_label ?: 'Sem data' }}</td>
+                  <td data-label="Usuário">{{ sale.cancelled_by_name ?: 'Não informado' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

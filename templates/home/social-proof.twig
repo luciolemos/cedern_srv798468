@@ -1,41 +1,12 @@
-<section id="quem-somos" class="nc-section" aria-label="Prova social" data-aos="fade-up" data-aos-delay="0">
+<section id="quem-somos" class="nc-section" aria-label="Quem Somos" data-aos="fade-up" data-aos-delay="0">
   {% set social_proof = homeContent.sections.socialProof|default({}) %}
-  {% set trust_cards = homeContent.socialProofTrustCards|default([]) %}
-  {% set testimonials = homeContent.socialProofTestimonials|default([]) %}
 
   <div class="nc-about-header">
     {% include 'components/section-header.twig' with {
-      kicker: social_proof.kicker|default('Confiança'),
-      title: social_proof.title|default('Confiado por equipes de operação e tecnologia'),
-      lead: social_proof.lead|default('Seguimos os preceitos codificados por Allan Kardec.'),
+      kicker: social_proof.kicker|default('Quem Somos'),
+      title: social_proof.title|default('Centro de Estudos da Doutrina Espírita - CEDE'),
+      lead: social_proof.lead|default('O Centro de Estudos da Doutrina Espírita - CEDE é uma associação civil sem fins lucrativos voltada ao estudo, à prática e à divulgação da Doutrina Espírita.'),
       lead_secondary: social_proof.leadSecondary|default('')
     } %}
-  </div>
-
-  <div class="nc-trust-grid" aria-label="{{ social_proof.trustGridLabel|default('Frentes de atuação') }}">
-    {% for card in trust_cards %}
-      <article class="nc-trust-card" data-aos="zoom-in" data-aos-delay="{{ card.delay|default(120 + (loop.index0 * 60)) }}">
-        <img class="nc-trust-media" src="{{ card.image }}" alt="{{ card.alt }}">
-        <div class="nc-trust-body">
-          <h3>{{ card.title }}</h3>
-          <p>{{ card.text }}</p>
-        </div>
-      </article>
-    {% endfor %}
-  </div>
-
-  <div class="nc-testimonial-grid">
-    {% for person in testimonials %}
-      <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ person.delay|default(160 + (loop.index0 * 60)) }}">
-        <div class="nc-testimonial-head">
-          <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}">
-          <div class="nc-testimonial-meta">
-            <strong class="nc-testimonial-name">{{ person.name }}</strong>
-            <span class="nc-testimonial-role">{{ person.role }}</span>
-          </div>
-        </div>
-        <p>"{{ person.quote }}"</p>
-      </article>
-    {% endfor %}
   </div>
 </section>

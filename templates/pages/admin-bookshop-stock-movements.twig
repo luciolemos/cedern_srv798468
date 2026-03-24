@@ -1,0 +1,159 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Movimentações de estoque' %}
+{% set dashboard_page_lead = 'Registre entradas e ajustes e acompanhe o histórico do saldo físico da livraria.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Histórico de movimentações de estoque da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% set movement_feedback = admin_stock_movement_feedback|default({}) %}
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if admin_status == 'created' %}
+      {% if movement_feedback.book_title|default('') %}
+        {% set movement_code = movement_feedback.movement_id|default(0) > 0 ? 'MOV-' ~ '%06d'|format(movement_feedback.movement_id) : 'movimentação' %}
+        {% set unit_label = movement_feedback.stock_quantity|default(0) == 1 ? 'unidade' : 'unidades' %}
+        {% set toast_message = movement_code ~ ' registrada com sucesso. O saldo de "' ~ movement_feedback.book_title ~ '" agora é ' ~ movement_feedback.stock_quantity|default(0) ~ ' ' ~ unit_label ~ '.' %}
+      {% else %}
+        {% set toast_message = 'Movimentação registrada com sucesso.' %}
+      {% endif %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Relatórios</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry">Nova entrada</a>
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/movimentacoes/nova?mode=adjustment">Novo ajuste</a>
+    </div>
+
+    {% set pagination = bookshop_stock_movements_pagination|default({}) %}
+    {% set sort_links = bookshop_stock_movements_sort_links|default({}) %}
+    {% set search_term = bookshop_stock_movements_search|default('') %}
+    {% set filters = bookshop_stock_movements_filters|default({}) %}
+
+    <form class="nc-admin-table-search" method="get" action="/painel/livraria/movimentacoes" data-aos="fade-up" data-aos-delay="95">
+      <label for="nc-bookshop-stock-movements-search">Buscar movimentações</label>
+      <div class="nc-admin-table-search-controls nc-bookshop-table-filters">
+        <input id="nc-bookshop-stock-movements-search" name="q" type="search" value="{{ search_term }}" placeholder="Código, livro, SKU, tipo, usuário ou observação...">
+        <select name="type_filter" aria-label="Filtrar por tipo de movimentação">
+          <option value="all" {{ filters.type_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os tipos</option>
+          <option value="entry" {{ filters.type_filter|default('all') == 'entry' ? 'selected' : '' }}>Entrada</option>
+          <option value="donation" {{ filters.type_filter|default('all') == 'donation' ? 'selected' : '' }}>Doação recebida</option>
+          <option value="adjustment_add" {{ filters.type_filter|default('all') == 'adjustment_add' ? 'selected' : '' }}>Ajuste positivo</option>
+          <option value="adjustment_remove" {{ filters.type_filter|default('all') == 'adjustment_remove' ? 'selected' : '' }}>Ajuste negativo</option>
+          <option value="loss" {{ filters.type_filter|default('all') == 'loss' ? 'selected' : '' }}>Perda ou avaria</option>
+        </select>
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('occurred_at') }}">
+        <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+        <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+      </div>
+    </form>
+
+    {% if bookshop_stock_movements|length == 0 %}
+      <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="120">
+        <p>{{ search_term or filters.type_filter != 'all' ? 'Nenhuma movimentação encontrada para os filtros informados.' : 'Nenhuma movimentação de estoque registrada ainda.' }}</p>
+      </article>
+    {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="120">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="/painel/livraria/movimentacoes">
+          <label for="nc-bookshop-stock-movements-per-page">Registros por página</label>
+          <select id="nc-bookshop-stock-movements-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('occurred_at') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="type_filter" value="{{ filters.type_filter|default('all') }}">
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="140">
+        <table class="nc-admin-table nc-admin-table-bookshop">
+          <thead>
+            <tr>
+              <th><a class="nc-admin-sort-link{% if sort_links.id.active %} is-active{% endif %}" href="{{ sort_links.id.url }}">Código <span aria-hidden="true">{{ sort_links.id.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.occurred_at.active %} is-active{% endif %}" href="{{ sort_links.occurred_at.url }}">Data <span aria-hidden="true">{{ sort_links.occurred_at.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.movement_type.active %} is-active{% endif %}" href="{{ sort_links.movement_type.url }}">Tipo <span aria-hidden="true">{{ sort_links.movement_type.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.title_snapshot.active %} is-active{% endif %}" href="{{ sort_links.title_snapshot.url }}">Livro <span aria-hidden="true">{{ sort_links.title_snapshot.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.stock_delta.active %} is-active{% endif %}" href="{{ sort_links.stock_delta.url }}">Impacto <span aria-hidden="true">{{ sort_links.stock_delta.indicator }}</span></a></th>
+              <th>Saldo</th>
+              <th>Custo / Venda</th>
+              <th><a class="nc-admin-sort-link{% if sort_links.created_by_name.active %} is-active{% endif %}" href="{{ sort_links.created_by_name.url }}">Usuário <span aria-hidden="true">{{ sort_links.created_by_name.indicator }}</span></a></th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in bookshop_stock_movements %}
+              <tr>
+                <td class="nc-admin-cell-code" data-label="Código"><strong>{{ movement.movement_code }}</strong></td>
+                <td data-label="Data">{{ movement.occurred_at_label|default('-') ?: '-' }}</td>
+                <td data-label="Tipo">{{ movement.movement_type_label|default('-') }}</td>
+                <td class="nc-agenda-activity-cell" data-label="Livro">
+                  <strong>{{ movement.title_snapshot }}</strong>
+                  {% if movement.author_snapshot|default('') %}
+                    <small>{{ movement.author_snapshot }}</small>
+                  {% endif %}
+                  <small>{{ movement.sku_snapshot|default('-') ?: '-' }}{% if movement.location_label|default('') %} · {{ movement.location_label }}{% endif %}</small>
+                </td>
+                <td data-label="Impacto">
+                  <span class="nc-bookshop-movement-delta {{ movement.stock_delta >= 0 ? 'is-positive' : 'is-negative' }}">{{ movement.stock_delta_label }}</span>
+                  <small>{{ movement.quantity }} unidade{{ movement.quantity == 1 ? '' : 's' }}</small>
+                </td>
+                <td data-label="Saldo">{{ movement.stock_before }} → {{ movement.stock_after }}</td>
+                <td data-label="Custo">
+                  {% if movement.unit_cost_label != '-' %}
+                    {{ movement.unit_cost_label }}
+                    <small>Total {{ movement.total_cost_label }}</small>
+                  {% else %}
+                    {{ movement.unit_sale_price_label|default('-') != '-' ? movement.unit_sale_price_label : '-' }}
+                  {% endif %}
+                  {% if movement.unit_sale_price_label|default('-') != '-' %}
+                    <small>Venda {{ movement.unit_sale_price_label }}{% if movement.total_sale_value_label|default('-') != '-' %} · Total {{ movement.total_sale_value_label }}{% endif %}</small>
+                  {% endif %}
+                </td>
+                <td data-label="Usuário">{{ movement.created_by_name|default('-') ?: 'Não informado' }}</td>
+                <td data-label="Observações">{{ movement.notes|default('-') ?: '-' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação de movimentações de estoque" data-aos="fade-up" data-aos-delay="170">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

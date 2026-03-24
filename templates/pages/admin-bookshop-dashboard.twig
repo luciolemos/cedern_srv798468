@@ -1,0 +1,139 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Gerenciar Livraria' %}
+{% set dashboard_page_lead = 'Fluxo administrativo da livraria física: acervo, movimentações de estoque, importação do Excel em CSV e vendas de balcão.' %}
+
+{% block admin_content %}
+  {% set metrics = bookshop_metrics|default({}) %}
+
+  <section class="nc-section" aria-label="Visão geral da livraria" data-aos="fade-up" data-aos-delay="0">
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Abrir acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Relatórios</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes">Movimentações</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/manual">Manual da livraria</a>
+      <a class="nc-btn nc-btn-primary" href="/painel/livraria/vendas/nova">Nova venda</a>
+    </div>
+
+    <div class="nc-bookshop-kpi-grid" data-aos="fade-up" data-aos-delay="100">
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Títulos cadastrados</span>
+        <strong class="nc-metric-value">{{ metrics.total_titles|default(0) }}</strong>
+        <p>{{ metrics.active_titles|default(0) }} ativos • {{ metrics.inactive_titles|default(0) }} inativos</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Unidades em estoque</span>
+        <strong class="nc-metric-value">{{ metrics.total_units|default(0) }}</strong>
+        <p>{{ metrics.low_stock_titles|default(0) }} com estoque baixo • {{ metrics.out_of_stock_titles|default(0) }} zerados</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Valor de custo</span>
+        <strong class="nc-metric-value">{{ metrics.inventory_value_label|default('R$ 0,00') }}</strong>
+        <p>Baseado no saldo atual do acervo.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Potencial de venda</span>
+        <strong class="nc-metric-value">{{ metrics.potential_revenue_label|default('R$ 0,00') }}</strong>
+        <p>Receita bruta estimada com o saldo em mãos.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Vendas hoje</span>
+        <strong class="nc-metric-value">{{ metrics.sales_today_count|default(0) }}</strong>
+        <p>{{ metrics.sales_today_total_label|default('R$ 0,00') }}</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <span class="nc-metric-label">Faturamento no mês</span>
+        <strong class="nc-metric-value">{{ metrics.sales_month_total_label|default('R$ 0,00') }}</strong>
+        <p>Somente vendas concluídas no PDV.</p>
+      </article>
+    </div>
+
+    <div class="nc-bookshop-overview-grid" data-aos="fade-up" data-aos-delay="140">
+      <article class="nc-card nc-bookshop-overview-card">
+        <h3>Fluxo sugerido</h3>
+        <ol class="nc-bookshop-flow-list">
+          <li>Importe o CSV exportado da planilha do Excel.</li>
+          <li>Revise coleção, volume, categoria, gênero, preço, saldo, SKU e localização do acervo.</li>
+          <li>Registre entradas e ajustes sempre que o saldo físico mudar.</li>
+          <li>Registre as vendas no PDV para baixar o estoque.</li>
+          <li>Cancele uma venda quando precisar estornar o saldo.</li>
+        </ol>
+      </article>
+
+      <article class="nc-card nc-bookshop-overview-card">
+        <h3>Atalhos da operação</h3>
+        <div class="nc-actions nc-bookshop-card-actions">
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/novo">Cadastrar item</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Gerir coleções</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Gerir categorias</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gerir gêneros</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Revisar estoque</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes">Histórico de estoque</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Ver relatórios</a>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Histórico de vendas</a>
+          <a class="nc-btn nc-btn-primary" href="/painel/livraria/vendas/nova">Abrir PDV</a>
+        </div>
+      </article>
+    </div>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="180">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Vendas recentes</h3>
+          <p>Últimos lançamentos do PDV para conferência rápida.</p>
+        </div>
+        <a class="nc-link" href="/painel/livraria/vendas">Ver histórico completo</a>
+      </div>
+
+      {% if metrics.recent_sales|default([])|length == 0 %}
+        <p class="nc-member-empty">Nenhuma venda registrada ainda.</p>
+      {% else %}
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Itens</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sale in metrics.recent_sales %}
+                <tr>
+                  <td data-label="Código"><strong>{{ sale.sale_code }}</strong></td>
+                  <td data-label="Data">{{ sale.sold_at_label|default('-') ?: '-' }}</td>
+                  <td data-label="Cliente">{{ sale.customer_name|default('-') ?: 'Balcão' }}</td>
+                  <td data-label="Itens">{{ sale.item_count|default(0) }}</td>
+                  <td data-label="Total">{{ sale.total_amount_label|default('R$ 0,00') }}</td>
+                  <td data-label="Status">
+                    <span class="nc-admin-featured-flag{{ sale.status == 'completed' ? ' is-on' : ' is-off' }}">{{ sale.status_label|default('-') }}</span>
+                  </td>
+                  <td class="nc-admin-table-actions" data-label="Ações">
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/livraria/vendas/{{ sale.id }}" aria-label="Abrir venda {{ sale.sale_code }}" title="Abrir venda">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span class="nc-sr-only">Abrir venda</span>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

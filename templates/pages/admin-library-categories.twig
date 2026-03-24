@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Categorias da Biblioteca' %}
-{% set dashboard_page_lead = 'Cadastre, edite e ative/inative categorias usadas no acervo digital.' %}
+{% set dashboard_page_title = 'Categorias da Central de conteúdo' %}
+{% set dashboard_page_lead = 'Cadastre, edite e ative/inative categorias usadas na central de conteúdo.' %}
 
 {% block admin_content %}
-    <section class="nc-section" aria-label="Administração de categorias da biblioteca" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section" aria-label="Administração de categorias da central de conteúdo" data-aos="fade-up" data-aos-delay="0">
       {% set toast_message = '' %}
       {% set toast_tone = 'success' %}
       {% if admin_status == 'created' %}
@@ -29,20 +29,10 @@
         tone: toast_tone
       } %}
 
-      <div class="nc-actions" data-aos="fade-up" data-aos-delay="80">
-        <a class="nc-btn nc-btn-secondary nc-btn-icon" href="/painel/biblioteca/livros" aria-label="Voltar para livros" title="Voltar para livros">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="nc-sr-only">Voltar para livros</span>
-        </a>
-        <a class="nc-btn nc-btn-primary nc-btn-icon nc-admin-action-create" href="/painel/biblioteca/categorias/nova" aria-label="Nova categoria" title="Nova categoria">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M12 9V15M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <span class="nc-sr-only">Nova categoria</span>
-        </a>
+      <div class="nc-actions nc-admin-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/biblioteca/livros">Voltar para conteúdos</a>
+        <a class="nc-btn nc-btn-primary nc-admin-action-create nc-actions-edge-button" href="/painel/biblioteca/categorias/nova" aria-label="Nova categoria" title="Nova categoria">+ Categoria</a>
       </div>
 
       {% set pagination = library_categories_pagination|default({}) %}
@@ -151,7 +141,7 @@
         </div>
 
         {% if pagination.total_pages > 1 %}
-          <nav class="nc-admin-pagination" aria-label="Paginação de categorias da biblioteca" data-aos="fade-up" data-aos-delay="170">
+          <nav class="nc-admin-pagination" aria-label="Paginação de categorias da central de conteúdo" data-aos="fade-up" data-aos-delay="170">
             {% if pagination.previous_url %}
               <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
             {% else %}

@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = library_category_form_is_edit ? 'Editar categoria de livros' : 'Nova categoria de livros' %}
-{% set dashboard_page_lead = 'Defina a taxonomia usada na biblioteca pública do CEDE.' %}
+{% set dashboard_page_title = library_category_form_is_edit ? 'Editar categoria da central' : 'Nova categoria da central' %}
+{% set dashboard_page_lead = 'Defina a taxonomia usada na central de conteúdo pública do CEDE.' %}
 
 {% block admin_content %}
-    <section class="nc-section" aria-label="Formulário de categoria da biblioteca" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section" aria-label="Formulário de categoria da central de conteúdo" data-aos="fade-up" data-aos-delay="0">
       {% if library_category_form_errors|length > 0 %}
         <article class="nc-admin-form-errors" role="alert">
           <strong>Corrija os campos abaixo:</strong>
@@ -16,6 +16,11 @@
           </ul>
         </article>
       {% endif %}
+
+      <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+        <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/biblioteca/categorias">Voltar</a>
+      </div>
 
       <article class="nc-card nc-admin-form-card">
         <form class="nc-admin-form" method="post" action="{{ library_category_form_is_edit ? '/painel/biblioteca/categorias/' ~ library_category_id ~ '/editar' : '/painel/biblioteca/categorias/nova' }}">
@@ -52,7 +57,7 @@
 
           <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
             <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ library_category_form_is_edit ? 'Salvar alterações' : 'Criar categoria' }}</button>
-            <a class="nc-btn nc-btn-secondary nc-admin-action-edit" href="/painel/biblioteca/categorias">Voltar</a>
+            <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/biblioteca/categorias">Voltar</a>
           </div>
         </form>
       </article>

@@ -192,7 +192,8 @@ VALUES
     ('member', 'Membro', 'Acesso à área de membro e recursos básicos.'),
     ('operator', 'Operador', 'Operação de funcionalidades internas específicas.'),
     ('manager', 'Gerente', 'Coordenação de conteúdos e fluxos internos.'),
-    ('admin', 'Administrador', 'Gestão completa de usuários e permissões.')
+    ('admin', 'Administrador', 'Gestão completa de usuários e permissões.'),
+    ('bookshop_operator', 'Operador da Livraria', 'Acesso exclusivo ao módulo interno da Livraria.')
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     description = VALUES(description);

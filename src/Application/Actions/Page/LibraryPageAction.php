@@ -41,14 +41,14 @@ class LibraryPageAction extends AbstractPageAction
         $books = [];
         $categories = [];
         $basePath = rtrim((string) $request->getUri()->getPath(), '/');
-        $basePath = $basePath !== '' ? $basePath : '/biblioteca';
+        $basePath = $basePath !== '' ? $basePath : '/quem-somos/base-de-conhecimento';
         $pageUrlBase = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
 
         try {
             $books = $this->libraryRepository->findPublishedBooks();
             $categories = $this->libraryRepository->findActiveCategories();
         } catch (\Throwable $exception) {
-            $this->logger->warning('Biblioteca dinâmica indisponível.', [
+            $this->logger->warning('Base de conhecimento dinâmica indisponível.', [
                 'error' => $exception->getMessage(),
             ]);
         }
@@ -194,11 +194,11 @@ class LibraryPageAction extends AbstractPageAction
                 'previous_url' => $previousPageUrl,
                 'next_url' => $nextPageUrl,
             ],
-            'page_title' => 'Biblioteca | CEDE',
+            'page_title' => 'Base de conhecimento | CEDE',
             'page_url' => $pageUrlBase . $basePath,
             'page_description' =>
-                'Consulte o acervo digital da biblioteca do CEDE '
-                . 'e acesse livros em PDF para estudo doutrinário.',
+                'Consulte a base de conhecimento do CEDE '
+                . 'e acesse conteúdos em PDF para estudo, pesquisa e aprofundamento doutrinário.',
         ]);
     }
 }

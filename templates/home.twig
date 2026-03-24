@@ -3,41 +3,8 @@
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/hero.twig' %}
-
-    <section class="nc-section nc-home-testimonials" aria-label="Depoimentos" data-aos="fade-up" data-aos-delay="0">
-      {% set social_proof = homeContent.sections.socialProof|default({}) %}
-      {% set testimonials = homeContent.socialProofTestimonials|default([]) %}
-
-      {% include 'components/section-header.twig' with {
-        kicker: social_proof.kicker|default('Depoimentos'),
-        title: 'Depoimentos e testemunhos',
-        lead: 'Relatos de quem participa das atividades e vivencia o acolhimento fraterno do CEDE.'
-      } %}
-
-      {% if testimonials|length > 0 %}
-        <div class="nc-testimonial-grid" data-testimonials-grid>
-          {% for person in testimonials %}
-            <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ person.delay|default(160 + (loop.index0 * 60)) }}"{% if loop.index > 3 %} hidden data-testimonial-extra="true"{% endif %}>
-              <div class="nc-testimonial-head">
-                <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}">
-                <div class="nc-testimonial-meta">
-                  <strong class="nc-testimonial-name">{{ person.name }}</strong>
-                  <span class="nc-testimonial-role">{{ person.role }}</span>
-                </div>
-              </div>
-              <p>"{{ person.quote }}"</p>
-            </article>
-          {% endfor %}
-        </div>
-
-        {% if testimonials|length > 3 %}
-          <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="180">
-            <button class="nc-btn nc-btn-primary" type="button" data-testimonials-toggle aria-expanded="false">Ver mais depoimentos</button>
-          </div>
-        {% endif %}
-      {% endif %}
-    </section>
-
+    {% include 'home/social-proof.twig' %}
+    {% include 'home/testimonials.twig' %}
 
     <section class="nc-section nc-home-quick-access" aria-label="Acesso rápido" data-aos="fade-up" data-aos-delay="0">
       {% include 'components/section-header.twig' with {
@@ -85,6 +52,14 @@
           href: '/contato',
           link_label: 'Falar com o CEDE',
           delay: 280
+        } %}
+
+        {% include 'components/feature-card.twig' with {
+          title: 'Central de Conteúdos',
+          description: 'Acesse a base de conhecimento com materiais, referências e conteúdos de apoio ao estudo.',
+          href: '/quem-somos/base-de-conhecimento',
+          link_label: 'Ver conteúdos',
+          delay: 320
         } %}
       </div>
     </section>

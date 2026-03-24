@@ -7,6 +7,7 @@
   {% set panel_can_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_library_books = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_library_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
+  {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_cede_management = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
 
@@ -66,6 +67,7 @@
           {% set dashboard_user_label = dashboard_user|default('Usuário') %}
           {% set dashboard_user_role_label = member_role_name|default({
             'admin': 'Administrador',
+            'bookshop_operator': 'Operador da Livraria',
             'manager': 'Gestor',
             'operator': 'Operador',
             'member': 'Membro'
@@ -130,7 +132,7 @@
             </details>
             {% if panel_can_library_books %}
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/biblioteca/' %}open{% endif %}>
-                <summary class="nc-dashboard-user-menu-group-title">BIBLIOTECA</summary>
+                <summary class="nc-dashboard-user-menu-group-title">CENTRAL DE CONTEÚDO</summary>
                 <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/biblioteca/livros">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,7 +142,7 @@
                       <path d="M9 11H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                   </span>
-                  <span>Gestão de livros</span>
+                  <span>Conteúdos</span>
                 </a>
                 {% if panel_can_library_categories %}
                   <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/biblioteca/categorias">
@@ -154,9 +156,128 @@
                         <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
                       </svg>
                     </span>
-                    <span>Categorias de livros</span>
+                    <span>Categorias</span>
                   </a>
                 {% endif %}
+              </details>
+            {% endif %}
+            {% if panel_can_bookshop %}
+              <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/livraria' %}open{% endif %}>
+                <summary class="nc-dashboard-user-menu-group-title">LIVRARIA</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 4H19V20H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M9 8H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M9 16H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Visão geral</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/manual">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 4.5A2.5 2.5 0 0 1 8.5 2H19v16H8.5A2.5 2.5 0 0 0 6 20.5V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M6 4.5A2.5 2.5 0 0 0 3.5 7V22H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M9 7H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M9 11H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Manual de operação</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/relatorios">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 19V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M12 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M19 19V8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Relatórios</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/movimentacoes">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 7H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M7 12H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M7 17H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M17 5V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M14.5 7.5H19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Movimentações</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/colecoes">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 5H17C18.1 5 19 5.9 19 7V17C19 18.1 18.1 19 17 19H7C5.9 19 5 18.1 5 17V7C5 5.9 5.9 5 7 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M8.5 9H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8.5 12H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8.5 15H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Coleções</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/categorias">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Categorias</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/generos">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Gêneros</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/acervo">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
+                      <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
+                      <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Acervo</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/importar">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 4V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 11L12 15L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <rect x="4" y="17" width="16" height="3" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                  </span>
+                  <span>Importar CSV</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/vendas">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 14H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Vendas PDV</span>
+                </a>
               </details>
             {% endif %}
             {% if panel_can_users %}
@@ -312,8 +433,8 @@
             <span class="nc-admin-link-label">Home do site</span>
           </a>
           {% if panel_can_library_books %}
-            <details class="nc-admin-nav-group" aria-label="Seção biblioteca" {% if current_path starts with '/painel/biblioteca/' %}open{% endif %}>
-              <summary class="nc-admin-nav-group-title">BIBLIOTECA</summary>
+            <details class="nc-admin-nav-group" aria-label="Seção central de conteúdo" {% if current_path starts with '/painel/biblioteca/' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">CENTRAL DE CONTEÚDO</summary>
               <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/biblioteca/livros' ? ' is-active' : '' }}" href="/painel/biblioteca/livros">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -323,7 +444,7 @@
                     <path d="M9 11H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Gestão de livros</span>
+                <span class="nc-admin-link-label">Conteúdos</span>
               </a>
               {% if panel_can_library_categories %}
                 <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/biblioteca/categorias' ? ' is-active' : '' }}" href="/painel/biblioteca/categorias">
@@ -337,9 +458,128 @@
                       <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
                     </svg>
                   </span>
-                  <span class="nc-admin-link-label">Categorias de livros</span>
+                  <span class="nc-admin-link-label">Categorias</span>
                 </a>
               {% endif %}
+            </details>
+          {% endif %}
+          {% if panel_can_bookshop %}
+            <details class="nc-admin-nav-group" aria-label="Seção livraria" {% if current_path starts with '/painel/livraria' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">LIVRARIA</summary>
+              <a class="nc-link nc-admin-submenu-link{{ current_path == '/painel/livraria' ? ' is-active' : '' }}" href="/painel/livraria">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 4H19V20H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M9 8H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M9 16H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Visão geral</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/manual' ? ' is-active' : '' }}" href="/painel/livraria/manual">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 4.5A2.5 2.5 0 0 1 8.5 2H19v16H8.5A2.5 2.5 0 0 0 6 20.5V4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M6 4.5A2.5 2.5 0 0 0 3.5 7V22H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 7H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M9 11H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Manual de operação</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/relatorios' ? ' is-active' : '' }}" href="/painel/livraria/relatorios">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 19V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M12 19V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M19 19V8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Relatórios</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/movimentacoes' ? ' is-active' : '' }}" href="/painel/livraria/movimentacoes">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 7H17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M7 12H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M7 17H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M17 5V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M14.5 7.5H19.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Movimentações</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/colecoes' ? ' is-active' : '' }}" href="/painel/livraria/colecoes">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 5H17C18.1 5 19 5.9 19 7V17C19 18.1 18.1 19 17 19H7C5.9 19 5 18.1 5 17V7C5 5.9 5.9 5 7 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M8.5 9H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8.5 12H15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8.5 15H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Coleções</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/categorias' ? ' is-active' : '' }}" href="/painel/livraria/categorias">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Categorias</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/generos' ? ' is-active' : '' }}" href="/painel/livraria/generos">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Gêneros</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/acervo' ? ' is-active' : '' }}" href="/painel/livraria/acervo">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
+                    <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
+                    <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Acervo</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/importar' ? ' is-active' : '' }}" href="/painel/livraria/importar">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 4V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 11L12 15L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="4" y="17" width="16" height="3" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Importar CSV</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/vendas' ? ' is-active' : '' }}" href="/painel/livraria/vendas">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 14H12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Vendas PDV</span>
+              </a>
             </details>
           {% endif %}
           <details class="nc-admin-nav-group" aria-label="Seção eventos" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>

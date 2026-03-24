@@ -16,6 +16,12 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         ['id' => 2, 'role_key' => 'operator', 'name' => 'Operador', 'description' => 'Acesso operacional.'],
         ['id' => 3, 'role_key' => 'manager', 'name' => 'Gerente', 'description' => 'Acesso de gestão.'],
         ['id' => 4, 'role_key' => 'admin', 'name' => 'Administrador', 'description' => 'Acesso administrativo.'],
+        [
+            'id' => 5,
+            'role_key' => 'bookshop_operator',
+            'name' => 'Operador da Livraria',
+            'description' => 'Acesso exclusivo ao módulo interno da Livraria.',
+        ],
     ];
 
     /**

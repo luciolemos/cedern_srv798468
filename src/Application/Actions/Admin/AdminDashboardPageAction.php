@@ -33,6 +33,13 @@ class AdminDashboardPageAction extends AbstractPageAction
 
     public function __invoke(Request $request, Response $response): Response
     {
+        if (
+            empty($_SESSION['admin_authenticated'])
+            && (string) ($_SESSION['member_role_key'] ?? '') === 'bookshop_operator'
+        ) {
+            return $response->withHeader('Location', '/painel/livraria')->withStatus(302);
+        }
+
         $flash = $this->consumeSessionFlash(self::FLASH_KEY);
         $visitMetrics = [
             'baseline_started_at' => null,
@@ -177,7 +184,7 @@ class AdminDashboardPageAction extends AbstractPageAction
         $segmentLabels = [
             'agenda' => 'Agenda',
             'atendimento-fraterno' => 'Atendimento Fraterno',
-            'biblioteca' => 'Biblioteca',
+            'biblioteca' => 'Central de Conteúdo',
             'cadastro' => 'Cadastro',
             'contato' => 'Contato',
             'entrar' => 'Entrar',

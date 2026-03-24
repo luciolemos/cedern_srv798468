@@ -68,6 +68,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede10_logo.png?v={{ asset_version }}">
   <link rel="apple-touch-icon" href="/assets/img/brands/cede10_logo.png?v={{ asset_version }}">
   <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>
+  {% block head %}{% endblock %}
 </head>
 <body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}">
   {% block content %}{% endblock %}

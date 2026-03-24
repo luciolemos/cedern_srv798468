@@ -56,9 +56,9 @@
   {# <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"> #}
   {% set asset_version = app_asset_version|default('1') %}
   <link rel="stylesheet" href="/assets/css/cedern.css?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede10_logo.png?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede10_logo.png?v={{ asset_version }}">
-  <link rel="apple-touch-icon" href="/assets/img/brands/cede10_logo.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
+  <link rel="apple-touch-icon" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
   {% if app_recaptcha_enabled and app_recaptcha_site_key|default('') %}
     <script src="https://www.google.com/recaptcha/api.js?render={{ app_recaptcha_site_key|url_encode }}" async defer></script>
     <script src="/assets/js/cedern-recaptcha.js?v={{ asset_version }}" defer></script>

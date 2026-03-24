@@ -31,7 +31,7 @@
   transition: opacity 0.2s;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 980px) {
   .nc-donation-key-wrap {
     flex-direction: column;
     align-items: flex-start;
@@ -40,6 +40,18 @@
 
   .nc-donation-key-wrap .nc-donation-key {
     margin-top: 0;
+    display: grid;
+    gap: 0.2rem;
+    width: 100%;
+  }
+
+  .nc-donation-key-wrap .nc-donation-key strong,
+  .nc-donation-key-wrap .nc-donation-key span {
+    display: block;
+  }
+
+  .nc-donation-key-wrap .nc-donation-key span {
+    word-break: break-all;
   }
 
   .nc-donation-key-wrap .nc-btn-copy-pix {
@@ -307,14 +319,14 @@
   --nav-toggle-size: 2.4rem;
   --nav-toggle-padding: 0.42rem;
 
-  --footer-logo-max-width: min(58vw, 220px);
-  --footer-logo-height: clamp(1.5rem, 5vw, 2.8rem);
+  --footer-logo-max-width: min(62vw, 260px);
+  --footer-logo-height: clamp(1.9rem, 6.2vw, 3.6rem);
 
   --brand-logo-max-width: min(54vw, 320px);
   --brand-logo-height: clamp(1.45rem, 3.4vw, 2.2rem);
   --brand-logo-mobile-max-width: min(calc(100vw - 6rem), 250px);
   --brand-logo-mobile-height: clamp(1.55rem, 5.4vw, 2.2rem);
-  --brand-logo-desktop-height: clamp(1.55rem, 2.3vw, 2.4rem);
+  --brand-logo-desktop-height: clamp(1.55rem, 2.6vw, 3rem);
   --brand-lockup-max-width-desktop: min(66vw, 980px);
 }
 
@@ -628,10 +640,6 @@ h3 {
 
 .nc-footer-contact-link {
   font-weight: var(--font-weight-semibold);
-}
-
-.nc-footer-actions {
-  margin-top: var(--space-4);
 }
 
 .nc-footer-bottom {
@@ -1091,17 +1099,17 @@ h3 {
   margin-right: calc(50% - 50vw);
   margin-left: calc(50% - 50vw);
   transform: translateY(calc(-1 * var(--main-padding-y)));
-  background-color: color-mix(in srgb, var(--theme-soft-1) 26%, var(--surface-main));
+  background-color: color-mix(in srgb, #1f2937 12%, var(--surface-main));
   background-image:
     linear-gradient(
       90deg,
-      rgb(241 247 255 / 0.97) 0%,
-      rgb(241 247 255 / 0.95) 34%,
-      rgb(241 247 255 / 0.82) 52%,
-      rgb(241 247 255 / 0.46) 72%,
-      rgb(241 247 255 / 0.14) 100%
+      rgb(228 232 238 / 0.82) 0%,
+      rgb(220 225 232 / 0.74) 34%,
+      rgb(199 206 216 / 0.52) 52%,
+      rgb(145 154 167 / 0.24) 72%,
+      rgb(74 85 101 / 0.08) 100%
     ),
-    linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(15 23 42 / 0.06)),
+    linear-gradient(180deg, rgb(15 23 42 / 0.14), rgb(15 23 42 / 0.08)),
     var(--nc-hero-bg-image);
   background-repeat: no-repeat;
   background-size: auto, auto, cover;
@@ -1160,6 +1168,18 @@ h3 {
   margin-top: var(--space-3);
 }
 
+.nc-admin-toolbar,
+.nc-bookshop-toolbar {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.nc-actions-edge-button {
+  margin-left: auto;
+}
+
 .nc-btn {
   position: relative;
   display: inline-flex;
@@ -1174,6 +1194,22 @@ h3 {
   border: var(--button-border-width) solid transparent;
   cursor: pointer;
   transition: var(--comp-btn-transition);
+}
+
+.nc-btn-inline-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.nc-btn-back::before {
+  content: "";
+  width: 0.56rem;
+  height: 0.56rem;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  flex-shrink: 0;
 }
 
 .nc-btn:hover {
@@ -1501,6 +1537,18 @@ h3 {
   border-color: color-mix(in srgb, var(--swatch-red-1) 30%, var(--surface-border));
 }
 
+.nc-store-status.is-warning {
+  color: color-mix(in srgb, var(--swatch-orange-3) 74%, var(--text-main));
+  background: color-mix(in srgb, var(--swatch-orange-1) 12%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--swatch-orange-1) 30%, var(--surface-border));
+}
+
+.nc-store-status.is-neutral {
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-main));
+  background: color-mix(in srgb, var(--surface-2) 84%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--surface-border) 72%, var(--surface-main));
+}
+
 .nc-store-card-list {
   list-style: none;
   margin: 0;
@@ -1581,6 +1629,27 @@ h3 {
   align-items: stretch;
 }
 
+.nc-knowledge-list-head {
+  margin-top: var(--space-4);
+  width: min(var(--content-max-width), 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) minmax(360px, 0.78fr);
+  gap: var(--space-4);
+  align-items: end;
+  padding: 0 clamp(1rem, 1.4vw, 1.35rem) 0 calc(clamp(1rem, 1.4vw, 1.35rem) + 0.24rem);
+  color: var(--text-subtle);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nc-list.nc-library-list.nc-knowledge-list {
+  margin-top: var(--space-2);
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .nc-library-overview {
   margin-top: var(--space-4);
   display: grid;
@@ -1620,6 +1689,10 @@ h3 {
   pointer-events: none;
 }
 
+.nc-bookshop-overview-card-primary {
+  gap: var(--space-3);
+}
+
 .nc-library-overview-kicker {
   margin: 0;
   font-family: var(--font-mono);
@@ -1644,6 +1717,13 @@ h3 {
 .nc-library-empty {
   margin: 0;
   color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.nc-bookshop-presential-note {
+  margin: 0;
+  color: var(--text-main);
+  font-weight: var(--font-weight-medium);
   text-wrap: pretty;
 }
 
@@ -1718,7 +1798,7 @@ h3 {
 
 .nc-library-filter-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
@@ -1823,6 +1903,10 @@ h3 {
   box-shadow: var(--shadow-soft);
 }
 
+.nc-library-bookplate:not(.is-default) {
+  background: transparent;
+}
+
 .nc-library-bookplate.is-default {
   background:
     radial-gradient(circle at 50% 12%, rgb(255 250 239 / 0.88), transparent 32%),
@@ -1835,7 +1919,7 @@ h3 {
   object-fit: contain;
   object-position: center top;
   display: block;
-  background: rgb(252 248 238);
+  background: transparent;
 }
 
 .nc-library-bookplate-default {
@@ -2193,6 +2277,467 @@ h3 {
   color: var(--text-main);
 }
 
+.nc-bookshop-list .nc-library-card {
+  height: 100%;
+}
+
+.nc-knowledge-row {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-soft-1) 8%, var(--surface-elevated)) 0%, var(--surface-elevated) 100%);
+}
+
+.nc-knowledge-row::before {
+  width: 0.24rem;
+}
+
+.nc-knowledge-row-shell {
+  grid-template-columns: 72px minmax(0, 1fr) minmax(360px, 0.78fr);
+  gap: var(--space-4);
+  align-items: center;
+  padding: clamp(1rem, 1.4vw, 1.2rem);
+}
+
+.nc-knowledge-row-cover {
+  width: 72px;
+  justify-self: start;
+}
+
+.nc-knowledge-row .nc-library-bookplate {
+  width: 72px;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 0.08);
+}
+
+.nc-knowledge-row-main {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.nc-knowledge-row-main .nc-library-card-topline {
+  margin-bottom: 0.1rem;
+}
+
+.nc-knowledge-row-main .nc-library-card-title {
+  margin: 0;
+  font-size: clamp(1.02rem, 1.4vw, 1.14rem);
+}
+
+.nc-knowledge-row-main .nc-library-card-subtitle {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.nc-knowledge-row-main .nc-library-card-author {
+  margin: 0;
+  color: var(--text-main);
+}
+
+.nc-knowledge-row-column {
+  display: grid;
+  gap: 0.55rem;
+  align-content: center;
+  min-width: 0;
+}
+
+.nc-knowledge-row-column-title {
+  display: none;
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nc-knowledge-data-list {
+  display: grid;
+  gap: 0.42rem;
+  margin: 0;
+}
+
+.nc-knowledge-data-list > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.22rem 0.55rem;
+  align-items: start;
+}
+
+.nc-knowledge-data-list dt,
+.nc-knowledge-data-list dd {
+  margin: 0;
+}
+
+.nc-knowledge-data-list dt {
+  color: var(--text-main);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-knowledge-data-list dd {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.nc-knowledge-data-clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.nc-knowledge-data-mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-footnote);
+}
+
+.nc-knowledge-row-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  align-content: center;
+  justify-items: stretch;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.nc-knowledge-row-actions .nc-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.nc-knowledge-row-actions .nc-knowledge-action-btn {
+  min-height: 3rem;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  padding-top: 0.68rem;
+  padding-bottom: 0.68rem;
+}
+
+.nc-knowledge-row-actions .nc-knowledge-action-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 0.95rem;
+}
+
+.nc-knowledge-row-actions .nc-knowledge-action-btn.nc-btn-primary {
+  border-color: color-mix(in srgb, var(--theme-accent-2) 68%, var(--theme-accent-1));
+}
+
+.nc-knowledge-row-actions .nc-knowledge-action-btn.nc-btn-secondary {
+  border-color: var(--surface-border);
+}
+
+.nc-bookshop-ii-list-head {
+  grid-template-columns: 128px minmax(0, 1fr) minmax(280px, 0.72fr);
+}
+
+.nc-bookshop-ii-row-shell {
+  grid-template-columns: 128px minmax(0, 1fr) minmax(280px, 0.72fr);
+  align-items: start;
+}
+
+.nc-bookshop-ii-row-cover {
+  width: 128px;
+}
+
+.nc-bookshop-ii-row .nc-library-bookplate {
+  width: 128px;
+  max-width: none;
+  box-shadow: 0 14px 30px rgb(15 23 42 / 0.12);
+}
+
+.nc-bookshop-ii-actions {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.nc-knowledge-row-file-meta {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-knowledge-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.nc-knowledge-toggle-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--theme-soft-1) 26%, var(--surface-main));
+  border: 1px solid color-mix(in srgb, var(--surface-border) 82%, var(--theme-soft-2));
+  color: var(--text-main);
+  font-size: 0.92rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.nc-knowledge-toggle.is-open .nc-knowledge-toggle-icon {
+  background: color-mix(in srgb, var(--theme-soft-1) 42%, var(--surface-main));
+  color: var(--theme-accent-1);
+  border-color: color-mix(in srgb, var(--theme-accent-1) 28%, var(--surface-border));
+}
+
+.nc-knowledge-details-panel {
+  padding: 0 clamp(1rem, 1.4vw, 1.2rem) clamp(1rem, 1.4vw, 1.2rem) calc(clamp(1rem, 1.4vw, 1.2rem) + 0.24rem);
+  border-top: 1px solid color-mix(in srgb, var(--surface-border) 84%, var(--theme-soft-2));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-elevated)) 0%, color-mix(in srgb, var(--theme-soft-1) 4%, var(--surface-elevated)) 100%);
+}
+
+.nc-knowledge-details-panel[hidden] {
+  display: none !important;
+}
+
+.nc-knowledge-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.nc-knowledge-details-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-main) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, var(--theme-soft-2));
+}
+
+.nc-knowledge-details-card.is-full {
+  grid-column: 1 / -1;
+}
+
+.nc-knowledge-details-title {
+  margin: 0;
+  color: var(--text-main);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nc-knowledge-details-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.nc-knowledge-details-list > div {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
+  gap: 0.2rem 0.7rem;
+  align-items: start;
+}
+
+.nc-knowledge-details-list dt,
+.nc-knowledge-details-list dd {
+  margin: 0;
+}
+
+.nc-knowledge-details-list dt {
+  color: var(--text-main);
+  font-size: var(--font-size-footnote);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-knowledge-details-list dd {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.nc-knowledge-details-copy {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.nc-bookshop-card-price-row {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.nc-bookshop-card-price-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.nc-bookshop-card-price {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.55rem);
+  line-height: 1;
+  color: var(--text-main);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-bookshop-card-price-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  text-wrap: pretty;
+}
+
+.nc-bookshop-pagination {
+  margin-top: clamp(4rem, 8vw, 6rem);
+  padding-top: 1.2rem;
+  border-top: 1px solid color-mix(in srgb, var(--surface-border) 76%, transparent);
+}
+
+.nc-bookshop-card-specs,
+.nc-bookshop-card-synopsis {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.nc-bookshop-card-specs {
+  padding-top: var(--space-2);
+  border-top: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
+}
+
+.nc-bookshop-card-specs-panel {
+  padding:
+    0 clamp(1rem, 1.4vw, 1.35rem)
+    clamp(1rem, 1.4vw, 1.35rem)
+    calc(clamp(1rem, 1.4vw, 1.35rem) + 0.35rem);
+}
+
+.nc-bookshop-card-synopsis-panel {
+  padding:
+    0 clamp(1rem, 1.4vw, 1.35rem)
+    clamp(1rem, 1.4vw, 1.35rem)
+    calc(clamp(1rem, 1.4vw, 1.35rem) + 0.35rem);
+  border-top: 1px solid color-mix(in srgb, var(--surface-border) 72%, transparent);
+}
+
+.nc-bookshop-card-synopsis-details {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.nc-bookshop-card-synopsis-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.82rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, var(--theme-soft-2));
+  background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
+  color: var(--text-main);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.nc-bookshop-card-synopsis-summary::-webkit-details-marker {
+  display: none;
+}
+
+.nc-bookshop-card-synopsis-summary::after {
+  content: "+";
+  flex: 0 0 auto;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--theme-accent-1);
+}
+
+.nc-bookshop-card-synopsis-details[open] .nc-bookshop-card-synopsis-summary {
+  background: color-mix(in srgb, var(--theme-soft-1) 22%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 26%, var(--surface-border));
+}
+
+.nc-bookshop-card-synopsis-details[open] .nc-bookshop-card-synopsis-summary::after {
+  content: "−";
+}
+
+.nc-bookshop-card-synopsis-copy {
+  padding: 0 0.1rem;
+}
+
+.nc-bookshop-card-section-title {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.nc-bookshop-card-spec-list {
+  margin: 0;
+  display: grid;
+  gap: 0.38rem;
+  grid-template-columns: 1fr;
+}
+
+.nc-bookshop-card-spec-item {
+  margin: 0;
+  display: flex;
+  gap: 0.28rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.nc-bookshop-card-spec-item dt,
+.nc-bookshop-card-spec-item dd {
+  margin: 0;
+}
+
+.nc-bookshop-card-spec-item dt {
+  font-size: var(--font-size-sm);
+  color: var(--text-main);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+}
+
+.nc-bookshop-card-spec-item dt::after {
+  content: ":";
+}
+
+.nc-bookshop-card-spec-item dd {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.3;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.nc-library-card-summary-truncated {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+.nc-bookshop-presential-card {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  display: grid;
+  gap: var(--space-4);
+}
+
 .nc-library-cover-dialog {
   width: min(96vw, 42rem);
   max-width: none;
@@ -2264,41 +2809,95 @@ h3 {
   box-shadow: var(--shadow-medium);
 }
 
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview {
+  width: min(100%, 34rem);
+  box-shadow: var(--shadow-strong);
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview > .nc-library-bookplate-default {
+  padding: clamp(0.9rem, 1rem + 0.4vw, 1.15rem);
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview > .nc-library-bookplate-default::before {
+  width: 0.56rem;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview > .nc-library-bookplate-default::after {
+  inset: 0.68rem;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-panel {
+  justify-content: center;
+  gap: clamp(0.42rem, 0.34rem + 0.28vw, 0.78rem);
+  padding: 0.52rem 0.4rem 1rem;
+}
+
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-top {
-  transform: translateY(-1.16rem);
-  margin-bottom: -0.56rem;
+  gap: 0.24rem;
+  transform: none;
+  margin-bottom: 0;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-mark {
+  font-size: clamp(0.64rem, 0.58rem + 0.18vw, 0.78rem);
+  letter-spacing: 0.18em;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-book-title {
+  font-size: clamp(0.82rem, 0.74rem + 0.38vw, 1.08rem);
+  line-height: 1.12;
+  -webkit-line-clamp: 4;
 }
 
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-portrait-frame {
-  width: clamp(6.25rem, 88%, 7.35rem);
-  padding: 0.03rem;
+  width: clamp(9.2rem, 68%, 11.8rem);
+  padding: 0.16rem;
 }
 
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-portrait {
-  border-width: 0.03rem;
+  border-width: 0.12rem;
 }
 
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-rule {
-  margin-top: 0.54rem;
+  width: 64%;
+  height: 0.12rem;
+  margin-top: 0.12rem;
 }
 
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-copy {
-  transform: translateY(1.04rem);
+  gap: 0.16rem;
+  transform: none;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-title {
+  font-size: clamp(0.92rem, 0.84rem + 0.34vw, 1.2rem);
+  line-height: 1.06;
+}
+
+.nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-subtitle {
+  font-size: clamp(0.5rem, 0.46rem + 0.12vw, 0.64rem);
+  letter-spacing: 0.08em;
+  line-height: 1.14;
 }
 
 .nc-library-cover-dialog-stage .nc-library-bookplate.is-lightbox-preview .nc-library-bookplate-default-author {
-  bottom: 0.18rem;
+  right: 0.74rem;
+  bottom: 0.72rem;
+  left: 0.74rem;
+  font-size: clamp(0.58rem, 0.54rem + 0.16vw, 0.76rem);
+  line-height: 1.12;
 }
 
 .nc-library-cover-dialog-caption {
   margin: 0;
   justify-self: center;
-  max-width: min(100%, 32rem);
-  padding: 0.55rem 0.85rem;
+  max-width: min(100%, 34rem);
+  padding: 0.7rem 1rem;
   border: 1px solid rgb(255 255 255 / 0.12);
   border-radius: var(--radius-pill);
   background: rgb(15 23 42 / 0.66);
   text-align: center;
+  font-size: clamp(0.98rem, 0.94rem + 0.08vw, 1.05rem);
   color: rgb(248 250 252 / 0.82);
   text-wrap: pretty;
   backdrop-filter: blur(8px);
@@ -2332,6 +2931,51 @@ body.is-library-cover-dialog-open {
   .nc-library-filter-grid,
   .nc-list.nc-library-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-knowledge-list-head {
+    display: none;
+  }
+
+  .nc-knowledge-row-shell {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .nc-bookshop-ii-row-shell {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+
+  .nc-knowledge-row-column-title {
+    display: block;
+  }
+
+  .nc-knowledge-row-cover {
+    grid-row: 1 / span 4;
+  }
+
+  .nc-bookshop-ii-row-cover {
+    width: 110px;
+  }
+
+  .nc-bookshop-ii-row .nc-library-bookplate {
+    width: 110px;
+  }
+
+  .nc-knowledge-row-main,
+  .nc-knowledge-row-column,
+  .nc-knowledge-row-actions {
+    grid-column: 2;
+  }
+
+  .nc-knowledge-row-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .nc-knowledge-row-file-meta,
+  .nc-knowledge-row-actions .nc-knowledge-row-column-title {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2370,9 +3014,56 @@ body.is-library-cover-dialog-open {
   .nc-library-card-actions .nc-btn {
     width: 100%;
   }
+
+  .nc-knowledge-row-shell {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .nc-bookshop-ii-row-shell {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .nc-knowledge-row-cover {
+    width: 72px;
+    justify-self: start;
+    grid-row: 1 / span 4;
+  }
+
+  .nc-bookshop-ii-row-cover {
+    width: 96px;
+  }
+
+  .nc-knowledge-row .nc-library-bookplate {
+    width: 72px;
+    max-width: none;
+    justify-self: start;
+  }
+
+  .nc-bookshop-ii-row .nc-library-bookplate {
+    width: 96px;
+  }
+
+  .nc-knowledge-row-main,
+  .nc-knowledge-row-column,
+  .nc-knowledge-row-actions {
+    grid-column: 2;
+  }
+
+  .nc-knowledge-row-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nc-knowledge-details-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nc-knowledge-details-list > div {
+    grid-template-columns: minmax(88px, auto) minmax(0, 1fr);
+  }
 }
 
-@media (max-width: 980px) {
+@media (min-width: 821px) and (max-width: 980px) {
   .nc-home-hero .nc-hero-grid {
     min-height: calc(100svh - var(--header-height));
     align-content: center;
@@ -2408,32 +3099,103 @@ body.is-library-cover-dialog-open {
     background-image:
       radial-gradient(
         circle at 50% 40%,
-        rgb(241 247 255 / 0.9) 0%,
-        rgb(241 247 255 / 0.78) 18%,
-        rgb(241 247 255 / 0.54) 36%,
-        rgb(241 247 255 / 0.22) 58%,
+        rgb(228 232 238 / 0.84) 0%,
+        rgb(214 220 228 / 0.68) 18%,
+        rgb(184 193 204 / 0.46) 36%,
+        rgb(120 130 144 / 0.18) 58%,
         transparent 78%
       ),
-      linear-gradient(180deg, rgb(241 247 255 / 0.14), rgb(15 23 42 / 0.06)),
+      linear-gradient(180deg, rgb(15 23 42 / 0.16), rgb(15 23 42 / 0.08)),
       var(--nc-hero-bg-image);
     background-position: center center, center center, 80% center;
   }
 }
 
 @media (max-width: 700px) {
+  .nc-bookshop-ii-row-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .nc-bookshop-ii-row-cover {
+    width: min(100%, 180px);
+    justify-self: center;
+    grid-row: auto;
+  }
+
+  .nc-bookshop-ii-row .nc-library-bookplate {
+    width: min(100%, 180px);
+    justify-self: center;
+  }
+
+  .nc-bookshop-ii-row .nc-knowledge-row-main,
+  .nc-bookshop-ii-row .nc-knowledge-row-actions {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .nc-bookshop-ii-row .nc-knowledge-row-main,
+  .nc-bookshop-ii-row .nc-knowledge-data-list,
+  .nc-bookshop-ii-row .nc-knowledge-row-column-title,
+  .nc-bookshop-ii-row .nc-knowledge-row-file-meta {
+    text-align: left;
+  }
+
+  .nc-bookshop-ii-actions {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .nc-bookshop-ii-actions .nc-knowledge-action-btn {
+    width: 100%;
+  }
+
+  .nc-home-hero.has-background-image {
+    min-height: calc(100svh - var(--header-height));
+  }
+
+  .nc-home-hero .nc-hero-grid {
+    min-height: calc(100svh - var(--header-height));
+    align-content: center;
+    justify-items: center;
+  }
+
+  .nc-home-hero .nc-hero-grid > div:first-child {
+    display: grid;
+    justify-items: center;
+    width: min(100%, 34rem);
+    text-align: center;
+  }
+
+  .nc-home-hero .nc-title,
+  .nc-home-hero .nc-hero-tagline,
+  .nc-home-hero .nc-lead {
+    text-align: center;
+  }
+
+  .nc-home-hero .nc-lead {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .nc-home-hero .nc-actions {
+    width: min(100%, 24rem);
+    justify-content: center;
+  }
+
   .nc-home-hero.has-background-image {
     background-image:
       linear-gradient(
         180deg,
-        rgb(241 247 255 / 0.8) 0%,
-        rgb(241 247 255 / 0.68) 46%,
-        rgb(241 247 255 / 0.54) 100%
+        rgb(226 230 236 / 0.76) 0%,
+        rgb(210 216 224 / 0.62) 46%,
+        rgb(188 197 208 / 0.48) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(241 247 255 / 0.7) 0%,
-        rgb(241 247 255 / 0.34) 44%,
-        rgb(241 247 255 / 0.06) 100%
+        rgb(219 224 231 / 0.64) 0%,
+        rgb(169 178 190 / 0.3) 44%,
+        rgb(74 85 101 / 0.08) 100%
       ),
       var(--nc-hero-bg-image);
     background-position: center center, center center, 82% center;
@@ -3156,6 +3918,10 @@ code {
     gap: var(--space-3);
   }
 
+  .nc-footer-nav-column.is-store {
+    display: none;
+  }
+
   .nc-footer nav .nc-footer-links {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--space-3);
@@ -3241,9 +4007,13 @@ code {
     align-content: start;
   }
 
+  .nc-footer-nav-column.is-store {
+    display: none;
+  }
+
   .footer-logo {
-    max-width: min(20vw, 300px);
-    height: clamp(1.9rem, 2.8vw, 3rem);
+    max-width: min(24vw, 380px);
+    height: clamp(2.4rem, 3.4vw, 4rem);
     transform: none;
     transform-origin: left top;
   }
@@ -4308,6 +5078,10 @@ code {
   margin-bottom: var(--space-5);
 }
 
+.nc-dashboard-page-header .nc-section-lead {
+  max-width: 120ch;
+}
+
 .nc-admin-main .nc-section {
   margin: 0;
 }
@@ -4518,11 +5292,13 @@ input[type='date'].nc-admin-login-input::-webkit-calendar-picker-indicator {
   filter: sepia(1) saturate(4) hue-rotate(345deg) brightness(0.9);
 }
 
-input[type='file'].nc-admin-login-input {
+input[type='file'].nc-admin-login-input,
+input[type='file'].nc-admin-form-input {
   padding: 0.42rem 0.48rem;
 }
 
-input[type='file'].nc-admin-login-input::file-selector-button {
+input[type='file'].nc-admin-login-input::file-selector-button,
+input[type='file'].nc-admin-form-input::file-selector-button {
   margin-right: 0.75rem;
   padding: 0.5rem 0.8rem;
   border: 1px solid color-mix(in srgb, var(--theme-soft-2) 56%, var(--surface-border));
@@ -4536,7 +5312,9 @@ input[type='file'].nc-admin-login-input::file-selector-button {
 }
 
 input[type='file'].nc-admin-login-input:hover::file-selector-button,
-input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
+input[type='file'].nc-admin-login-input:focus-visible::file-selector-button,
+input[type='file'].nc-admin-form-input:hover::file-selector-button,
+input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   border-color: color-mix(in srgb, var(--theme-accent-1) 48%, var(--surface-border));
   background: color-mix(in srgb, var(--theme-soft-1) 72%, var(--surface-main));
   color: var(--theme-accent-1);
@@ -4661,6 +5439,10 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   .nc-actions.is-stacked-mobile .nc-btn {
     width: 100%;
     min-width: 0;
+  }
+
+  .nc-actions-edge-button {
+    margin-left: 0;
   }
 
   .nc-contact-form-actions {
@@ -5541,8 +6323,8 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   display: flex;
   align-items: stretch;
   width: 148px;
-  aspect-ratio: 3 / 4;
-  border-radius: var(--radius-md);
+  aspect-ratio: 2 / 3;
+  border-radius: 0;
   overflow: hidden;
   border: 1px solid var(--surface-border);
   background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
@@ -5553,13 +6335,19 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   flex: 1 1 auto;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center top;
   display: block;
 }
 
 .nc-library-bookplate > .nc-library-bookplate-default,
 .nc-library-admin-cover-preview-wrap > .nc-library-bookplate-default {
   flex: 1 1 auto;
+}
+
+.nc-library-admin-cover-preview-wrap .nc-library-bookplate-default::after,
+.nc-library-admin-cover-preview-wrap .nc-library-bookplate-default-panel {
+  border-radius: 0;
 }
 
 .nc-library-admin-cover-remove-option {
@@ -5585,6 +6373,75 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   grid-template-columns: minmax(240px, 2.2fr) minmax(130px, 0.75fr) minmax(150px, 0.9fr);
 }
 
+.nc-admin-form-grid-bookshop-sale-customer {
+  grid-template-columns:
+    minmax(145px, 0.9fr)
+    minmax(200px, 1.35fr)
+    minmax(150px, 1fr);
+}
+
+.nc-admin-form-grid-bookshop-sale-customer-extra {
+  grid-template-columns: minmax(220px, 1.5fr) minmax(145px, 0.95fr);
+}
+
+.nc-admin-form-grid-bookshop-header {
+  grid-template-columns:
+    minmax(120px, 0.7fr)
+    minmax(260px, 2.1fr)
+    minmax(145px, 0.95fr)
+    minmax(150px, 1fr);
+}
+
+.nc-admin-form-grid-bookshop-metadata {
+  grid-template-columns:
+    minmax(145px, 1.15fr)
+    minmax(175px, 1.35fr)
+    minmax(175px, 1.4fr)
+    minmax(155px, 1.15fr)
+    minmax(105px, 0.75fr);
+}
+
+.nc-admin-form-grid-bookshop-classification {
+  grid-template-columns:
+    minmax(240px, 1.85fr)
+    minmax(190px, 1.35fr)
+    minmax(150px, 0.95fr)
+    minmax(170px, 1.05fr);
+}
+
+.nc-admin-form-grid-bookshop-volume {
+  grid-template-columns: minmax(130px, 0.8fr) minmax(260px, 1.7fr);
+}
+
+.nc-admin-form-grid-bookshop-pricing {
+  grid-template-columns:
+    minmax(110px, 0.8fr)
+    minmax(120px, 0.85fr)
+    minmax(145px, 1fr)
+    minmax(145px, 1fr)
+    minmax(190px, 1.45fr);
+}
+
+.nc-admin-form-grid-bookshop-sale-payment {
+  grid-template-columns:
+    minmax(150px, 1fr)
+    minmax(120px, 0.8fr)
+    minmax(150px, 0.95fr)
+    minmax(0, 1.75fr);
+}
+
+.nc-admin-form-grid-bookshop-stock-movement-head {
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(170px, 1fr)
+    minmax(180px, 1fr)
+    minmax(110px, 0.8fr);
+}
+
+.nc-admin-form-grid-bookshop-stock-movement-meta {
+  grid-template-columns: minmax(160px, 0.9fr) minmax(160px, 0.9fr) minmax(0, 1.8fr);
+}
+
 .nc-admin-form-grid-schedule {
   grid-template-columns: minmax(240px, 1.7fr) minmax(180px, 1fr) minmax(180px, 1fr);
 }
@@ -5605,6 +6462,11 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--text-muted);
+}
+
+.nc-admin-form-required-indicator {
+  color: var(--danger-strong);
+  font-weight: var(--font-weight-bold);
 }
 
 .nc-admin-form-input {
@@ -5628,6 +6490,12 @@ input[type='file'].nc-admin-login-input:focus-visible::file-selector-button {
   border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
   background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
+}
+
+.nc-admin-form-input[aria-invalid='true'] {
+  border-color: color-mix(in srgb, var(--swatch-red-1) 56%, var(--surface-border));
+  background: color-mix(in srgb, var(--swatch-red-1) 6%, var(--surface-main));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--swatch-red-1) 12%, transparent);
 }
 
 textarea.nc-admin-form-input {
@@ -5662,6 +6530,80 @@ textarea.nc-admin-form-input {
   margin-top: var(--space-1);
 }
 
+@media (min-width: 821px) and (max-width: 980px) {
+  .nc-admin-form-grid-triplet {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+
+  .nc-admin-form-grid-triplet > .nc-admin-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-metadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-metadata > .nc-admin-form-field:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-classification {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-classification > .nc-admin-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-volume {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-pricing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-pricing > .nc-admin-form-field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-sale-customer {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-customer-extra {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-payment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-payment > .nc-admin-form-field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-head {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-head > .nc-admin-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-meta > .nc-admin-form-field:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-bookshop-toolbar {
+    align-items: stretch;
+  }
+}
+
 @media (max-width: 820px) {
   .nc-admin-form-grid {
     grid-template-columns: 1fr;
@@ -5669,8 +6611,32 @@ textarea.nc-admin-form-input {
 
   .nc-admin-form-grid-identity,
   .nc-admin-form-grid-triplet,
+  .nc-admin-form-grid-bookshop-sale-customer,
+  .nc-admin-form-grid-bookshop-sale-customer-extra,
+  .nc-admin-form-grid-bookshop-header,
+  .nc-admin-form-grid-bookshop-classification,
+  .nc-admin-form-grid-bookshop-volume,
+  .nc-admin-form-grid-bookshop-metadata,
+  .nc-admin-form-grid-bookshop-pricing,
+  .nc-admin-form-grid-bookshop-stock-movement-head,
+  .nc-admin-form-grid-bookshop-stock-movement-meta,
+  .nc-admin-form-grid-bookshop-sale-payment,
   .nc-admin-form-grid-schedule {
     grid-template-columns: 1fr;
+  }
+
+  .nc-admin-form-grid-triplet > .nc-admin-form-field:first-child,
+  .nc-admin-form-grid-bookshop-classification > .nc-admin-form-field:first-child,
+  .nc-admin-form-grid-bookshop-metadata > .nc-admin-form-field:nth-child(3),
+  .nc-admin-form-grid-bookshop-pricing > .nc-admin-form-field:last-child,
+  .nc-admin-form-grid-bookshop-stock-movement-head > .nc-admin-form-field:first-child {
+    grid-column: auto;
+  }
+
+  .nc-admin-toolbar .nc-btn,
+  .nc-bookshop-toolbar .nc-btn,
+  .nc-admin-form-actions .nc-btn {
+    width: 100%;
   }
 
   .nc-member-grid {
@@ -5682,13 +6648,61 @@ textarea.nc-admin-form-input {
   }
 }
 
-@media (max-width: 1180px) {
+@media (min-width: 821px) and (max-width: 1180px) {
   .nc-admin-form-grid-identity {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .nc-admin-form-grid-triplet {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-header {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-classification {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-volume {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-metadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-pricing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-customer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-customer-extra {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-sale-payment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-head {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-head > .nc-admin-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-bookshop-stock-movement-meta > .nc-admin-form-field:last-child {
+    grid-column: 1 / -1;
   }
 
   .nc-admin-form-grid-schedule {
@@ -5924,6 +6938,16 @@ textarea.nc-admin-form-input {
   color: var(--text-muted);
   font-size: var(--font-size-caption);
   line-height: 1.32;
+}
+
+.nc-admin-table-bookshop {
+  min-width: 1080px;
+}
+
+.nc-admin-table tbody td.nc-admin-cell-code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
 }
 
 .nc-admin-table tbody tr:hover {
@@ -6499,6 +7523,10 @@ textarea.nc-admin-form-input {
     min-width: 760px;
   }
 
+  .nc-admin-table-bookshop {
+    min-width: 940px;
+  }
+
   .nc-admin-table-events th.nc-admin-col-id,
   .nc-admin-table-events td.nc-admin-col-id,
   .nc-admin-table-events th.nc-admin-col-category,
@@ -6611,6 +7639,10 @@ textarea.nc-admin-form-input {
   }
 
   .nc-admin-table {
+    min-width: 0;
+  }
+
+  .nc-admin-table-bookshop {
     min-width: 0;
   }
 
@@ -6938,5 +7970,1139 @@ textarea.nc-admin-form-input {
 @media (min-width: 701px) and (max-width: 1100px) {
   .nc-agenda-featured-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.nc-admin-toolbar .nc-btn,
+.nc-bookshop-toolbar .nc-btn {
+  height: 3rem;
+  min-height: 3rem;
+  line-height: 1.2;
+  padding-top: 0;
+  padding-bottom: 0;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.nc-bookshop-toolbar-paired .nc-btn {
+  height: 3rem;
+  min-height: 3rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+.nc-bookshop-kpi-grid,
+.nc-bookshop-overview-grid,
+.nc-bookshop-detail-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.nc-bookshop-kpi-grid + .nc-bookshop-overview-grid,
+.nc-bookshop-overview-grid + .nc-card,
+.nc-bookshop-detail-grid + .nc-card,
+.nc-bookshop-kpi-grid + .nc-card {
+  margin-top: 1rem;
+}
+
+.nc-bookshop-kpi-card,
+.nc-bookshop-overview-card,
+.nc-bookshop-detail-card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.nc-bookshop-kpi-card .nc-metric-value,
+.nc-bookshop-detail-card .nc-metric-value {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1;
+}
+
+.nc-bookshop-overview-card h3,
+.nc-bookshop-detail-card h3 {
+  margin: 0;
+}
+
+.nc-bookshop-flow-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.nc-bookshop-inline-copy {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.nc-bookshop-inline-copy-error {
+  color: color-mix(in srgb, var(--swatch-red-1) 78%, var(--text-main));
+  font-weight: var(--font-weight-medium);
+}
+
+.nc-bookshop-manual-hero,
+.nc-bookshop-manual-step-card,
+.nc-bookshop-manual-side-card,
+.nc-bookshop-manual-stock-card,
+.nc-bookshop-manual-pdv-card,
+.nc-bookshop-manual-pdv-block {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.nc-bookshop-manual-hero {
+  gap: 1.4rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--theme-accent-1) 18%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--theme-soft-1) 18%, var(--surface-main)), color-mix(in srgb, var(--theme-soft-2) 16%, var(--surface-main)));
+}
+
+.nc-bookshop-manual-kicker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--theme-accent-1) 28%, var(--surface-border));
+  border-radius: var(--radius-pill);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--text-main));
+  background: color-mix(in srgb, var(--theme-accent-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-manual-hero-copy {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 76ch;
+}
+
+.nc-bookshop-manual-hero-copy h3,
+.nc-bookshop-manual-section-head h3,
+.nc-bookshop-manual-step-card h4,
+.nc-bookshop-manual-side-card h4,
+.nc-bookshop-manual-stock-card h4,
+.nc-bookshop-manual-pdv-block h4 {
+  margin: 0;
+}
+
+.nc-bookshop-manual-hero-grid,
+.nc-bookshop-manual-flow-grid,
+.nc-bookshop-manual-support-grid,
+.nc-bookshop-manual-stock-grid,
+.nc-bookshop-manual-import-grid,
+.nc-bookshop-manual-pdv-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.nc-bookshop-manual-hero-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nc-bookshop-manual-mini-card {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 1rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-main) 82%, var(--theme-soft-1));
+}
+
+.nc-bookshop-manual-mini-card p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.nc-bookshop-manual-mini-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.nc-bookshop-manual-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.nc-bookshop-manual-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.7rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-fast);
+}
+
+.nc-bookshop-manual-nav-link:hover,
+.nc-bookshop-manual-nav-link:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 10%, var(--surface-main));
+  transform: translateY(-1px);
+}
+
+.nc-bookshop-manual-section {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.35rem;
+}
+
+.nc-bookshop-manual-section-head {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 78ch;
+}
+
+.nc-bookshop-manual-section-head p,
+.nc-bookshop-manual-hero-copy p,
+.nc-bookshop-manual-step-card p,
+.nc-bookshop-manual-side-card p,
+.nc-bookshop-manual-stock-card p,
+.nc-bookshop-manual-pdv-card > p,
+.nc-bookshop-manual-pdv-block p {
+  margin: 0;
+}
+
+.nc-bookshop-manual-flow-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.nc-bookshop-manual-step-card {
+  position: relative;
+  padding-top: 1.2rem;
+}
+
+.nc-bookshop-manual-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-accent-1), color-mix(in srgb, var(--theme-accent-2) 84%, var(--theme-accent-1)));
+  color: var(--btn-primary-text);
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-sm);
+}
+
+.nc-bookshop-manual-support-grid,
+.nc-bookshop-manual-stock-grid,
+.nc-bookshop-manual-import-grid,
+.nc-bookshop-manual-pdv-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nc-bookshop-manual-definition-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.nc-bookshop-manual-definition-row {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+  gap: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 28%, var(--surface-border));
+}
+
+.nc-bookshop-manual-definition-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.nc-bookshop-manual-definition-row strong {
+  color: var(--text-main);
+}
+
+.nc-bookshop-manual-definition-row span {
+  color: var(--text-muted);
+}
+
+.nc-bookshop-manual-note {
+  padding: 0.85rem 0.95rem;
+  border-left: 3px solid color-mix(in srgb, var(--theme-accent-1) 68%, var(--surface-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-accent-1) 8%, var(--surface-main));
+}
+
+.nc-bookshop-manual-pdv-card {
+  margin-top: 1.35rem;
+}
+
+.nc-bookshop-manual-pdv-block {
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-card-actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.nc-bookshop-card-actions .nc-btn {
+  width: 100%;
+}
+
+.nc-bookshop-panel-head,
+.nc-bookshop-sale-head {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.nc-bookshop-panel-head h3,
+.nc-bookshop-sale-head .nc-admin-form-label {
+  margin-bottom: 0.2rem;
+}
+
+.nc-bookshop-report-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nc-bookshop-report-grid.is-thirds {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nc-bookshop-report-table-block {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.nc-bookshop-report-table-block h4 {
+  margin: 0;
+  font-size: var(--font-size-ui);
+}
+
+.nc-bookshop-report-table-block .nc-admin-table-wrap {
+  margin-top: 0;
+}
+
+.nc-bookshop-report-table {
+  min-width: 100%;
+}
+
+.nc-bookshop-report-table tbody td strong {
+  display: block;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.nc-bookshop-report-table tbody td small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.28;
+}
+
+.nc-bookshop-report-columns {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.nc-bookshop-report-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.nc-bookshop-report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.78rem 0.9rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-report-item-copy,
+.nc-bookshop-report-item-meta {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.nc-bookshop-report-item-copy {
+  min-width: 0;
+}
+
+.nc-bookshop-report-item-copy strong,
+.nc-bookshop-report-item-copy p,
+.nc-bookshop-report-item-meta strong,
+.nc-bookshop-report-item-meta span {
+  margin: 0;
+}
+
+.nc-bookshop-report-item-copy p,
+.nc-bookshop-report-item-meta span,
+.nc-bookshop-report-empty {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.nc-bookshop-report-item-meta {
+  justify-items: end;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.nc-bookshop-report-snapshot {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.nc-bookshop-report-snapshot div {
+  padding: 0.82rem 0.9rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-report-snapshot dt {
+  margin: 0 0 0.28rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.nc-bookshop-report-snapshot dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+}
+
+.nc-bookshop-empty-card {
+  text-align: center;
+}
+
+.nc-bookshop-stock-pill {
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 2.5rem;
+  justify-content: center;
+  padding: 0.35rem 0.65rem;
+}
+
+.nc-bookshop-stock-pill.is-ok {
+  background: color-mix(in srgb, #2f9e44 18%, var(--surface-main));
+  color: #1f6d2f;
+}
+
+.nc-bookshop-stock-pill.is-low {
+  background: color-mix(in srgb, #f08c00 18%, var(--surface-main));
+  color: #9a6100;
+}
+
+.nc-bookshop-stock-pill.is-out {
+  background: color-mix(in srgb, #c92a2a 18%, var(--surface-main));
+  color: #8f1d1d;
+}
+
+.nc-bookshop-table-filters {
+  flex-wrap: wrap;
+}
+
+.nc-bookshop-table-filters > * {
+  flex: 1 1 12rem;
+}
+
+.nc-bookshop-form-metrics {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1.25rem;
+}
+
+.nc-bookshop-form-metric {
+  background: color-mix(in srgb, var(--theme-accent-2) 8%, var(--surface-subtle));
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+}
+
+.nc-bookshop-form-metric strong {
+  font-size: 1.25rem;
+}
+
+.nc-bookshop-movement-book-hint {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.35;
+}
+
+.nc-bookshop-movement-delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.7rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: var(--font-weight-semibold);
+  padding: 0.28rem 0.56rem;
+}
+
+.nc-bookshop-movement-delta.is-positive {
+  background: color-mix(in srgb, #2f9e44 16%, var(--surface-main));
+  color: #1f6d2f;
+}
+
+.nc-bookshop-movement-delta.is-negative {
+  background: color-mix(in srgb, #d9480f 16%, var(--surface-main));
+  color: #9d3210;
+}
+
+.nc-bookshop-sale-lines {
+  display: grid;
+  gap: 1rem;
+}
+
+.nc-bookshop-sale-quick-search {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.nc-bookshop-sale-quick-results {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.nc-bookshop-sale-quick-result,
+.nc-bookshop-sale-quick-empty {
+  background: color-mix(in srgb, var(--theme-accent-2) 6%, var(--surface-subtle));
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.nc-bookshop-sale-quick-result {
+  align-items: flex-start;
+  cursor: pointer;
+  display: grid;
+  gap: 0.3rem;
+  text-align: left;
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+  width: 100%;
+}
+
+.nc-bookshop-sale-quick-result:hover,
+.nc-bookshop-sale-quick-result:focus-visible {
+  background: color-mix(in srgb, var(--theme-accent-2) 10%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-2) 28%, var(--surface-border));
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.nc-bookshop-sale-quick-result strong {
+  font-size: 0.98rem;
+}
+
+.nc-bookshop-sale-quick-result span,
+.nc-bookshop-sale-quick-empty {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.nc-bookshop-sale-live-summary {
+  margin-top: 1rem;
+}
+
+.nc-bookshop-sale-line {
+  background: color-mix(in srgb, var(--theme-accent-2) 5%, var(--surface-subtle));
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.nc-bookshop-sale-line-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns:
+    minmax(0, 2.2fr)
+    minmax(0, 1.7fr)
+    minmax(110px, 0.8fr)
+    minmax(130px, 0.9fr)
+    minmax(120px, 0.9fr);
+}
+
+.nc-bookshop-sale-line-book {
+  min-width: 0;
+}
+
+.nc-bookshop-sale-line-actions {
+  justify-content: end;
+}
+
+.nc-bookshop-sale-line-actions .nc-btn {
+  width: 100%;
+}
+
+.nc-bookshop-sale-summary-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.nc-bookshop-sale-summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.nc-bookshop-sale-summary-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--theme-accent-2) 6%, var(--surface-subtle));
+}
+
+.nc-bookshop-sale-summary-item strong {
+  font-size: clamp(1.05rem, 0.96rem + 0.28vw, 1.35rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.nc-bookshop-sale-summary-item p {
+  margin: 0;
+  color: var(--text-muted);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.nc-bookshop-sale-meta-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.nc-bookshop-sale-meta-grid strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-top: 0.2rem;
+}
+
+.nc-bookshop-sale-data-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+.nc-bookshop-sale-data-group {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--theme-accent-2) 4%, var(--surface-subtle));
+}
+
+.nc-bookshop-sale-data-group h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.nc-bookshop-sale-data-group-compact {
+  gap: 0.7rem;
+  padding-block: 0.9rem;
+}
+
+.nc-bookshop-sale-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.nc-bookshop-sale-facts > div {
+  display: grid;
+  gap: 0.28rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 74%, transparent);
+}
+
+.nc-bookshop-sale-facts > div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.nc-bookshop-sale-facts dt,
+.nc-bookshop-sale-facts dd {
+  margin: 0;
+}
+
+.nc-bookshop-sale-facts dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.nc-bookshop-sale-facts dd {
+  color: var(--text-main);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.nc-bookshop-sale-facts-compact {
+  gap: 0.7rem 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.nc-bookshop-sale-facts-compact > div {
+  gap: 0.18rem;
+  padding: 0;
+  border-bottom: none;
+}
+
+.nc-bookshop-sale-facts-compact dd {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.nc-bookshop-sale-inline-rows {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.nc-bookshop-sale-inline-row {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.35rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 74%, transparent);
+}
+
+.nc-bookshop-sale-inline-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.nc-bookshop-sale-inline-row > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nc-bookshop-sale-inline-row dt,
+.nc-bookshop-sale-inline-row dd {
+  margin: 0;
+}
+
+.nc-bookshop-sale-inline-row dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nc-bookshop-sale-inline-row dt::after {
+  content: ":";
+}
+
+.nc-bookshop-sale-inline-row dd {
+  color: var(--text-main);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.nc-bookshop-receipt-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-height: clamp(42rem, 78vh, 58rem);
+}
+
+body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
+  display: none;
+}
+
+.nc-bookshop-receipt-brand {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 75%, transparent);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: auto 1fr;
+  padding-bottom: 1rem;
+}
+
+.nc-bookshop-receipt-brand-mark {
+  align-items: center;
+  display: grid;
+  justify-items: center;
+}
+
+.nc-bookshop-receipt-logo {
+  display: block;
+  height: auto;
+  max-width: 108px;
+  width: 100%;
+}
+
+.nc-bookshop-receipt-brand-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.nc-bookshop-receipt-brand-copy h3 {
+  margin: 0;
+}
+
+.nc-bookshop-receipt-brand-copy p {
+  margin: 0;
+}
+
+.nc-bookshop-receipt-brand-inline {
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+}
+
+.nc-bookshop-receipt-head,
+.nc-bookshop-receipt-meta,
+.nc-bookshop-receipt-item-head,
+.nc-bookshop-receipt-item-meta,
+.nc-bookshop-receipt-totals > div {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.nc-bookshop-receipt-kicker {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.2rem;
+  text-transform: uppercase;
+}
+
+.nc-bookshop-receipt-head h3 {
+  margin: 0;
+}
+
+.nc-bookshop-receipt-code {
+  text-align: right;
+}
+
+.nc-bookshop-receipt-code strong {
+  display: block;
+  font-size: 1.15rem;
+  margin-top: 0.2rem;
+}
+
+.nc-bookshop-receipt-meta {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.nc-bookshop-receipt-meta > div {
+  background: color-mix(in srgb, var(--theme-accent-2) 6%, var(--surface-subtle));
+  border: 1px solid var(--surface-border);
+  border-radius: 0.9rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+}
+
+.nc-bookshop-receipt-meta > div strong {
+  font-size: 1rem;
+}
+
+.nc-bookshop-receipt-items {
+  border-bottom: 1px dashed color-mix(in srgb, var(--text-muted) 35%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--text-muted) 35%, transparent);
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem 0;
+}
+
+.nc-bookshop-receipt-item {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.nc-bookshop-receipt-item-head strong,
+.nc-bookshop-receipt-totals strong {
+  font-size: 1rem;
+}
+
+.nc-bookshop-receipt-item-meta {
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+  justify-content: flex-start;
+}
+
+.nc-bookshop-receipt-totals {
+  display: grid;
+  gap: 0.6rem;
+  justify-self: stretch;
+  max-width: none;
+  width: 100%;
+}
+
+.nc-bookshop-receipt-totals > div {
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 65%, transparent);
+  padding-bottom: 0.45rem;
+}
+
+.nc-bookshop-receipt-totals > div.is-total {
+  border-bottom: none;
+  font-size: 1.05rem;
+  padding-bottom: 0;
+}
+
+.nc-bookshop-receipt-note {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.nc-bookshop-receipt-footer-meta {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.nc-bookshop-receipt-footer {
+  border-top: 1px dashed color-mix(in srgb, var(--text-muted) 35%, transparent);
+  display: grid;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.9rem;
+}
+
+.nc-bookshop-receipt-motto {
+  margin: 0;
+  color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--text-main));
+  font-size: 0.92rem;
+  font-style: italic;
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+@media (max-width: 980px) {
+  .nc-bookshop-manual-hero-grid,
+  .nc-bookshop-manual-support-grid,
+  .nc-bookshop-manual-stock-grid,
+  .nc-bookshop-manual-import-grid,
+  .nc-bookshop-manual-pdv-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-manual-definition-row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .nc-bookshop-sale-line-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-bookshop-sale-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-bookshop-sale-data-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .nc-admin-toolbar .nc-btn,
+  .nc-bookshop-toolbar .nc-btn,
+  .nc-bookshop-card-actions .nc-btn {
+    width: 100%;
+  }
+
+  .nc-bookshop-manual-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-manual-nav-link {
+    width: 100%;
+  }
+
+  .nc-bookshop-manual-flow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-report-grid,
+  .nc-bookshop-report-grid.is-thirds {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-report-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nc-bookshop-report-item-meta {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .nc-bookshop-report-snapshot {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-card-spec-list {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-panel-head,
+  .nc-bookshop-sale-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nc-bookshop-receipt-brand {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-receipt-head,
+  .nc-bookshop-receipt-item-head,
+  .nc-bookshop-receipt-totals > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nc-bookshop-sale-line-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-sale-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-receipt-totals {
+    max-width: none;
+  }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  .nc-utility-stack,
+  .nc-dashboard-topbar,
+  .nc-admin-sidebar,
+  .nc-dashboard-page-header,
+  .nc-dashboard-content-footer,
+  .nc-admin-toast,
+  .nc-print-hidden {
+    display: none !important;
+  }
+
+  .nc-dashboard-shell,
+  .nc-dashboard-layout,
+  .nc-admin-main,
+  .nc-section {
+    background: #fff !important;
+    display: block !important;
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .nc-bookshop-receipt-card {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    gap: 0.9rem !important;
+    margin: 0 !important;
+    min-height: 265mm !important;
+    padding: 0 !important;
+  }
+
+  .nc-bookshop-receipt-brand {
+    border-bottom-color: #bdbdbd !important;
+  }
+
+  .nc-bookshop-receipt-brand-inline {
+    color: #444 !important;
+  }
+
+  .nc-bookshop-receipt-meta > div {
+    background: transparent !important;
+    border: 1px solid #d7d7d7 !important;
+    break-inside: avoid;
+  }
+
+  .nc-bookshop-receipt-totals > div {
+    break-inside: avoid;
+  }
+
+  .nc-bookshop-receipt-item {
+    break-inside: avoid;
+  }
+
+  .nc-bookshop-receipt-items {
+    border-bottom-color: #bdbdbd !important;
+    border-top-color: #bdbdbd !important;
+  }
+
+  .nc-bookshop-receipt-note,
+  .nc-bookshop-receipt-footer-meta,
+  .nc-bookshop-receipt-motto,
+  .nc-bookshop-inline-copy,
+  .nc-metric-label {
+    color: #444 !important;
+  }
+
+  .nc-bookshop-receipt-footer {
+    border-top-color: #bdbdbd !important;
   }
 }

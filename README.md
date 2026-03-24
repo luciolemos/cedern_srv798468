@@ -163,6 +163,8 @@ LIBRARY_UPLOAD_DIR=public/assets/docs/library
 LIBRARY_UPLOAD_PUBLIC_PREFIX=assets/docs/library
 LIBRARY_COVER_UPLOAD_DIR=public/assets/img/library-covers
 LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX=assets/img/library-covers
+BOOKSHOP_COVER_UPLOAD_DIR=public/assets/img/bookshop-covers
+BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX=assets/img/bookshop-covers
 ```
 
 Valores válidos:
@@ -175,6 +177,8 @@ Valores válidos:
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `pdf_path` e usado nas URLs do site, por exemplo `assets/docs/library`
 - `LIBRARY_COVER_UPLOAD_DIR`: diretório físico onde as capas da Biblioteca serão gravadas; pode ser relativo ao projeto ou absoluto
 - `LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `assets/img/library-covers`
+- `BOOKSHOP_COVER_UPLOAD_DIR`: diretório físico onde as capas da Livraria serão gravadas; pode ser relativo ao projeto ou absoluto
+- `BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `assets/img/bookshop-covers`
 
 ## Acesso administrativo via membros
 

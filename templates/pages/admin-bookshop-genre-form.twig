@@ -1,0 +1,63 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = bookshop_genre_form_is_edit ? 'Editar gênero da livraria' : 'Novo gênero da livraria' %}
+{% set dashboard_page_lead = 'Cadastre gêneros editoriais para classificar as obras da livraria em paralelo às categorias de estudo.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário de gênero da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% if bookshop_genre_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in bookshop_genre_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/generos">Voltar aos gêneros</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <form class="nc-admin-form" method="post" action="{{ bookshop_genre_form_is_edit ? '/painel/livraria/generos/' ~ bookshop_genre_id ~ '/editar' : '/painel/livraria/generos/novo' }}">
+        <div class="nc-admin-form-grid nc-admin-form-grid-triplet">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="name">Nome do gênero</label>
+            <input class="nc-admin-form-input" id="name" name="name" type="text" required placeholder="Ex: Romance" value="{{ bookshop_genre_form.name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="slug">Slug</label>
+            <input class="nc-admin-form-input" id="slug" name="slug" type="text" required placeholder="Ex: romance" value="{{ bookshop_genre_form.slug|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="is_active">Status</label>
+            <select class="nc-admin-form-input" id="is_active" name="is_active" required>
+              <option value="" {% if bookshop_genre_form.is_active|default('') == '' %}selected{% endif %} disabled>Selecione</option>
+              <option value="1" {{ bookshop_genre_form.is_active|default('1') == '1' ? 'selected' : '' }}>Ativo</option>
+              <option value="0" {{ bookshop_genre_form.is_active|default('1') == '0' ? 'selected' : '' }}>Inativo</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">Descrição</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="4" placeholder="Explique o tipo de obras que pertencem a este gênero.">{{ bookshop_genre_form.description|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_genre_form_is_edit ? 'Salvar alterações' : 'Criar gênero' }}</button>
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}
