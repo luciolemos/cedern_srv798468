@@ -2,7 +2,7 @@
 
 {% set dashboard_page_kicker = 'Dashboard' %}
 {% set dashboard_page_title = bookshop_book_form_is_edit ? 'Editar item do acervo' : 'Novo item do acervo' %}
-{% set dashboard_page_lead = 'Preencha os dados do livro vendido no balcão, envie opcionalmente a capa e mantenha o estoque alinhado com o controle operacional.' %}
+{% set dashboard_page_lead = 'Cadastre o título, envie opcionalmente a capa e controle o estoque somente pelas movimentações da livraria.' %}
 
 {% block head %}
   <script src="/assets/js/cedern-bookshop-cover-preview.js?v={{ app_asset_version|default('1') }}" defer></script>
@@ -25,15 +25,19 @@
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias doutrinárias</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros literários</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar">Importar CSV</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Ver vendas</a>
     </div>
 
-    <article class="nc-card nc-admin-form-card">
+    <div class="nc-admin-form-shell">
       {% if bookshop_book_form_is_edit %}
         <div class="nc-bookshop-form-metrics">
+          <div class="nc-bookshop-form-metric">
+            <span class="nc-metric-label">Estoque atual</span>
+            <strong>{{ bookshop_book_form.stock_quantity|default('0') }}</strong>
+          </div>
           <div class="nc-bookshop-form-metric">
             <span class="nc-metric-label">Saldo em custo</span>
             <strong>{{ bookshop_book_form.inventory_value_label|default('R$ 0,00') }}</strong>
@@ -49,7 +53,7 @@
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-header">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sku">SKU <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
-            <input class="nc-admin-form-input" id="sku" name="sku" type="text" required placeholder="Ex: CEDE-LIV-001" value="{{ bookshop_book_form.sku|default('') }}">
+            <input class="nc-admin-form-input" id="sku" name="sku" type="text" required pattern="CEDE-LIV-[0-9]{4}" maxlength="13" inputmode="text" placeholder="Ex: CEDE-LIV-0001" title="Use o padrão CEDE-LIV-0001" value="{{ bookshop_book_form.sku|default('') }}">
           </div>
 
           <div class="nc-admin-form-field">
@@ -62,16 +66,6 @@
             <select class="nc-admin-form-input" id="status" name="status" required>
               <option value="active" {{ bookshop_book_form.status|default('active') == 'active' ? 'selected' : '' }}>Ativo</option>
               <option value="inactive" {{ bookshop_book_form.status|default('active') == 'inactive' ? 'selected' : '' }}>Inativo</option>
-            </select>
-          </div>
-
-          <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="language">Idioma</label>
-            <select class="nc-admin-form-input" id="language" name="language">
-              <option value="" {% if bookshop_book_form.language|default('') == '' %}selected{% endif %}>Selecione um idioma</option>
-              {% for language in bookshop_book_language_options|default([]) %}
-                <option value="{{ language }}" {{ bookshop_book_form.language|default('') == language ? 'selected' : '' }}>{{ language }}</option>
-              {% endfor %}
             </select>
           </div>
         </div>
@@ -95,6 +89,31 @@
           </div>
 
           <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="genre_id">Gênero literário <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <select class="nc-admin-form-input" id="genre_id" name="genre_id" required>
+              <option value="" {% if bookshop_book_form.genre_id|default('0') in ['0', ''] %}selected{% endif %} disabled>Selecione um gênero literário</option>
+              {% for genre in bookshop_book_genres|default([]) %}
+                <option value="{{ genre.id }}" {{ bookshop_book_form.genre_id|default('0') == genre.id ? 'selected' : '' }}>{{ genre.label }}</option>
+              {% endfor %}
+            </select>
+            {% if bookshop_book_genres|default([])|length == 0 %}
+              <small>Cadastre um gênero literário antes de criar o item.</small>
+            {% endif %}
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="category_id">Categoria doutrinária</label>
+            <select class="nc-admin-form-input" id="category_id" name="category_id">
+              <option value="" {% if bookshop_book_form.category_id|default('0') in ['0', ''] %}selected{% endif %}>Selecione uma categoria doutrinária</option>
+              {% for category in bookshop_book_categories|default([]) %}
+                <option value="{{ category.id }}" {{ bookshop_book_form.category_id|default('0') == category.id ? 'selected' : '' }}>{{ category.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-volume">
+          <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="collection_id">Coleção</label>
             <select class="nc-admin-form-input" id="collection_id" name="collection_id">
               <option value="" {% if bookshop_book_form.collection_id|default('0') in ['0', ''] %}selected{% endif %}>Selecione uma coleção</option>
@@ -108,34 +127,6 @@
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="genre_id">Gênero</label>
-            <select class="nc-admin-form-input" id="genre_id" name="genre_id">
-              <option value="" {% if bookshop_book_form.genre_id|default('0') in ['0', ''] %}selected{% endif %}>Selecione um gênero</option>
-              {% for genre in bookshop_book_genres|default([]) %}
-                <option value="{{ genre.id }}" {{ bookshop_book_form.genre_id|default('0') == genre.id ? 'selected' : '' }}>{{ genre.label }}</option>
-              {% endfor %}
-            </select>
-            {% if bookshop_book_genres|default([])|length == 0 %}
-              <small>Cadastre gêneros se quiser classificar o item por linha editorial.</small>
-            {% endif %}
-          </div>
-
-          <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="category_id">Categoria <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
-            <select class="nc-admin-form-input" id="category_id" name="category_id" required>
-              <option value="" {% if bookshop_book_form.category_id|default('0') in ['0', ''] %}selected{% endif %} disabled>Selecione uma categoria</option>
-              {% for category in bookshop_book_categories|default([]) %}
-                <option value="{{ category.id }}" {{ bookshop_book_form.category_id|default('0') == category.id ? 'selected' : '' }}>{{ category.label }}</option>
-              {% endfor %}
-            </select>
-            {% if bookshop_book_categories|default([])|length == 0 %}
-              <small>Cadastre uma categoria antes de criar o item.</small>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-volume">
-          <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="volume_number">Nº do volume</label>
             <input class="nc-admin-form-input" id="volume_number" name="volume_number" type="number" min="1" max="999" placeholder="Ex: 1" value="{{ bookshop_book_form.volume_number|default('') }}">
           </div>
@@ -146,17 +137,29 @@
           </div>
         </div>
 
-        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-metadata">
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-identifiers">
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="isbn">ISBN</label>
-            <input class="nc-admin-form-input" id="isbn" name="isbn" type="text" placeholder="Ex: 978-85-7328-728-8" value="{{ bookshop_book_form.isbn|default('') }}">
+            <label class="nc-admin-form-label" for="isbn">ISBN <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="isbn" name="isbn" type="text" required placeholder="Ex: 978-85-7328-728-8" value="{{ bookshop_book_form.isbn|default('') }}">
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="barcode">Código de barras</label>
-            <input class="nc-admin-form-input" id="barcode" name="barcode" type="text" inputmode="numeric" placeholder="Ex: 9788594661920" value="{{ bookshop_book_form.barcode|default('') }}">
+            <label class="nc-admin-form-label" for="barcode">Código de barras <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="barcode" name="barcode" type="text" inputmode="numeric" required placeholder="Ex: 9788594661920" value="{{ bookshop_book_form.barcode|default('') }}">
           </div>
 
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="language">Idioma</label>
+            <select class="nc-admin-form-input" id="language" name="language">
+              <option value="" {% if bookshop_book_form.language|default('') == '' %}selected{% endif %}>Selecione um idioma</option>
+              {% for language in bookshop_book_language_options|default([]) %}
+                <option value="{{ language }}" {{ bookshop_book_form.language|default('') == language ? 'selected' : '' }}>{{ language }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-publishing">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="publisher_name">Editora</label>
             <input class="nc-admin-form-input" id="publisher_name" name="publisher_name" type="text" placeholder="Ex: FEB" value="{{ bookshop_book_form.publisher_name|default('') }}">
@@ -177,6 +180,11 @@
             <input class="nc-admin-form-input" id="page_count" name="page_count" type="number" min="1" placeholder="Ex: 320" value="{{ bookshop_book_form.page_count|default('') }}">
           </div>
 
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">SINOPSE</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="5" placeholder="Sinopse curta da obra para identificação interna e apoio ao atendimento.">{{ bookshop_book_form.description|default('') }}</textarea>
         </div>
 
         <div class="nc-admin-form-grid">
@@ -223,25 +231,23 @@
           </div>
         </div>
 
-        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-pricing">
-          <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="stock_quantity">Estoque atual</label>
-            <input class="nc-admin-form-input" id="stock_quantity" name="stock_quantity" type="number" min="0" placeholder="Ex: 12" value="{{ bookshop_book_form.stock_quantity|default('0') }}">
-          </div>
+        <p class="nc-bookshop-inline-copy">
+          {% if bookshop_book_form_is_edit %}
+            O saldo do item é controlado por <strong>Nova entrada</strong> e <strong>Novo ajuste</strong>. O cadastro não altera estoque diretamente, e o custo continua vinculado às entradas do acervo.
+          {% else %}
+            O item nasce sem estoque. Depois de salvar, use <strong>Nova entrada</strong> para criar o primeiro lote no acervo. O custo unitário será informado nessa entrada.
+          {% endif %}
+        </p>
 
+        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-pricing">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="stock_minimum">Estoque mínimo</label>
             <input class="nc-admin-form-input" id="stock_minimum" name="stock_minimum" type="number" min="0" placeholder="Ex: 2" value="{{ bookshop_book_form.stock_minimum|default('0') }}">
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="cost_price">Preço de custo</label>
-            <input class="nc-admin-form-input" id="cost_price" name="cost_price" type="text" inputmode="decimal" placeholder="Ex: 28,90" value="{{ bookshop_book_form.cost_price|default('0.00') }}">
-          </div>
-
-          <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sale_price">Preço de venda</label>
-            <input class="nc-admin-form-input" id="sale_price" name="sale_price" type="text" inputmode="decimal" placeholder="Ex: 39,90" value="{{ bookshop_book_form.sale_price|default('0.00') }}">
+            <input class="nc-admin-form-input" id="sale_price" name="sale_price" type="text" inputmode="decimal" placeholder="Ex: 39,90" value="{{ bookshop_book_form.sale_price|default('0.00')|replace({'.': ','}) }}">
           </div>
 
           <div class="nc-admin-form-field">
@@ -250,16 +256,11 @@
           </div>
         </div>
 
-        <div class="nc-admin-form-field nc-admin-form-field-full">
-          <label class="nc-admin-form-label" for="description">SINOPSE</label>
-          <textarea class="nc-admin-form-input" id="description" name="description" rows="5" placeholder="Sinopse curta da obra para identificação interna e apoio ao atendimento.">{{ bookshop_book_form.description|default('') }}</textarea>
-        </div>
-
         <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
           <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_book_form_is_edit ? 'Salvar alterações' : 'Criar item' }}</button>
           <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Cancelar</a>
         </div>
       </form>
-    </article>
+    </div>
   </section>
 {% endblock %}

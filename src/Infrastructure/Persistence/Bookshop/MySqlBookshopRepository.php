@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Bookshop;
 
 use App\Domain\Bookshop\BookshopRepository;
+use App\Support\BookshopTextNormalizer;
 
 class MySqlBookshopRepository implements BookshopRepository
 {
@@ -707,6 +708,8 @@ class MySqlBookshopRepository implements BookshopRepository
                 SELECT
                     m.id,
                     m.book_id,
+                    m.stock_lot_id,
+                    m.stock_lot_code_snapshot,
                     m.sku_snapshot,
                     m.title_snapshot,
                     m.author_snapshot,
@@ -821,6 +824,9 @@ class MySqlBookshopRepository implements BookshopRepository
 
             try {
                 $resolvedItems = [];
+                $booksById = [];
+                $remainingBookStockById = [];
+                $remainingLotsByBookId = [];
                 $subtotal = 0.0;
                 $itemCount = 0;
 
@@ -833,66 +839,84 @@ class MySqlBookshopRepository implements BookshopRepository
                         continue;
                     }
 
-                    $book = $this->findBookForSale($bookId);
+                    if (!isset($booksById[$bookId])) {
+                        $booksById[$bookId] = $this->findBookForSale($bookId);
+                    }
+
+                    $book = $booksById[$bookId];
                     if ($book === null) {
                         throw new \RuntimeException('Um dos livros selecionados não está mais disponível.');
                     }
 
-                    $availableStock = (int) ($book['stock_quantity'] ?? 0);
-                    if ($availableStock < $quantity) {
+                    if (!array_key_exists($bookId, $remainingBookStockById)) {
+                        $remainingBookStockById[$bookId] = (int) ($book['stock_quantity'] ?? 0);
+                    }
+
+                    if (!array_key_exists($bookId, $remainingLotsByBookId)) {
+                        $remainingLotsByBookId[$bookId] = $this->findAvailableSaleLotsForBook($bookId);
+                    }
+
+                    if ($remainingBookStockById[$bookId] < $quantity) {
                         throw new \RuntimeException(
                             'Estoque insuficiente para "' . (string) ($book['title'] ?? 'Livro') . '".'
                         );
                     }
 
-                    $lot = $this->resolveSaleLot($bookId, $lotId);
-                    if ($lot === null) {
-                        throw new \RuntimeException(
-                            'Selecione um lote válido para "' . (string) ($book['title'] ?? 'Livro') . '".'
-                        );
-                    }
+                    $lotAllocations = $this->resolveSaleLotAllocations(
+                        $bookId,
+                        $quantity,
+                        $lotId,
+                        $remainingLotsByBookId[$bookId]
+                    );
 
-                    $lotAvailableQuantity = (int) ($lot['quantity_available'] ?? 0);
-                    if ($lotAvailableQuantity < $quantity) {
+                    if ($lotAllocations === []) {
                         throw new \RuntimeException(
-                            'O lote '
-                            . $this->formatStockLotCode((int) ($lot['id'] ?? 0))
-                            . ' de "'
-                            . (string) ($book['title'] ?? 'Livro')
-                            . '" tem apenas '
-                            . $lotAvailableQuantity
-                            . ' unidade(s) disponível(is).'
+                            $lotId > 0
+                                ? 'Selecione um lote válido para "' . (string) ($book['title'] ?? 'Livro') . '".'
+                                : 'Os lotes disponíveis de "'
+                                    . (string) ($book['title'] ?? 'Livro')
+                                    . '" não comportam a quantidade desta linha.'
                         );
                     }
 
                     $unitPrice = $this->normalizeDecimal(
                         $item['unit_price']
-                        ?? $lot['unit_sale_price']
                         ?? $book['sale_price']
+                        ?? $lotAllocations[0]['unit_sale_price']
                         ?? '0.00'
                     );
-                    $lineTotal = round(((float) $unitPrice) * $quantity, 2);
-                    $unitCostSnapshot = isset($lot['unit_cost']) && $lot['unit_cost'] !== null
-                        ? (float) $lot['unit_cost']
-                        : null;
 
-                    $resolvedItems[] = [
-                        'book_id' => $bookId,
-                        'stock_lot_id' => (int) ($lot['id'] ?? 0),
-                        'stock_lot_code_snapshot' => $this->formatStockLotCode((int) ($lot['id'] ?? 0)),
-                        'quantity' => $quantity,
-                        'unit_cost_snapshot' => $unitCostSnapshot !== null
-                            ? number_format($unitCostSnapshot, 2, '.', '')
-                            : null,
-                        'unit_price' => $unitPrice,
-                        'line_total' => number_format($lineTotal, 2, '.', ''),
-                        'sku_snapshot' => (string) ($book['sku'] ?? ''),
-                        'title_snapshot' => (string) ($book['title'] ?? ''),
-                        'author_snapshot' => $this->nullableText($book['author_name'] ?? null),
-                    ];
+                    foreach ($lotAllocations as $allocation) {
+                        $allocatedQuantity = max(0, (int) ($allocation['allocated_quantity'] ?? 0));
+                        if ($allocatedQuantity <= 0) {
+                            continue;
+                        }
 
-                    $subtotal += $lineTotal;
-                    $itemCount += $quantity;
+                        $lineTotal = round(((float) $unitPrice) * $allocatedQuantity, 2);
+                        $unitCostSnapshot = isset($allocation['unit_cost']) && $allocation['unit_cost'] !== null
+                            ? (float) $allocation['unit_cost']
+                            : null;
+
+                        $resolvedItems[] = [
+                            'book_id' => $bookId,
+                            'stock_lot_id' => (int) ($allocation['id'] ?? 0),
+                            'stock_lot_code_snapshot' => $this->formatStockLotCode((int) ($allocation['id'] ?? 0)),
+                            'quantity' => $allocatedQuantity,
+                            'unit_cost_snapshot' => $unitCostSnapshot !== null
+                                ? number_format($unitCostSnapshot, 2, '.', '')
+                                : null,
+                            'unit_price' => $unitPrice,
+                            'line_total' => number_format($lineTotal, 2, '.', ''),
+                            'sku_snapshot' => (string) ($book['sku'] ?? ''),
+                            'title_snapshot' => (string) ($book['title'] ?? ''),
+                            'author_snapshot' => $this->nullableText($book['author_name'] ?? null),
+                        ];
+
+                        $subtotal += $lineTotal;
+                        $itemCount += $allocatedQuantity;
+                    }
+
+                    $remainingBookStockById[$bookId] -= $quantity;
                 }
 
                 if ($resolvedItems === []) {
@@ -1083,6 +1107,7 @@ class MySqlBookshopRepository implements BookshopRepository
                 $bookId = (int) ($data['book_id'] ?? 0);
                 $movementType = trim((string) ($data['movement_type'] ?? ''));
                 $quantity = max(0, (int) ($data['quantity'] ?? 0));
+                $stockLotId = max(0, (int) ($data['stock_lot_id'] ?? 0));
 
                 if ($bookId <= 0 || $quantity <= 0) {
                     throw new \RuntimeException('Informe um livro e uma quantidade válida para a movimentação.');
@@ -1112,6 +1137,66 @@ class MySqlBookshopRepository implements BookshopRepository
                     );
                 }
 
+                $availableLots = [];
+                $selectedLot = null;
+                $stockLotCodeSnapshot = null;
+                $requiresLotSelection = in_array($movementType, ['adjustment_add', 'adjustment_remove', 'loss'], true);
+
+                if ($requiresLotSelection) {
+                    $availableLots = $this->findAvailableStockLotsByBookIds([$bookId])[$bookId] ?? [];
+
+                    if ($stockLotId > 0) {
+                        $selectedLot = $this->resolveStockMovementLot(
+                            $bookId,
+                            $stockLotId,
+                            $movementType === 'adjustment_add'
+                        );
+                    } elseif ($availableLots !== []) {
+                        if (count($availableLots) === 1) {
+                            $selectedLot = $this->resolveStockMovementLot(
+                                $bookId,
+                                (int) ($availableLots[0]['id'] ?? 0),
+                                $movementType === 'adjustment_add'
+                            );
+                        } else {
+                            throw new \RuntimeException(
+                                'Selecione o lote do ajuste para "' . (string) ($book['title'] ?? 'Livro') . '".'
+                            );
+                        }
+                    } elseif (in_array($movementType, ['adjustment_remove', 'loss'], true)) {
+                        throw new \RuntimeException(
+                            'O item "' . (string) ($book['title'] ?? 'Livro') . '" não possui lote disponível para este ajuste.'
+                        );
+                    }
+
+                    if ($stockLotId > 0 && $selectedLot === null) {
+                        throw new \RuntimeException(
+                            'Selecione um lote válido para "' . (string) ($book['title'] ?? 'Livro') . '".'
+                        );
+                    }
+
+                    if (
+                        $selectedLot !== null
+                        && in_array($movementType, ['adjustment_remove', 'loss'], true)
+                        && (int) ($selectedLot['quantity_available'] ?? 0) < $quantity
+                    ) {
+                        throw new \RuntimeException(
+                            'O lote '
+                            . $this->formatStockLotCode((int) ($selectedLot['id'] ?? 0))
+                            . ' de "'
+                            . (string) ($book['title'] ?? 'Livro')
+                            . '" tem apenas '
+                            . (int) ($selectedLot['quantity_available'] ?? 0)
+                            . ' unidade(s) disponível(is).'
+                        );
+                    }
+
+                    if ($selectedLot !== null) {
+                        $stockLotId = (int) ($selectedLot['id'] ?? 0);
+                        $stockLotCodeSnapshot = $this->formatStockLotCode($stockLotId);
+                    }
+                }
+
                 $unitCost = null;
                 $unitCostRaw = trim((string) ($data['unit_cost'] ?? ''));
                 if ($unitCostRaw !== '') {
@@ -1124,6 +1209,14 @@ class MySqlBookshopRepository implements BookshopRepository
                     $unitSalePrice = (float) $this->normalizeDecimal($unitSalePriceRaw);
                 }
 
+                if ($unitCost === null && $selectedLot !== null && isset($selectedLot['unit_cost']) && $selectedLot['unit_cost'] !== null) {
+                    $unitCost = (float) $selectedLot['unit_cost'];
+                }
+
+                if ($unitSalePrice === null && $selectedLot !== null && isset($selectedLot['unit_sale_price']) && $selectedLot['unit_sale_price'] !== null) {
+                    $unitSalePrice = (float) $selectedLot['unit_sale_price'];
+                }
+
                 $totalCost = $unitCost !== null
                     ? round($unitCost * $quantity, 2)
                     : null;
@@ -1134,6 +1227,8 @@ class MySqlBookshopRepository implements BookshopRepository
                 $insertStatement = $this->pdo->prepare(<<<SQL
                     INSERT INTO bookshop_stock_movements (
                         book_id,
+                        stock_lot_id,
+                        stock_lot_code_snapshot,
                         sku_snapshot,
                         title_snapshot,
                         author_snapshot,
@@ -1152,6 +1247,8 @@ class MySqlBookshopRepository implements BookshopRepository
                         created_by_name
                     ) VALUES (
                         :book_id,
+                        :stock_lot_id,
+                        :stock_lot_code_snapshot,
                         :sku_snapshot,
                         :title_snapshot,
                         :author_snapshot,
@@ -1172,6 +1269,8 @@ class MySqlBookshopRepository implements BookshopRepository
                 SQL);
                 $insertStatement->execute([
                     'book_id' => $bookId,
+                    'stock_lot_id' => $stockLotId > 0 ? $stockLotId : null,
+                    'stock_lot_code_snapshot' => $this->nullableText($stockLotCodeSnapshot),
                     'sku_snapshot' => (string) ($book['sku'] ?? ''),
                     'title_snapshot' => (string) ($book['title'] ?? ''),
                     'author_snapshot' => $this->nullableText($book['author_name'] ?? null),
@@ -1215,17 +1314,19 @@ class MySqlBookshopRepository implements BookshopRepository
                 ));
                 $updateBookStatement->execute($updateParams);
 
-                if ($stockDelta > 0) {
+                if ($movementType === 'entry' || $movementType === 'donation') {
                     $resolvedLotSalePrice = $unitSalePrice !== null
                         ? $unitSalePrice
                         : (float) ($book['sale_price'] ?? 0);
-                    $resolvedLotCost = $unitCost !== null
-                        ? $unitCost
-                        : (isset($book['cost_price']) && $book['cost_price'] !== null
-                            ? (float) $book['cost_price']
-                            : null);
+                    $resolvedLotCost = $movementType === 'donation'
+                        ? null
+                        : ($unitCost !== null
+                            ? $unitCost
+                            : (isset($book['cost_price']) && $book['cost_price'] !== null
+                                ? (float) $book['cost_price']
+                                : null));
 
-                    $this->createStockLot([
+                    $createdLotId = $this->createStockLot([
                         'book_id' => $bookId,
                         'source_movement_id' => $movementId,
                         'quantity_received' => $quantity,
@@ -1235,6 +1336,45 @@ class MySqlBookshopRepository implements BookshopRepository
                         'occurred_at' => (string) ($data['occurred_at'] ?? gmdate('Y-m-d H:i:s')),
                         'notes' => $data['notes'] ?? null,
                     ]);
+                    $this->attachStockLotSnapshotToMovement($movementId, $createdLotId);
+                } elseif ($movementType === 'adjustment_add') {
+                    if ($selectedLot !== null) {
+                        $this->incrementStockLotQuantity(
+                            (int) ($selectedLot['id'] ?? 0),
+                            $quantity,
+                            $unitCost,
+                            $unitSalePrice
+                        );
+                    } else {
+                        $resolvedLotSalePrice = $unitSalePrice !== null
+                            ? $unitSalePrice
+                            : (float) ($book['sale_price'] ?? 0);
+                        $resolvedLotCost = $unitCost !== null
+                            ? $unitCost
+                            : (isset($book['cost_price']) && $book['cost_price'] !== null
+                                ? (float) $book['cost_price']
+                                : null);
+
+                        $createdLotId = $this->createStockLot([
+                            'book_id' => $bookId,
+                            'source_movement_id' => $movementId,
+                            'quantity_received' => $quantity,
+                            'quantity_available' => $quantity,
+                            'unit_cost' => $resolvedLotCost,
+                            'unit_sale_price' => $resolvedLotSalePrice,
+                            'occurred_at' => (string) ($data['occurred_at'] ?? gmdate('Y-m-d H:i:s')),
+                            'notes' => $data['notes'] ?? null,
+                        ]);
+                        $this->attachStockLotSnapshotToMovement($movementId, $createdLotId);
+                    }
+                } elseif (in_array($movementType, ['adjustment_remove', 'loss'], true)) {
+                    if ($selectedLot === null) {
+                        throw new \RuntimeException(
+                            'Selecione um lote válido para "' . (string) ($book['title'] ?? 'Livro') . '".'
+                        );
+                    }
+
+                    $this->decrementStockLotQuantity((int) ($selectedLot['id'] ?? 0), $quantity);
                 }
 
                 $this->pdo->commit();
@@ -1408,9 +1548,9 @@ class MySqlBookshopRepository implements BookshopRepository
             'genre_name' => $resolvedGenre['name'],
             'collection_id' => $resolvedCollection['id'],
             'collection_name' => $resolvedCollection['name'],
-            'title' => trim((string) ($data['title'] ?? '')),
+            'title' => BookshopTextNormalizer::normalizeTitle((string) ($data['title'] ?? '')),
             'subtitle' => $this->nullableText($data['subtitle'] ?? null),
-            'author_name' => trim((string) ($data['author_name'] ?? '')),
+            'author_name' => BookshopTextNormalizer::normalizeAuthorName((string) ($data['author_name'] ?? '')),
             'publisher_name' => $this->nullableText($data['publisher_name'] ?? null),
             'isbn' => $this->nullableText($data['isbn'] ?? null),
             'barcode' => $this->nullableText($data['barcode'] ?? null),
@@ -1742,39 +1882,73 @@ class MySqlBookshopRepository implements BookshopRepository
         return (int) $this->pdo->lastInsertId();
     }
 
-    /**
-     * @return array<string, mixed>|null
-     */
-    private function resolveSaleLot(int $bookId, int $lotId = 0): ?array
-    {
-        if ($lotId > 0) {
-            $statement = $this->pdo->prepare(<<<SQL
-                SELECT
-                    id,
-                    book_id,
-                    source_movement_id,
-                    quantity_received,
-                    quantity_available,
-                    unit_cost,
-                    unit_sale_price,
-                    occurred_at,
-                    notes,
-                    created_at
-                FROM bookshop_stock_lots
-                WHERE id = :id AND book_id = :book_id AND quantity_available > 0
-                LIMIT 1
-                FOR UPDATE
-            SQL);
-            $statement->execute([
-                'id' => $lotId,
-                'book_id' => $bookId,
-            ]);
+    private function incrementStockLotQuantity(
+        int $lotId,
+        int $quantity,
+        ?float $unitCost,
+        ?float $unitSalePrice
+    ): void {
+        $setClauses = [
+            'quantity_received = quantity_received + :quantity',
+            'quantity_available = quantity_available + :quantity',
+        ];
+        $params = [
+            'lot_id' => $lotId,
+            'quantity' => $quantity,
+        ];
 
-            $lot = $statement->fetch();
-
-            return $lot ?: null;
+        if ($unitCost !== null) {
+            $setClauses[] = 'unit_cost = :unit_cost';
+            $params['unit_cost'] = number_format($unitCost, 2, '.', '');
         }
 
+        if ($unitSalePrice !== null && $unitSalePrice > 0) {
+            $setClauses[] = 'unit_sale_price = :unit_sale_price';
+            $params['unit_sale_price'] = number_format($unitSalePrice, 2, '.', '');
+        }
+
+        $statement = $this->pdo->prepare(sprintf(
+            'UPDATE bookshop_stock_lots SET %s WHERE id = :lot_id LIMIT 1',
+            implode(', ', $setClauses)
+        ));
+        $statement->execute($params);
+    }
+
+    private function decrementStockLotQuantity(int $lotId, int $quantity): void
+    {
+        $statement = $this->pdo->prepare(<<<SQL
+            UPDATE bookshop_stock_lots
+            SET quantity_available = quantity_available - :quantity
+            WHERE id = :lot_id
+            LIMIT 1
+        SQL);
+        $statement->execute([
+            'lot_id' => $lotId,
+            'quantity' => $quantity,
+        ]);
+    }
+
+    private function attachStockLotSnapshotToMovement(int $movementId, int $stockLotId): void
+    {
+        $statement = $this->pdo->prepare(<<<SQL
+            UPDATE bookshop_stock_movements
+            SET stock_lot_id = :stock_lot_id,
+                stock_lot_code_snapshot = :stock_lot_code_snapshot
+            WHERE id = :id
+            LIMIT 1
+        SQL);
+        $statement->execute([
+            'id' => $movementId,
+            'stock_lot_id' => $stockLotId,
+            'stock_lot_code_snapshot' => $this->formatStockLotCode($stockLotId),
+        ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function findAvailableSaleLotsForBook(int $bookId): array
+    {
         $statement = $this->pdo->prepare(<<<SQL
             SELECT
                 id,
@@ -1790,10 +1964,116 @@ class MySqlBookshopRepository implements BookshopRepository
             FROM bookshop_stock_lots
             WHERE book_id = :book_id AND quantity_available > 0
             ORDER BY occurred_at ASC, id ASC
-            LIMIT 1
             FOR UPDATE
         SQL);
         $statement->execute([
+            'book_id' => $bookId,
+        ]);
+
+        return $statement->fetchAll() ?: [];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $availableLots
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveSaleLotAllocations(
+        int $bookId,
+        int $quantity,
+        int $lotId,
+        array &$availableLots
+    ): array {
+        if ($quantity <= 0) {
+            return [];
+        }
+
+        $originalLots = $availableLots;
+
+        if ($lotId > 0) {
+            foreach ($availableLots as $index => $lot) {
+                if ((int) ($lot['id'] ?? 0) !== $lotId || (int) ($lot['book_id'] ?? 0) !== $bookId) {
+                    continue;
+                }
+
+                if ((int) ($lot['quantity_available'] ?? 0) < $quantity) {
+                    $availableLots = $originalLots;
+
+                    return [];
+                }
+
+                $availableLots[$index]['quantity_available'] = (int) ($lot['quantity_available'] ?? 0) - $quantity;
+
+                return [array_merge($lot, [
+                    'allocated_quantity' => $quantity,
+                ])];
+            }
+
+            return [];
+        }
+
+        $remainingQuantity = $quantity;
+        $allocations = [];
+
+        foreach ($availableLots as $index => $lot) {
+            if ((int) ($lot['book_id'] ?? 0) !== $bookId) {
+                continue;
+            }
+
+            $quantityAvailable = max(0, (int) ($lot['quantity_available'] ?? 0));
+            if ($quantityAvailable <= 0) {
+                continue;
+            }
+
+            $allocatedQuantity = min($remainingQuantity, $quantityAvailable);
+            if ($allocatedQuantity <= 0) {
+                continue;
+            }
+
+            $availableLots[$index]['quantity_available'] = $quantityAvailable - $allocatedQuantity;
+            $allocations[] = array_merge($lot, [
+                'allocated_quantity' => $allocatedQuantity,
+            ]);
+            $remainingQuantity -= $allocatedQuantity;
+
+            if ($remainingQuantity === 0) {
+                break;
+            }
+        }
+
+        if ($remainingQuantity > 0) {
+            $availableLots = $originalLots;
+
+            return [];
+        }
+
+        return $allocations;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveStockMovementLot(int $bookId, int $lotId, bool $allowEmptyLot = false): ?array
+    {
+        $statement = $this->pdo->prepare(sprintf(
+            'SELECT
+                id,
+                book_id,
+                source_movement_id,
+                quantity_received,
+                quantity_available,
+                unit_cost,
+                unit_sale_price,
+                occurred_at,
+                notes,
+                created_at
+             FROM bookshop_stock_lots
+             WHERE id = :id AND book_id = :book_id%s
+             LIMIT 1
+             FOR UPDATE',
+            $allowEmptyLot ? '' : ' AND quantity_available > 0'
+        ));
+        $statement->execute([
+            'id' => $lotId,
             'book_id' => $bookId,
         ]);
 
@@ -2354,6 +2634,9 @@ class MySqlBookshopRepository implements BookshopRepository
 
         return array_merge($movement, [
             'movement_code' => 'MOV-' . str_pad((string) ((int) ($movement['id'] ?? 0)), 6, '0', STR_PAD_LEFT),
+            'stock_lot_id' => isset($movement['stock_lot_id']) && $movement['stock_lot_id'] !== null
+                ? (int) $movement['stock_lot_id']
+                : null,
             'quantity' => (int) ($movement['quantity'] ?? 0),
             'stock_delta' => $stockDelta,
             'stock_delta_label' => sprintf('%+d', $stockDelta),
@@ -2415,7 +2698,7 @@ class MySqlBookshopRepository implements BookshopRepository
     private function formatStockMovementTypeLabel(string $movementType): string
     {
         $map = [
-            'entry' => 'Entrada',
+            'entry' => 'Compra / reposição',
             'donation' => 'Doação recebida',
             'adjustment_add' => 'Ajuste positivo',
             'adjustment_remove' => 'Ajuste negativo',
@@ -2743,6 +3026,8 @@ class MySqlBookshopRepository implements BookshopRepository
             CREATE TABLE IF NOT EXISTS bookshop_stock_movements (
                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 book_id BIGINT UNSIGNED NOT NULL,
+                stock_lot_id BIGINT UNSIGNED NULL,
+                stock_lot_code_snapshot VARCHAR(40) NULL,
                 sku_snapshot VARCHAR(80) NOT NULL,
                 title_snapshot VARCHAR(255) NOT NULL,
                 author_snapshot VARCHAR(255) NULL,
@@ -2810,6 +3095,16 @@ class MySqlBookshopRepository implements BookshopRepository
             'bookshop_sale_items',
             'unit_cost_snapshot',
             'ALTER TABLE bookshop_sale_items ADD COLUMN unit_cost_snapshot DECIMAL(10, 2) NULL AFTER author_snapshot'
+        );
+        $this->ensureColumn(
+            'bookshop_stock_movements',
+            'stock_lot_id',
+            'ALTER TABLE bookshop_stock_movements ADD COLUMN stock_lot_id BIGINT UNSIGNED NULL AFTER book_id'
+        );
+        $this->ensureColumn(
+            'bookshop_stock_movements',
+            'stock_lot_code_snapshot',
+            'ALTER TABLE bookshop_stock_movements ADD COLUMN stock_lot_code_snapshot VARCHAR(40) NULL AFTER stock_lot_id'
         );
         $this->ensureColumn(
             'bookshop_stock_movements',
@@ -2910,6 +3205,11 @@ class MySqlBookshopRepository implements BookshopRepository
             'bookshop_books',
             'idx_bookshop_books_barcode',
             'ALTER TABLE bookshop_books ADD INDEX idx_bookshop_books_barcode (barcode)'
+        );
+        $this->ensureIndex(
+            'bookshop_stock_movements',
+            'idx_bookshop_stock_movements_lot',
+            'ALTER TABLE bookshop_stock_movements ADD INDEX idx_bookshop_stock_movements_lot (stock_lot_id)'
         );
         $this->ensureIndex(
             'bookshop_sale_items',

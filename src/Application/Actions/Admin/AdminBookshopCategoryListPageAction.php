@@ -24,7 +24,7 @@ class AdminBookshopCategoryListPageAction extends AbstractAdminBookshopAction
         try {
             $categories = $this->bookshopRepository->findAllCategoriesForAdmin();
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao listar categorias da livraria.', [
+            $this->logger->warning('Falha ao listar categorias doutrinárias da livraria.', [
                 'error' => $exception->getMessage(),
             ]);
         }
@@ -172,9 +172,9 @@ class AdminBookshopCategoryListPageAction extends AbstractAdminBookshopAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Categorias da Livraria | Dashboard',
+            'page_title' => 'Categorias Doutrinárias da Livraria | Dashboard',
             'page_url' => 'https://cedern.org/painel/livraria/categorias',
-            'page_description' => 'Painel para gestão de categorias do acervo da livraria do CEDE.',
+            'page_description' => 'Painel para gestão de categorias doutrinárias do acervo da livraria do CEDE.',
         ]);
     }
 }

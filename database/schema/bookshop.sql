@@ -161,6 +161,8 @@ CREATE TABLE IF NOT EXISTS bookshop_sale_items (
 CREATE TABLE IF NOT EXISTS bookshop_stock_movements (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     book_id BIGINT UNSIGNED NOT NULL,
+    stock_lot_id BIGINT UNSIGNED NULL,
+    stock_lot_code_snapshot VARCHAR(40) NULL,
     sku_snapshot VARCHAR(80) NOT NULL,
     title_snapshot VARCHAR(255) NOT NULL,
     author_snapshot VARCHAR(255) NULL,
@@ -183,6 +185,7 @@ CREATE TABLE IF NOT EXISTS bookshop_stock_movements (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     INDEX idx_bookshop_stock_movements_book (book_id),
+    INDEX idx_bookshop_stock_movements_lot (stock_lot_id),
     INDEX idx_bookshop_stock_movements_type (movement_type),
     INDEX idx_bookshop_stock_movements_occurred_at (occurred_at),
     INDEX idx_bookshop_stock_movements_created_by (created_by_name)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Admin;
 
+use App\Support\BookshopTextNormalizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UploadedFileInterface;
@@ -11,6 +12,8 @@ use Psr\Http\Message\UploadedFileInterface;
 class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
 {
     private const FLASH_KEY_PREFIX = 'admin_bookshop_book_form_';
+
+    private const SKU_PATTERN = '/^CEDE-LIV-\d{4}$/';
 
     public function __invoke(Request $request, Response $response): Response
     {
@@ -46,6 +49,12 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
 
         $body = (array) ($request->getParsedBody() ?? []);
         $payload = $this->normalizePayload($body);
+        $payload['cost_price'] = $isEdit
+            ? $this->normalizeMoneyInput($existingBook['cost_price'] ?? '0')
+            : $this->normalizeMoneyInput('0');
+        $payload['stock_quantity'] = $isEdit
+            ? (int) ($existingBook['stock_quantity'] ?? 0)
+            : 0;
         $errors = $this->validatePayload($payload);
         $existingCoverImagePath = (string) ($existingBook['cover_image_path'] ?? '');
         $existingCoverImageMimeType = (string) ($existingBook['cover_image_mime_type'] ?? '');
@@ -203,8 +212,8 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
      */
     private function normalizePayload(array $input): array
     {
-        $title = trim((string) ($input['title'] ?? ''));
-        $sku = strtoupper(trim((string) ($input['sku'] ?? '')));
+        $title = BookshopTextNormalizer::normalizeTitle((string) ($input['title'] ?? ''));
+        $sku = $this->normalizeBookshopSku($input['sku'] ?? '');
         $slugInput = trim((string) ($input['slug'] ?? ''));
         $slug = $this->slugify($slugInput !== '' ? $slugInput : ($title . '-' . strtolower($sku)));
         $status = trim((string) ($input['status'] ?? 'active'));
@@ -224,7 +233,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             'collection_id' => max(0, $this->normalizeIntegerInput($input['collection_id'] ?? 0, 0)),
             'title' => $title,
             'subtitle' => trim((string) ($input['subtitle'] ?? '')),
-            'author_name' => trim((string) ($input['author_name'] ?? '')),
+            'author_name' => BookshopTextNormalizer::normalizeAuthorName((string) ($input['author_name'] ?? '')),
             'publisher_name' => trim((string) ($input['publisher_name'] ?? '')),
             'isbn' => trim((string) ($input['isbn'] ?? '')),
             'barcode' => trim((string) ($input['barcode'] ?? '')),
@@ -260,6 +269,8 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
 
         if ((string) ($payload['sku'] ?? '') === '') {
             $errors[] = 'SKU é obrigatório.';
+        } elseif (!preg_match(self::SKU_PATTERN, (string) $payload['sku'])) {
+            $errors[] = 'SKU inválido. Use o padrão CEDE-LIV-0001.';
         }
 
         if ((string) ($payload['slug'] ?? '') === '') {
@@ -274,17 +285,27 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             $errors[] = 'Autor é obrigatório.';
         }
 
-        if ((int) ($payload['category_id'] ?? 0) <= 0) {
-            $errors[] = 'Categoria é obrigatória.';
-        } elseif ($this->bookshopRepository->findCategoryByIdForAdmin((int) $payload['category_id']) === null) {
-            $errors[] = 'Selecione uma categoria válida.';
+        if ((string) ($payload['isbn'] ?? '') === '') {
+            $errors[] = 'ISBN é obrigatório.';
+        }
+
+        if ((string) ($payload['barcode'] ?? '') === '') {
+            $errors[] = 'Código de barras é obrigatório.';
         }
 
         if (
-            (int) ($payload['genre_id'] ?? 0) > 0
-            && $this->bookshopRepository->findGenreByIdForAdmin((int) $payload['genre_id']) === null
+            (int) ($payload['category_id'] ?? 0) > 0
+            && $this->bookshopRepository->findCategoryByIdForAdmin((int) $payload['category_id']) === null
         ) {
-            $errors[] = 'Selecione um gênero válido.';
+            $errors[] = 'Selecione uma categoria doutrinária válida.';
+        }
+
+        if ((int) ($payload['genre_id'] ?? 0) <= 0) {
+            $errors[] = 'Gênero literário é obrigatório.';
+        } elseif (
+            $this->bookshopRepository->findGenreByIdForAdmin((int) $payload['genre_id']) === null
+        ) {
+            $errors[] = 'Selecione um gênero literário válido.';
         }
 
         if (
@@ -337,15 +358,24 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             $errors[] = 'Preço de venda inválido.';
         }
 
-        if ((int) ($payload['stock_quantity'] ?? 0) < 0) {
-            $errors[] = 'Estoque atual inválido.';
-        }
-
         if ((int) ($payload['stock_minimum'] ?? 0) < 0) {
             $errors[] = 'Estoque mínimo inválido.';
         }
 
         return $errors;
+    }
+
+    private function normalizeBookshopSku(mixed $value): string
+    {
+        $sku = strtoupper(trim((string) $value));
+        if ($sku === '') {
+            return '';
+        }
+
+        $sku = preg_replace('/[^A-Z0-9]+/', '-', $sku) ?? $sku;
+        $sku = preg_replace('/-+/', '-', $sku) ?? $sku;
+
+        return trim($sku, '-');
     }
 
     /**
@@ -399,9 +429,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             'description' => $submittedPayload['description'] ?? ($existingBook['description'] ?? ''),
             'cost_price' => $submittedPayload['cost_price'] ?? ($existingBook['cost_price'] ?? '0.00'),
             'sale_price' => $submittedPayload['sale_price'] ?? ($existingBook['sale_price'] ?? '0.00'),
-            'stock_quantity' => array_key_exists('stock_quantity', $submittedPayload)
-                ? (string) ($submittedPayload['stock_quantity'] ?? '0')
-                : (string) ($existingBook['stock_quantity'] ?? '0'),
+            'stock_quantity' => (string) ($existingBook['stock_quantity'] ?? '0'),
             'stock_minimum' => array_key_exists('stock_minimum', $submittedPayload)
                 ? (string) ($submittedPayload['stock_minimum'] ?? '0')
                 : (string) ($existingBook['stock_minimum'] ?? '0'),
@@ -439,7 +467,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
         try {
             $categories = $this->bookshopRepository->findAllCategoriesForAdmin();
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao carregar categorias da livraria para o formulário do acervo.', [
+            $this->logger->warning('Falha ao carregar categorias doutrinárias da livraria para o formulário do acervo.', [
                 'error' => $exception->getMessage(),
             ]);
 
@@ -447,7 +475,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
         }
 
         return array_map(static function (array $category): array {
-            $label = (string) ($category['name'] ?? 'Categoria');
+            $label = (string) ($category['name'] ?? 'Categoria doutrinária');
             if ((int) ($category['is_active'] ?? 0) !== 1) {
                 $label .= ' (inativa)';
             }
@@ -467,7 +495,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
         try {
             $genres = $this->bookshopRepository->findAllGenresForAdmin();
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao carregar gêneros da livraria para o formulário do acervo.', [
+            $this->logger->warning('Falha ao carregar gêneros literários da livraria para o formulário do acervo.', [
                 'error' => $exception->getMessage(),
             ]);
 
@@ -475,7 +503,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
         }
 
         return array_map(static function (array $genre): array {
-            $label = (string) ($genre['name'] ?? 'Gênero');
+            $label = (string) ($genre['name'] ?? 'Gênero literário');
             if ((int) ($genre['is_active'] ?? 0) !== 1) {
                 $label .= ' (inativo)';
             }

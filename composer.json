@@ -58,7 +58,10 @@
         }
     },
     "scripts": {
+        "import:bookshop:csv": "php scripts/import_bookshop_csv.php",
         "start": "php -S localhost:8080 -t public",
+        "export:bookshop-manual-pdf": "php scripts/export_bookshop_manual_pdf.php",
+        "seed:bookshop:xlsx-web": "php scripts/build_bookshop_seed_from_xlsx.php",
         "seed:bookshop": "php scripts/seed_bookshop_catalog.php",
         "test": "phpunit"
     }

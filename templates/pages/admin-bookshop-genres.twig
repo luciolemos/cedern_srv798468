@@ -1,26 +1,26 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Gêneros da Livraria' %}
-{% set dashboard_page_lead = 'Cadastre e organize os gêneros usados no acervo físico da livraria.' %}
+{% set dashboard_page_title = 'Gêneros Literários da Livraria' %}
+{% set dashboard_page_lead = 'Cadastre e organize os gêneros literários usados no acervo físico da livraria.' %}
 
 {% block admin_content %}
-  <section class="nc-section" aria-label="Administração de gêneros da livraria" data-aos="fade-up" data-aos-delay="0">
+  <section class="nc-section" aria-label="Administração de gêneros literários da livraria" data-aos="fade-up" data-aos-delay="0">
     {% set toast_message = '' %}
     {% set toast_tone = 'success' %}
     {% if admin_status == 'created' %}
-      {% set toast_message = 'Gênero criado com sucesso.' %}
+      {% set toast_message = 'Gênero literário criado com sucesso.' %}
     {% elseif admin_status == 'updated' %}
-      {% set toast_message = 'Gênero atualizado com sucesso.' %}
+      {% set toast_message = 'Gênero literário atualizado com sucesso.' %}
     {% elseif admin_status == 'enabled' %}
-      {% set toast_message = 'Gênero ativado com sucesso.' %}
+      {% set toast_message = 'Gênero literário ativado com sucesso.' %}
     {% elseif admin_status == 'disabled' %}
-      {% set toast_message = 'Gênero inativado com sucesso.' %}
+      {% set toast_message = 'Gênero literário inativado com sucesso.' %}
     {% elseif admin_status == 'not-found' %}
-      {% set toast_message = 'Gênero não encontrado.' %}
+      {% set toast_message = 'Gênero literário não encontrado.' %}
       {% set toast_tone = 'error' %}
     {% elseif admin_status == 'toggle-error' %}
-      {% set toast_message = 'Não foi possível alterar o status do gênero.' %}
+      {% set toast_message = 'Não foi possível alterar o status do gênero literário.' %}
       {% set toast_tone = 'error' %}
     {% endif %}
 
@@ -32,8 +32,8 @@
     <div class="nc-actions nc-bookshop-toolbar nc-bookshop-toolbar-paired is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
-      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/generos/novo" aria-label="Novo gênero" title="Novo gênero">
-        + Gênero
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/generos/novo" aria-label="Novo gênero literário" title="Novo gênero literário">
+        + Gênero literário
       </a>
     </div>
 
@@ -43,7 +43,7 @@
 
     {% if bookshop_genres|length == 0 %}
       <form class="nc-admin-table-search" method="get" action="/painel/livraria/generos" data-aos="fade-up" data-aos-delay="95">
-        <label for="nc-bookshop-genres-search">Buscar gêneros</label>
+        <label for="nc-bookshop-genres-search">Buscar gêneros literários</label>
         <div class="nc-admin-table-search-controls">
           <input id="nc-bookshop-genres-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, status...">
           <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
@@ -52,10 +52,10 @@
           <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
         </div>
       </form>
-      <p>{{ search_term ? 'Nenhum gênero encontrado para a busca informada.' : 'Nenhum gênero cadastrado.' }}</p>
+      <p>{{ search_term ? 'Nenhum gênero literário encontrado para a busca informada.' : 'Nenhum gênero literário cadastrado.' }}</p>
     {% else %}
       <form class="nc-admin-table-search" method="get" action="/painel/livraria/generos" data-aos="fade-up" data-aos-delay="95">
-        <label for="nc-bookshop-genres-search">Buscar gêneros</label>
+        <label for="nc-bookshop-genres-search">Buscar gêneros literários</label>
         <div class="nc-admin-table-search-controls">
           <input id="nc-bookshop-genres-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, slug, status...">
           <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
@@ -113,14 +113,14 @@
                   <span class="nc-admin-featured-flag{{ genre.is_active ? ' is-on' : ' is-off' }}">{{ genre.is_active ? 'Ativo' : 'Inativo' }}</span>
                 </td>
                 <td class="nc-admin-table-actions" data-label="Ações">
-                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/livraria/generos/{{ genre.id }}/editar" aria-label="Editar gênero {{ genre.name }}" title="Editar">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/livraria/generos/{{ genre.id }}/editar" aria-label="Editar gênero literário {{ genre.name }}" title="Editar">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                       <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <span class="nc-sr-only">Editar</span>
                   </a>
-                  <form method="post" action="/painel/livraria/generos/{{ genre.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status deste gênero?');">
-                    <button class="nc-btn nc-btn-secondary nc-btn-icon {{ genre.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ genre.is_active ? 'Inativar' : 'Ativar' }} gênero {{ genre.name }}" title="{{ genre.is_active ? 'Inativar' : 'Ativar' }}">
+                  <form method="post" action="/painel/livraria/generos/{{ genre.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status deste gênero literário?');">
+                    <button class="nc-btn nc-btn-secondary nc-btn-icon {{ genre.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ genre.is_active ? 'Inativar' : 'Ativar' }} gênero literário {{ genre.name }}" title="{{ genre.is_active ? 'Inativar' : 'Ativar' }}">
                       {% if genre.is_active %}
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
@@ -143,7 +143,7 @@
       </div>
 
       {% if pagination.total_pages > 1 %}
-        <nav class="nc-admin-pagination" aria-label="Paginação de gêneros da livraria" data-aos="fade-up" data-aos-delay="170">
+        <nav class="nc-admin-pagination" aria-label="Paginação de gêneros literários da livraria" data-aos="fade-up" data-aos-delay="170">
           {% if pagination.previous_url %}
             <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
           {% else %}

@@ -41,6 +41,10 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
                 static fn (mixed $error): bool => is_string($error) && trim($error) !== ''
             ));
 
+            if (!array_key_exists('items', $submittedPayload)) {
+                $submittedPayload['items'] = $this->resolvePrefilledItems($request, $saleableBooks);
+            }
+
             return $this->renderForm($response, $saleableBooks, $submittedPayload, $errors);
         }
 
@@ -125,6 +129,9 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
             $paymentMethod = 'other';
         }
         $receivedAmountRaw = trim((string) ($input['received_amount'] ?? ''));
+        if ($paymentMethod !== 'cash') {
+            $receivedAmountRaw = '';
+        }
         $customerPhone = $this->normalizePhoneInput($input['customer_phone'] ?? '');
         $customerEmail = strtolower(trim((string) ($input['customer_email'] ?? '')));
         $customerCpf = $this->normalizeCpfInput($input['customer_cpf'] ?? '');
@@ -179,6 +186,7 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
     {
         $errors = [];
         $booksById = [];
+        $requestedQuantityByBookId = [];
 
         foreach ($books as $book) {
             $booksById[(int) ($book['id'] ?? 0)] = $book;
@@ -225,7 +233,6 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
         foreach ($items as $index => $item) {
             $row = $index + 1;
             $bookId = (int) ($item['book_id'] ?? 0);
-            $lotId = (int) ($item['lot_id'] ?? 0);
             $quantity = (int) ($item['quantity'] ?? 0);
             $unitPrice = (float) ($item['unit_price'] ?? 0);
 
@@ -256,38 +263,35 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
                 (array) ($book['stock_lots'] ?? []),
                 static fn (mixed $lot): bool => is_array($lot) && (int) ($lot['quantity_available'] ?? 0) > 0
             ));
-            $selectedLot = null;
-
-            if ($lotId > 0) {
-                foreach ($lots as $lot) {
-                    if ((int) ($lot['id'] ?? 0) === $lotId) {
-                        $selectedLot = $lot;
-                        break;
-                    }
-                }
-
-                if ($selectedLot === null) {
-                    $errors[] = 'Selecione um lote válido na linha ' . $row . '.';
-                }
-            } elseif (count($lots) > 1) {
-                $errors[] = 'Selecione o lote do item "' . (string) ($book['title'] ?? 'Livro') . '" na linha ' . $row . '.';
-            } elseif ($lots !== []) {
-                $selectedLot = $lots[0];
+            if ($lots === []) {
+                $errors[] = 'O item "' . (string) ($book['title'] ?? 'Livro') . '" não possui lote disponível para baixa automática.';
             }
 
-            if ((int) ($book['stock_quantity'] ?? 0) < $quantity) {
-                $errors[] = 'Estoque insuficiente para "' . (string) ($book['title'] ?? 'Livro') . '".';
-            }
-
-            if ($selectedLot !== null && (int) ($selectedLot['quantity_available'] ?? 0) < $quantity) {
-                $errors[] = 'Quantidade acima do disponível no lote '
-                    . (string) ($selectedLot['lot_code'] ?? '')
-                    . ' da linha '
-                    . $row
-                    . '.';
-            }
-
+            $requestedQuantityByBookId[$bookId] = ($requestedQuantityByBookId[$bookId] ?? 0) + max(0, $quantity);
             $subtotal += max(0, $unitPrice) * max(0, $quantity);
+        }
+
+        foreach ($requestedQuantityByBookId as $bookId => $requestedQuantity) {
+            $book = $booksById[$bookId] ?? null;
+            if ($book === null) {
+                continue;
+            }
+
+            $availableLotsQuantity = array_reduce(
+                (array) ($book['stock_lots'] ?? []),
+                static fn (int $carry, mixed $lot): int => $carry
+                    + (is_array($lot) ? max(0, (int) ($lot['quantity_available'] ?? 0)) : 0),
+                0
+            );
+
+            if ((int) ($book['stock_quantity'] ?? 0) < $requestedQuantity) {
+                $errors[] = 'Estoque insuficiente para "' . (string) ($book['title'] ?? 'Livro') . '".';
+                continue;
+            }
+
+            if ($availableLotsQuantity < $requestedQuantity) {
+                $errors[] = 'Os lotes disponíveis de "' . (string) ($book['title'] ?? 'Livro') . '" não cobrem a quantidade informada na venda.';
+            }
         }
 
         if ((float) ($payload['discount_amount'] ?? 0) > $subtotal) {
@@ -321,13 +325,12 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
         array $errors
     ): Response {
         $defaultItems = [
-            ['book_id' => '', 'lot_id' => '', 'quantity' => '1', 'unit_price' => '0.00'],
+            ['book_id' => '', 'quantity' => '1', 'unit_price' => '0.00'],
         ];
 
         $formItems = array_values(array_map(static function (array $item): array {
             return [
                 'book_id' => (string) ($item['book_id'] ?? ''),
-                'lot_id' => (string) ($item['lot_id'] ?? ''),
                 'quantity' => (string) ($item['quantity'] ?? '1'),
                 'unit_price' => (string) ($item['unit_price'] ?? '0.00'),
             ];
@@ -362,21 +365,6 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
                 'volume_label' => (string) ($book['volume_label'] ?? ''),
                 'sale_price' => (string) number_format((float) ($book['sale_price'] ?? 0), 2, '.', ''),
                 'stock_quantity' => (int) ($book['stock_quantity'] ?? 0),
-                'stock_lots' => array_values(array_map(static function (array $lot): array {
-                    return [
-                        'id' => (string) ($lot['id'] ?? ''),
-                        'lot_code' => (string) ($lot['lot_code'] ?? ''),
-                        'label' => (string) ($lot['label'] ?? ''),
-                        'quantity_available' => (int) ($lot['quantity_available'] ?? 0),
-                        'unit_cost' => isset($lot['unit_cost']) && $lot['unit_cost'] !== null
-                            ? (string) number_format((float) $lot['unit_cost'], 2, '.', '')
-                            : '',
-                        'unit_cost_label' => (string) ($lot['unit_cost_label'] ?? '-'),
-                        'unit_sale_price' => (string) number_format((float) ($lot['unit_sale_price'] ?? 0), 2, '.', ''),
-                        'unit_sale_price_label' => (string) ($lot['unit_sale_price_label'] ?? 'R$ 0,00'),
-                        'occurred_at_label' => (string) ($lot['occurred_at_label'] ?? ''),
-                    ];
-                }, (array) ($book['stock_lots'] ?? []))),
             ];
         }, $saleableBooks);
 
@@ -400,6 +388,34 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
             'page_url' => 'https://cedern.org/painel/livraria/vendas/nova',
             'page_description' => 'PDV administrativo da livraria do CEDE.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $saleableBooks
+     * @return array<int, array<string, string>>
+     */
+    private function resolvePrefilledItems(Request $request, array $saleableBooks): array
+    {
+        $queryParams = $request->getQueryParams();
+        $bookId = $this->normalizeIntegerInput($queryParams['book_id'] ?? 0, 0);
+
+        if ($bookId <= 0) {
+            return [];
+        }
+
+        foreach ($saleableBooks as $book) {
+            if ((int) ($book['id'] ?? 0) !== $bookId) {
+                continue;
+            }
+
+            return [[
+                'book_id' => (string) $bookId,
+                'quantity' => '1',
+                'unit_price' => (string) number_format((float) ($book['sale_price'] ?? 0), 2, '.', ''),
+            ]];
+        }
+
+        return [];
     }
 
     private function currentLocalDateTime(): string

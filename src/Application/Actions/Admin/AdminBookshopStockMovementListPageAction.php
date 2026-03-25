@@ -58,6 +58,7 @@ class AdminBookshopStockMovementListPageAction extends AbstractAdminBookshopActi
                 static function (array $movement) use ($normalizedSearch): bool {
                     $haystack = implode(' ', [
                         (string) ($movement['movement_code'] ?? ''),
+                        (string) ($movement['stock_lot_code_snapshot'] ?? ''),
                         (string) ($movement['title_snapshot'] ?? ''),
                         (string) ($movement['author_snapshot'] ?? ''),
                         (string) ($movement['sku_snapshot'] ?? ''),

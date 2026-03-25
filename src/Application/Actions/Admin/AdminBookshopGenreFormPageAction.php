@@ -70,7 +70,7 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
             if ($newId <= 0) {
                 $this->storeSessionFlash($this->resolveFlashKey($genreId), [
                     'payload' => $payload,
-                    'errors' => ['Não foi possível salvar o gênero.'],
+                'errors' => ['Não foi possível salvar o gênero literário.'],
                 ]);
 
                 return $response->withHeader('Location', $formPath)->withStatus(303);
@@ -82,7 +82,7 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
 
             return $response->withHeader('Location', '/painel/livraria/generos')->withStatus(303);
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao salvar gênero da livraria.', [
+            $this->logger->warning('Falha ao salvar gênero literário da livraria.', [
                 'error' => $exception->getMessage(),
                 'genre_id' => $genreId,
             ]);
@@ -136,15 +136,15 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
         $errors = [];
 
         if ((string) ($payload['name'] ?? '') === '') {
-            $errors[] = 'Nome do gênero é obrigatório.';
+            $errors[] = 'Nome do gênero literário é obrigatório.';
         }
 
         if ((string) ($payload['slug'] ?? '') === '') {
-            $errors[] = 'Slug do gênero é obrigatório.';
+            $errors[] = 'Slug do gênero literário é obrigatório.';
         }
 
         if (!in_array((int) ($payload['is_active'] ?? -1), [0, 1], true)) {
-            $errors[] = 'Selecione o status do gênero.';
+            $errors[] = 'Selecione o status do gênero literário.';
         }
 
         return $errors;
@@ -180,9 +180,9 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
             'bookshop_genre_form_errors' => $errors,
             'bookshop_genre_form_is_edit' => $isEdit,
             'bookshop_genre_id' => $existingGenre['id'] ?? null,
-            'page_title' => ($isEdit ? 'Editar gênero da livraria' : 'Novo gênero da livraria') . ' | Dashboard',
+            'page_title' => ($isEdit ? 'Editar gênero literário da livraria' : 'Novo gênero literário da livraria') . ' | Dashboard',
             'page_url' => 'https://cedern.org/painel/livraria/generos',
-            'page_description' => 'Formulário do dashboard para gêneros do acervo da livraria.',
+            'page_description' => 'Formulário do dashboard para gêneros literários do acervo da livraria.',
         ]);
     }
 }

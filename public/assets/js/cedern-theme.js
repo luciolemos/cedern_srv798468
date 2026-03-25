@@ -4,6 +4,7 @@ function initCedernTheme() {
   var themeStorageKey = 'natalcode_theme';
   var modeStorageKey = 'natalcode_mode';
   var darkIntensityStorageKey = 'natalcode_dark_intensity';
+  var desktopPalettePositionStorageKey = 'natalcode_desktop_palette_position';
   var mobilePalettePositionStorageKey = 'natalcode_mobile_palette_position';
   var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
   var allowedModes = ['light', 'dark'];
@@ -72,8 +73,14 @@ function initCedernTheme() {
   var pointerDragOffsetX = 0;
   var pointerDragOffsetY = 0;
 
-  function getMobilePalettePosition() {
-    var rawValue = localStorage.getItem(mobilePalettePositionStorageKey);
+  function getPalettePositionStorageKey() {
+    return isDesktop()
+      ? desktopPalettePositionStorageKey
+      : mobilePalettePositionStorageKey;
+  }
+
+  function getStoredPalettePosition() {
+    var rawValue = localStorage.getItem(getPalettePositionStorageKey());
     if (!rawValue) {
       return null;
     }
@@ -90,11 +97,11 @@ function initCedernTheme() {
     }
   }
 
-  function saveMobilePalettePosition(x, y) {
-    localStorage.setItem(mobilePalettePositionStorageKey, JSON.stringify({ x: x, y: y }));
+  function saveStoredPalettePosition(x, y) {
+    localStorage.setItem(getPalettePositionStorageKey(), JSON.stringify({ x: x, y: y }));
   }
 
-  function clearInlineMobilePalettePosition() {
+  function clearInlinePalettePosition() {
     if (!utilityStack) {
       return;
     }
@@ -103,9 +110,10 @@ function initCedernTheme() {
     utilityStack.style.top = '';
     utilityStack.style.right = '';
     utilityStack.style.bottom = '';
+    utilityStack.style.transform = '';
   }
 
-  function clampMobilePalettePosition(x, y) {
+  function clampPalettePosition(x, y) {
     if (!utilityStack) {
       return { x: 0, y: 0 };
     }
@@ -121,47 +129,39 @@ function initCedernTheme() {
     };
   }
 
-  function applyMobilePalettePosition(position) {
+  function applyPalettePosition(position) {
     if (!utilityStack || !position) {
       return;
     }
 
-    var clamped = clampMobilePalettePosition(position.x, position.y);
+    var clamped = clampPalettePosition(position.x, position.y);
     utilityStack.style.left = clamped.x + 'px';
     utilityStack.style.top = clamped.y + 'px';
     utilityStack.style.right = 'auto';
     utilityStack.style.bottom = 'auto';
+    utilityStack.style.transform = 'none';
   }
 
-  function syncMobilePalettePosition() {
+  function syncPalettePosition() {
     if (!utilityStack) {
       return;
     }
 
-    if (isDesktop()) {
-      clearInlineMobilePalettePosition();
-      return;
-    }
-
-    var storedPosition = getMobilePalettePosition();
+    var storedPosition = getStoredPalettePosition();
     if (!storedPosition) {
-      clearInlineMobilePalettePosition();
+      clearInlinePalettePosition();
       return;
     }
 
-    applyMobilePalettePosition(storedPosition);
+    applyPalettePosition(storedPosition);
   }
 
-  function initMobilePaletteDrag() {
+  function initPaletteDrag() {
     if (!utilityStack || !paletteToggle || !window.PointerEvent) {
       return;
     }
 
     paletteToggle.addEventListener('pointerdown', function (event) {
-      if (isDesktop()) {
-        return;
-      }
-
       if (event.pointerType === 'mouse' && event.button !== 0) {
         return;
       }
@@ -181,11 +181,11 @@ function initCedernTheme() {
     });
 
     paletteToggle.addEventListener('pointermove', function (event) {
-      if (!pointerDragActive || isDesktop()) {
+      if (!pointerDragActive) {
         return;
       }
 
-      var nextPosition = clampMobilePalettePosition(
+      var nextPosition = clampPalettePosition(
         event.clientX - pointerDragOffsetX,
         event.clientY - pointerDragOffsetY
       );
@@ -196,7 +196,7 @@ function initCedernTheme() {
         pointerDragMoved = true;
       }
 
-      applyMobilePalettePosition(nextPosition);
+      applyPalettePosition(nextPosition);
     });
 
     function endPointerDrag(event) {
@@ -206,10 +206,10 @@ function initCedernTheme() {
 
       pointerDragActive = false;
 
-      if (pointerDragMoved && !isDesktop()) {
+      if (pointerDragMoved) {
         var leftValue = Number.parseFloat(utilityStack.style.left || '0');
         var topValue = Number.parseFloat(utilityStack.style.top || '0');
-        saveMobilePalettePosition(leftValue, topValue);
+        saveStoredPalettePosition(leftValue, topValue);
         pointerDragSuppressToggle = true;
         window.setTimeout(function () {
           pointerDragSuppressToggle = false;
@@ -367,8 +367,8 @@ function initCedernTheme() {
   var initialIntensity = rootDarkIntensity || (allowedDarkIntensities.indexOf(savedIntensity) !== -1 ? savedIntensity : defaultDarkIntensity);
   applyDarkIntensity(initialIntensity);
   setPanelState(false);
-  syncMobilePalettePosition();
-  initMobilePaletteDrag();
+  syncPalettePosition();
+  initPaletteDrag();
 
   if (paletteToggle) {
     paletteToggle.addEventListener('click', function () {
@@ -378,7 +378,7 @@ function initCedernTheme() {
 
       var expanded = paletteToggle.getAttribute('aria-expanded') === 'true';
       setPanelState(!expanded);
-      syncMobilePalettePosition();
+      syncPalettePosition();
     });
   }
 
@@ -454,7 +454,7 @@ function initCedernTheme() {
     setPanelState(false);
     updateUtilityLift();
     updateScrollTopVisibility();
-    syncMobilePalettePosition();
+    syncPalettePosition();
   });
 
   window.addEventListener('scroll', function () {
@@ -464,7 +464,7 @@ function initCedernTheme() {
 
   updateUtilityLift();
   updateScrollTopVisibility();
-  syncMobilePalettePosition();
+  syncPalettePosition();
 }
 
 if (document.readyState === 'loading') {

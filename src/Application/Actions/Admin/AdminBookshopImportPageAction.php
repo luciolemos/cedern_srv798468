@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Admin;
 
+use App\Support\BookshopTextNormalizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UploadedFileInterface;
@@ -15,26 +16,24 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
     private const HEADER_ALIASES = [
         'sku' => ['sku', 'codigo', 'codigo interno', 'código', 'id'],
         'title' => ['titulo', 'título', 'title', 'nome'],
-        'author_name' => ['autor', 'author'],
-        'category_name' => ['categoria', 'category', 'secao', 'seção'],
-        'genre_name' => ['genero', 'gênero', 'genre'],
-        'collection_name' => ['colecao', 'coleção', 'collection', 'serie', 'série'],
-        'publisher_name' => ['editora', 'publisher'],
+        'author_name' => ['autor', 'author', 'author_name'],
+        'category_name' => ['categoria', 'category', 'secao', 'seção', 'category_name'],
+        'genre_name' => ['genero', 'gênero', 'genre', 'genre_name'],
+        'collection_name' => ['colecao', 'coleção', 'collection', 'serie', 'série', 'collection_name'],
+        'publisher_name' => ['editora', 'publisher', 'publisher_name'],
         'isbn' => ['isbn'],
         'barcode' => ['codigo_barra', 'código_barra', 'codigo de barras', 'código de barras', 'ean', 'barcode'],
-        'edition_label' => ['edicao', 'edição', 'edition', 'edicao_label'],
+        'edition_label' => ['edicao', 'edição', 'edition', 'edicao_label', 'edition_label'],
         'volume_number' => ['numero_volume', 'número_volume', 'numero do volume', 'número do volume', 'volume', 'volume_number'],
         'volume_label' => ['rotulo_volume', 'rótulo_volume', 'rotulo do volume', 'rótulo do volume', 'volume_label'],
         'publication_year' => ['ano', 'ano_publicacao', 'ano de publicacao', 'publication_year'],
         'page_count' => ['paginas', 'páginas', 'n_paginas', 'número de páginas', 'numero de paginas', 'page_count'],
         'language' => ['idioma', 'language'],
         'description' => ['descricao', 'descrição', 'sinopse', 'description'],
-        'cost_price' => ['custo', 'preco_custo', 'preço_custo', 'cost_price'],
         'sale_price' => ['preco', 'preço', 'preco_venda', 'preço_venda', 'valor_venda', 'sale_price'],
-        'stock_quantity' => ['estoque', 'quantidade', 'saldo', 'stock', 'stock_quantity'],
         'stock_minimum' => ['estoque_minimo', 'estoque mínimo', 'estoque_mínimo', 'minimo', 'mínimo', 'stock_minimum'],
         'status' => ['status', 'situacao', 'situação'],
-        'location_label' => ['localizacao', 'localização', 'prateleira', 'location'],
+        'location_label' => ['localizacao', 'localização', 'prateleira', 'location', 'location_label'],
         'subtitle' => ['subtitulo', 'subtítulo', 'subtitle'],
         'slug' => ['slug'],
     ];
@@ -88,9 +87,13 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
                         }
 
                         if ($existingBook !== null) {
+                            $payload['cost_price'] = (string) ($existingBook['cost_price'] ?? '0.00');
+                            $payload['stock_quantity'] = (int) ($existingBook['stock_quantity'] ?? 0);
                             $this->bookshopRepository->updateBook((int) $existingBook['id'], $payload);
                             $summary['updated']++;
                         } else {
+                            $payload['cost_price'] = '0.00';
+                            $payload['stock_quantity'] = 0;
                             $this->bookshopRepository->createBook($payload);
                             $summary['created']++;
                         }
@@ -238,7 +241,7 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
      */
     private function normalizeImportRow(array $row): array
     {
-        $title = trim((string) ($row['title'] ?? ''));
+        $title = BookshopTextNormalizer::normalizeTitle((string) ($row['title'] ?? ''));
         $sku = strtoupper(trim((string) ($row['sku'] ?? '')));
         $isbn = trim((string) ($row['isbn'] ?? ''));
 
@@ -263,7 +266,7 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
             'collection_name' => trim((string) ($row['collection_name'] ?? '')),
             'title' => $title,
             'subtitle' => trim((string) ($row['subtitle'] ?? '')),
-            'author_name' => trim((string) ($row['author_name'] ?? '')),
+            'author_name' => BookshopTextNormalizer::normalizeAuthorName((string) ($row['author_name'] ?? '')),
             'publisher_name' => trim((string) ($row['publisher_name'] ?? '')),
             'isbn' => $isbn,
             'barcode' => trim((string) ($row['barcode'] ?? '')),
@@ -271,12 +274,10 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
             'volume_number' => ctype_digit($volumeNumber) ? (int) $volumeNumber : null,
             'volume_label' => trim((string) ($row['volume_label'] ?? '')),
             'publication_year' => ctype_digit($publicationYear) ? (int) $publicationYear : null,
-            'page_count' => ctype_digit($pageCount) ? (int) $pageCount : null,
+            'page_count' => ctype_digit($pageCount) && (int) $pageCount > 0 ? (int) $pageCount : null,
             'language' => $this->normalizeBookshopLanguage($row['language'] ?? ''),
             'description' => trim((string) ($row['description'] ?? '')),
-            'cost_price' => $this->normalizeMoneyInput($row['cost_price'] ?? '0'),
             'sale_price' => $this->normalizeMoneyInput($row['sale_price'] ?? '0'),
-            'stock_quantity' => max(0, $this->normalizeIntegerInput($row['stock_quantity'] ?? 0, 0)),
             'stock_minimum' => max(0, $this->normalizeIntegerInput($row['stock_minimum'] ?? 0, 0)),
             'status' => $status,
             'location_label' => trim((string) ($row['location_label'] ?? '')),

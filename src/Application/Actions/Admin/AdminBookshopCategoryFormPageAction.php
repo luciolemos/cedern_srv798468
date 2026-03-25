@@ -70,7 +70,7 @@ class AdminBookshopCategoryFormPageAction extends AbstractAdminBookshopAction
             if ($newId <= 0) {
                 $this->storeSessionFlash($this->resolveFlashKey($categoryId), [
                     'payload' => $payload,
-                    'errors' => ['Não foi possível salvar a categoria.'],
+                'errors' => ['Não foi possível salvar a categoria doutrinária.'],
                 ]);
 
                 return $response->withHeader('Location', $formPath)->withStatus(303);
@@ -82,7 +82,7 @@ class AdminBookshopCategoryFormPageAction extends AbstractAdminBookshopAction
 
             return $response->withHeader('Location', '/painel/livraria/categorias')->withStatus(303);
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao salvar categoria da livraria.', [
+            $this->logger->warning('Falha ao salvar categoria doutrinária da livraria.', [
                 'error' => $exception->getMessage(),
                 'category_id' => $categoryId,
             ]);
@@ -136,15 +136,15 @@ class AdminBookshopCategoryFormPageAction extends AbstractAdminBookshopAction
         $errors = [];
 
         if ((string) ($payload['name'] ?? '') === '') {
-            $errors[] = 'Nome da categoria é obrigatório.';
+            $errors[] = 'Nome da categoria doutrinária é obrigatório.';
         }
 
         if ((string) ($payload['slug'] ?? '') === '') {
-            $errors[] = 'Slug da categoria é obrigatório.';
+            $errors[] = 'Slug da categoria doutrinária é obrigatório.';
         }
 
         if (!in_array((int) ($payload['is_active'] ?? -1), [0, 1], true)) {
-            $errors[] = 'Selecione o status da categoria.';
+            $errors[] = 'Selecione o status da categoria doutrinária.';
         }
 
         return $errors;
@@ -180,9 +180,9 @@ class AdminBookshopCategoryFormPageAction extends AbstractAdminBookshopAction
             'bookshop_category_form_errors' => $errors,
             'bookshop_category_form_is_edit' => $isEdit,
             'bookshop_category_id' => $existingCategory['id'] ?? null,
-            'page_title' => ($isEdit ? 'Editar categoria da livraria' : 'Nova categoria da livraria') . ' | Dashboard',
+            'page_title' => ($isEdit ? 'Editar categoria doutrinária da livraria' : 'Nova categoria doutrinária da livraria') . ' | Dashboard',
             'page_url' => 'https://cedern.org/painel/livraria/categorias',
-            'page_description' => 'Formulário do dashboard para categorias do acervo da livraria.',
+            'page_description' => 'Formulário do dashboard para categorias doutrinárias do acervo da livraria.',
         ]);
     }
 }

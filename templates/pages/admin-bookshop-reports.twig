@@ -118,8 +118,8 @@
                 </tr>
                 <tr>
                   <td data-label="Indicador"><strong>Classificações</strong></td>
-                  <td data-label="Volume">{{ metrics.categories_count|default(0) }} categorias</td>
-                  <td data-label="Recorte">{{ metrics.genres_count|default(0) }} gêneros · {{ metrics.collections_count|default(0) }} coleções</td>
+                  <td data-label="Volume">{{ metrics.categories_count|default(0) }} categorias doutrinárias</td>
+                  <td data-label="Recorte">{{ metrics.genres_count|default(0) }} gêneros literários · {{ metrics.collections_count|default(0) }} coleções</td>
                 </tr>
               </tbody>
             </table>
@@ -242,28 +242,28 @@
       <div class="nc-bookshop-panel-head">
         <div>
           <h3>Distribuição do catálogo</h3>
-          <p>Recorte atual por categoria, gênero e coleção.</p>
+          <p>Recorte atual por categoria doutrinária, gênero literário e coleção.</p>
         </div>
       </div>
 
       <div class="nc-bookshop-report-grid is-thirds">
         <div class="nc-bookshop-report-table-block">
-          <h4>Categorias</h4>
+          <h4>Categorias doutrinárias</h4>
           {% if category_rows|length == 0 %}
-            <p class="nc-bookshop-report-empty">Nenhuma categoria consolidada.</p>
+            <p class="nc-bookshop-report-empty">Nenhuma categoria doutrinária consolidada.</p>
           {% else %}
             <div class="nc-admin-table-wrap">
               <table class="nc-admin-table nc-bookshop-report-table">
                 <thead>
                   <tr>
-                    <th>Categoria</th>
+                    <th>Categoria doutrinária</th>
                     <th>Títulos</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for row in category_rows %}
                     <tr>
-                      <td data-label="Categoria"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Categoria doutrinária"><strong>{{ row.label }}</strong></td>
                       <td data-label="Títulos">{{ row.count }}</td>
                     </tr>
                   {% endfor %}
@@ -274,22 +274,22 @@
         </div>
 
         <div class="nc-bookshop-report-table-block">
-          <h4>Gêneros</h4>
+          <h4>Gêneros literários</h4>
           {% if genre_rows|length == 0 %}
-            <p class="nc-bookshop-report-empty">Nenhum gênero consolidado.</p>
+            <p class="nc-bookshop-report-empty">Nenhum gênero literário consolidado.</p>
           {% else %}
             <div class="nc-admin-table-wrap">
               <table class="nc-admin-table nc-bookshop-report-table">
                 <thead>
                   <tr>
-                    <th>Gênero</th>
+                    <th>Gênero literário</th>
                     <th>Títulos</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for row in genre_rows %}
                     <tr>
-                      <td data-label="Gênero"><strong>{{ row.label }}</strong></td>
+                      <td data-label="Gênero literário"><strong>{{ row.label }}</strong></td>
                       <td data-label="Títulos">{{ row.count }}</td>
                     </tr>
                   {% endfor %}

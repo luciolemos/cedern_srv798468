@@ -14,6 +14,8 @@ class StoreBookshopPageAction extends AbstractPageAction
 {
     private const PAGE_SIZE_OPTIONS = [12, 24, 48];
 
+    private const PAGINATION_VISIBLE_RADIUS = 1;
+
     /**
      * @var array<string, array{field: string, direction: string, label: string}>
      */
@@ -193,14 +195,9 @@ class StoreBookshopPageAction extends AbstractPageAction
             'per_page' => $pageSize,
         ];
 
-        $paginationLinks = [];
-        for ($pageNumber = 1; $pageNumber <= $totalPages; $pageNumber++) {
-            $paginationLinks[] = [
-                'number' => $pageNumber,
-                'active' => $pageNumber === $currentPage,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $pageNumber]),
-            ];
-        }
+        $paginationLinks = $this->buildCompactPaginationLinks($currentPage, $totalPages, static function (int $page) use ($basePath, $baseQuery): string {
+            return $basePath . '?' . http_build_query($baseQuery + ['page' => $page]);
+        });
 
         $previousPageUrl = $currentPage > 1
             ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
@@ -267,5 +264,62 @@ class StoreBookshopPageAction extends AbstractPageAction
             'page_url' => $pageUrlBase . $basePath,
             'page_description' => $this->getPageDescription(),
         ]);
+    }
+
+    /**
+     * @param callable(int): string $buildUrl
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildCompactPaginationLinks(int $currentPage, int $totalPages, callable $buildUrl): array
+    {
+        if ($totalPages <= 0) {
+            return [];
+        }
+
+        $pages = [1, $totalPages];
+
+        for ($page = $currentPage - self::PAGINATION_VISIBLE_RADIUS; $page <= $currentPage + self::PAGINATION_VISIBLE_RADIUS; $page++) {
+            if ($page >= 1 && $page <= $totalPages) {
+                $pages[] = $page;
+            }
+        }
+
+        if ($currentPage <= 3) {
+            $pages[] = 2;
+            $pages[] = 3;
+        }
+
+        if ($currentPage >= $totalPages - 2) {
+            $pages[] = $totalPages - 1;
+            $pages[] = $totalPages - 2;
+        }
+
+        $pages = array_values(array_unique(array_filter($pages, static fn (int $page): bool => $page >= 1 && $page <= $totalPages)));
+        sort($pages);
+
+        $links = [];
+        $previousPage = null;
+
+        foreach ($pages as $page) {
+            if ($previousPage !== null && $page - $previousPage > 1) {
+                $links[] = [
+                    'number' => '…',
+                    'active' => false,
+                    'url' => '',
+                    'is_gap' => true,
+                ];
+            }
+
+            $links[] = [
+                'number' => $page,
+                'active' => $page === $currentPage,
+                'url' => $buildUrl($page),
+                'is_gap' => false,
+            ];
+
+            $previousPage = $page;
+        }
+
+        return $links;
     }
 }

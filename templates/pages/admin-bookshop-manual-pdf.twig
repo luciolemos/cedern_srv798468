@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>Manual da Livraria | CEDE</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 22mm 16mm 18mm 16mm;
+      }
+
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        color: #1f2933;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 11pt;
+        line-height: 1.55;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      code {
+        font-family: "Courier New", monospace;
+        font-size: 0.92em;
+      }
+
+      .pdf-running-header,
+      .pdf-running-footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        color: #4f5f6f;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9pt;
+      }
+
+      .pdf-running-header {
+        top: -15mm;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 0.4mm solid #d8dee4;
+        padding: 0 16mm 3mm;
+      }
+
+      .pdf-running-footer {
+        bottom: -13mm;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 0.4mm solid #d8dee4;
+        padding: 3mm 16mm 0;
+      }
+
+      .pdf-page-number::after {
+        content: counter(page);
+      }
+
+      .pdf-cover {
+        min-height: 240mm;
+        display: grid;
+        align-content: center;
+        gap: 1rem;
+        page-break-after: always;
+      }
+
+      .pdf-cover-kicker,
+      .nc-bookshop-manual-kicker {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0.2rem 0.65rem;
+        border: 0.4mm solid #d7bf91;
+        border-radius: 999px;
+        background: #fbf4e8;
+        color: #8a5a10;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pdf-cover h1 {
+        margin: 0;
+        font-size: 28pt;
+        line-height: 1.08;
+      }
+
+      .pdf-cover p {
+        margin: 0;
+        max-width: 36rem;
+        font-size: 12pt;
+      }
+
+      .pdf-cover-meta {
+        display: grid;
+        gap: 0.35rem;
+        margin-top: 1rem;
+        color: #52606d;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+      }
+
+      .pdf-document {
+        display: grid;
+        gap: 8mm;
+      }
+
+      .nc-card,
+      .nc-bookshop-manual-pdv-block,
+      .nc-bookshop-manual-mini-card {
+        border: 0.35mm solid #d9dee5;
+        border-radius: 3mm;
+        background: #fff;
+        break-inside: avoid;
+      }
+
+      .nc-bookshop-manual-hero,
+      .nc-bookshop-manual-pdv-card {
+        display: grid;
+        gap: 6mm;
+        padding: 6mm;
+      }
+
+      .nc-bookshop-manual-hero-copy,
+      .nc-bookshop-manual-section-head,
+      .nc-bookshop-manual-pdv-block,
+      .nc-bookshop-manual-stock-card,
+      .nc-bookshop-manual-side-card,
+      .nc-bookshop-manual-step-card {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .nc-bookshop-manual-hero-copy h3,
+      .nc-bookshop-manual-section-head h3,
+      .nc-bookshop-manual-pdv-card h3 {
+        margin: 0;
+        font-size: 18pt;
+        line-height: 1.15;
+      }
+
+      .nc-bookshop-manual-hero-copy p,
+      .nc-bookshop-manual-section-head p,
+      .nc-bookshop-manual-pdv-card p,
+      .nc-bookshop-manual-step-card p,
+      .nc-bookshop-manual-side-card p,
+      .nc-bookshop-manual-stock-card p,
+      .nc-bookshop-manual-pdv-block p {
+        margin: 0;
+      }
+
+      .nc-bookshop-manual-hero-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4mm;
+      }
+
+      .nc-bookshop-manual-mini-card {
+        padding: 4.5mm;
+      }
+
+      .nc-bookshop-manual-mini-label,
+      .nc-bookshop-manual-step-number {
+        color: #8a5a10;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .nc-bookshop-manual-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3mm;
+      }
+
+      .nc-bookshop-manual-nav-link {
+        padding: 3.2mm 4mm;
+        border: 0.35mm solid #d9dee5;
+        border-radius: 2.5mm;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        font-weight: 600;
+      }
+
+      .nc-bookshop-manual-section {
+        display: grid;
+        gap: 5mm;
+      }
+
+      .nc-bookshop-manual-flow-grid,
+      .nc-bookshop-manual-support-grid,
+      .nc-bookshop-manual-stock-grid,
+      .nc-bookshop-manual-import-grid,
+      .nc-bookshop-manual-pdv-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4mm;
+      }
+
+      .nc-bookshop-manual-step-card,
+      .nc-bookshop-manual-side-card,
+      .nc-bookshop-manual-stock-card,
+      .nc-bookshop-manual-pdv-block {
+        padding: 4.5mm;
+      }
+
+      .nc-bookshop-manual-definition-list {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .nc-bookshop-manual-definition-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+        gap: 0.8rem;
+        padding-bottom: 0.28rem;
+        border-bottom: 0.3mm solid #edf1f5;
+      }
+
+      .nc-bookshop-manual-definition-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .nc-bookshop-flow-list {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+
+      .nc-bookshop-flow-list li + li {
+        margin-top: 0.22rem;
+      }
+
+      .nc-bookshop-inline-copy,
+      .nc-bookshop-manual-note {
+        color: #52606d;
+        font-size: 10pt;
+      }
+
+      .nc-bookshop-manual-section-head-summary {
+        margin-top: 2mm;
+      }
+
+      @media print {
+        .nc-card,
+        .nc-bookshop-manual-pdv-block,
+        .nc-bookshop-manual-mini-card {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="pdf-running-header">
+      <span>{{ site.legalName|default(site.name|default('CEDE')) }}</span>
+      <span>Manual da Livraria</span>
+    </header>
+
+    <footer class="pdf-running-footer">
+      <span>{{ site.contact.address|default('Parnamirim/RN') }}</span>
+      <span>Página <span class="pdf-page-number"></span></span>
+    </footer>
+
+    <main class="pdf-document">
+      <section class="pdf-cover">
+        <span class="pdf-cover-kicker">Documento operacional</span>
+        <h1>Manual da Livraria</h1>
+        <p>Guia operacional do acervo, estoque, importação CSV e vendas de balcão da Livraria do CEDE.</p>
+
+        <div class="pdf-cover-meta">
+          <span>{{ site.legalName|default(site.name|default('CEDE')) }}</span>
+          <span>{{ site.contact.address|default('Parnamirim/RN') }}</span>
+          <span>Gerado em {{ manual_pdf_generated_at|default('') }}</span>
+        </div>
+      </section>
+
+      {% include 'pages/partials/admin-bookshop-manual-content.twig' with {
+        manual_pdf_mode: true
+      } %}
+    </main>
+  </body>
+</html>

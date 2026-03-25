@@ -96,10 +96,10 @@ class AdminBookshopReportsPageAction extends AbstractAdminBookshopAction
             }
 
             $categoryLabel = trim((string) ($book['category_name'] ?? ''));
-            $this->incrementNamedCounter($categorySummary, $categoryLabel !== '' ? $categoryLabel : 'Sem categoria');
+            $this->incrementNamedCounter($categorySummary, $categoryLabel !== '' ? $categoryLabel : 'Sem categoria doutrinária');
 
             $genreLabel = trim((string) ($book['genre_name'] ?? ''));
-            $this->incrementNamedCounter($genreSummary, $genreLabel !== '' ? $genreLabel : 'Sem gênero');
+            $this->incrementNamedCounter($genreSummary, $genreLabel !== '' ? $genreLabel : 'Sem gênero literário');
 
             $collectionLabel = trim((string) ($book['collection_name'] ?? ''));
             if ($collectionLabel !== '') {

@@ -29,8 +29,10 @@
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Relatórios</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry">Nova entrada</a>
-      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/movimentacoes/nova?mode=adjustment">Novo ajuste</a>
+      <div class="nc-bookshop-toolbar-actions-pair">
+        <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry">Nova entrada</a>
+        <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=adjustment">Novo ajuste</a>
+      </div>
     </div>
 
     {% set pagination = bookshop_stock_movements_pagination|default({}) %}
@@ -44,7 +46,7 @@
         <input id="nc-bookshop-stock-movements-search" name="q" type="search" value="{{ search_term }}" placeholder="Código, livro, SKU, tipo, usuário ou observação...">
         <select name="type_filter" aria-label="Filtrar por tipo de movimentação">
           <option value="all" {{ filters.type_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os tipos</option>
-          <option value="entry" {{ filters.type_filter|default('all') == 'entry' ? 'selected' : '' }}>Entrada</option>
+          <option value="entry" {{ filters.type_filter|default('all') == 'entry' ? 'selected' : '' }}>Compra / reposição</option>
           <option value="donation" {{ filters.type_filter|default('all') == 'donation' ? 'selected' : '' }}>Doação recebida</option>
           <option value="adjustment_add" {{ filters.type_filter|default('all') == 'adjustment_add' ? 'selected' : '' }}>Ajuste positivo</option>
           <option value="adjustment_remove" {{ filters.type_filter|default('all') == 'adjustment_remove' ? 'selected' : '' }}>Ajuste negativo</option>
@@ -106,6 +108,9 @@
                   <strong>{{ movement.title_snapshot }}</strong>
                   {% if movement.author_snapshot|default('') %}
                     <small>{{ movement.author_snapshot }}</small>
+                  {% endif %}
+                  {% if movement.stock_lot_code_snapshot|default('') %}
+                    <small>Lote {{ movement.stock_lot_code_snapshot }}</small>
                   {% endif %}
                   <small>{{ movement.sku_snapshot|default('-') ?: '-' }}{% if movement.location_label|default('') %} · {{ movement.location_label }}{% endif %}</small>
                 </td>

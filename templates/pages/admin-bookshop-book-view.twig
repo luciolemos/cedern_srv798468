@@ -1,0 +1,234 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Acervo da Livraria' %}
+{% set dashboard_page_title = bookshop_book.title|default('Item do acervo') %}
+{% set dashboard_page_lead = 'Ficha completa do item. Use os botões acima para editar ou registrar uma venda.' %}
+{% set book = bookshop_book|default({}) %}
+{% set can_start_sale = book.status|default('inactive') == 'active' and book.stock_quantity|default(0) > 0 %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Visualização do item do acervo" data-aos="fade-up" data-aos-delay="0">
+
+    <div class="nc-actions nc-bookshop-toolbar nc-bookshop-book-view-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/{{ book.id }}/editar">Editar item</a>
+      <div class="nc-bookshop-toolbar-actions-pair">
+        <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry&book_id={{ book.id }}">Nova entrada</a>
+        <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=adjustment&book_id={{ book.id }}">Novo ajuste</a>
+      </div>
+      <a
+        class="nc-btn nc-btn-primary nc-bookshop-book-view-sale-btn"
+        {% if can_start_sale %}
+          href="/painel/livraria/vendas/nova?book_id={{ book.id }}"
+        {% else %}
+          aria-disabled="true"
+          title="Sem estoque disponível para venda. Use Nova entrada para formar saldo."
+        {% endif %}
+      >+ Nova venda</a>
+    </div>
+
+    {% if not can_start_sale %}
+      <article class="nc-admin-form-errors nc-bookshop-book-view-sale-alert" role="status" data-aos="fade-up" data-aos-delay="75">
+        <strong>Venda indisponível no momento.</strong>
+        <p class="nc-bookshop-inline-copy">Este título está sem estoque para o PDV. Use <strong>Nova entrada</strong> para criar saldo vendável; depois disso, o livro voltará a aparecer automaticamente na venda.</p>
+      </article>
+    {% endif %}
+
+    {# ── Visão geral ──────────────────────────────────────────────────────── #}
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="90">
+      <div class="nc-bookshop-book-view-hero">
+
+        {# Miniatura da capa + status #}
+        <div class="nc-bookshop-book-view-cover-col">
+          <div class="nc-bookshop-book-view-cover-wrap">
+            {% set cover_url = book.cover_image_url|default('')|trim %}
+            {% if cover_url %}
+              <img
+                class="nc-library-admin-cover-preview"
+                src="{{ cover_url }}"
+                alt="Capa de {{ book.title }}"
+              >
+            {% else %}
+              {% include 'components/library-bookplate-fallback.twig' with {
+                bookplate_title: book.title|default('livro'),
+                bookplate_author: book.author_name|default(''),
+                bookplate_collection_label: 'Livraria CEDE',
+                bookplate_section_title: 'Livraria',
+                bookplate_modifier_class: 'is-admin-preview'
+              } only %}
+            {% endif %}
+          </div>
+          <span class="nc-admin-featured-flag{{ book.status == 'active' ? ' is-on' : ' is-off' }}">{{ book.status_label|default('-') }}</span>
+        </div>
+
+        {# Título, autor e métricas #}
+        <div class="nc-bookshop-book-view-hero-body">
+          <div>
+            <h3 class="nc-bookshop-book-view-title">{{ book.title }}</h3>
+            {% if book.subtitle|default('') %}
+              <p class="nc-bookshop-book-view-subtitle">{{ book.subtitle }}</p>
+            {% endif %}
+            {% if book.author_name|default('') %}
+              <p class="nc-bookshop-book-view-author">{{ book.author_name }}</p>
+            {% endif %}
+          </div>
+
+          <div class="nc-bookshop-sale-summary-grid">
+            <article class="nc-bookshop-sale-summary-item">
+              <span class="nc-metric-label">SKU</span>
+              <strong>{{ book.sku|default('-') ?: '-' }}</strong>
+              <p>{{ book.location_label|default('Sem localização') ?: 'Sem localização' }}</p>
+            </article>
+
+            <article class="nc-bookshop-sale-summary-item">
+              <span class="nc-metric-label">Estoque</span>
+              <strong>
+                <span class="nc-bookshop-stock-pill is-{{ book.stock_state|default('ok') }}">{{ book.stock_quantity|default(0) }}</span>
+              </strong>
+              <p>{{ book.stock_state_label|default('-') }}</p>
+            </article>
+
+            <article class="nc-bookshop-sale-summary-item">
+              <span class="nc-metric-label">Preço de venda</span>
+              <strong>{{ book.sale_price_label|default('R$ 0,00') }}</strong>
+              <p>Custo: {{ book.cost_price_label|default('R$ 0,00') }}</p>
+            </article>
+
+            <article class="nc-bookshop-sale-summary-item">
+              <span class="nc-metric-label">Saldo em custo</span>
+              <strong>{{ book.inventory_value_label|default('R$ 0,00') }}</strong>
+              <p>Potencial: {{ book.potential_revenue_label|default('R$ 0,00') }}</p>
+            </article>
+          </div>
+        </div>
+
+      </div>
+    </article>
+
+    {# ── Dados editoriais ─────────────────────────────────────────────────── #}
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="110">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Dados editoriais</h3>
+          <p>Identificação bibliográfica e classificação da obra.</p>
+        </div>
+      </div>
+
+      <dl class="nc-bookshop-book-view-editorial-inline" aria-label="Dados editoriais do item">
+        <div>
+          <dt>Título</dt>
+          <dd>{{ book.title|default('-') }}</dd>
+        </div>
+        {% if book.subtitle|default('') %}
+          <div>
+            <dt>Subtítulo</dt>
+            <dd>{{ book.subtitle }}</dd>
+          </div>
+        {% endif %}
+        <div>
+          <dt>Autor</dt>
+          <dd>{{ book.author_name|default('-') ?: '-' }}</dd>
+        </div>
+        {% if book.collection_name|default('') %}
+          <div>
+            <dt>Coleção</dt>
+            <dd>
+              {{ book.collection_name }}
+              {% if book.volume_number|default(null) %} · Vol. {{ book.volume_number }}{% endif %}
+              {% if book.volume_label|default('') %} · {{ book.volume_label }}{% endif %}
+            </dd>
+          </div>
+        {% endif %}
+        <div>
+          <dt>Categoria doutrinária</dt>
+          <dd>{{ book.category_name|default('-') ?: '-' }}</dd>
+        </div>
+        <div>
+          <dt>Gênero literário</dt>
+          <dd>{{ book.genre_name|default('-') ?: '-' }}</dd>
+        </div>
+        {% if book.publisher_name|default('') %}
+          <div>
+            <dt>Editora</dt>
+            <dd>{{ book.publisher_name }}</dd>
+          </div>
+        {% endif %}
+        {% if book.edition_label|default('') %}
+          <div>
+            <dt>Edição</dt>
+            <dd>{{ book.edition_label }}</dd>
+          </div>
+        {% endif %}
+        {% if book.publication_year|default('') %}
+          <div>
+            <dt>Ano</dt>
+            <dd>{{ book.publication_year }}</dd>
+          </div>
+        {% endif %}
+        {% if book.language|default('') %}
+          <div>
+            <dt>Idioma</dt>
+            <dd>{{ book.language }}</dd>
+          </div>
+        {% endif %}
+        {% if book.page_count|default(0) %}
+          <div>
+            <dt>Páginas</dt>
+            <dd>{{ book.page_count }}</dd>
+          </div>
+        {% endif %}
+        {% if book.isbn|default('') %}
+          <div>
+            <dt>ISBN</dt>
+            <dd class="nc-admin-cell-slug">{{ book.isbn }}</dd>
+          </div>
+        {% endif %}
+        {% if book.barcode|default('') %}
+          <div>
+            <dt>Código de barras</dt>
+            <dd class="nc-admin-cell-slug">{{ book.barcode }}</dd>
+          </div>
+        {% endif %}
+      </dl>
+    </article>
+
+    {# ── Descrição ────────────────────────────────────────────────────────── #}
+    {% if book.description|default('') %}
+      <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="130">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Descrição / Sinopse</h3>
+          </div>
+        </div>
+        <p class="nc-bookshop-inline-copy">{{ book.description }}</p>
+      </article>
+    {% endif %}
+
+    {# ── Registro ─────────────────────────────────────────────────────────── #}
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="145">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Registro</h3>
+          <p>Datas de criação e última atualização do item.</p>
+        </div>
+      </div>
+      <dl class="nc-bookshop-sale-inline-row">
+        <div>
+          <dt>Criado em</dt>
+          <dd>{{ book.created_at|default('-') ?: '-' }}</dd>
+        </div>
+        <div>
+          <dt>Atualizado em</dt>
+          <dd>{{ book.updated_at|default('-') ?: '-' }}</dd>
+        </div>
+        {% if book.slug|default('') %}
+          <div>
+            <dt>Slug</dt>
+            <dd>{{ book.slug }}</dd>
+          </div>
+        {% endif %}
+      </dl>
+    </article>
+
+  </section>
+{% endblock %}

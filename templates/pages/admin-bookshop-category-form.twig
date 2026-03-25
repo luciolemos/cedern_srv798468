@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = bookshop_category_form_is_edit ? 'Editar categoria da livraria' : 'Nova categoria da livraria' %}
-{% set dashboard_page_lead = 'Defina as categorias de estudo usadas para organizar o acervo físico da livraria.' %}
+{% set dashboard_page_title = bookshop_category_form_is_edit ? 'Editar categoria doutrinária da livraria' : 'Nova categoria doutrinária da livraria' %}
+{% set dashboard_page_lead = 'Defina as categorias doutrinárias de estudo usadas para organizar o acervo físico da livraria.' %}
 
 {% block admin_content %}
-  <section class="nc-section" aria-label="Formulário de categoria da livraria" data-aos="fade-up" data-aos-delay="0">
+  <section class="nc-section" aria-label="Formulário de categoria doutrinária da livraria" data-aos="fade-up" data-aos-delay="0">
     {% if bookshop_category_form_errors|length > 0 %}
       <article class="nc-admin-form-errors" role="alert">
         <strong>Corrija os campos abaixo:</strong>
@@ -26,7 +26,7 @@
       <form class="nc-admin-form" method="post" action="{{ bookshop_category_form_is_edit ? '/painel/livraria/categorias/' ~ bookshop_category_id ~ '/editar' : '/painel/livraria/categorias/nova' }}">
         <div class="nc-admin-form-grid nc-admin-form-grid-triplet">
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="name">Nome da categoria</label>
+            <label class="nc-admin-form-label" for="name">Nome da categoria doutrinária</label>
             <input class="nc-admin-form-input" id="name" name="name" type="text" required placeholder="Ex: Obras básicas" value="{{ bookshop_category_form.name|default('') }}">
           </div>
 
@@ -47,12 +47,12 @@
 
         <div class="nc-admin-form-field nc-admin-form-field-full">
           <label class="nc-admin-form-label" for="description">Descrição</label>
-          <textarea class="nc-admin-form-input" id="description" name="description" rows="4" placeholder="Explique o tipo de obras que pertencem a esta categoria.">{{ bookshop_category_form.description|default('') }}</textarea>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="4" placeholder="Explique o tipo de obras que pertencem a esta categoria doutrinária.">{{ bookshop_category_form.description|default('') }}</textarea>
         </div>
 
         <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
-          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_category_form_is_edit ? 'Salvar alterações' : 'Criar categoria' }}</button>
-          <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/livraria/categorias">Voltar</a>
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_category_form_is_edit ? 'Salvar alterações' : 'Criar categoria doutrinária' }}</button>
+          <a class="nc-btn nc-btn-secondary nc-admin-action-edit nc-btn-back" href="/painel/livraria/categorias">Voltar às categorias doutrinárias</a>
         </div>
       </form>
     </article>

@@ -15,6 +15,8 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
 
     private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
 
+    private const PAGINATION_VISIBLE_RADIUS = 1;
+
     private const SORT_FIELDS = [
         'title',
         'author_name',
@@ -166,14 +168,9 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             ];
         }
 
-        $paginationLinks = [];
-        for ($page = 1; $page <= $totalPages; $page++) {
-            $paginationLinks[] = [
-                'number' => $page,
-                'active' => $page === $currentPage,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $page]),
-            ];
-        }
+        $paginationLinks = $this->buildCompactPaginationLinks($currentPage, $totalPages, static function (int $page) use ($basePath, $baseQuery): string {
+            return $basePath . '?' . http_build_query($baseQuery + ['page' => $page]);
+        });
 
         $previousPageUrl = $currentPage > 1
             ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
@@ -215,5 +212,62 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             'page_url' => 'https://cedern.org/painel/livraria/acervo',
             'page_description' => 'Gestão administrativa do acervo da livraria do CEDE.',
         ]);
+    }
+
+    /**
+     * @param callable(int): string $buildUrl
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildCompactPaginationLinks(int $currentPage, int $totalPages, callable $buildUrl): array
+    {
+        if ($totalPages <= 0) {
+            return [];
+        }
+
+        $pages = [1, $totalPages];
+
+        for ($page = $currentPage - self::PAGINATION_VISIBLE_RADIUS; $page <= $currentPage + self::PAGINATION_VISIBLE_RADIUS; $page++) {
+            if ($page >= 1 && $page <= $totalPages) {
+                $pages[] = $page;
+            }
+        }
+
+        if ($currentPage <= 3) {
+            $pages[] = 2;
+            $pages[] = 3;
+        }
+
+        if ($currentPage >= $totalPages - 2) {
+            $pages[] = $totalPages - 1;
+            $pages[] = $totalPages - 2;
+        }
+
+        $pages = array_values(array_unique(array_filter($pages, static fn (int $page): bool => $page >= 1 && $page <= $totalPages)));
+        sort($pages);
+
+        $links = [];
+        $previousPage = null;
+
+        foreach ($pages as $page) {
+            if ($previousPage !== null && $page - $previousPage > 1) {
+                $links[] = [
+                    'number' => '…',
+                    'active' => false,
+                    'url' => '',
+                    'is_gap' => true,
+                ];
+            }
+
+            $links[] = [
+                'number' => $page,
+                'active' => $page === $currentPage,
+                'url' => $buildUrl($page),
+                'is_gap' => false,
+            ];
+
+            $previousPage = $page;
+        }
+
+        return $links;
     }
 }

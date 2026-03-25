@@ -397,7 +397,11 @@
 
             <div class="nc-admin-pagination-pages">
               {% for link in pagination.links|default([]) %}
-                <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+                {% if link.is_gap|default(false) %}
+                  <span class="is-disabled" aria-hidden="true">{{ link.number }}</span>
+                {% else %}
+                  <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+                {% endif %}
               {% endfor %}
             </div>
 

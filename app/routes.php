@@ -18,6 +18,7 @@ use App\Application\Actions\Admin\AdminAgendaListPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookDeleteAction;
 use App\Application\Actions\Admin\AdminBookshopBookFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookListPageAction;
+use App\Application\Actions\Admin\AdminBookshopBookViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionListPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionToggleStatusAction;
@@ -331,6 +332,8 @@ return function (App $app) {
         $group->get('/livraria/acervo', AdminBookshopBookListPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/acervo/novo', AdminBookshopBookFormPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/acervo/{id}', AdminBookshopBookViewPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/acervo/{id}/editar', AdminBookshopBookFormPageAction::class)
             ->add($panelBookshopAccessMiddleware);

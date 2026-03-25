@@ -1,0 +1,1103 @@
+{
+    "generated_at": "2026-03-25T15:15:23+00:00",
+    "input": "/var/www/natalcode/relatorio_produtos.xlsx",
+    "processed_titles": 20,
+    "matched_rows": 11,
+    "review_rows": 9,
+    "match_threshold": 0.9,
+    "review_threshold": 0.72,
+    "results": [
+        {
+            "raw_title": "10 RAZÕES PARA SER ESPÍRITA",
+            "search_title": "10 RAZÕES PARA SER ESPÍRITA",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A ALMA DOS ANIMAIS",
+            "search_title": "A ALMA DOS ANIMAIS",
+            "author_hint": "",
+            "confidence": 0.9311111111111111,
+            "best_match": {
+                "source_name": "Open Library",
+                "source_url": "https://openlibrary.org/works/OL13415573M",
+                "source_query": "A ALMA DOS ANIMAIS",
+                "title": "Alma dos Animais, A",
+                "subtitle": "",
+                "authors": [],
+                "publisher": "",
+                "isbn": "",
+                "barcode": "",
+                "publication_year": 2002,
+                "page_count": null,
+                "language": "Português",
+                "description": "",
+                "confidence": 0.9311111111111111
+            },
+            "candidates": [
+                {
+                    "source_name": "Open Library",
+                    "source_url": "https://openlibrary.org/works/OL13415573M",
+                    "source_query": "A ALMA DOS ANIMAIS",
+                    "title": "Alma dos Animais, A",
+                    "subtitle": "",
+                    "authors": [],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2002,
+                    "page_count": null,
+                    "language": "Português",
+                    "description": "",
+                    "confidence": 0.9311111111111111
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=JGcnEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A ALMA DOS ANIMAIS\"",
+                    "title": "Conheça a alma dos animais",
+                    "subtitle": "",
+                    "authors": [
+                        "Severino Barbosa"
+                    ],
+                    "publisher": "Editora EME",
+                    "isbn": "9786555431407",
+                    "barcode": "9786555431407",
+                    "publication_year": 2020,
+                    "page_count": 201,
+                    "language": "",
+                    "description": "Despertado por casos presentes na mídia, notadamente na revista National Geographic Brasil, o autor pesquisou o assunto em fontes seguras, como os livros de Allan Kardec, Gabriel Delanne, Léon Denis e Ernesto Bozzano, além de outros cientistas, antropólogos e filósofos renomados. Com o objetivo de explicar se os animais têm alma, desenvolveu um interessante trabalho, que aborda temas como a semelhança entre o homem e os animais, as faculdades intelectuais e morais, o psiquismo e os sentimentos dos animais, a sensibilidade para prever acontecimentos, a sobrevivência da alma animal e os impulsos divinos da evolução. Severino Barbosa analisa ainda, por meio de casos comprovados, como os cientistas estão decifrando a inteligência dos animais.",
+                    "confidence": 0.8872727272727272
+                }
+            ]
+        },
+        {
+            "raw_title": "A ARTE DE MAGNETIZAR OU, MAGNETISMO ANIMAL",
+            "search_title": "A ARTE DE MAGNETIZAR OU, MAGNETISMO ANIMAL",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A Arte de Recomeçar",
+            "search_title": "A Arte de Recomeçar",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=ondNDwAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A Arte de Recomeçar\"",
+                "title": "A ARTE DE RECOMEÇAR",
+                "subtitle": "",
+                "authors": [
+                    "Thais Luz"
+                ],
+                "publisher": "EDITORA BIBLIOMUNDI SERVIÇOS DIGITAIS LTDA",
+                "isbn": "9781526003515",
+                "barcode": "9781526003515",
+                "publication_year": 2021,
+                "page_count": 104,
+                "language": "",
+                "description": "O Livro relata pensamentos e sentimentos muitas vezes vivenciados por todos, no decorrer de sua trajetória de vida, divido com vocês, um pouco de minha história, pensamentos e sentimentos. O intuito do livro é também o de estimular a auto-análise por parte do leitor.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=ondNDwAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Arte de Recomeçar\"",
+                    "title": "A ARTE DE RECOMEÇAR",
+                    "subtitle": "",
+                    "authors": [
+                        "Thais Luz"
+                    ],
+                    "publisher": "EDITORA BIBLIOMUNDI SERVIÇOS DIGITAIS LTDA",
+                    "isbn": "9781526003515",
+                    "barcode": "9781526003515",
+                    "publication_year": 2021,
+                    "page_count": 104,
+                    "language": "",
+                    "description": "O Livro relata pensamentos e sentimentos muitas vezes vivenciados por todos, no decorrer de sua trajetória de vida, divido com vocês, um pouco de minha história, pensamentos e sentimentos. O intuito do livro é também o de estimular a auto-análise por parte do leitor.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=CnWGEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Arte de Recomeçar\"",
+                    "title": "A Arte de Recomeçar",
+                    "subtitle": "",
+                    "authors": [
+                        "Manuel Carlos "
+                    ],
+                    "publisher": "Manuel Carlos",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2025,
+                    "page_count": 67,
+                    "language": "",
+                    "description": "﻿🎨✍️ A Arte de Recomeçar é uma celebração da coragem de reescrever a própria história — uma narrativa envolvente sobre dois artistas que descobrem que o verdadeiro renascimento começa quando se ousa sair da zona de conforto. Na vibrante pulsação da cidade, Clara, uma pintora em busca de cor para sua alma, e Lucas, um escritor em silêncio criativo, vivem dias cinzentos marcados pela frustração. Mas tudo muda quando Clara encontra um retiro artístico promissor e Lucas recebe um convite inesperado para uma conferência literária. O que parecia apenas uma pausa na rotina se transforma em uma jornada de transformação. 🌟 Enfrentando críticas, rivalidades e inseguranças, Clara e Lucas descobrem que os maiores desafios são também os mais reveladores. Com o apoio de mentores inspiradores e a força de uma amizade que floresce entre tintas e palavras, eles redescobrem suas paixões e se tornam catalisadores de mudança em sua comunidade. 💫 Em meio a pinceladas de esperança e parágrafos de superação, nasce um projeto que une arte e literatura — e prova que recomeçar não é apenas possível, é uma arte que se aprende com o coração aberto. A Arte de Recomeçar é uma história sensível e inspiradora sobre criatividade, amizade e a beleza dos novos começos. Ideal para quem acredita que sempre há tempo para reinventar-se — e que a vida, como a arte, é feita de camadas, erros e recomeços brilhantes.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=FqJxEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Arte de Recomeçar\"",
+                    "title": "A Arte de Recomeçar",
+                    "subtitle": "Um Guia Prático para Novos Ciclos",
+                    "authors": [
+                        "Igor Farias"
+                    ],
+                    "publisher": "Igor Farias",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2025,
+                    "page_count": 26,
+                    "language": "",
+                    "description": "A Arte de Recomeçar – Um Guia Prático para Novos Ciclos é um convite poderoso à reconstrução da vida com coragem, consciência e propósito. Escrito de forma acessível e acolhedora, o livro oferece reflexões, ferramentas e orientações práticas para quem deseja virar páginas, encerrar ciclos com maturidade e iniciar novos caminhos com mais leveza e direção. Ao longo dos capítulos, o autor Igor Farias conduz o leitor por temas essenciais como autoconhecimento, resiliência, mudança de hábitos, enfrentamento de perdas, reinvenção pessoal e definição de metas reais. Com linguagem direta e empática, ele mostra que recomeçar não é fraqueza, mas uma habilidade fundamental na jornada humana — seja após uma crise, uma perda, uma mudança profissional ou pessoal. Mais do que um manual de autoajuda, esta obra é um guia de ação e inspiração para quem está pronto para dar um novo sentido à própria história. Um livro feito para quem sabe que todo fim é, na verdade, um novo começo.",
+                    "confidence": 0.7872222222222222
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=s2I1EAAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Arte de Recomeçar\"",
+                    "title": "A arte de recomeçar",
+                    "subtitle": "Uma história de coragem e superação",
+                    "authors": [
+                        "Débora Calix"
+                    ],
+                    "publisher": "E-Galáxia",
+                    "isbn": "9786587639499",
+                    "barcode": "9786587639499",
+                    "publication_year": 2021,
+                    "page_count": 149,
+                    "language": "",
+                    "description": "Esta é uma obra de memórias sobre amor e dor, mas também sobre superação. Débora Calix, a autora, conta e expõe sua trajetória sofrida e como se libertou do assédio de um marido violento e conseguiu transformar em realidade seus sonhos represados, interrompidos. A arte de recomeçar – uma história de coragem e superação é o primeiro livro de Débora, que, generosa, compartilha com a leitora que se identifica com a situação pela qual ela passou, os atalhos desse caminho turbulento para recomeçar uma nova vida e alcançar a paz, o sucesso e a felicidade. A autora desvenda na prática os recursos emocionais e físicos de que lançou mão para sair da armadilha do sofrimento, da depressão e da baixa autoestima. O casamento de uma jovem inexperiente, tinha tudo para resultar em uma vida nova de companheirismo, carinho e felicidade. Mas as coisas começaram a se mostrar brutais, quando o marido se revela abusivo, e a esposa, assustada, descobre que o casamento não era o refúgio ideal para se desvencilhar de uma vida familiar difícil, dura e limitada. Com determinação, obstinação, confiança, e sem autopiedade, Débora não se imobiliza, e conquista a vida que havia traçado para si desde a infância. Uma história real, de coragem e superação.",
+                    "confidence": 0.7783783783783783
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=iTRpEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Arte de Recomeçar\"",
+                    "title": "A Arte de Recomeçar: Um Guia Para Quem Quer Mudar de Vida",
+                    "subtitle": "",
+                    "authors": [
+                        "Sérgio T.A"
+                    ],
+                    "publisher": "Sérgio Teixeira de Azevedo",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2025,
+                    "page_count": 39,
+                    "language": "",
+                    "description": "Você sente que sua vida está estagnada ou fora do rumo? Como se tudo que você construiu tivesse desmoronado? A Arte de Recomeçar é o guia essencial para quem deseja transformar crises em oportunidades e mudar de vida de verdade. Neste eBook, você vai encontrar ferramentas práticas, reflexões profundas e estratégias comprovadas para: Identificar o ponto de ruptura e transformar a dor em força Aceitar o passado sem se prender à culpa e ao arrependimento Ressignificar sua história e assumir o protagonismo da sua vida Construir novos hábitos que sustentem sua transformação diária Desenvolver autorresponsabilidade e assumir o controle do seu destino Avaliar seu círculo de influência e fortalecer conexões positivas Conectar-se com seu propósito, fé e intuição para alimentar sua jornada Seja você alguém que está passando por um momento difícil, buscando recomeçar em qualquer área da vida ou simplesmente quer crescer e evoluir, este livro é um convite para despertar a coragem que existe dentro de você e dar o primeiro passo para uma vida mais plena e feliz. Comece hoje sua jornada de transformação e descubra a arte de recomeçar.",
+                    "confidence": 0.7741333333333332
+                }
+            ]
+        },
+        {
+            "raw_title": "A ARTE DE SEGUIR EM FRENTE",
+            "search_title": "A ARTE DE SEGUIR EM FRENTE",
+            "author_hint": "",
+            "confidence": 0.8348837209302326,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=PdgBEQAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A ARTE DE SEGUIR EM FRENTE\"",
+                "title": "A Arte de Seguir em Frente: Um Manual em Primeiríssima Pessoa",
+                "subtitle": "",
+                "authors": [
+                    "Paola Cavallari"
+                ],
+                "publisher": "Editora Appris",
+                "isbn": "9786525056029",
+                "barcode": "9786525056029",
+                "publication_year": 2024,
+                "page_count": 255,
+                "language": "",
+                "description": "Ao começar a pandemia de 2018, Mônica, uma mulher de quase 60 anos, de luto pela não tão recente morte do marido, encontra numa gaveta da cozinha um caderno de receitas esquecido entre espátulas e batedores, já há muito sem uso. Mônica usa esse caderno para escrever um diário que se transforma em uma carta para Mané, o marido morto. Mônica escreve suas confidências, desejos e sonhos, imaginando como Mané reagiria aos acontecimentos descritos e suas respostas, resgatando os anos que viveu ao lado do marido. Entre uma lembrança e outra, Mônica revisita os 30 anos de casada e reflete sobre erros e acertos cometidos pelos dois. A partir da vida que viveu, ela questiona o mundo que parece tão estranho. Quando a pandemia finalmente chega ao fim, Mônica percebe que não pode e não quer continuar escondida do mundo, sozinha no silêncio do apartamento vazio. Ela então comunica ao Mané que vai encontrar um namorado, por isso ela faz um perfil no Crusher, o aplicativo de namoros, mas o que ela não sabe é que os homens disponíveis nessa faixa etária são muito mais complicados, cheios de manias e esquisitices, mais do que ela imaginava. Conforme vai conhecendo outras pessoas, consegue se despedir do marido que já se foi e se abrir para novas possibilidades. Mônica se depara com um mundo diferente daquele com que estava acostumada, mas percebe que é um caminho sem volta. Como ela mesma diz: \"Eu não sou mulher de faraó para ser emparedada junto com o sarcófago, como no Antigo Egito\". Assim, Mônica vai encontrando maneiras de seguir em frente.",
+                "confidence": 0.8348837209302326
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=PdgBEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A ARTE DE SEGUIR EM FRENTE\"",
+                    "title": "A Arte de Seguir em Frente: Um Manual em Primeiríssima Pessoa",
+                    "subtitle": "",
+                    "authors": [
+                        "Paola Cavallari"
+                    ],
+                    "publisher": "Editora Appris",
+                    "isbn": "9786525056029",
+                    "barcode": "9786525056029",
+                    "publication_year": 2024,
+                    "page_count": 255,
+                    "language": "",
+                    "description": "Ao começar a pandemia de 2018, Mônica, uma mulher de quase 60 anos, de luto pela não tão recente morte do marido, encontra numa gaveta da cozinha um caderno de receitas esquecido entre espátulas e batedores, já há muito sem uso. Mônica usa esse caderno para escrever um diário que se transforma em uma carta para Mané, o marido morto. Mônica escreve suas confidências, desejos e sonhos, imaginando como Mané reagiria aos acontecimentos descritos e suas respostas, resgatando os anos que viveu ao lado do marido. Entre uma lembrança e outra, Mônica revisita os 30 anos de casada e reflete sobre erros e acertos cometidos pelos dois. A partir da vida que viveu, ela questiona o mundo que parece tão estranho. Quando a pandemia finalmente chega ao fim, Mônica percebe que não pode e não quer continuar escondida do mundo, sozinha no silêncio do apartamento vazio. Ela então comunica ao Mané que vai encontrar um namorado, por isso ela faz um perfil no Crusher, o aplicativo de namoros, mas o que ela não sabe é que os homens disponíveis nessa faixa etária são muito mais complicados, cheios de manias e esquisitices, mais do que ela imaginava. Conforme vai conhecendo outras pessoas, consegue se despedir do marido que já se foi e se abrir para novas possibilidades. Mônica se depara com um mundo diferente daquele com que estava acostumada, mas percebe que é um caminho sem volta. Como ela mesma diz: \"Eu não sou mulher de faraó para ser emparedada junto com o sarcófago, como no Antigo Egito\". Assim, Mônica vai encontrando maneiras de seguir em frente.",
+                    "confidence": 0.8348837209302326
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=35oPEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A ARTE DE SEGUIR EM FRENTE\"",
+                    "title": "Dia 164: Vivendo sem Arrependimentos",
+                    "subtitle": "A Arte de Seguir em Frente",
+                    "authors": [
+                        "Nazaré Lohn"
+                    ],
+                    "publisher": "Nazaré Lohn",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2024,
+                    "page_count": 10,
+                    "language": "",
+                    "description": "Este e-book \"Dia 164: Vivendo sem Arrependimentos: A Arte de Seguir em Frente\" é um dos 365 volumes de nossa coleção dedicada ao desenvolvimento pessoal, cada um projetado para enriquecer um dia específico do seu ano com reflexões e exercícios motivacionais. Preparados para uma leitura rápida e acessível, todos os e-books desta coleção têm como objetivo impulsionar sua jornada de crescimento e autoaperfeiçoamento diário. Série Motivacional Diária (Volume 164: 12 de Junho).",
+                    "confidence": 0.7463636363636363
+                }
+            ]
+        },
+        {
+            "raw_title": "A ARTE DO REENCONTRO",
+            "search_title": "A ARTE DO REENCONTRO",
+            "author_hint": "",
+            "confidence": 0.6117757009345794,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=7ejAEQAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A ARTE DO REENCONTRO\"",
+                "title": "A VIDA É A ARTE DO ENCONTRO E DO REENCONTRO",
+                "subtitle": "Reflexão sobre nossos valores e sentimentos",
+                "authors": [
+                    "JORGE RAMOS"
+                ],
+                "publisher": "Jorge Geraldo Ramos",
+                "isbn": "",
+                "barcode": "",
+                "publication_year": 2026,
+                "page_count": 76,
+                "language": "",
+                "description": "Neste livro, Jorge Ramos reflete sobre a vida como uma sucessão de encontros que marcam, transformam e direcionam nossa trajetória espiritual. Mais do que encontros de pessoas, a obra aborda reencontros de almas, aprendizados que atravessam o tempo e experiências que impulsionam a evolução moral e consciente do ser. Com uma narrativa sensível e espiritualista, o autor mostra que nada acontece por acaso: cada encontro carrega um propósito maior dentro da jornada da vida.",
+                "confidence": 0.6117757009345794
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=7ejAEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A ARTE DO REENCONTRO\"",
+                    "title": "A VIDA É A ARTE DO ENCONTRO E DO REENCONTRO",
+                    "subtitle": "Reflexão sobre nossos valores e sentimentos",
+                    "authors": [
+                        "JORGE RAMOS"
+                    ],
+                    "publisher": "Jorge Geraldo Ramos",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2026,
+                    "page_count": 76,
+                    "language": "",
+                    "description": "Neste livro, Jorge Ramos reflete sobre a vida como uma sucessão de encontros que marcam, transformam e direcionam nossa trajetória espiritual. Mais do que encontros de pessoas, a obra aborda reencontros de almas, aprendizados que atravessam o tempo e experiências que impulsionam a evolução moral e consciente do ser. Com uma narrativa sensível e espiritualista, o autor mostra que nada acontece por acaso: cada encontro carrega um propósito maior dentro da jornada da vida.",
+                    "confidence": 0.6117757009345794
+                }
+            ]
+        },
+        {
+            "raw_title": "A Biologia da Crença",
+            "search_title": "A Biologia da Crença",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=sTYVEQAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A Biologia da Crença\"",
+                "title": "A Biologia da Crença",
+                "subtitle": "",
+                "authors": [
+                    "Bruce H. Lipton"
+                ],
+                "publisher": "Butterfly",
+                "isbn": "9786589238096",
+                "barcode": "9786589238096",
+                "publication_year": 2024,
+                "page_count": 271,
+                "language": "",
+                "description": "Este livro vai mudar sua vida: novas e surpreendentes descobertas científicas demonstram que as células do corpo são influenciadas pelo nosso pensamento e ajudam a comprovar a reencarnação. O cientista Bruce Lipton, renomado biólogo norte-americano,descreve as reações químicas do processo celular e comprova cientificamente suas descobertas que revolucionaram a Biologia. Best-seller nos Estados Unidos, \"A Biologia da Crença\" é um livro ilustrado, escrito em linguagem simples e direta, repleto deexemplos que demonstram, na prática, como a Nova Biologia está mudando o modo de pensar de milhares de pessoas em todo mundo.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=sTYVEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Biologia da Crença\"",
+                    "title": "A Biologia da Crença",
+                    "subtitle": "",
+                    "authors": [
+                        "Bruce H. Lipton"
+                    ],
+                    "publisher": "Butterfly",
+                    "isbn": "9786589238096",
+                    "barcode": "9786589238096",
+                    "publication_year": 2024,
+                    "page_count": 271,
+                    "language": "",
+                    "description": "Este livro vai mudar sua vida: novas e surpreendentes descobertas científicas demonstram que as células do corpo são influenciadas pelo nosso pensamento e ajudam a comprovar a reencarnação. O cientista Bruce Lipton, renomado biólogo norte-americano,descreve as reações químicas do processo celular e comprova cientificamente suas descobertas que revolucionaram a Biologia. Best-seller nos Estados Unidos, \"A Biologia da Crença\" é um livro ilustrado, escrito em linguagem simples e direta, repleto deexemplos que demonstram, na prática, como a Nova Biologia está mudando o modo de pensar de milhares de pessoas em todo mundo.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=kYLmEAAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Biologia da Crença\"",
+                    "title": "Resumo Estendid - A Biologia Da Crença (The Biology Of Belief) - Baseado No Livro De Bruce Lipton",
+                    "subtitle": "",
+                    "authors": [
+                        "Mentors Library"
+                    ],
+                    "publisher": "Mentors Library",
+                    "isbn": "9781304918499",
+                    "barcode": "9781304918499",
+                    "publication_year": 2023,
+                    "page_count": 58,
+                    "language": "",
+                    "description": "RESUMO ESTENDIDO: A BIOLOGIA DA CRENÇA (THE BIOLOGY OF BELIEF) - BASEADO NO LIVRO DE BRUCE LIPTONVocê está pronto para aumentar seu conhecimento sobre A BIOLOGIA DA CRENÇA? Você quer aprender as principais lições deste livro de forma rápida e concisa?Você está pronto para processar as informações de um livro inteiro em apenas uma leitura de aproximadamente 20 minutos?Você gostaria de ter uma compreensão mais profunda das técnicas e dos exercícios do livro original? Então este livro é para você!CONTEÚDO DO LIVRO:Introdução à Biologia da CrençaA Revolução da Biologia CelularO Poder das Crenças na SaúdeComo as Crenças Afetam as CélulasA Mente Sobre a MatériaO Cérebro Subconsciente e Suas InfluênciasEpigenética: O Controle Mestre da Expressão GenéticaO Ambiente como Fator CrucialA Programação da InfânciaA Cura através da Mudança de CrençasA Importância da Consciência na SaúdeCrenças Limitantes e Crenças CapacitadorasPráticas para Transformar Crenças LimitantesHistórias de Sucesso na Aplicação da Biologia da CrençaConclusão e Como Aplicar os Princípios em Sua Vida",
+                    "confidence": 0.6034234234234235
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=72s60AEACAAJ&dq=intitle:%22A+Biologia+da+Cren%C3%A7a%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Biologia da Crença\"",
+                    "title": "Resumo Estendido: A Biologia Da Crença (The Biology Of Belief)",
+                    "subtitle": "Baseado No Livro De Bruce Lipton",
+                    "authors": [
+                        "Mentors Library"
+                    ],
+                    "publisher": "",
+                    "isbn": "9783969173961",
+                    "barcode": "9783969173961",
+                    "publication_year": 2020,
+                    "page_count": 0,
+                    "language": "",
+                    "description": "",
+                    "confidence": 0.6014285714285714
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=6LSxEAAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Biologia da Crença\"",
+                    "title": "RESUMO - The Biology Of Belief / A Biologia da Crença: Libertando o Poder da Consciência, Milagres da Matéria por Bruce H. Lipton",
+                    "subtitle": "",
+                    "authors": [
+                        "Shortcut Edition"
+                    ],
+                    "publisher": "Shortcut Edition",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": null,
+                    "page_count": 16,
+                    "language": "",
+                    "description": "Ao ler este resumo, o senhor descobrirá que seu ambiente e sua maneira de pensar podem agir sobre seu código genético e modificar seu metabolismo. O senhor descobrirá também : que a vida não é o resultado de uma luta, mas de uma colaboração entre células; que cada célula de um organismo vivo é um ser em seu próprio direito; que o meio ambiente influencia mais a reação de uma célula do que seu DNA; que a maneira como o senhor percebe o mundo afeta sua saúde; que a força energética de sua mente e de suas crenças tem o poder de corrigir seu código genético. A descoberta do DNA levou os cientistas a considerar que um indivíduo é permanentemente programado pelo seu código genético. Pelo contrário, a epigenética, um ramo da biologia que estuda os mecanismos que modificam a atividade dos genes, mostra que um ser humano é capaz de intervir em sua própria biologia. Seu ambiente, mais do que seus genes, influencia seu metabolismo. Assim, as experiências da primeira infância, os traumas, mas também os mecanismos mentais que lhe foram ensinados, agem sobre sua saúde. O senhor tem então o poder de se libertar de sua codificação genética. O senhor está disposto a descobrir como suas crenças podem mudar seu metabolismo?",
+                    "confidence": 0.5546478873239437
+                }
+            ]
+        },
+        {
+            "raw_title": "A cada um Segundo suas OBRAS",
+            "search_title": "A cada um Segundo suas OBRAS",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A CAMINHO DA LUZ - FRANCISCO CÃ‚NDIDO XAVIER",
+            "search_title": "A CAMINHO DA LUZ",
+            "author_hint": "FRANCISCO CÃ‚NDIDO XAVIER",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=yK4cEQAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                "title": "A caminho da luz",
+                "subtitle": "",
+                "authors": [
+                    "Francisco Cândido Xavier",
+                    "Emmanuel (Espírito)"
+                ],
+                "publisher": "FEB Editora",
+                "isbn": "9786555706536",
+                "barcode": "9786555706536",
+                "publication_year": 2024,
+                "page_count": 140,
+                "language": "",
+                "description": "Objetivando orientar o homem de acordo com os desígnios da Misericórdia Divina, apresentando reflexões sobre as situações cotidianas à guisa dos ensinamentos e bondade celestes, A caminho da luz é obra merecedora de leitura e estudo para os que buscam compreender nosso mundo. Nesta inestimável obra, o Espírito Emmanuel narra a história da Humanidade sob a luz do Espiritismo, apresentando-nos acontecimentos e experiências que vão desde a gênese planetária até as perspectivas para o futuro da Humanidade, elucidando-nos a posição e a importância do Evangelho do Cristo diante da ciência, das religiões e das filosofias terrenas.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=yK4cEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                    "title": "A caminho da luz",
+                    "subtitle": "",
+                    "authors": [
+                        "Francisco Cândido Xavier",
+                        "Emmanuel (Espírito)"
+                    ],
+                    "publisher": "FEB Editora",
+                    "isbn": "9786555706536",
+                    "barcode": "9786555706536",
+                    "publication_year": 2024,
+                    "page_count": 140,
+                    "language": "",
+                    "description": "Objetivando orientar o homem de acordo com os desígnios da Misericórdia Divina, apresentando reflexões sobre as situações cotidianas à guisa dos ensinamentos e bondade celestes, A caminho da luz é obra merecedora de leitura e estudo para os que buscam compreender nosso mundo. Nesta inestimável obra, o Espírito Emmanuel narra a história da Humanidade sob a luz do Espiritismo, apresentando-nos acontecimentos e experiências que vão desde a gênese planetária até as perspectivas para o futuro da Humanidade, elucidando-nos a posição e a importância do Evangelho do Cristo diante da ciência, das religiões e das filosofias terrenas.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=KFf0zQEACAAJ&dq=intitle:%22A+CAMINHO+DA+LUZ%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                    "title": "A Caminho Da Luz",
+                    "subtitle": "",
+                    "authors": [
+                        "Luiz Loyola"
+                    ],
+                    "publisher": "",
+                    "isbn": "9798697297278",
+                    "barcode": "9798697297278",
+                    "publication_year": 2020,
+                    "page_count": 76,
+                    "language": "",
+                    "description": "A caminho da Luz, é um livro feito com o intuito de mostrar experiências vividas por uma pessoa, experiências reais na parte da vida amorosa, mostrando desde dificuldades enfrentadas por algumas pessoas, até o desenvolvimento pessoal e crescimento no quesito maturidade da vida amorosa, aborda alguns aspectos relacionados ao amor e o que foi aprendido sobre o assunto ao longo da vida do protagonista até este momento.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=liFKEAAAQBAJ&dq=intitle:%22A+CAMINHO+DA+LUZ%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                    "title": "A Caminho Da Luz Eterna",
+                    "subtitle": "",
+                    "authors": [
+                        "Tabajara Ferro Abranches"
+                    ],
+                    "publisher": "Clube de Autores",
+                    "isbn": "9788592074326",
+                    "barcode": "9788592074326",
+                    "publication_year": 2017,
+                    "page_count": 76,
+                    "language": "",
+                    "description": "O mundo se torna complicado apenas e tão somente para quem o faz. Tudo depende do nosso livre arbítrio, Atropelamos os acontecimentos Em razão da nossa vontade, nosso desejo, nossa visão, o que aceitamos ou reagimos, acreditando que estamos a procura da justiça que entendemos Sem conhecermos a Lei do Universo onde tudo e todos estão inseridos que é “Causa e Efeito” Portanto devemos aprimorar nosso conhecimento estando sempre em busca do equilíbrio de nossas forças, da dualidade.",
+                    "confidence": 0.9687179487179487
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=yVNZAAAAMAAJ&dq=intitle:%22A+CAMINHO+DA+LUZ%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                    "title": "Umbanda",
+                    "subtitle": "a caminho da luz",
+                    "authors": [
+                        "Paulo Newton de Almeida"
+                    ],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2003,
+                    "page_count": 268,
+                    "language": "",
+                    "description": "Esta não é uma simples obra de pregação da filosofia que norteia a umbanda. Desejando compartilhar o conhecimento adquirido ao longo de muitos anos de prática como sacerdote, o autor faz um raro registro das práticas litúrgicas e mágicas da umbanda que já é chamada esotérica, e que promete ser uma das grandes forças místicas do terceiro milênio.",
+                    "confidence": 0.876
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=F8ObEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A CAMINHO DA LUZ\"",
+                    "title": "Tomás, a caminho da luz eterna",
+                    "subtitle": "",
+                    "authors": [
+                        "Ana Margarida Cardoso"
+                    ],
+                    "publisher": ".",
+                    "isbn": "9789893806753",
+                    "barcode": "9789893806753",
+                    "publication_year": 2025,
+                    "page_count": 99,
+                    "language": "",
+                    "description": "Este livro é a partilha da vida do meu único filho, Tomás. Um jovem cheio de vida e amor, uma verdadeira inspiração. Escrito por mim, com uma narrativa emocional e sincera, onde revivo as suas memórias. A perda de um filho é destrutível à alma dos pais, ninguém na sua pura natureza devia ver partir a pessoa que pôs no mundo. Porque é que não há lugar para todos neste mundo? Porque partem pessoas boas? Aqui encontram uma homenagem ao Tomás, esperando que seja uma fonte de inspiração para jovens e adultos que procurem sentido nas suas vidas. O Tomás era amor, um ser especial, muito especial, por isso, devia ficar por cá mais tempo a fazer o bem, e que bem que ele fazia.",
+                    "confidence": 0.8208888888888889
+                }
+            ]
+        },
+        {
+            "raw_title": "A CARTA MAGNA DA PAZ",
+            "search_title": "A CARTA MAGNA DA PAZ",
+            "author_hint": "",
+            "confidence": 0.987659574468085,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=CoHoDwAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A CARTA MAGNA DA PAZ\"",
+                "title": "A carta magna da paz (FRÁTER)",
+                "subtitle": "",
+                "authors": [
+                    "José Raul Teixeira",
+                    "Camilo (Espírito)"
+                ],
+                "publisher": "Editora Fráter",
+                "isbn": "9781936547784",
+                "barcode": "9781936547784",
+                "publication_year": 2014,
+                "page_count": 130,
+                "language": "",
+                "description": "Nesta obra o Benfeitor Camilo nos oferece, através de seu pensamento iluminado, belas reflexões em torno de ensinos de Francisco de Assis. Propõe-nos uma análise a respeito de nossa contribuição para construção da paz legítima. Esclarece que “pouco o homem tem atinado para o fato de que são as brigas internas, quando a alma está indisposta consigo mesma, as principais responsáveis pela beligerância que explode, atormentando a vida, ceifando corpos, espalhando luto e aflições”. Apresenta-nos vinte e dois temas de nobre conteúdo doutrinário, numa perspectiva espírita, fazendo-nos recordar a mensagem de Francisco, o doce “cantor” do Evangelho, que teve por missão instigar os corações humanos aos esforços necessários para a conquista da plenitude. Camilo, em A Carta Magna da Paz, enseja a todos aqueles que anseiam por modificar seus passos, nesta trajetória humana que tem sido marcada por episódios de guerras íntimas e sociais, uma mensagem sensível e profunda, capaz de despertar-nos a consciência para a execução dos sublimes deveres que nos levarão à harmonia interior, condição imprescindível para a construção de um mundo pacificado.",
+                "confidence": 0.987659574468085
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=CoHoDwAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A CARTA MAGNA DA PAZ\"",
+                    "title": "A carta magna da paz (FRÁTER)",
+                    "subtitle": "",
+                    "authors": [
+                        "José Raul Teixeira",
+                        "Camilo (Espírito)"
+                    ],
+                    "publisher": "Editora Fráter",
+                    "isbn": "9781936547784",
+                    "barcode": "9781936547784",
+                    "publication_year": 2014,
+                    "page_count": 130,
+                    "language": "",
+                    "description": "Nesta obra o Benfeitor Camilo nos oferece, através de seu pensamento iluminado, belas reflexões em torno de ensinos de Francisco de Assis. Propõe-nos uma análise a respeito de nossa contribuição para construção da paz legítima. Esclarece que “pouco o homem tem atinado para o fato de que são as brigas internas, quando a alma está indisposta consigo mesma, as principais responsáveis pela beligerância que explode, atormentando a vida, ceifando corpos, espalhando luto e aflições”. Apresenta-nos vinte e dois temas de nobre conteúdo doutrinário, numa perspectiva espírita, fazendo-nos recordar a mensagem de Francisco, o doce “cantor” do Evangelho, que teve por missão instigar os corações humanos aos esforços necessários para a conquista da plenitude. Camilo, em A Carta Magna da Paz, enseja a todos aqueles que anseiam por modificar seus passos, nesta trajetória humana que tem sido marcada por episódios de guerras íntimas e sociais, uma mensagem sensível e profunda, capaz de despertar-nos a consciência para a execução dos sublimes deveres que nos levarão à harmonia interior, condição imprescindível para a construção de um mundo pacificado.",
+                    "confidence": 0.987659574468085
+                }
+            ]
+        },
+        {
+            "raw_title": "A CASA DO ESCRITOR",
+            "search_title": "A CASA DO ESCRITOR",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=jfJNEAAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A CASA DO ESCRITOR\"",
+                "title": "A casa do escritor",
+                "subtitle": "",
+                "authors": [
+                    "Vera Lúcia Marinzeck de Carvalho"
+                ],
+                "publisher": "Petit Editora",
+                "isbn": "9788572532372",
+                "barcode": "9788572532372",
+                "publication_year": 2014,
+                "page_count": 161,
+                "language": "",
+                "description": "Patrícia nos apresenta um lugar especial: A Casa do Escritor. Ali estudam os espíritos que são preparados para serem médiuns ou escritores. Mostra-nos a influência dos espíritos sobre os escritores e toda a dedicação e o preparo necessário para que os textos ditados sejam mensagens que elevam a alma.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=jfJNEAAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A CASA DO ESCRITOR\"",
+                    "title": "A casa do escritor",
+                    "subtitle": "",
+                    "authors": [
+                        "Vera Lúcia Marinzeck de Carvalho"
+                    ],
+                    "publisher": "Petit Editora",
+                    "isbn": "9788572532372",
+                    "barcode": "9788572532372",
+                    "publication_year": 2014,
+                    "page_count": 161,
+                    "language": "",
+                    "description": "Patrícia nos apresenta um lugar especial: A Casa do Escritor. Ali estudam os espíritos que são preparados para serem médiuns ou escritores. Mostra-nos a influência dos espíritos sobre os escritores e toda a dedicação e o preparo necessário para que os textos ditados sejam mensagens que elevam a alma.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=dxU-0QEACAAJ&dq=intitle:%22A+CASA+DO+ESCRITOR%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CASA DO ESCRITOR\"",
+                    "title": "A casa do escritor",
+                    "subtitle": "",
+                    "authors": [
+                        "Patricia (Espirito)"
+                    ],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 1993,
+                    "page_count": 0,
+                    "language": "",
+                    "description": "",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=GcyZVO37eu0C&dq=intitle:%22A+CASA+DO+ESCRITOR%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CASA DO ESCRITOR\"",
+                    "title": "A Casa Do Escritor",
+                    "subtitle": "",
+                    "authors": [],
+                    "publisher": "Petit Editora e Distribuidor",
+                    "isbn": "9788572530019",
+                    "barcode": "9788572530019",
+                    "publication_year": null,
+                    "page_count": 232,
+                    "language": "Inglês",
+                    "description": "",
+                    "confidence": 1
+                }
+            ]
+        },
+        {
+            "raw_title": "A CONSTRUÇÃO DA CONSCIÊNCIA",
+            "search_title": "A CONSTRUÇÃO DA CONSCIÊNCIA",
+            "author_hint": "",
+            "confidence": 0.7561797752808989,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "http://books.google.com.br/books?id=VNT9zwEACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+CONSCI%C3%8ANCIA%22&hl=&as_pt=BOOKS&source=gbs_api",
+                "source_query": "intitle:\"A CONSTRUÇÃO DA CONSCIÊNCIA\"",
+                "title": "Representações sociais e a construção da consciência histórica",
+                "subtitle": "",
+                "authors": [
+                    "Ronaldo Cardoso Alves"
+                ],
+                "publisher": "",
+                "isbn": "9788544427323",
+                "barcode": "9788544427323",
+                "publication_year": 2018,
+                "page_count": 0,
+                "language": "",
+                "description": "A obra apresenta pesquisa que teve como objetivo estudar a construção de consciência histórica em alunos do ensino básico, a partir do encontro/confronto, em sala de aula, dos diferentes saberes oriundos do senso comum e da ciência da História, por meio da análise das representações sociais constituídas por seus sujeitos: alunos e professores. Desenvolvida no Mestrado em Educação na Universidade de São Paulo (2003-2006), e orientada pela Profa. Katia Maria Abud, a pesquisa utilizou metodologia de inspiração etnográfica, somada a outros instrumentais qualitativos, junto a estudantes e professores do ensino fundamental e do médio, de escolas públicas situadas na periferia da Cidade de São Paulo, possibilitando a interpretação das configurações sociais da comunidade escolar à luz da teoria das representações sociais de Serge Moscovici, e do conceito de consciência histórica de Jörn Rüsen. Baseado nesse repertório teórico e empírico, a obra buscou compreender a influência da dupla dimensão do cotidiano (local e global) na construção das representações sociais dos alunos, bem como sua transformação (ou reprodução) após a atuação do ensino de História no espaço escolar, com vistas à consecução (ou não) de consciência histórica na vida prática. Por fim, a partir da análise do confronto de representações sociais de alunos e de professores, oriundas da apreensão de um conceito substantivo (“Revolução”) trabalhado nas aulas de História, propõe a socialização e a discussão dessas diferentes representações no espaço escolar como possibilidade de formação de consciência histórica e de maior aproximação do estudo da História da vida prática dos alunos.",
+                "confidence": 0.7561797752808989
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=VNT9zwEACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+CONSCI%C3%8ANCIA%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA CONSCIÊNCIA\"",
+                    "title": "Representações sociais e a construção da consciência histórica",
+                    "subtitle": "",
+                    "authors": [
+                        "Ronaldo Cardoso Alves"
+                    ],
+                    "publisher": "",
+                    "isbn": "9788544427323",
+                    "barcode": "9788544427323",
+                    "publication_year": 2018,
+                    "page_count": 0,
+                    "language": "",
+                    "description": "A obra apresenta pesquisa que teve como objetivo estudar a construção de consciência histórica em alunos do ensino básico, a partir do encontro/confronto, em sala de aula, dos diferentes saberes oriundos do senso comum e da ciência da História, por meio da análise das representações sociais constituídas por seus sujeitos: alunos e professores. Desenvolvida no Mestrado em Educação na Universidade de São Paulo (2003-2006), e orientada pela Profa. Katia Maria Abud, a pesquisa utilizou metodologia de inspiração etnográfica, somada a outros instrumentais qualitativos, junto a estudantes e professores do ensino fundamental e do médio, de escolas públicas situadas na periferia da Cidade de São Paulo, possibilitando a interpretação das configurações sociais da comunidade escolar à luz da teoria das representações sociais de Serge Moscovici, e do conceito de consciência histórica de Jörn Rüsen. Baseado nesse repertório teórico e empírico, a obra buscou compreender a influência da dupla dimensão do cotidiano (local e global) na construção das representações sociais dos alunos, bem como sua transformação (ou reprodução) após a atuação do ensino de História no espaço escolar, com vistas à consecução (ou não) de consciência histórica na vida prática. Por fim, a partir da análise do confronto de representações sociais de alunos e de professores, oriundas da apreensão de um conceito substantivo (“Revolução”) trabalhado nas aulas de História, propõe a socialização e a discussão dessas diferentes representações no espaço escolar como possibilidade de formação de consciência histórica e de maior aproximação do estudo da História da vida prática dos alunos.",
+                    "confidence": 0.7561797752808989
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=9wsjngAACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+CONSCI%C3%8ANCIA%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA CONSCIÊNCIA\"",
+                    "title": "Representações sociais e a construção da consciência histórica",
+                    "subtitle": "",
+                    "authors": [],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2005,
+                    "page_count": null,
+                    "language": "",
+                    "description": "Esta pesquisa teve como objetivo estudar a construção de consciência histórica em alunos do ensino básico a partir do encontro/confronto, em sala de aula, dos diferentes saberes oriundos do senso comum e da ciência da História, por meio da análise das representações sociais constituídas por seus sujeitos: alunos e professores. A utilização de uma metodologia de pesquisa de inspiração etnográfica, somada a outros instrumentais qualitativos aplicados em alunos e professores do ensino fundamental e médio de escolas situadas na periferia da Cidade de São Paulo, proporcionou a leitura das configurações sociais da comunidade escolar à luz da teoria das representações sociais de Serge Moscovici e do conceito de consciência histórica de Jörn Rüsen. Baseado nesse aporte teórico e empírico, a dissertação buscou compreender a influência da dupla dimensão do cotidiano (local e global) na construção das representações sociais dos alunos e a transformação (ou reprodução) das mesmas após a atuação do ensino de História no espaço escolar, com vistas à consecução (ou não) de consciência histórica na vida prática. Por fim, a partir da análise do confronto de representações sociais de alunos e professores, oriundas da apreensão de um conceito substantivo discutido no ensino de História, propõe a socialização e discussão dessas diferentes representações no espaço escolar como possibilidade de formação de consciência histórica e de maior aproximação do estudo da História da vida prática dos alunos.",
+                    "confidence": 0.7561797752808989
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=60sqGwAACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+CONSCI%C3%8ANCIA%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA CONSCIÊNCIA\"",
+                    "title": "O professor e a categoria profissional",
+                    "subtitle": "a construção da consciência política",
+                    "authors": [
+                        "Vera Lúcia Aparecida de Castro Dobbeck"
+                    ],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2000,
+                    "page_count": 237,
+                    "language": "",
+                    "description": "(Continuação) de entidades onde atuam esses professores, entre elas, as intituições empregadoras e a entidades sindicais.",
+                    "confidence": 0.7082352941176471
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=5tFknQAACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+CONSCI%C3%8ANCIA%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA CONSCIÊNCIA\"",
+                    "title": "Formação de Professores Na Prática Política Do MST",
+                    "subtitle": "A Construção Da Consciência Orgulhosa",
+                    "authors": [
+                        "Sonia Aparecida Branco Beltrame"
+                    ],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2000,
+                    "page_count": 19,
+                    "language": "Inglês",
+                    "description": "",
+                    "confidence": 0.6711304347826087
+                }
+            ]
+        },
+        {
+            "raw_title": "A CONSTRUÇÃO DA MENTE",
+            "search_title": "A CONSTRUÇÃO DA MENTE",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "http://books.google.com.br/books?id=hJZUswEACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+MENTE%22&hl=&as_pt=BOOKS&source=gbs_api",
+                "source_query": "intitle:\"A CONSTRUÇÃO DA MENTE\"",
+                "title": "A Construçao Da Mente",
+                "subtitle": "",
+                "authors": [
+                    "A. R. Luria"
+                ],
+                "publisher": "",
+                "isbn": "9788527412803",
+                "barcode": "9788527412803",
+                "publication_year": null,
+                "page_count": 236,
+                "language": "",
+                "description": "Uma das suas principais afirmações a respeito da possibilidade de uma interação frutífera entre a psicologia e a medicina apareceu em 1929 no artigo 'A Psicologia e a Clínica'. Uma de suas mensagens centrais era a possibilidade de utilização de métodos clínicos para a realização de pesquisa científica sobre o comportamento humano. Assim, ao mesmo tempo em que duvidava das possibilidades terapêuticas dos psicoterapeutas ou da base das teorias alternativas da personalidade, ele via nos ataques feitos aos métodos clássicos e laboratório um movimento comum e sadio em direção a uma psicologia que seria ao mesmo tempo científica e relevante para a prática médica - 'Pouco a pouco a psicologia abstrata e estatística de Wundt tem renascido de maneira fundamental; aproximou-se das tarefas concretas da vida e, por vontade própria ou não, começou a superar a natureza mecanicista das ciências naturais anteriores. Com o novo conteúdo, vieram novos princípios e um novo método.'.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=hJZUswEACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+MENTE%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA MENTE\"",
+                    "title": "A Construçao Da Mente",
+                    "subtitle": "",
+                    "authors": [
+                        "A. R. Luria"
+                    ],
+                    "publisher": "",
+                    "isbn": "9788527412803",
+                    "barcode": "9788527412803",
+                    "publication_year": null,
+                    "page_count": 236,
+                    "language": "",
+                    "description": "Uma das suas principais afirmações a respeito da possibilidade de uma interação frutífera entre a psicologia e a medicina apareceu em 1929 no artigo 'A Psicologia e a Clínica'. Uma de suas mensagens centrais era a possibilidade de utilização de métodos clínicos para a realização de pesquisa científica sobre o comportamento humano. Assim, ao mesmo tempo em que duvidava das possibilidades terapêuticas dos psicoterapeutas ou da base das teorias alternativas da personalidade, ele via nos ataques feitos aos métodos clássicos e laboratório um movimento comum e sadio em direção a uma psicologia que seria ao mesmo tempo científica e relevante para a prática médica - 'Pouco a pouco a psicologia abstrata e estatística de Wundt tem renascido de maneira fundamental; aproximou-se das tarefas concretas da vida e, por vontade própria ou não, começou a superar a natureza mecanicista das ciências naturais anteriores. Com o novo conteúdo, vieram novos princípios e um novo método.'.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=o1f8zwEACAAJ&dq=intitle:%22A+CONSTRU%C3%87%C3%83O+DA+MENTE%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA MENTE\"",
+                    "title": "A Construção da Mente",
+                    "subtitle": "",
+                    "authors": [
+                        "Walter Oliveira Alves"
+                    ],
+                    "publisher": "",
+                    "isbn": "9788573416848",
+                    "barcode": "9788573416848",
+                    "publication_year": 2017,
+                    "page_count": 0,
+                    "language": "",
+                    "description": "Totalmente ilustrada a cores, a obra integra os conhecimentos da neurociência com o aspecto espiritual da vida, sem o que impossível seria compreender o mecanismo integral da mente. Para isso, o autor utilizou os modernos conceitos da neurociência e dos ensinamentos contidos nas obras de Allan Kardec, bem como nas do Espírito André Luiz, ditadas ao médium Francisco Cândido Xavier.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=PeCzEQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A CONSTRUÇÃO DA MENTE\"",
+                    "title": "Foco e Força Interior A construção da mente forte que não desiste",
+                    "subtitle": "",
+                    "authors": [
+                        "Simone Borguignon"
+                    ],
+                    "publisher": "Simone Borguignon",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2026,
+                    "page_count": 27,
+                    "language": "",
+                    "description": "Foco e Força Interior é um ebook para quem precisa fortalecer a mente, sustentar decisões e seguir firme mesmo em meio às dificuldades. Com uma abordagem clara e consciente, Simone Borguignon mostra como desenvolver disciplina mental, clareza interna e auto liderança para construir a versão mais forte de si mesmo, sem rigidez e sem promessas vazias.",
+                    "confidence": 0.6827906976744187
+                }
+            ]
+        },
+        {
+            "raw_title": "A CORAGEM DA FÉ",
+            "search_title": "A CORAGEM DA FÉ",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A Crise da Morte",
+            "search_title": "A Crise da Morte",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=DXxlEAAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A Crise da Morte\"",
+                "title": "A crise da morte",
+                "subtitle": "",
+                "authors": [
+                    "Ernesto Bozzano"
+                ],
+                "publisher": "FEB Editora",
+                "isbn": "9788584850396",
+                "barcode": "9788584850396",
+                "publication_year": 2021,
+                "page_count": 158,
+                "language": "",
+                "description": "Haverá quem não tenha pensado no instante final da nossa trajetória terrestre? A vida continua além do túmulo? Se cremos que sim, como será essa nova vida? Quais os fenômenos que se passam com aqueles que se desprendem dos liames carnais e dão entrada no outro mundo? Em A Crise da Morte, o autor aprecia e comenta os testemunhos vindos do mundo espiritual, submetendo-os ao processo científico da análise comparada, do que resultou um conjunto de revelações de irrecusável veracidade. Traça orientações sobre os objetivos de existência física, as bases da moral e dos deveres do homem na decisão do seu futuro. Ler esta obra é confirmar as realidades de uma outra existência, de um mundo extrafísico, cujas condições, para cada um de nós, sempre dependerão do modo por que nos conduzimos moralmente enquanto Espíritos encarnados.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=DXxlEAAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A Crise da Morte\"",
+                    "title": "A crise da morte",
+                    "subtitle": "",
+                    "authors": [
+                        "Ernesto Bozzano"
+                    ],
+                    "publisher": "FEB Editora",
+                    "isbn": "9788584850396",
+                    "barcode": "9788584850396",
+                    "publication_year": 2021,
+                    "page_count": 158,
+                    "language": "",
+                    "description": "Haverá quem não tenha pensado no instante final da nossa trajetória terrestre? A vida continua além do túmulo? Se cremos que sim, como será essa nova vida? Quais os fenômenos que se passam com aqueles que se desprendem dos liames carnais e dão entrada no outro mundo? Em A Crise da Morte, o autor aprecia e comenta os testemunhos vindos do mundo espiritual, submetendo-os ao processo científico da análise comparada, do que resultou um conjunto de revelações de irrecusável veracidade. Traça orientações sobre os objetivos de existência física, as bases da moral e dos deveres do homem na decisão do seu futuro. Ler esta obra é confirmar as realidades de uma outra existência, de um mundo extrafísico, cujas condições, para cada um de nós, sempre dependerão do modo por que nos conduzimos moralmente enquanto Espíritos encarnados.",
+                    "confidence": 1
+                }
+            ]
+        },
+        {
+            "raw_title": "A CURA DA DEPRESSÃO PELO MAGNETISMO",
+            "search_title": "A CURA DA DEPRESSÃO PELO MAGNETISMO",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A Escada de Jacó",
+            "search_title": "A Escada de Jacó",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "http://books.google.com.br/books?id=jv1xDwAAQBAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                "source_query": "intitle:\"A Escada de Jacó\"",
+                "title": "A Escada De Jacó",
+                "subtitle": "",
+                "authors": [
+                    "José Xavier"
+                ],
+                "publisher": "Clube de Autores",
+                "isbn": "",
+                "barcode": "",
+                "publication_year": 2015,
+                "page_count": 189,
+                "language": "",
+                "description": "Como entender o pensamento de uma visão refletida na personalidade Divina, por um ser humano? Como podemos ver através de uma mensagem o conceito filosófico-religioso do acesso direto ao Criador, baseado em relatos vivenciados por pessoas oculares. A resposta podemos ter neste pequeno estudo.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=jv1xDwAAQBAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Escada de Jacó\"",
+                    "title": "A Escada De Jacó",
+                    "subtitle": "",
+                    "authors": [
+                        "José Xavier"
+                    ],
+                    "publisher": "Clube de Autores",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2015,
+                    "page_count": 189,
+                    "language": "",
+                    "description": "Como entender o pensamento de uma visão refletida na personalidade Divina, por um ser humano? Como podemos ver através de uma mensagem o conceito filosófico-religioso do acesso direto ao Criador, baseado em relatos vivenciados por pessoas oculares. A resposta podemos ter neste pequeno estudo.",
+                    "confidence": 1
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=tIkhAQAAIAAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Escada de Jacó\"",
+                    "title": "A escada de Jacó e outros escritos",
+                    "subtitle": "",
+                    "authors": [
+                        "Ney Teles de Paula"
+                    ],
+                    "publisher": "",
+                    "isbn": "",
+                    "barcode": "",
+                    "publication_year": 2005,
+                    "page_count": 164,
+                    "language": "",
+                    "description": "",
+                    "confidence": 0.8567999999999999
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=zFssEAAAQBAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Escada de Jacó\"",
+                    "title": "A Cabala E A Escada De Jacó",
+                    "subtitle": "",
+                    "authors": [
+                        "Eliel Roshveder"
+                    ],
+                    "publisher": "Clube de Autores",
+                    "isbn": "9781005029142",
+                    "barcode": "9781005029142",
+                    "publication_year": 2021,
+                    "page_count": 180,
+                    "language": "",
+                    "description": "A verdade foi ocultada de nós por gerações, mas os sábios cabalistas guardaram ela através da tradição oral e então surgiu a Cabala. Em toda religião há segredos ocultos guardados por tradição oral entre os ditos iniciados nos mistérios profundos e na cabala este segredo foi escondido pelos rabinos. No reino mouro da Espanha medieval os rabinos puderam partilhar este conhecimento, pois havia liberdade dada pelos muçulmanos e então a CABLA floresceu e saiu das sombras, mas logo veio o governo cristão das sombras de Fernando e Izabel e os cabalistas foram perseguidos e mortos. Os que escaparam se refugiaram em rincões desertos pelos quatro cantos da terra. A maior parte deles veio para o novo mundo que foi descoberto por influência dos judeus cabalistas. Na verdade nunca foi descoberto, pois já havia o mapa de Piri Reis séculos antes e os fenícios e mouros já faziam comércio com o continente americano. Na verdade o novo mundo foi abordado para fugir da Inquisição, não foi descoberto, pois os místicos da época já sabiam da existência dele. A cabala voltou ao ostracismo, mas hoje com a liberdade de religião ela foi revelada novamente, está sendo revelada pelos rabinos... No entanto ela está sendo interpretada de forma errada e se tornando num terreno propício para charlatão e mentiroso que usam a cabala para ficar rico, mas este não é o objetivo dos rabinos e sim revelar a cabala para entendermos o Criador e suas leis divinas. Este é o foco deste livro, mostrar a ligação da Cabala com o mistério oculto na bíblia, na verdade mistérios, pois são vários e a cabala é um código para decifrar estes mistérios. Não existe nada dizendo que se você fizer uma magia envolvendo a cabala vai ficar rico. Isso faz parte da cabala draconiana, daqueles que usam a cabala para ficar rico, para ter poder e riqueza. A verdadeira Cabala é aprender a amar e conhecer o Criador e a ajudar a humanidade a sair da miséria espiritual e financeira, pois tem leis da cabala prometendo riqueza sim, mas só para os que seguem a TORAH. A principal lei da cabala prometendo riqueza é ajudar os pobres, pois quando ajuda alguém aquilo volta para ti dez vezes mais. No entanto o povo rebelde quer apenas fazer rituais para ficar rico e que se ferrem os pobres. Estes ignorantes nunca vão desvendar os segredos da verdadeira cabala, pois eles estão presos a mentira e ao poder do caos...",
+                    "confidence": 0.8413953488372092
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=0ryL0QEACAAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Escada de Jacó\"",
+                    "title": "Portões, Adn E A Escada De Jacó",
+                    "subtitle": "",
+                    "authors": [
+                        "Lindi Masters"
+                    ],
+                    "publisher": "",
+                    "isbn": "9781964959740",
+                    "barcode": "9781964959740",
+                    "publication_year": 2025,
+                    "page_count": 0,
+                    "language": "",
+                    "description": "Este livro é o quinto numa série criada para inspirar crianças a explorar e se envolverem no Reino dos Reinos de Jeová. Vamos explorar de perto a Escada de Jacó, o ADN e os Portões do Espírito, Alma e Corpo. Escada de Jacó para crianças ADN e criação divina infantil Portões do espírito alma e corpo Exploração espiritual para crianças Livro cristão educativo infantil Reino de Jeová para crianças Descobertas bíblicas infantis",
+                    "confidence": 0.811304347826087
+                },
+                {
+                    "source_name": "Google Books",
+                    "source_url": "http://books.google.com.br/books?id=cjZpzgEACAAJ&dq=intitle:%22A+Escada+de+Jac%C3%B3%22&hl=&as_pt=BOOKS&source=gbs_api",
+                    "source_query": "intitle:\"A Escada de Jacó\"",
+                    "title": "A Cabala e a escada de Jacó",
+                    "subtitle": "Segredos que transcendem gerações",
+                    "authors": [
+                        "Eliel Roshveder"
+                    ],
+                    "publisher": "",
+                    "isbn": "9798740262864",
+                    "barcode": "9798740262864",
+                    "publication_year": 2021,
+                    "page_count": 304,
+                    "language": "",
+                    "description": "A verdade foi ocultada de nós por gerações, mas os sábios cabalistas guardaram ela através da tradição oral e então surgiu a Cabala. Em toda religião há segredos ocultos guardados por tradição oral entre os ditos iniciados nos mistérios profundos e na cabala este segredo foi escondido pelos rabinos. No reino mouro da Espanha medieval os rabinos puderam partilhar este conhecimento, pois havia liberdade dada pelos muçulmanos e então a CABLA floresceu e saiu das sombras, mas logo veio o governo cristão das sombras de Fernando e Izabel e os cabalistas foram perseguidos e mortos. Os que escaparam se refugiaram em rincões desertos pelos quatro cantos da terra. A maior parte deles veio para o novo mundo que foi descoberto por influência dos judeus cabalistas. Na verdade nunca foi descoberto, pois já havia o mapa de Piri Reis séculos antes e os fenícios e mouros já faziam comércio com o continente americano. Na verdade o novo mundo foi abordado para fugir da Inquisição, não foi descoberto, pois os místicos da época já sabiam da existência dele. A cabala voltou ao ostracismo, mas hoje com a liberdade de religião ela foi revelada novamente, está sendo revelada pelos rabinos... No entanto ela está sendo interpretada de forma errada e se tornando num terreno propício para charlatão e mentiroso que usam a cabala para ficar rico, mas este não é o objetivo dos rabinos e sim revelar a cabala para entendermos o Criador e suas leis divinas. Este é o foco deste livro, mostrar a ligação da Cabala com o mistério oculto na bíblia, na verdade mistérios, pois são vários e a cabala é um código para decifrar estes mistérios. Não existe nada dizendo que se você fizer uma magia envolvendo a cabala vai ficar rico. Isso faz parte da cabala draconiana, daqueles que usam a cabala para ficar rico, para ter poder e riqueza. A verdadeira Cabala é aprender a amar e conhecer o Criador e a ajudar a humanidade a sair da miséria espiritual e financeira, pois tem leis da cabala prometendo riqueza sim, mas só para os que seguem a TORAH. A principal lei da cabala prometendo riqueza é ajudar os pobres, pois quando ajuda alguém aquilo volta para ti dez vezes mais. No entanto o povo rebelde quer apenas fazer rituais para ficar rico e que se ferrem os pobres. Estes ignorantes nunca vão desvendar os segredos da verdadeira cabala, pois eles estão presos a mentira e ao poder do caos...",
+                    "confidence": 0.6376623376623376
+                }
+            ]
+        },
+        {
+            "raw_title": "A ÉTICA DE JESUS",
+            "search_title": "A ÉTICA DE JESUS",
+            "author_hint": "",
+            "confidence": 0.9687179487179487,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=6j2lDQAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A ÉTICA DE JESUS\"",
+                "title": "A Ética de Jesus Cristo",
+                "subtitle": "",
+                "authors": [
+                    "Grupo de Estudos de Ética GEEC"
+                ],
+                "publisher": "Grupo Educação Ética e Cidadania",
+                "isbn": "9788568476062",
+                "barcode": "9788568476062",
+                "publication_year": 2016,
+                "page_count": 399,
+                "language": "",
+                "description": "Ética para o Século XXI - Reflexões sobre os princípios universais ensinados por Jesus para o mundo contemporâneo. O foco de A ética de Jesus é a transformação do ser humano para conquista dos valores transcendentais do espírito, por meio dos inesquecíveis ensinamentos do Carpinteiro de Nazaré. Uma visão de vanguarda sobre os ensinamentos de Jesus é proposta. O caráter ímpar do Mestre nos mostra o melhor caminho, revelando o quão atual é a ética apresentada há quase 2000 anos. p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Helvetica; color: #323333; -webkit-text-stroke: #323333} span.s1 {font-kerning: none} São 90 temas dispostos em 10 capítulos são frutos das reflexões propostas pelo GEET (Grupo de estudos de ética). Pontuados com elucidações de benfeitores espirituais anônimos e de forma bastante prática trazem o Evangelho à luz do espiritismo para um mundo moderno. A cada página, uma lição inesquecível, um novo ponto de vista, sempre com o intuito de nos fazer refletir, compreender e entender melhor a essência dos ensinamentos que Jesus veio trazer ao universo. p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Helvetica; color: #323333; -webkit-text-stroke: #323333} span.s1 {font-kerning: none}",
+                "confidence": 0.9687179487179487
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=6j2lDQAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A ÉTICA DE JESUS\"",
+                    "title": "A Ética de Jesus Cristo",
+                    "subtitle": "",
+                    "authors": [
+                        "Grupo de Estudos de Ética GEEC"
+                    ],
+                    "publisher": "Grupo Educação Ética e Cidadania",
+                    "isbn": "9788568476062",
+                    "barcode": "9788568476062",
+                    "publication_year": 2016,
+                    "page_count": 399,
+                    "language": "",
+                    "description": "Ética para o Século XXI - Reflexões sobre os princípios universais ensinados por Jesus para o mundo contemporâneo. O foco de A ética de Jesus é a transformação do ser humano para conquista dos valores transcendentais do espírito, por meio dos inesquecíveis ensinamentos do Carpinteiro de Nazaré. Uma visão de vanguarda sobre os ensinamentos de Jesus é proposta. O caráter ímpar do Mestre nos mostra o melhor caminho, revelando o quão atual é a ética apresentada há quase 2000 anos. p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Helvetica; color: #323333; -webkit-text-stroke: #323333} span.s1 {font-kerning: none} São 90 temas dispostos em 10 capítulos são frutos das reflexões propostas pelo GEET (Grupo de estudos de ética). Pontuados com elucidações de benfeitores espirituais anônimos e de forma bastante prática trazem o Evangelho à luz do espiritismo para um mundo moderno. A cada página, uma lição inesquecível, um novo ponto de vista, sempre com o intuito de nos fazer refletir, compreender e entender melhor a essência dos ensinamentos que Jesus veio trazer ao universo. p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Helvetica; color: #323333; -webkit-text-stroke: #323333} span.s1 {font-kerning: none}",
+                    "confidence": 0.9687179487179487
+                }
+            ]
+        },
+        {
+            "raw_title": "A EVANGELIZAÇÃO MUDANDO VIDAS",
+            "search_title": "A EVANGELIZAÇÃO MUDANDO VIDAS",
+            "author_hint": "",
+            "confidence": 0,
+            "best_match": null,
+            "candidates": []
+        },
+        {
+            "raw_title": "A FAMÍLIA ESPÍRITA",
+            "search_title": "A FAMÍLIA ESPÍRITA",
+            "author_hint": "",
+            "confidence": 1,
+            "best_match": {
+                "source_name": "Google Books",
+                "source_url": "https://play.google.com/store/books/details?id=JVEmDwAAQBAJ&source=gbs_api",
+                "source_query": "intitle:\"A FAMÍLIA ESPÍRITA\"",
+                "title": "A família espírita",
+                "subtitle": "",
+                "authors": [
+                    "Yvonne do Amaral Pereira"
+                ],
+                "publisher": "FEB Editora",
+                "isbn": "9788573288872",
+                "barcode": "9788573288872",
+                "publication_year": 2021,
+                "page_count": 104,
+                "language": "",
+                "description": "FEB Editora tem a satisfação de oferecer ao público quatro obras inéditas de autoria da médium Yvonne A. Pereira. Escritas entre os anos de 1964 e 1971, trazem conteúdo notavelmente atual dedicado à leitura de toda a família. Em A família espírita, Evangelho aos simples e As três revelações da lei de Deus, o leitor será apresentado à família Vasconcelos, que vive em harmonia de acordo com os preceitos da Doutrina Espírita. Por meio das situações vividas por eles, pais e filhos conseguirão desfrutar de uma leitura que tenderá a florescer um diálogo rico sobre o Evangelho de Cristo. Soma-se a esses o livro Contos amigos, com quatro histórias fundamentadas nos ensinos e exemplos de Jesus e explicadas, em espírito e verdade, pela revelação dos Espíritos.",
+                "confidence": 1
+            },
+            "candidates": [
+                {
+                    "source_name": "Google Books",
+                    "source_url": "https://play.google.com/store/books/details?id=JVEmDwAAQBAJ&source=gbs_api",
+                    "source_query": "intitle:\"A FAMÍLIA ESPÍRITA\"",
+                    "title": "A família espírita",
+                    "subtitle": "",
+                    "authors": [
+                        "Yvonne do Amaral Pereira"
+                    ],
+                    "publisher": "FEB Editora",
+                    "isbn": "9788573288872",
+                    "barcode": "9788573288872",
+                    "publication_year": 2021,
+                    "page_count": 104,
+                    "language": "",
+                    "description": "FEB Editora tem a satisfação de oferecer ao público quatro obras inéditas de autoria da médium Yvonne A. Pereira. Escritas entre os anos de 1964 e 1971, trazem conteúdo notavelmente atual dedicado à leitura de toda a família. Em A família espírita, Evangelho aos simples e As três revelações da lei de Deus, o leitor será apresentado à família Vasconcelos, que vive em harmonia de acordo com os preceitos da Doutrina Espírita. Por meio das situações vividas por eles, pais e filhos conseguirão desfrutar de uma leitura que tenderá a florescer um diálogo rico sobre o Evangelho de Cristo. Soma-se a esses o livro Contos amigos, com quatro histórias fundamentadas nos ensinos e exemplos de Jesus e explicadas, em espírito e verdade, pela revelação dos Espíritos.",
+                    "confidence": 1
+                }
+            ]
+        }
+    ]
+}

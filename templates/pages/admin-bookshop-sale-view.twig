@@ -8,6 +8,13 @@
 {% set footer = site.footer|default({}) %}
 
 {% block admin_content %}
+  <style media="print">
+    @page {
+      size: 80mm auto;
+      margin: 6mm;
+    }
+  </style>
+
   <section class="nc-section" aria-label="Resumo da venda da livraria" data-aos="fade-up" data-aos-delay="0">
     {% set toast_message = '' %}
     {% set toast_tone = 'success' %}
@@ -27,15 +34,15 @@
 
     <div class="nc-actions nc-bookshop-toolbar nc-print-hidden" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/vendas">Voltar às vendas</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Ver acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
       <button class="nc-btn nc-btn-secondary" type="button" onclick="window.print()">Imprimir comprovante</button>
-      <a class="nc-btn nc-btn-primary" href="/painel/livraria/vendas/nova">Nova venda</a>
       {% if bookshop_sale.status == 'completed' %}
         <form method="post" action="/painel/livraria/vendas/{{ bookshop_sale.id }}/cancelar" onsubmit="return confirm('Cancelar esta venda e devolver os itens ao estoque?');">
           <button class="nc-btn nc-btn-secondary" type="submit">Cancelar venda</button>
         </form>
       {% endif %}
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/vendas/nova">+ Nova venda</a>
     </div>
 
     <article class="nc-card nc-bookshop-sale-summary-card nc-print-hidden" data-aos="fade-up" data-aos-delay="100">
@@ -179,23 +186,14 @@
 
     <article class="nc-card nc-bookshop-overview-card nc-bookshop-receipt-card" data-aos="fade-up" data-aos-delay="145">
       <div class="nc-bookshop-receipt-brand">
-        <div class="nc-bookshop-receipt-brand-mark">
-          <img
-            src="{{ (base_url ?? '') ~ '/assets/img/brands/selo_cede.png' }}"
-            alt="{{ brand.logoAlt|default(site.name|default('CEDE')) }}"
-            class="nc-bookshop-receipt-logo"
-          >
-        </div>
+        {% set receipt_address = site_contact.address|default('') %}
         <div class="nc-bookshop-receipt-brand-copy">
           <p class="nc-bookshop-receipt-kicker">Comprovante institucional</p>
           <h3>{{ site.legalName|default(site.name|default('CEDE')) }}</h3>
-          {% if site_contact.address|default('') %}
-            <p>{{ site_contact.address }}</p>
+          {% if receipt_address %}
+            <p>{{ receipt_address|replace({' - Nova Parnamirim, ': ' - Nova Parnamirim<br>'})|raw }}</p>
           {% endif %}
           <p class="nc-bookshop-receipt-brand-inline">
-            {% if site_contact.email|default('') %}
-              <span>{{ site_contact.email }}</span>
-            {% endif %}
             <span>www.cedern.org</span>
           </p>
         </div>
@@ -225,18 +223,6 @@
           <div>
             <span class="nc-metric-label">Telefone</span>
             <strong>{{ bookshop_sale.customer_phone_display }}</strong>
-          </div>
-        {% endif %}
-        {% if bookshop_sale.customer_email|default('') %}
-          <div>
-            <span class="nc-metric-label">E-mail</span>
-            <strong>{{ bookshop_sale.customer_email }}</strong>
-          </div>
-        {% endif %}
-        {% if bookshop_sale.customer_cpf_display|default('') %}
-          <div>
-            <span class="nc-metric-label">CPF</span>
-            <strong>{{ bookshop_sale.customer_cpf_display }}</strong>
           </div>
         {% endif %}
         <div>

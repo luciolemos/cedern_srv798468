@@ -24,7 +24,7 @@ class AdminBookshopGenreListPageAction extends AbstractAdminBookshopAction
         try {
             $genres = $this->bookshopRepository->findAllGenresForAdmin();
         } catch (\Throwable $exception) {
-            $this->logger->warning('Falha ao listar gêneros da livraria.', [
+            $this->logger->warning('Falha ao listar gêneros literários da livraria.', [
                 'error' => $exception->getMessage(),
             ]);
         }
@@ -172,9 +172,9 @@ class AdminBookshopGenreListPageAction extends AbstractAdminBookshopAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Gêneros da Livraria | Dashboard',
+            'page_title' => 'Gêneros Literários da Livraria | Dashboard',
             'page_url' => 'https://cedern.org/painel/livraria/generos',
-            'page_description' => 'Painel para gestão de gêneros do acervo da livraria do CEDE.',
+            'page_description' => 'Painel para gestão de gêneros literários do acervo da livraria do CEDE.',
         ]);
     }
 }
