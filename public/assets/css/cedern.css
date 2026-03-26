@@ -5439,6 +5439,45 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   background: color-mix(in srgb, var(--theme-soft-1) 14%, var(--surface-main));
 }
 
+.nc-password-toggle-field {
+  position: relative;
+}
+
+.nc-password-toggle-field .nc-admin-login-input {
+  padding-right: 5.9rem;
+}
+
+.nc-password-toggle-button {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  min-width: 4.85rem;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  border-radius: calc(var(--radius-sm) - 3px);
+  background: color-mix(in srgb, var(--theme-soft-1) 58%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  padding: 0.36rem 0.68rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast);
+}
+
+.nc-password-toggle-button:hover,
+.nc-password-toggle-button:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 48%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 76%, var(--surface-main));
+  color: var(--theme-accent-1);
+}
+
+.nc-password-toggle-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
+}
+
 .nc-admin-login-error {
   margin: 0 0 var(--space-3);
   padding: 0.58rem 0.7rem;
@@ -5457,6 +5496,24 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   background: color-mix(in srgb, var(--swatch-green-1) 12%, var(--surface-main));
   color: var(--swatch-green-1);
   font-size: 0.92rem;
+}
+
+.nc-admin-login-success-panel p {
+  margin: 0;
+}
+
+.nc-admin-login-success-panel p + p {
+  margin-top: 0.55rem;
+}
+
+.nc-admin-login-followup-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: inherit;
+}
+
+.nc-admin-login-followup-list li + li {
+  margin-top: 0.35rem;
 }
 
 .nc-admin-login-actions {

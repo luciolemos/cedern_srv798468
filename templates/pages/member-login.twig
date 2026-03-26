@@ -1,5 +1,9 @@
 {% extends 'layouts/base.twig' %}
 
+{% block head %}
+  <script src="/assets/js/cedern-password-toggle.js?v={{ app_asset_version|default('1') }}" defer></script>
+{% endblock %}
+
 {% block content %}
   <main class="nc-main nc-home-flow">
     <section class="nc-section" aria-label="Login de membro" data-aos="fade-up" data-aos-delay="0">
@@ -29,7 +33,10 @@
 
             <div class="nc-admin-login-field">
               <label class="nc-admin-login-label" for="password">Senha</label>
-              <input class="nc-admin-login-input" id="password" name="password" type="password" autocomplete="current-password" required>
+              <div class="nc-password-toggle-field">
+                <input class="nc-admin-login-input nc-password-toggle-input" id="password" name="password" type="password" autocomplete="current-password" required>
+                <button class="nc-password-toggle-button" type="button" data-password-toggle aria-controls="password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
+              </div>
             </div>
 
             <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="80">
