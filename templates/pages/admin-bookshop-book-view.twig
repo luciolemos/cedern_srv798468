@@ -11,6 +11,7 @@
 
     <div class="nc-actions nc-bookshop-toolbar nc-bookshop-book-view-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/{{ book.id }}/lotes">Lotes do título</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/{{ book.id }}/editar">Editar item</a>
       <div class="nc-bookshop-toolbar-actions-pair">
         <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes/nova?mode=entry&book_id={{ book.id }}">Nova entrada</a>
@@ -213,6 +214,10 @@
         </div>
       </div>
       <dl class="nc-bookshop-sale-inline-row">
+        <div>
+          <dt>Cadastrado por</dt>
+          <dd>{{ book.created_by_name|default('Não informado') ?: 'Não informado' }}</dd>
+        </div>
         <div>
           <dt>Criado em</dt>
           <dd>{{ book.created_at|default('-') ?: '-' }}</dd>

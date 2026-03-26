@@ -48,8 +48,8 @@
 
       <form class="nc-admin-table-search" method="get" action="/painel/livraria/acervo" data-aos="fade-up" data-aos-delay="95">
         <label for="nc-bookshop-books-search">Buscar no acervo</label>
-        <div class="nc-admin-table-search-controls nc-bookshop-table-filters">
-        <input id="nc-bookshop-books-search" name="q" type="search" value="{{ search_term }}" placeholder="SKU, título, autor, coleção, volume, categoria doutrinária, gênero literário, editora, ISBN, código de barras, localização...">
+        <div class="nc-admin-table-search-controls nc-bookshop-table-filters nc-bookshop-books-search-controls">
+        <input id="nc-bookshop-books-search" name="q" type="search" value="{{ search_term }}" aria-describedby="nc-bookshop-books-search-help" placeholder="SKU, título, autor, coleção, volume, categoria doutrinária, gênero literário, editora, ISBN, código de barras, localização...">
         <select name="status_filter" aria-label="Filtrar por status">
           <option value="all" {{ filters.status_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os status</option>
           <option value="active" {{ filters.status_filter|default('all') == 'active' ? 'selected' : '' }}>Somente ativos</option>
@@ -64,8 +64,9 @@
         <input type="hidden" name="sort" value="{{ pagination.sort|default('title') }}">
         <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
         <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
-        <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+        <button class="nc-btn nc-btn-primary" type="submit">Aplicar busca</button>
       </div>
+      <p class="nc-bookshop-inline-copy" id="nc-bookshop-books-search-help">Digite o termo e clique em <strong>Aplicar busca</strong> ou pressione Enter.</p>
     </form>
 
     {% if bookshop_books|length == 0 %}
@@ -149,6 +150,7 @@
                   {% if book.stock_lot_summary|default('') %}
                     <small>Lotes: {{ book.stock_lot_summary }}</small>
                   {% endif %}
+                  <small><a class="nc-link" href="/painel/livraria/acervo/{{ book.id }}/lotes">Ver lotes do título</a></small>
                 </td>
                 <td data-label="Autor">{{ book.author_name|default('-') }}</td>
                 <td data-label="Gênero literário">{{ book.genre_name|default('-') ?: '-' }}</td>

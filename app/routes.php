@@ -15,9 +15,11 @@ use App\Application\Actions\Admin\AdminAgendaDeleteAction;
 use App\Application\Actions\Admin\AdminAgendaFormPageAction;
 use App\Application\Actions\Admin\AdminLoginPageAction;
 use App\Application\Actions\Admin\AdminAgendaListPageAction;
+use App\Application\Actions\Admin\AdminAccessDataPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookDeleteAction;
 use App\Application\Actions\Admin\AdminBookshopBookFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookListPageAction;
+use App\Application\Actions\Admin\AdminBookshopBookLotsPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionListPageAction;
@@ -61,6 +63,7 @@ use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
+use App\Application\Actions\Page\AccessDataPageAction;
 use App\Application\Actions\Page\BookshopCoverImagePageAction;
 use App\Application\Actions\Page\ContactPageAction;
 use App\Application\Actions\Page\EsdePageAction;
@@ -333,6 +336,8 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/acervo/novo', AdminBookshopBookFormPageAction::class)
             ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/acervo/{id}/lotes', AdminBookshopBookLotsPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
         $group->get('/livraria/acervo/{id}', AdminBookshopBookViewPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/acervo/{id}/editar', AdminBookshopBookFormPageAction::class)
@@ -357,6 +362,7 @@ return function (App $app) {
         $group->get('/guia-do-usuario', AdminUserGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/guia-pratico', AdminPracticalGuidePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->map(['GET', 'POST'], '/institucional/estatuto', AdminStatutePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->map(['GET', 'POST'], '/institucional/dados-de-acesso', AdminAccessDataPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->map(['GET', 'POST'], '/institucional/politica-de-privacidade', AdminPrivacyPolicyPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->map(['GET', 'POST'], '/institucional/termos-de-uso', AdminTermsOfUsePageAction::class)->add($panelRoleMiddlewareFactory('admin'));
     })->add($adminSessionAuthMiddleware);
@@ -527,6 +533,11 @@ return function (App $app) {
 
         return $response->withHeader('Location', '/painel/institucional/estatuto')->withStatus($statusCode);
     });
+    $app->map(['GET', 'POST'], '/admin/institucional/dados-de-acesso', function (Request $request, Response $response) {
+        $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
+
+        return $response->withHeader('Location', '/painel/institucional/dados-de-acesso')->withStatus($statusCode);
+    });
     $app->map(['GET', 'POST'], '/admin/institucional/politica-de-privacidade', function (Request $request, Response $response) {
         $statusCode = strtoupper($request->getMethod()) === 'POST' ? 307 : 302;
 
@@ -543,6 +554,7 @@ return function (App $app) {
     $app->get('/faq/praticas', FaqPracticesPageAction::class);
     $app->map(['GET', 'POST'], '/contato', ContactPageAction::class);
     $app->get('/politica-de-privacidade', PrivacyPolicyPageAction::class);
+    $app->get('/dados-de-acesso', AccessDataPageAction::class);
     $app->get('/termos-de-uso', TermsOfUsePageAction::class);
 
     $app->get('/users', function (Request $request, Response $response) use ($app) {

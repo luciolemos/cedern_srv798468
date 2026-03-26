@@ -1,22 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Manual da Livraria' %}
+{% set dashboard_page_title = 'Guia Operacional da Livraria' %}
 {% set dashboard_page_lead = 'Guia dedicado da operação da livraria física: acervo, importação da planilha e vendas de balcão.' %}
 
 {% block admin_content %}
-  <section class="nc-section" aria-label="Manual da livraria" data-aos="fade-up" data-aos-delay="0">
-    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias doutrinárias</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros literários</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar">Importar CSV</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas PDV</a>
-      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/vendas/nova">Nova venda</a>
-    </div>
+  <section class="nc-section" aria-label="Guia operacional da livraria" data-aos="fade-up" data-aos-delay="0">
     {% include 'pages/partials/admin-bookshop-manual-content.twig' with {
       manual_pdf_mode: false
     } %}

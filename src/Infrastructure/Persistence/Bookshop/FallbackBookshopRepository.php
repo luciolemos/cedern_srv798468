@@ -33,6 +33,11 @@ class FallbackBookshopRepository implements BookshopRepository
         return null;
     }
 
+    public function findStockLotsByBookIdForAdmin(int $bookId): array
+    {
+        return [];
+    }
+
     public function findBookBySku(string $sku): ?array
     {
         return null;

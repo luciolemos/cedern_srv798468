@@ -151,9 +151,8 @@
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="language">Idioma</label>
             <select class="nc-admin-form-input" id="language" name="language">
-              <option value="" {% if bookshop_book_form.language|default('') == '' %}selected{% endif %}>Selecione um idioma</option>
               {% for language in bookshop_book_language_options|default([]) %}
-                <option value="{{ language }}" {{ bookshop_book_form.language|default('') == language ? 'selected' : '' }}>{{ language }}</option>
+                <option value="{{ language }}" {{ bookshop_book_form.language|default('Português') == language ? 'selected' : '' }}>{{ language }}</option>
               {% endfor %}
             </select>
           </div>
@@ -241,8 +240,8 @@
 
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-pricing">
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="stock_minimum">Estoque mínimo</label>
-            <input class="nc-admin-form-input" id="stock_minimum" name="stock_minimum" type="number" min="0" placeholder="Ex: 2" value="{{ bookshop_book_form.stock_minimum|default('0') }}">
+            <label class="nc-admin-form-label" for="stock_minimum">Estoque mínimo <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="stock_minimum" name="stock_minimum" type="number" min="0" required placeholder="Ex: 2" value="{{ bookshop_book_form.stock_minimum|default('2') }}">
           </div>
 
           <div class="nc-admin-form-field">
@@ -257,7 +256,7 @@
         </div>
 
         <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
-          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ bookshop_book_form_is_edit ? 'Salvar alterações' : 'Criar item' }}</button>
+          <button class="nc-btn nc-btn-primary" type="submit">{{ bookshop_book_form_is_edit ? 'Salvar alterações' : 'Criar item' }}</button>
           <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Cancelar</a>
         </div>
       </form>

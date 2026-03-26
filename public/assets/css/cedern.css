@@ -7867,6 +7867,14 @@ textarea.nc-admin-form-input {
     min-width: 0;
   }
 
+  .nc-bookshop-books-search-controls > input[type="search"],
+  .nc-bookshop-books-search-controls > select,
+  .nc-bookshop-books-search-controls > .nc-btn {
+    flex: 1 1 100%;
+    min-width: 0;
+    width: 100%;
+  }
+
   .nc-admin-pagination-pages {
     flex-wrap: wrap;
   }
@@ -8295,6 +8303,13 @@ textarea.nc-admin-form-input {
   font-weight: var(--font-weight-medium);
 }
 
+.nc-bookshop-manual-book {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 2rem;
+}
+
 .nc-bookshop-manual-hero,
 .nc-bookshop-manual-step-card,
 .nc-bookshop-manual-side-card,
@@ -8306,10 +8321,29 @@ textarea.nc-admin-form-input {
 }
 
 .nc-bookshop-manual-hero {
-  gap: 1.4rem;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--theme-accent-1) 18%, transparent), transparent 42%),
-    linear-gradient(135deg, color-mix(in srgb, var(--theme-soft-1) 18%, var(--surface-main)), color-mix(in srgb, var(--theme-soft-2) 16%, var(--surface-main)));
+  width: 100%;
+  margin: 0;
+  padding: 0 0 1.4rem;
+  gap: 1.15rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-soft-2) 48%, var(--surface-border));
+}
+
+.nc-bookshop-manual-hero-meta {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.nc-bookshop-manual-lead {
+  font-size: 1.12rem;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--text-main) 90%, var(--theme-soft-ink));
 }
 
 .nc-bookshop-manual-kicker {
@@ -8327,19 +8361,64 @@ textarea.nc-admin-form-input {
   background: color-mix(in srgb, var(--theme-accent-1) 10%, var(--surface-main));
 }
 
+.nc-bookshop-manual-chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--theme-soft-ink) 82%, var(--text-main));
+}
+
+.nc-bookshop-manual-chapter::after {
+  content: "";
+  display: block;
+  width: 2.8rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--theme-accent-1) 34%, var(--surface-border));
+}
+
 .nc-bookshop-manual-hero-copy {
   display: grid;
   gap: 0.85rem;
-  max-width: 76ch;
+  max-width: 68ch;
 }
 
-.nc-bookshop-manual-hero-copy h3,
-.nc-bookshop-manual-section-head h3,
+.nc-bookshop-manual-hero-intro {
+  display: grid;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: none;
+  padding: 0.15rem 0 0.25rem;
+}
+
+.nc-bookshop-manual-hero-copy h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.95rem, 3.7vw, 2.45rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.nc-bookshop-manual-section-head h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.7rem, 3vw, 2.15rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
 .nc-bookshop-manual-step-card h4,
 .nc-bookshop-manual-side-card h4,
 .nc-bookshop-manual-stock-card h4,
 .nc-bookshop-manual-pdv-block h4 {
   margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.28rem;
+  line-height: 1.18;
 }
 
 .nc-bookshop-manual-hero-grid,
@@ -8360,10 +8439,9 @@ textarea.nc-admin-form-input {
   display: grid;
   gap: 0.45rem;
   min-width: 0;
-  padding: 1rem 1.05rem;
-  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-main) 82%, var(--theme-soft-1));
+  padding: 1rem 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  background: transparent;
 }
 
 .nc-bookshop-manual-mini-card p {
@@ -8379,64 +8457,129 @@ textarea.nc-admin-form-input {
   color: var(--text-subtle);
 }
 
+.nc-bookshop-manual-toc {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0 0 1.3rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-soft-2) 36%, var(--surface-border));
+}
+
 .nc-bookshop-manual-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1.25rem;
 }
 
 .nc-bookshop-manual-nav-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.7rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  min-height: 3.35rem;
+  padding: 0.65rem 0;
+  border: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--theme-soft-2) 40%, var(--surface-border));
+  border-radius: 0;
+  background: transparent;
   color: var(--text-main);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
-  transition: border-color var(--motion-fast), background-color var(--motion-fast), transform var(--motion-fast);
+  transition: color var(--motion-fast), transform var(--motion-fast);
 }
 
 .nc-bookshop-manual-nav-link:hover,
 .nc-bookshop-manual-nav-link:focus-visible {
-  border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
-  background: color-mix(in srgb, var(--theme-accent-1) 10%, var(--surface-main));
+  color: color-mix(in srgb, var(--theme-accent-1) 72%, var(--text-main));
   transform: translateY(-1px);
+}
+
+.nc-bookshop-manual-nav-order {
+  padding-top: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: color-mix(in srgb, var(--theme-soft-ink) 82%, var(--text-main));
+}
+
+.nc-bookshop-manual-nav-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.nc-bookshop-manual-nav-copy strong {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+}
+
+.nc-bookshop-manual-nav-copy small {
+  font-size: 0.77rem;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
 }
 
 .nc-bookshop-manual-section {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.35rem;
+  gap: 1.2rem;
+  margin-top: 0;
+  padding-top: 1.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 32%, var(--surface-border));
 }
 
 .nc-bookshop-manual-section-head {
   display: grid;
-  gap: 0.55rem;
-  max-width: 78ch;
+  gap: 0.6rem;
+  max-width: 70ch;
+  padding-top: 0.1rem;
+}
+
+.nc-bookshop-manual-section-intro {
+  display: grid;
+  gap: 0.8rem;
+  width: 100%;
 }
 
 .nc-bookshop-manual-section-head p,
 .nc-bookshop-manual-hero-copy p,
+.nc-bookshop-manual-hero-intro p,
+.nc-bookshop-manual-section-intro p,
 .nc-bookshop-manual-step-card p,
 .nc-bookshop-manual-side-card p,
 .nc-bookshop-manual-stock-card p,
 .nc-bookshop-manual-pdv-card > p,
 .nc-bookshop-manual-pdv-block p {
   margin: 0;
+  line-height: 1.7;
+}
+
+.nc-bookshop-manual-section-head p,
+.nc-bookshop-manual-hero-copy p,
+.nc-bookshop-manual-hero-intro p,
+.nc-bookshop-manual-section-intro p {
+  font-size: 1.02rem;
+  color: color-mix(in srgb, var(--text-main) 80%, var(--text-muted));
 }
 
 .nc-bookshop-manual-flow-grid {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
+  gap: 1rem;
 }
 
 .nc-bookshop-manual-step-card {
-  position: relative;
-  padding-top: 1.2rem;
+  width: 100%;
+  margin: 0;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 36%, var(--surface-border));
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .nc-bookshop-manual-step-number {
@@ -8452,11 +8595,46 @@ textarea.nc-admin-form-input {
   box-shadow: var(--shadow-sm);
 }
 
+.nc-bookshop-manual-step-body {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+}
+
 .nc-bookshop-manual-support-grid,
 .nc-bookshop-manual-stock-grid,
 .nc-bookshop-manual-import-grid,
 .nc-bookshop-manual-pdv-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nc-bookshop-manual-pdv-grid {
+  grid-template-columns: 1fr;
+}
+
+.nc-bookshop-manual-support-grid-stacked {
+  grid-template-columns: 1fr;
+}
+
+.nc-bookshop-manual-stock-grid-stacked {
+  grid-template-columns: 1fr;
+}
+
+.nc-bookshop-manual-side-card,
+.nc-bookshop-manual-stock-card,
+.nc-bookshop-manual-pdv-block {
+  width: 100%;
+  margin: 0;
+  padding: 1rem 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 36%, var(--surface-border));
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.nc-bookshop-manual-side-card-wide {
+  grid-column: 1 / -1;
 }
 
 .nc-bookshop-manual-definition-list {
@@ -8486,21 +8664,84 @@ textarea.nc-admin-form-input {
 }
 
 .nc-bookshop-manual-note {
-  padding: 0.85rem 0.95rem;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem 1rem;
   border-left: 3px solid color-mix(in srgb, var(--theme-accent-1) 68%, var(--surface-border));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--theme-accent-1) 8%, var(--surface-main));
+  background: color-mix(in srgb, var(--theme-soft-1) 62%, var(--surface-main));
+}
+
+.nc-bookshop-manual-note.is-rule {
+  border-left-color: color-mix(in srgb, var(--swatch-amber-1) 72%, var(--surface-border));
+  background: color-mix(in srgb, var(--swatch-amber-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-manual-note.is-example {
+  border-left-color: color-mix(in srgb, var(--theme-accent-1) 72%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-accent-1) 10%, var(--surface-main));
+}
+
+.nc-bookshop-manual-note.is-operational {
+  border-left-color: color-mix(in srgb, var(--theme-soft-ink) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-2) 12%, var(--surface-main));
+}
+
+.nc-bookshop-manual-example-code {
+  gap: 0.55rem;
+}
+
+.nc-bookshop-manual-example-code code {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.32rem 0.58rem;
+  border: 1px solid color-mix(in srgb, var(--theme-accent-1) 24%, var(--surface-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-main) 84%, var(--theme-accent-1));
+  font-size: 0.94rem;
+  white-space: nowrap;
+}
+
+.nc-bookshop-manual-rule-card {
+  gap: 0.65rem;
+}
+
+.nc-bookshop-manual-rule-card > strong {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: var(--text-main);
+}
+
+.nc-bookshop-manual-rule-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.nc-bookshop-manual-rule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.nc-bookshop-manual-rule-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-main);
+}
+
+.nc-bookshop-manual-example-list-card .nc-bookshop-manual-rule-row {
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
 }
 
 .nc-bookshop-manual-pdv-card {
-  margin-top: 1.35rem;
-}
-
-.nc-bookshop-manual-pdv-block {
-  padding: 1rem 1.05rem;
-  border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .nc-bookshop-card-actions {
@@ -8684,6 +8925,22 @@ textarea.nc-admin-form-input {
 
 .nc-bookshop-table-filters > * {
   flex: 1 1 12rem;
+}
+
+.nc-bookshop-books-search-controls > input[type="search"] {
+  flex: 2.8 1 30rem;
+  width: auto;
+  min-width: 22rem;
+}
+
+.nc-bookshop-books-search-controls > select {
+  flex: 0.75 1 9.5rem;
+  min-width: 9.5rem;
+}
+
+.nc-bookshop-books-search-controls > .nc-btn {
+  flex: 0 0 auto;
+  padding-inline: 1rem;
 }
 
 .nc-bookshop-form-metrics {
@@ -9254,7 +9511,7 @@ body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
   align-items: center;
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: max-content max-content 1fr max-content;
+  grid-template-columns: max-content max-content max-content max-content 1fr;
 }
 
 .nc-bookshop-book-view-toolbar > .nc-btn {
@@ -9354,6 +9611,11 @@ body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
     gap: 0.35rem;
   }
 
+  .nc-bookshop-manual-rule-row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
   .nc-bookshop-sale-line-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9384,6 +9646,13 @@ body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
 
   .nc-bookshop-book-view-toolbar .nc-bookshop-book-view-sale-btn {
     justify-self: stretch;
+  }
+}
+
+@media (min-width: 981px) {
+  .nc-bookshop-manual-hero-copy h3,
+  .nc-bookshop-manual-section-head h3 {
+    white-space: nowrap;
   }
 }
 

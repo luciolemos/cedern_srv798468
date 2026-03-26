@@ -32,6 +32,11 @@ interface BookshopRepository
     public function findBookByIdForAdmin(int $id): ?array;
 
     /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function findStockLotsByBookIdForAdmin(int $bookId): array;
+
+    /**
      * @return array<string, mixed>|null
      */
     public function findBookBySku(string $sku): ?array;

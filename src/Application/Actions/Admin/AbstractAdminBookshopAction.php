@@ -37,6 +37,8 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
         'Galego',
     ];
 
+    private const DEFAULT_BOOKSHOP_LANGUAGE = 'Português';
+
     protected BookshopRepository $bookshopRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, BookshopRepository $bookshopRepository)
@@ -103,6 +105,11 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
     protected function getBookshopLanguageOptions(): array
     {
         return self::ROMANCE_LANGUAGE_OPTIONS;
+    }
+
+    protected function getDefaultBookshopLanguage(): string
+    {
+        return self::DEFAULT_BOOKSHOP_LANGUAGE;
     }
 
     /**
@@ -242,7 +249,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
         $language = trim((string) $value);
         $language = trim($language, " \t\n\r\0\x0B|");
         if ($language === '') {
-            return '';
+            return self::DEFAULT_BOOKSHOP_LANGUAGE;
         }
 
         $normalizedLanguage = $this->normalizeBookshopLanguageKey($language);

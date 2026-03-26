@@ -1,8 +1,13 @@
-<article class="nc-card nc-bookshop-manual-hero" data-aos="fade-up" data-aos-delay="100" id="visao-geral">
+<div class="nc-bookshop-manual-book">
+<article class="nc-bookshop-manual-hero" data-aos="fade-up" data-aos-delay="100" id="visao-geral">
   <div class="nc-bookshop-manual-hero-copy">
+    <p class="nc-bookshop-manual-hero-meta">CEDE · operação interna · venda presencial</p>
     <span class="nc-bookshop-manual-kicker">Operação presencial</span>
-    <h3>Manual operacional da Livraria</h3>
-    <p>A Livraria do painel foi criada para a operação interna do CEDE. Ela não é uma loja online. O objetivo é controlar o acervo físico, manter preço e saldo atualizados e registrar as vendas feitas no balcão.</p>
+    <h3>Guia operacional da Livraria</h3>
+  </div>
+
+  <div class="nc-bookshop-manual-hero-intro">
+    <p class="nc-bookshop-manual-lead">A Livraria do painel foi criada para a operação interna do CEDE. Ela não é uma loja online. O objetivo é controlar o acervo físico, manter preço e saldo atualizados e registrar as vendas feitas no balcão.</p>
     <p>Em linguagem simples: o admin cadastra ou importa os livros, organiza o estoque e depois lança cada venda no PDV. Quando uma venda é cancelada, o sistema devolve automaticamente os itens ao estoque.</p>
   </div>
 
@@ -25,64 +30,80 @@
       <p>Venda presencial, cancelamento e devolução automática ao estoque.</p>
     </article>
   </div>
+
 </article>
 
-{% if manual_pdf_mode|default(false) %}
+<section class="nc-bookshop-manual-toc" data-aos="fade-up" data-aos-delay="120">
   <div class="nc-bookshop-manual-section-head nc-bookshop-manual-section-head-summary">
+    <span class="nc-bookshop-manual-chapter">Sumário</span>
     <span class="nc-bookshop-manual-kicker">Navegação</span>
-    <h3>Sumário</h3>
+    <h3>Como este guia está organizado</h3>
   </div>
-{% endif %}
 
-<nav class="nc-bookshop-manual-nav" aria-label="Atalhos do manual" data-aos="fade-up" data-aos-delay="120">
-  <a class="nc-bookshop-manual-nav-link" href="#fluxo">Fluxo diário</a>
-  <a class="nc-bookshop-manual-nav-link" href="#movimentacoes">Movimentações</a>
-  <a class="nc-bookshop-manual-nav-link" href="#cadastro">Cadastro</a>
-  <a class="nc-bookshop-manual-nav-link" href="#importacao">Importação CSV</a>
-  <a class="nc-bookshop-manual-nav-link" href="#pdv">PDV</a>
-  <a class="nc-bookshop-manual-nav-link" href="#sku">SKU</a>
-</nav>
+  <nav class="nc-bookshop-manual-nav" aria-label="Atalhos do manual">
+    <a class="nc-bookshop-manual-nav-link" href="#fluxo"><span class="nc-bookshop-manual-nav-order">01</span><span class="nc-bookshop-manual-nav-copy"><strong>Fluxo diário</strong><small>ordem de trabalho</small></span></a>
+    <a class="nc-bookshop-manual-nav-link" href="#movimentacoes"><span class="nc-bookshop-manual-nav-order">02</span><span class="nc-bookshop-manual-nav-copy"><strong>Movimentações</strong><small>entrada e ajuste</small></span></a>
+    <a class="nc-bookshop-manual-nav-link" href="#cadastro"><span class="nc-bookshop-manual-nav-order">03</span><span class="nc-bookshop-manual-nav-copy"><strong>Cadastro</strong><small>campos do livro</small></span></a>
+    <a class="nc-bookshop-manual-nav-link" href="#importacao"><span class="nc-bookshop-manual-nav-order">04</span><span class="nc-bookshop-manual-nav-copy"><strong>Importação CSV</strong><small>planilha e aliases</small></span></a>
+    <a class="nc-bookshop-manual-nav-link" href="#pdv"><span class="nc-bookshop-manual-nav-order">05</span><span class="nc-bookshop-manual-nav-copy"><strong>PDV</strong><small>venda presencial</small></span></a>
+    <a class="nc-bookshop-manual-nav-link" href="#sku"><span class="nc-bookshop-manual-nav-order">A1</span><span class="nc-bookshop-manual-nav-copy"><strong>SKU e conceitos</strong><small>termos operacionais</small></span></a>
+  </nav>
+</section>
 
 <div class="nc-bookshop-manual-section" id="fluxo" data-aos="fade-up" data-aos-delay="140">
   <div class="nc-bookshop-manual-section-head">
+    <span class="nc-bookshop-manual-chapter">Capítulo 1</span>
     <span class="nc-bookshop-manual-kicker">Jornada diária</span>
     <h3>Fluxo de operação da livraria</h3>
+  </div>
+
+  <div class="nc-bookshop-manual-section-intro">
     <p>O dia a dia da livraria fica mais estável quando a equipe segue a mesma ordem de trabalho.</p>
   </div>
 
   <div class="nc-bookshop-manual-flow-grid">
     <article class="nc-card nc-bookshop-manual-step-card">
       <span class="nc-bookshop-manual-step-number">01</span>
-      <h4>Importar ou revisar o acervo</h4>
-      <p>Use o CSV exportado da planilha quando houver atualização grande. Se a alteração for pontual, faça a revisão direta no cadastro do item.</p>
+      <div class="nc-bookshop-manual-step-body">
+        <h4>Importar ou revisar o acervo</h4>
+        <p>Use o CSV exportado da planilha quando houver atualização grande. Se a alteração for pontual, faça a revisão direta no cadastro do item.</p>
+      </div>
     </article>
 
     <article class="nc-card nc-bookshop-manual-step-card">
       <span class="nc-bookshop-manual-step-number">02</span>
-      <h4>Conferir estoque e localização</h4>
-      <p>Priorize coleção, volume, preço, saldo e localização física dos livros antes do atendimento no balcão.</p>
+      <div class="nc-bookshop-manual-step-body">
+        <h4>Conferir estoque e localização</h4>
+        <p>Priorize coleção, volume, preço, saldo e localização física dos livros antes do atendimento no balcão.</p>
+      </div>
     </article>
 
     <article class="nc-card nc-bookshop-manual-step-card">
       <span class="nc-bookshop-manual-step-number">03</span>
-      <h4>Lançar entradas e ajustes</h4>
-      <p>Quando chegar reposição, houver doação ou divergência física, registre a movimentação antes de vender.</p>
+      <div class="nc-bookshop-manual-step-body">
+        <h4>Lançar entradas e ajustes</h4>
+        <p>Quando chegar reposição, houver doação ou divergência física, registre a movimentação antes de vender.</p>
+      </div>
     </article>
 
     <article class="nc-card nc-bookshop-manual-step-card">
       <span class="nc-bookshop-manual-step-number">04</span>
-      <h4>Registrar a venda no PDV</h4>
-      <p>Cada venda presencial precisa passar pelo PDV para reduzir o estoque corretamente e manter o histórico limpo.</p>
+      <div class="nc-bookshop-manual-step-body">
+        <h4>Registrar a venda no PDV</h4>
+        <p>Cada venda presencial precisa passar pelo PDV para reduzir o estoque corretamente e manter o histórico limpo.</p>
+      </div>
     </article>
 
     <article class="nc-card nc-bookshop-manual-step-card">
       <span class="nc-bookshop-manual-step-number">05</span>
-      <h4>Consultar histórico e cancelar só quando preciso</h4>
-      <p>Se houver erro no lançamento, cancele a venda pelo histórico. O sistema devolve o saldo automaticamente.</p>
+      <div class="nc-bookshop-manual-step-body">
+        <h4>Consultar histórico e cancelar só quando preciso</h4>
+        <p>Se houver erro no lançamento, cancele a venda pelo histórico. O sistema devolve o saldo automaticamente.</p>
+      </div>
     </article>
   </div>
 
-  <div class="nc-bookshop-manual-support-grid">
+  <div class="nc-bookshop-manual-support-grid nc-bookshop-manual-support-grid-stacked">
     <article class="nc-card nc-bookshop-manual-side-card">
       <h4>O que o sistema faz sozinho</h4>
       <ul class="nc-bookshop-flow-list">
@@ -96,29 +117,34 @@
 
     <article class="nc-card nc-bookshop-manual-side-card" id="sku">
       <h4>O que significa SKU</h4>
-      <p><strong>SKU</strong> é o código interno do item na livraria. Ele serve para localizar o produto rapidamente e manter o controle da operação.</p>
+      <p><strong>SKU</strong> é a sigla de <strong>Stock Keeping Unit</strong>, que pode ser entendida como <strong>unidade de manutenção de estoque</strong>. Na prática, é o código interno do item na livraria.</p>
       <p>O <strong>SKU</strong> não é o <strong>ISBN</strong>. O ISBN é o código editorial da obra; o SKU é o código criado pela própria livraria para uso interno.</p>
-      <p class="nc-bookshop-manual-note">Exemplo prático: um livro pode ter ISBN da editora e, ao mesmo tempo, ter um SKU como <code>KARDEC-001</code>.</p>
+      <div class="nc-bookshop-manual-note is-example nc-bookshop-manual-example-code">
+        <span>Exemplo prático: um livro pode ter ISBN da editora e, ao mesmo tempo, ter um SKU interno no padrão.</span>
+        <code>CEDE-LIV-0001</code>
+      </div>
     </article>
 
-    <article class="nc-card nc-bookshop-manual-side-card">
+    <article class="nc-card nc-bookshop-manual-side-card nc-bookshop-manual-side-card-wide">
       <h4>O que significa Ticket médio</h4>
       <p><strong>Ticket médio</strong> é o valor médio por venda concluída no relatório da livraria.</p>
       <p>O sistema calcula esse indicador dividindo o valor total das vendas concluídas pela quantidade de vendas concluídas.</p>
-      <p class="nc-bookshop-manual-note">Exemplo prático: se 10 vendas concluídas somaram R$ 500,00, o ticket médio será R$ 50,00.</p>
+      <p class="nc-bookshop-manual-note is-example">Exemplo prático: se 10 vendas concluídas somaram R$ 500,00, o ticket médio será R$ 50,00.</p>
     </article>
   </div>
 </div>
 
 <div class="nc-bookshop-manual-section" id="movimentacoes" data-aos="fade-up" data-aos-delay="180">
   <div class="nc-bookshop-manual-section-head">
+    <span class="nc-bookshop-manual-chapter">Capítulo 2</span>
     <span class="nc-bookshop-manual-kicker">Controle físico</span>
     <h3>Como funcionam as movimentações de estoque</h3>
     <p>Movimentações são usadas sempre que o saldo físico muda por entrada, correção, doação, perda ou avaria.</p>
-    <p class="nc-bookshop-manual-note">Regra prática: use <strong>Nova entrada</strong> quando chegaram exemplares novos fisicamente ao acervo. Use <strong>Novo ajuste</strong> quando não entrou lote novo, mas o saldo do sistema precisa ser corrigido.</p>
   </div>
 
-  <div class="nc-bookshop-manual-stock-grid">
+  <p class="nc-bookshop-manual-note is-rule">Regra prática: use <strong>Nova entrada</strong> quando chegaram exemplares novos fisicamente ao acervo. Use <strong>Novo ajuste</strong> quando não entrou lote novo, mas o saldo do sistema precisa ser corrigido.</p>
+
+  <div class="nc-bookshop-manual-stock-grid nc-bookshop-manual-stock-grid-stacked">
     <article class="nc-card nc-bookshop-manual-stock-card">
       <h4>Quando usar cada tipo</h4>
       <div class="nc-bookshop-manual-definition-list">
@@ -143,7 +169,27 @@
           <span>Quando o item saiu do estoque por dano, extravio ou descarte.</span>
         </div>
       </div>
-      <p class="nc-bookshop-manual-note">Exemplo simples: compra, reposição e doação usam <strong>Nova entrada</strong>. Divergência de inventário, livro encontrado depois, perda e avaria usam <strong>Novo ajuste</strong>.</p>
+      <div class="nc-bookshop-manual-note is-example nc-bookshop-manual-rule-card nc-bookshop-manual-example-list-card">
+        <strong>Exemplo simples</strong>
+        <div class="nc-bookshop-manual-rule-list">
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Compra, reposição e doação</span>
+            <span>entram como <strong>Nova entrada</strong>.</span>
+          </div>
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Físico maior que o sistema</span>
+            <span>use <strong>Novo ajuste</strong> com <strong>Ajuste positivo</strong>.</span>
+          </div>
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Físico menor que o sistema</span>
+            <span>use <strong>Novo ajuste</strong> com <strong>Ajuste negativo</strong>.</span>
+          </div>
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Dano, extravio ou descarte</span>
+            <span>use <strong>Novo ajuste</strong> com <strong>Perda ou avaria</strong>.</span>
+          </div>
+        </div>
+      </div>
     </article>
 
     <article class="nc-card nc-bookshop-manual-stock-card">
@@ -163,17 +209,34 @@
 
 <div class="nc-bookshop-manual-section" id="cadastro" data-aos="fade-up" data-aos-delay="220">
   <div class="nc-bookshop-manual-section-head">
+    <span class="nc-bookshop-manual-chapter">Capítulo 3</span>
     <span class="nc-bookshop-manual-kicker">Cadastros</span>
     <h3>O que cada campo do livro significa</h3>
-    <p>O formulário do acervo mistura identificação editorial, classificação interna e dados de operação.</p>
-    <p class="nc-bookshop-manual-note">O item do acervo nasce sem saldo operacional. Depois do cadastro, use <strong>Nova entrada</strong> para criar o primeiro lote e formar o estoque do título.</p>
   </div>
 
-  <div class="nc-bookshop-manual-stock-grid">
+  <div class="nc-bookshop-manual-section-intro">
+    <p>O formulário do acervo mistura identificação editorial, classificação interna e dados de operação.</p>
+  </div>
+
+  <div class="nc-bookshop-manual-note is-operational nc-bookshop-manual-rule-card">
+    <strong>Regra operacional</strong>
+    <div class="nc-bookshop-manual-rule-list">
+      <div class="nc-bookshop-manual-rule-row">
+        <span class="nc-bookshop-manual-rule-label">Situação inicial</span>
+        <span>O item do acervo nasce sem saldo operacional.</span>
+      </div>
+      <div class="nc-bookshop-manual-rule-row">
+        <span class="nc-bookshop-manual-rule-label">Próximo passo</span>
+        <span>Use <strong>Nova entrada</strong> para criar o primeiro lote e formar o estoque do título.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="nc-bookshop-manual-stock-grid nc-bookshop-manual-stock-grid-stacked">
     <article class="nc-card nc-bookshop-manual-stock-card">
       <h4>Identificação</h4>
       <div class="nc-bookshop-manual-definition-list">
-        <div class="nc-bookshop-manual-definition-row"><strong>SKU</strong><span>código interno de controle do item.</span></div>
+        <div class="nc-bookshop-manual-definition-row"><strong>SKU</strong><span>código interno de controle do item; sigla de <em>Stock Keeping Unit</em>, ou unidade de manutenção de estoque.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Slug</strong><span>nome técnico simplificado usado pelo sistema.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Status</strong><span>indica se o item está ativo ou inativo.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Título e subtítulo</strong><span>nome principal e complemento da obra.</span></div>
@@ -191,21 +254,37 @@
       <h4>Operação</h4>
       <div class="nc-bookshop-manual-definition-list">
         <div class="nc-bookshop-manual-definition-row"><strong>Localização</strong><span>onde o livro fica fisicamente, como estante ou prateleira.</span></div>
-        <div class="nc-bookshop-manual-definition-row"><strong>Estoque mínimo</strong><span>não existe um valor único no sistema; o alerta de reposição usa o campo técnico <code>stock_minimum</code> cadastrado em cada livro.</span></div>
+        <div class="nc-bookshop-manual-definition-row"><strong>Estoque mínimo</strong><span>campo obrigatório no formulário. O backend rejeita envio vazio no cadastro e na edição. Se algum registro antigo chegar sem valor na tela de edição, o fallback atual é <code>2</code>. O alerta de reposição usa o campo técnico <code>stock_minimum</code> cadastrado em cada livro.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Preço de venda</strong><span>preço-base público do título, usado como referência na vitrine e no PDV.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Custo do lote</strong><span>é informado na <strong>Nova entrada</strong> e fica vinculado ao lote, não ao cadastro do livro.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Saldo atual</strong><span>quantidade disponível no momento, controlada apenas pelas movimentações e pelas vendas do PDV.</span></div>
         <div class="nc-bookshop-manual-definition-row"><strong>Sinopse</strong><span>resumo curto da obra para identificação interna e apoio ao atendimento.</span></div>
       </div>
-      <p class="nc-bookshop-manual-note">Regras do alerta: <code>sem estoque</code> quando <code>stock_quantity &lt;= 0</code>; <code>estoque baixo</code> quando <code>stock_quantity &lt;= stock_minimum</code>.</p>
+      <div class="nc-bookshop-manual-note is-operational nc-bookshop-manual-rule-card">
+        <strong>Regras do alerta</strong>
+        <div class="nc-bookshop-manual-rule-list">
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Sem estoque</span>
+            <span>quando <code>stock_quantity &lt;= 0</code>.</span>
+          </div>
+          <div class="nc-bookshop-manual-rule-row">
+            <span class="nc-bookshop-manual-rule-label">Estoque baixo</span>
+            <span>quando <code>stock_quantity &lt;= stock_minimum</code>.</span>
+          </div>
+        </div>
+      </div>
     </article>
   </div>
 </div>
 
 <div class="nc-bookshop-manual-section" id="importacao" data-aos="fade-up" data-aos-delay="260">
   <div class="nc-bookshop-manual-section-head">
+    <span class="nc-bookshop-manual-chapter">Capítulo 4</span>
     <span class="nc-bookshop-manual-kicker">Importação</span>
     <h3>Como pensar a planilha em CSV</h3>
+  </div>
+
+  <div class="nc-bookshop-manual-section-intro">
     <p>A importação funciona melhor quando a planilha já chega enxuta, com campos no padrão técnico que o sistema entende.</p>
   </div>
 
@@ -213,21 +292,25 @@
     <article class="nc-card nc-bookshop-manual-stock-card">
       <h4>Campos principais</h4>
       <p class="nc-bookshop-inline-copy"><code>sku</code>, <code>title</code>, <code>author_name</code>, <code>collection_name</code>, <code>volume_number</code>, <code>volume_label</code>, <code>category_name</code>, <code>genre_name</code>, <code>publisher_name</code>, <code>isbn</code>, <code>barcode</code>, <code>edition_label</code>, <code>publication_year</code>, <code>language</code>, <code>description</code>, <code>sale_price</code>, <code>stock_minimum</code>, <code>status</code>, <code>location_label</code>, <code>subtitle</code> e <code>slug</code>.</p>
-      <p class="nc-bookshop-manual-note">O item é importado sem saldo operacional e sem custo de lote. Depois do cadastro, use <strong>Nova entrada</strong> para criar o primeiro lote e formar o estoque.</p>
+      <p class="nc-bookshop-manual-note is-operational">O item é importado sem saldo operacional e sem custo de lote. Depois do cadastro, use <strong>Nova entrada</strong> para criar o primeiro lote e formar o estoque.</p>
     </article>
 
     <article class="nc-card nc-bookshop-manual-stock-card">
       <h4>Aliases aceitos</h4>
       <p>O sistema também entende equivalentes em português, como <code>colecao</code>, <code>coleção</code>, <code>volume</code>, <code>rotulo_volume</code>, <code>categoria</code>, <code>genero</code>, <code>gênero</code>, <code>titulo</code>, <code>autor</code>, <code>editora</code>, <code>preco_venda</code> e <code>localizacao</code>.</p>
-      <p class="nc-bookshop-manual-note">Para coleção, o campo técnico principal continua sendo <code>collection_name</code>. Para categoria doutrinária, <code>category_name</code>. Para gênero literário, <code>genre_name</code>.</p>
+      <p class="nc-bookshop-manual-note is-operational">Para coleção, o campo técnico principal continua sendo <code>collection_name</code>. Para categoria doutrinária, <code>category_name</code>. Para gênero literário, <code>genre_name</code>.</p>
     </article>
   </div>
 </div>
 
 <article class="nc-card nc-bookshop-manual-pdv-card" id="pdv" data-aos="fade-up" data-aos-delay="300">
   <div class="nc-bookshop-manual-section-head">
+    <span class="nc-bookshop-manual-chapter">Capítulo 5</span>
     <span class="nc-bookshop-manual-kicker">Balcão</span>
     <h3>Como pensar o PDV</h3>
+  </div>
+
+  <div class="nc-bookshop-manual-section-intro">
     <p>O PDV é a tela usada para registrar a venda presencial. Ele não substitui movimentações de estoque; ele registra a venda propriamente dita.</p>
   </div>
 
@@ -255,3 +338,4 @@
     </article>
   </div>
 </article>
+</div>

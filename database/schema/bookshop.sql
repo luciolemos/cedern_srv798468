@@ -66,6 +66,8 @@ CREATE TABLE IF NOT EXISTS bookshop_books (
     stock_minimum INT UNSIGNED NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL DEFAULT 'active',
     location_label VARCHAR(120) NULL,
+    created_by_member_id BIGINT UNSIGNED NULL,
+    created_by_name VARCHAR(160) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_bookshop_books_title (title),
@@ -78,7 +80,8 @@ CREATE TABLE IF NOT EXISTS bookshop_books (
     INDEX idx_bookshop_books_collection (collection_name),
     INDEX idx_bookshop_books_barcode (barcode),
     INDEX idx_bookshop_books_status (status),
-    INDEX idx_bookshop_books_stock (stock_quantity)
+    INDEX idx_bookshop_books_stock (stock_quantity),
+    INDEX idx_bookshop_books_created_by (created_by_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS bookshop_sales (

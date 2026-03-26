@@ -115,6 +115,38 @@ class MySqlBookshopRepository implements BookshopRepository
         return $this->withSchemaRetry($operation);
     }
 
+    public function findStockLotsByBookIdForAdmin(int $bookId): array
+    {
+        $operation = function () use ($bookId): array {
+            if ($bookId <= 0) {
+                return [];
+            }
+
+            $statement = $this->pdo->prepare(<<<SQL
+                SELECT
+                    l.id,
+                    l.book_id,
+                    l.source_movement_id,
+                    l.quantity_received,
+                    l.quantity_available,
+                    l.unit_cost,
+                    l.unit_sale_price,
+                    l.occurred_at,
+                    l.notes,
+                    l.created_at
+                FROM bookshop_stock_lots l
+                WHERE l.book_id = :book_id
+                ORDER BY l.occurred_at ASC, l.id ASC
+            SQL);
+            $statement->bindValue(':book_id', $bookId, \PDO::PARAM_INT);
+            $statement->execute();
+
+            return array_map([$this, 'normalizeStockLot'], $statement->fetchAll() ?: []);
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
     public function findBookBySku(string $sku): ?array
     {
         $normalizedSku = trim($sku);
@@ -137,7 +169,6 @@ class MySqlBookshopRepository implements BookshopRepository
 
             return $books[0] ?? null;
         };
-
         return $this->withSchemaRetry($operation);
     }
 
@@ -232,12 +263,19 @@ class MySqlBookshopRepository implements BookshopRepository
                     :stock_quantity,
                     :stock_minimum,
                     :status,
-                    :location_label
+                    :location_label,
+                    :created_by_member_id,
+                    :created_by_name
                 )
             SQL;
 
             $statement = $this->pdo->prepare($sql);
-            $statement->execute($this->buildBookWriteParams($data));
+            $params = $this->buildBookWriteParams($data);
+            $params['created_by_member_id'] = isset($data['created_by_member_id']) && $data['created_by_member_id'] !== null
+                ? (int) $data['created_by_member_id']
+                : null;
+            $params['created_by_name'] = $this->nullableText($data['created_by_name'] ?? null);
+            $statement->execute($params);
 
             return (int) $this->pdo->lastInsertId();
         };
@@ -1520,6 +1558,8 @@ class MySqlBookshopRepository implements BookshopRepository
                 b.stock_minimum,
                 b.status,
                 b.location_label,
+                b.created_by_member_id,
+                b.created_by_name,
                 b.created_at,
                 b.updated_at
             FROM bookshop_books b
@@ -1665,6 +1705,10 @@ class MySqlBookshopRepository implements BookshopRepository
         }
 
         return array_merge($book, [
+            'created_by_member_id' => isset($book['created_by_member_id']) && $book['created_by_member_id'] !== null
+                ? (int) $book['created_by_member_id']
+                : null,
+            'created_by_name' => trim((string) ($book['created_by_name'] ?? '')),
             'volume_number' => isset($book['volume_number']) && $book['volume_number'] !== null
                 ? (int) $book['volume_number']
                 : null,
@@ -1774,11 +1818,14 @@ class MySqlBookshopRepository implements BookshopRepository
     private function normalizeStockLot(array $lot): array
     {
         $lotId = (int) ($lot['id'] ?? 0);
+        $quantityReceived = (int) ($lot['quantity_received'] ?? 0);
         $quantityAvailable = (int) ($lot['quantity_available'] ?? 0);
+        $quantitySold = max(0, $quantityReceived - $quantityAvailable);
         $unitCost = isset($lot['unit_cost']) && $lot['unit_cost'] !== null
             ? (float) $lot['unit_cost']
             : null;
         $unitSalePrice = (float) ($lot['unit_sale_price'] ?? 0);
+        $status = $quantityAvailable > 0 ? 'active' : 'closed';
         $labelFragments = [
             $this->formatStockLotCode($lotId),
             $quantityAvailable . ' un',
@@ -1789,20 +1836,28 @@ class MySqlBookshopRepository implements BookshopRepository
             $labelFragments[] = 'custo ' . $this->formatMoney($unitCost);
         }
 
+        $sourceMovementId = isset($lot['source_movement_id']) && $lot['source_movement_id'] !== null
+            ? (int) $lot['source_movement_id']
+            : 0;
+
         return array_merge($lot, [
             'id' => $lotId,
             'book_id' => (int) ($lot['book_id'] ?? 0),
-            'source_movement_id' => isset($lot['source_movement_id']) && $lot['source_movement_id'] !== null
-                ? (int) $lot['source_movement_id']
-                : null,
-            'quantity_received' => (int) ($lot['quantity_received'] ?? 0),
+            'source_movement_id' => $sourceMovementId > 0 ? $sourceMovementId : null,
+            'quantity_received' => $quantityReceived,
             'quantity_available' => $quantityAvailable,
+            'quantity_sold' => $quantitySold,
             'unit_cost' => $unitCost,
             'unit_sale_price' => $unitSalePrice,
             'lot_code' => $this->formatStockLotCode($lotId),
+            'status' => $status,
+            'status_label' => $status === 'active' ? 'Ativo' : 'Encerrado',
             'unit_cost_label' => $unitCost !== null ? $this->formatMoney($unitCost) : '-',
             'unit_sale_price_label' => $this->formatMoney($unitSalePrice),
             'occurred_at_label' => $this->formatDateTime($lot['occurred_at'] ?? null),
+            'source_movement_code' => $sourceMovementId > 0
+                ? 'MOV-' . str_pad((string) $sourceMovementId, 6, '0', STR_PAD_LEFT)
+                : '',
             'label' => implode(' · ', $labelFragments),
         ]);
     }
@@ -3176,6 +3231,16 @@ class MySqlBookshopRepository implements BookshopRepository
             'page_count',
             'ALTER TABLE bookshop_books ADD COLUMN page_count INT UNSIGNED NULL AFTER publication_year'
         );
+        $this->ensureColumn(
+            'bookshop_books',
+            'created_by_member_id',
+            'ALTER TABLE bookshop_books ADD COLUMN created_by_member_id BIGINT UNSIGNED NULL AFTER location_label'
+        );
+        $this->ensureColumn(
+            'bookshop_books',
+            'created_by_name',
+            'ALTER TABLE bookshop_books ADD COLUMN created_by_name VARCHAR(160) NULL AFTER created_by_member_id'
+        );
         $this->ensureIndex(
             'bookshop_books',
             'idx_bookshop_books_category_id',
@@ -3205,6 +3270,11 @@ class MySqlBookshopRepository implements BookshopRepository
             'bookshop_books',
             'idx_bookshop_books_barcode',
             'ALTER TABLE bookshop_books ADD INDEX idx_bookshop_books_barcode (barcode)'
+        );
+        $this->ensureIndex(
+            'bookshop_books',
+            'idx_bookshop_books_created_by',
+            'ALTER TABLE bookshop_books ADD INDEX idx_bookshop_books_created_by (created_by_name)'
         );
         $this->ensureIndex(
             'bookshop_stock_movements',

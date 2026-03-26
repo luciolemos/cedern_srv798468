@@ -142,7 +142,11 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
                 return $response->withHeader('Location', '/painel/livraria/acervo')->withStatus(303);
             }
 
-            $newId = $this->bookshopRepository->createBook($payload);
+            $actor = $this->resolveAdminActor();
+            $newId = $this->bookshopRepository->createBook(array_merge($payload, [
+                'created_by_member_id' => $actor['member_id'] > 0 ? $actor['member_id'] : null,
+                'created_by_name' => trim($actor['member_name']) !== '' ? $actor['member_name'] : 'Admin',
+            ]));
             if ($newId <= 0) {
                 if ($newCoverImagePath !== '') {
                     $this->deleteStoredBookshopCoverIfManaged($newCoverImagePath);
@@ -224,6 +228,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
 
         $publicationYear = trim((string) ($input['publication_year'] ?? ''));
         $pageCount = trim((string) ($input['page_count'] ?? ''));
+        $stockMinimum = trim((string) ($input['stock_minimum'] ?? ''));
 
         return [
             'sku' => $sku,
@@ -249,7 +254,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             'cost_price' => $this->normalizeMoneyInput($input['cost_price'] ?? '0'),
             'sale_price' => $this->normalizeMoneyInput($input['sale_price'] ?? '0'),
             'stock_quantity' => max(0, $this->normalizeIntegerInput($input['stock_quantity'] ?? 0, 0)),
-            'stock_minimum' => max(0, $this->normalizeIntegerInput($input['stock_minimum'] ?? 0, 0)),
+            'stock_minimum' => preg_match('/^\d+$/', $stockMinimum) ? (int) $stockMinimum : null,
             'status' => $status,
             'location_label' => trim((string) ($input['location_label'] ?? '')),
             'cover_image_path' => '',
@@ -358,7 +363,9 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             $errors[] = 'Preço de venda inválido.';
         }
 
-        if ((int) ($payload['stock_minimum'] ?? 0) < 0) {
+        if ($payload['stock_minimum'] === null) {
+            $errors[] = 'Estoque mínimo é obrigatório.';
+        } elseif ((int) $payload['stock_minimum'] < 0) {
             $errors[] = 'Estoque mínimo inválido.';
         }
 
@@ -424,15 +431,19 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
                 ? (string) ($submittedPayload['page_count'] ?? '')
                 : (string) ($existingBook['page_count'] ?? ''),
             'language' => array_key_exists('language', $submittedPayload)
-                ? (string) ($submittedPayload['language'] ?? '')
+                ? $this->normalizeBookshopLanguage($submittedPayload['language'] ?? '')
                 : $this->normalizeBookshopLanguage($existingBook['language'] ?? ''),
             'description' => $submittedPayload['description'] ?? ($existingBook['description'] ?? ''),
-            'cost_price' => $submittedPayload['cost_price'] ?? ($existingBook['cost_price'] ?? '0.00'),
-            'sale_price' => $submittedPayload['sale_price'] ?? ($existingBook['sale_price'] ?? '0.00'),
+            'cost_price' => array_key_exists('cost_price', $submittedPayload)
+                ? $this->normalizeMoneyInput($submittedPayload['cost_price'] ?? '0')
+                : $this->normalizeMoneyInput($existingBook['cost_price'] ?? '0'),
+            'sale_price' => array_key_exists('sale_price', $submittedPayload)
+                ? $this->normalizeMoneyInput($submittedPayload['sale_price'] ?? '0')
+                : $this->normalizeMoneyInput($existingBook['sale_price'] ?? '0'),
             'stock_quantity' => (string) ($existingBook['stock_quantity'] ?? '0'),
             'stock_minimum' => array_key_exists('stock_minimum', $submittedPayload)
-                ? (string) ($submittedPayload['stock_minimum'] ?? '0')
-                : (string) ($existingBook['stock_minimum'] ?? '0'),
+                ? (string) ($submittedPayload['stock_minimum'] ?? '')
+                : (string) ($existingBook['stock_minimum'] ?? '2'),
             'status' => $submittedPayload['status'] ?? ($existingBook['status'] ?? 'active'),
             'location_label' => $submittedPayload['location_label'] ?? ($existingBook['location_label'] ?? ''),
             'cover_image_path' => $existingBook['cover_image_path'] ?? '',

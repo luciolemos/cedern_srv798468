@@ -1,0 +1,111 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Acervo da Livraria' %}
+{% set dashboard_page_title = 'Lotes do título' %}
+{% set dashboard_page_lead = 'Leitura operacional de como o estoque deste título está dividido por entradas, custos e preços de venda.' %}
+{% set book = bookshop_book|default({}) %}
+{% set summary = bookshop_book_lot_summary|default({}) %}
+{% set lots = bookshop_book_lots|default([]) %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Lotes do título da livraria" data-aos="fade-up" data-aos-delay="0">
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/livraria/acervo">Voltar ao acervo</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/{{ book.id }}">Ficha do item</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/{{ book.id }}/editar">Editar item</a>
+      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/movimentacoes/nova?mode=entry&book_id={{ book.id }}">Nova entrada</a>
+    </div>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="90">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>{{ book.title|default('Título') }}</h3>
+          <p>
+            {{ book.author_name|default('Autor não informado') }}
+            {% if book.sku|default('') %} · {{ book.sku }}{% endif %}
+            {% if book.location_label|default('') %} · {{ book.location_label }}{% endif %}
+          </p>
+        </div>
+        <span class="nc-admin-featured-flag{{ book.status|default('inactive') == 'active' ? ' is-on' : ' is-off' }}">{{ book.status_label|default('-') }}</span>
+      </div>
+
+      <div class="nc-bookshop-sale-summary-grid">
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Estoque atual</span>
+          <strong>{{ summary.total_available|default(0) }}</strong>
+          <p>{{ book.stock_quantity|default(0) }} exemplares no título</p>
+        </article>
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Lotes ativos</span>
+          <strong>{{ summary.active_lots|default(0) }}</strong>
+          <p>{{ summary.total_lots|default(0) }} lotes no histórico</p>
+        </article>
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Saldo em custo</span>
+          <strong>{{ summary.available_cost_value_label|default('R$ 0,00') }}</strong>
+          <p>{{ summary.total_received|default(0) }} recebidos · {{ summary.total_sold|default(0) }} já vendidos</p>
+        </article>
+        <article class="nc-bookshop-sale-summary-item">
+          <span class="nc-metric-label">Potencial de venda</span>
+          <strong>{{ summary.available_sale_value_label|default('R$ 0,00') }}</strong>
+          <p>Com base nos lotes ainda disponíveis</p>
+        </article>
+      </div>
+    </article>
+
+    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="120">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Como o título está dividido</h3>
+          <p>Cada linha representa uma entrada de estoque. É aqui que fica claro quantas unidades restam de cada custo e de cada preço de venda.</p>
+        </div>
+      </div>
+
+      {% if lots|length == 0 %}
+        <p class="nc-bookshop-inline-copy">Este título ainda não possui lotes registrados. Faça uma nova entrada para começar a separar o estoque por custo e preço de venda.</p>
+      {% else %}
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table nc-bookshop-report-table">
+            <thead>
+              <tr>
+                <th>Lote</th>
+                <th>Entrada</th>
+                <th>Quantidade inicial</th>
+                <th>Disponível</th>
+                <th>Vendidas</th>
+                <th>Custo unitário</th>
+                <th>Venda unitária</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lot in lots %}
+                <tr>
+                  <td data-label="Lote">
+                    <strong>{{ lot.lot_code }}</strong>
+                    {% if lot.source_movement_code|default('') %}
+                      <small>{{ lot.source_movement_code }}</small>
+                    {% endif %}
+                    {% if lot.notes|default('') %}
+                      <small>{{ lot.notes }}</small>
+                    {% endif %}
+                  </td>
+                  <td data-label="Entrada">{{ lot.occurred_at_label|default('-') ?: '-' }}</td>
+                  <td data-label="Quantidade inicial">{{ lot.quantity_received|default(0) }}</td>
+                  <td data-label="Disponível"><strong>{{ lot.quantity_available|default(0) }}</strong></td>
+                  <td data-label="Vendidas">{{ lot.quantity_sold|default(0) }}</td>
+                  <td data-label="Custo unitário">{{ lot.unit_cost_label|default('-') }}</td>
+                  <td data-label="Venda unitária">{{ lot.unit_sale_price_label|default('R$ 0,00') }}</td>
+                  <td data-label="Situação">
+                    <span class="nc-admin-featured-flag{{ lot.status|default('closed') == 'active' ? ' is-on' : ' is-off' }}">{{ lot.status_label|default('-') }}</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

@@ -32,6 +32,7 @@ return [
         'participacao' => 'Participação',
         'praticas' => 'Práticas da Casa',
         'politica-de-privacidade' => 'Política de Privacidade',
+        'dados-de-acesso' => 'Dados de acesso',
         'termos-de-uso' => 'Termos de Uso',
         'contato' => 'Contato',
     ],
