@@ -59,6 +59,7 @@
     },
     "scripts": {
         "import:bookshop:csv": "php scripts/import_bookshop_csv.php",
+        "migrate:bookshop:covers": "php scripts/migrate_bookshop_cover_paths.php",
         "start": "php -S localhost:8080 -t public",
         "export:bookshop-manual-pdf": "php scripts/export_bookshop_manual_pdf.php",
         "seed:bookshop:xlsx-web": "php scripts/build_bookshop_seed_from_xlsx.php",
