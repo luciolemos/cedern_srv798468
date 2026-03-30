@@ -1,0 +1,2 @@
+sku;slug;title;subtitle;author_name;collection_name;volume_number;volume_label;category_name;genre_name;publisher_name;isbn;barcode;edition_label;publication_year;page_count;language;description;sale_price;stock_minimum;status;location_label
+;;Livro Exemplo;;Autor Exemplo;Colecao Exemplo;1;Vol. 1;Categoria Exemplo;Genero Exemplo;Editora Exemplo;;;1a;2020;200;Portugues;Descricao curta;35.90;2;active;Prateleira 1

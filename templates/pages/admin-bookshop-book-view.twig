@@ -53,7 +53,7 @@
               {% include 'components/library-bookplate-fallback.twig' with {
                 bookplate_title: book.title|default('livro'),
                 bookplate_author: book.author_name|default(''),
-                bookplate_collection_label: 'Livraria CEDE',
+                bookplate_collection_label: 'Livraria Auta de Sousa',
                 bookplate_section_title: 'Livraria',
                 bookplate_modifier_class: 'is-admin-preview'
               } only %}
@@ -141,12 +141,12 @@
           </div>
         {% endif %}
         <div>
-          <dt>Categoria doutrinária</dt>
-          <dd>{{ book.category_name|default('-') ?: '-' }}</dd>
-        </div>
-        <div>
           <dt>Gênero literário</dt>
           <dd>{{ book.genre_name|default('-') ?: '-' }}</dd>
+        </div>
+        <div>
+          <dt>Categoria doutrinária</dt>
+          <dd>{{ book.category_name|default('-') ?: '-' }}</dd>
         </div>
         {% if book.publisher_name|default('') %}
           <div>
@@ -190,6 +190,19 @@
             <dd class="nc-admin-cell-slug">{{ book.barcode }}</dd>
           </div>
         {% endif %}
+        <div>
+          <dt>Localização</dt>
+          {% set location_label = book.location_label|default('')|trim %}
+          {% if location_label %}
+            {% if location_label matches '/^[A-Za-z][0-9]{1,2}$/' %}
+              <dd>{{ location_label }} (Estante {{ location_label|slice(0, 1)|upper }}/Prateleira {{ location_label|slice(1) }})</dd>
+            {% else %}
+              <dd>{{ location_label }}</dd>
+            {% endif %}
+          {% else %}
+            <dd>Sem localização</dd>
+          {% endif %}
+        </div>
       </dl>
     </article>
 

@@ -13,7 +13,9 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
 
     private const DEFAULT_PAGE_SIZE = 10;
 
-    private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
+    private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
+
+    private const ALL_PAGE_SIZE = 'all';
 
     private const PAGINATION_VISIBLE_RADIUS = 1;
 
@@ -33,9 +35,13 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
     public function __invoke(Request $request, Response $response): Response
     {
         $books = [];
+        $categories = [];
+        $genres = [];
 
         try {
             $books = $this->bookshopRepository->findAllBooksForAdmin();
+            $categories = $this->bookshopRepository->findAllCategoriesForAdmin();
+            $genres = $this->bookshopRepository->findAllGenresForAdmin();
         } catch (\Throwable $exception) {
             $this->logger->warning('Falha ao listar acervo da livraria.', [
                 'error' => $exception->getMessage(),
@@ -48,6 +54,19 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
         $statusFilter = trim((string) ($queryParams['status_filter'] ?? 'all'));
         $stockFilter = trim((string) ($queryParams['stock_filter'] ?? 'all'));
+        $genreFilter = trim((string) ($queryParams['genre_filter'] ?? 'all'));
+        $categoryFilter = trim((string) ($queryParams['category_filter'] ?? 'all'));
+        $shelfFilter = strtoupper(trim((string) ($queryParams['shelf_filter'] ?? 'all')));
+        $levelFilter = trim((string) ($queryParams['level_filter'] ?? 'all'));
+
+        $genreOptions = $this->buildNamedFilterOptions($genres);
+        $categoryOptions = $this->buildNamedFilterOptions($categories);
+        $genreFilter = $this->resolveNamedFilterValue($genreFilter, $genreOptions);
+        $categoryFilter = $this->resolveNamedFilterValue($categoryFilter, $categoryOptions);
+        $shelfOptions = $this->buildShelfFilterOptions();
+        $levelOptions = $this->buildLevelFilterOptions();
+        $shelfFilter = $this->resolveSimpleFilterValue($shelfFilter, $shelfOptions);
+        $levelFilter = $this->resolveSimpleFilterValue($levelFilter, $levelOptions);
 
         if ($searchTerm !== '') {
             $normalizedSearch = strtolower($searchTerm);
@@ -94,9 +113,44 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             $stockFilter = 'all';
         }
 
-        $sortBy = (string) ($queryParams['sort'] ?? 'title');
+        if ($genreFilter !== 'all') {
+            $normalizedGenreFilter = strtolower($genreFilter);
+            $books = array_values(array_filter(
+                $books,
+                static fn (array $book): bool => strtolower(trim((string) ($book['genre_name'] ?? ''))) === $normalizedGenreFilter
+            ));
+        }
+
+        if ($categoryFilter !== 'all') {
+            $normalizedCategoryFilter = strtolower($categoryFilter);
+            $books = array_values(array_filter(
+                $books,
+                static fn (array $book): bool => strtolower(trim((string) ($book['category_name'] ?? ''))) === $normalizedCategoryFilter
+            ));
+        }
+
+        if ($shelfFilter !== 'all' || $levelFilter !== 'all') {
+            $books = array_values(array_filter(
+                $books,
+                function (array $book) use ($shelfFilter, $levelFilter): bool {
+                    $location = $this->parseLocationLabel((string) ($book['location_label'] ?? ''));
+
+                    if ($shelfFilter !== 'all' && $location['shelf'] !== $shelfFilter) {
+                        return false;
+                    }
+
+                    if ($levelFilter !== 'all' && $location['level'] !== $levelFilter) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            ));
+        }
+
+        $sortBy = (string) ($queryParams['sort'] ?? 'sku');
         if (!in_array($sortBy, self::SORT_FIELDS, true)) {
-            $sortBy = 'title';
+            $sortBy = 'sku';
         }
 
         $sortDirection = strtolower((string) ($queryParams['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
@@ -117,17 +171,25 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             return $comparison * $sortMultiplier;
         });
 
-        $requestedPageSize = (int) ($queryParams['per_page'] ?? self::DEFAULT_PAGE_SIZE);
-        $pageSize = in_array($requestedPageSize, self::PAGE_SIZE_OPTIONS, true)
-            ? $requestedPageSize
-            : self::DEFAULT_PAGE_SIZE;
-
         $totalItems = count($books);
         $totalUnits = array_reduce(
             $books,
             static fn (int $carry, array $book): int => $carry + (int) ($book['stock_quantity'] ?? 0),
             0
         );
+        $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
+        $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
+        $pageSize = self::DEFAULT_PAGE_SIZE;
+
+        if (!$showAllItems) {
+            $requestedPageSizeNumber = (int) $requestedPageSize;
+            $pageSize = in_array($requestedPageSizeNumber, self::PAGE_SIZE_OPTIONS, true)
+                ? $requestedPageSizeNumber
+                : self::DEFAULT_PAGE_SIZE;
+        } else {
+            $pageSize = max($totalItems, 1);
+        }
+
         $totalPages = max(1, (int) ceil($totalItems / $pageSize));
         $currentPage = max(1, (int) ($queryParams['page'] ?? 1));
         $currentPage = min($currentPage, $totalPages);
@@ -140,13 +202,23 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
 
         $basePath = '/painel/livraria/acervo';
         $baseQuery = [
-            'per_page' => $pageSize,
+            'per_page' => $showAllItems ? self::ALL_PAGE_SIZE : $pageSize,
             'sort' => $sortBy,
             'dir' => $sortDirection,
             'q' => $searchTerm,
             'status_filter' => $statusFilter,
             'stock_filter' => $stockFilter,
+            'genre_filter' => $genreFilter,
+            'category_filter' => $categoryFilter,
+            'shelf_filter' => $shelfFilter,
+            'level_filter' => $levelFilter,
         ];
+        $exportQuery = $baseQuery;
+        unset($exportQuery['per_page']);
+        $exportUrl = '/painel/livraria/acervo/exportar';
+        if ($exportQuery !== []) {
+            $exportUrl .= '?' . http_build_query($exportQuery);
+        }
 
         $sortLinks = [];
         foreach (self::SORT_FIELDS as $field) {
@@ -158,31 +230,37 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             }
 
             $sortLinks[$field] = [
-                'url' => $basePath . '?' . http_build_query($baseQuery + [
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, [
                     'page' => 1,
                     'sort' => $field,
                     'dir' => $nextDirection,
-                ]),
+                ])),
                 'indicator' => $indicator,
                 'active' => $sortBy === $field,
             ];
         }
 
         $paginationLinks = $this->buildCompactPaginationLinks($currentPage, $totalPages, static function (int $page) use ($basePath, $baseQuery): string {
-            return $basePath . '?' . http_build_query($baseQuery + ['page' => $page]);
+            return $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page]));
         });
 
         $previousPageUrl = $currentPage > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
             : null;
         $nextPageUrl = $currentPage < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
             : null;
 
         $pageSizeOptions = array_map(static fn (int $option): array => [
-            'value' => $option,
-            'selected' => $option === $pageSize,
+            'value' => (string) $option,
+            'label' => (string) $option,
+            'selected' => !$showAllItems && $option === $pageSize,
         ], self::PAGE_SIZE_OPTIONS);
+        $pageSizeOptions[] = [
+            'value' => self::ALL_PAGE_SIZE,
+            'label' => 'Todos',
+            'selected' => $showAllItems,
+        ];
 
         return $this->renderPage($response, 'pages/admin-bookshop-books.twig', [
             'bookshop_books' => $books,
@@ -192,7 +270,18 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             'bookshop_books_filters' => [
                 'status_filter' => $statusFilter,
                 'stock_filter' => $stockFilter,
+                'genre_filter' => $genreFilter,
+                'category_filter' => $categoryFilter,
+                'shelf_filter' => $shelfFilter,
+                'level_filter' => $levelFilter,
             ],
+            'bookshop_books_filter_options' => [
+                'genres' => $genreOptions,
+                'categories' => $categoryOptions,
+                'shelves' => $shelfOptions,
+                'levels' => $levelOptions,
+            ],
+            'bookshop_books_export_url' => $exportUrl,
             'bookshop_books_pagination' => [
                 'current_page' => $currentPage,
                 'total_pages' => $totalPages,
@@ -200,7 +289,7 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
                 'total_units' => $totalUnits,
                 'start_item' => $startItem,
                 'end_item' => $endItem,
-                'page_size' => $pageSize,
+                'page_size' => $showAllItems ? self::ALL_PAGE_SIZE : (string) $pageSize,
                 'sort' => $sortBy,
                 'dir' => $sortDirection,
                 'links' => $paginationLinks,
@@ -212,6 +301,136 @@ class AdminBookshopBookListPageAction extends AbstractAdminBookshopAction
             'page_url' => 'https://cedern.org/painel/livraria/acervo',
             'page_description' => 'Gestão administrativa do acervo da livraria do CEDE.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array{label: string, value: string}>
+     */
+    private function buildNamedFilterOptions(array $rows): array
+    {
+        $labels = [];
+
+        foreach ($rows as $row) {
+            $label = trim((string) ($row['name'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+
+            $labels[strtolower($label)] = $label;
+        }
+
+        natcasesort($labels);
+
+        return array_map(static fn (string $label): array => [
+            'label' => $label,
+            'value' => $label,
+        ], array_values($labels));
+    }
+
+    /**
+     * @param array<int, array{label: string, value: string}> $options
+     */
+    private function resolveNamedFilterValue(string $value, array $options): string
+    {
+        if ($value === '' || $value === 'all') {
+            return 'all';
+        }
+
+        $normalized = strtolower(trim($value));
+        foreach ($options as $option) {
+            if (strtolower(trim($option['value'])) === $normalized) {
+                return $option['value'];
+            }
+        }
+
+        return 'all';
+    }
+
+    /**
+     * @param array<int, array{label: string, value: string}> $options
+     */
+    private function resolveSimpleFilterValue(string $value, array $options): string
+    {
+        if ($value === '' || $value === 'all') {
+            return 'all';
+        }
+
+        foreach ($options as $option) {
+            if (strtoupper($option['value']) === strtoupper($value)) {
+                return (string) $option['value'];
+            }
+        }
+
+        return 'all';
+    }
+
+    /**
+     * @return array<int, array{label: string, value: string}>
+     */
+    private function buildShelfFilterOptions(): array
+    {
+        $options = [];
+
+        foreach (range('A', 'Z') as $letter) {
+            $options[] = [
+                'label' => $letter,
+                'value' => $letter,
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array<int, array{label: string, value: string}>
+     */
+    private function buildLevelFilterOptions(): array
+    {
+        $options = [];
+
+        foreach (range(1, 10) as $level) {
+            $options[] = [
+                'label' => (string) $level,
+                'value' => (string) $level,
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array{shelf: string, level: string}
+     */
+    private function parseLocationLabel(string $label): array
+    {
+        $normalized = trim($label);
+        if ($normalized === '') {
+            return ['shelf' => '', 'level' => ''];
+        }
+
+        if (preg_match('/^([a-z])\s*[-\/]?\s*([0-9]{1,2})$/i', $normalized, $matches) === 1) {
+            return [
+                'shelf' => strtoupper($matches[1]),
+                'level' => ltrim($matches[2], '0') !== '' ? ltrim($matches[2], '0') : '0',
+            ];
+        }
+
+        $shelf = '';
+        $level = '';
+
+        if (preg_match('/estante\s*([a-z0-9]+)/i', $normalized, $shelfMatch) === 1) {
+            $shelf = strtoupper($shelfMatch[1]);
+        }
+
+        if (preg_match('/prateleira\s*([0-9]{1,2})/i', $normalized, $levelMatch) === 1) {
+            $level = ltrim($levelMatch[1], '0') !== '' ? ltrim($levelMatch[1], '0') : '0';
+        }
+
+        return [
+            'shelf' => $shelf,
+            'level' => $level,
+        ];
     }
 
     /**

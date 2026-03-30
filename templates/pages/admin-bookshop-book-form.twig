@@ -53,12 +53,14 @@
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-header">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sku">SKU <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
-            <input class="nc-admin-form-input" id="sku" name="sku" type="text" required pattern="CEDE-LIV-[0-9]{4}" maxlength="13" inputmode="text" placeholder="Ex: CEDE-LIV-0001" title="Use o padrão CEDE-LIV-0001" value="{{ bookshop_book_form.sku|default('') }}">
+            <input class="nc-admin-form-input" id="sku" name="sku" type="text" required readonly aria-readonly="true" pattern="CEDE-LIV-[0-9]{4}" maxlength="13" inputmode="text" placeholder="Ex: CEDE-LIV-0001" title="Gerado automaticamente no padrão CEDE-LIV-0001" value="{{ bookshop_book_form.sku|default('') }}">
+            <small>Gerado automaticamente pelo sistema no padrão <code>CEDE-LIV-0001</code>.</small>
           </div>
 
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="slug">Slug</label>
             <input class="nc-admin-form-input" id="slug" name="slug" type="text" placeholder="Ex: livro-dos-espiritos-kardec-001" value="{{ bookshop_book_form.slug|default('') }}">
+            <small>Identificador técnico usado em URLs e referências internas do sistema. Se ficar em branco, o sistema monta esse valor automaticamente a partir do título.</small>
           </div>
 
           <div class="nc-admin-form-field">
@@ -67,6 +69,7 @@
               <option value="active" {{ bookshop_book_form.status|default('active') == 'active' ? 'selected' : '' }}>Ativo</option>
               <option value="inactive" {{ bookshop_book_form.status|default('active') == 'inactive' ? 'selected' : '' }}>Inativo</option>
             </select>
+            <small>Itens ativos aparecem no acervo operacional; itens inativos ficam fora da operação e da vitrine.</small>
           </div>
         </div>
 
@@ -112,6 +115,7 @@
           </div>
         </div>
 
+        {% set collection_is_empty = bookshop_book_form.collection_id|default('0') in ['0', ''] %}
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-volume">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="collection_id">Coleção</label>
@@ -128,12 +132,12 @@
 
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="volume_number">Nº do volume</label>
-            <input class="nc-admin-form-input" id="volume_number" name="volume_number" type="number" min="1" max="999" placeholder="Ex: 1" value="{{ bookshop_book_form.volume_number|default('') }}">
+            <input class="nc-admin-form-input" id="volume_number" name="volume_number" type="number" min="1" max="999" placeholder="Ex: 1" value="{{ bookshop_book_form.volume_number|default('') }}" {{ collection_is_empty ? 'disabled' : '' }}>
           </div>
 
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="volume_label">Rótulo do volume</label>
-            <input class="nc-admin-form-input" id="volume_label" name="volume_label" type="text" placeholder="Ex: Vol. 1 ou Tomo II" value="{{ bookshop_book_form.volume_label|default('') }}">
+            <input class="nc-admin-form-input" id="volume_label" name="volume_label" type="text" placeholder="Ex: Vol. 1 ou Tomo II" value="{{ bookshop_book_form.volume_label|default('') }}" {{ collection_is_empty ? 'disabled' : '' }}>
           </div>
         </div>
 
@@ -202,7 +206,7 @@
                 {% include 'components/library-bookplate-fallback.twig' with {
                   bookplate_title: bookshop_book_form.title|default('livro'),
                   bookplate_author: bookshop_book_form.author_name|default(''),
-                  bookplate_collection_label: 'Livraria CEDE',
+                  bookplate_collection_label: 'Livraria Auta de Sousa',
                   bookplate_section_title: 'Livraria',
                   bookplate_modifier_class: 'is-admin-preview'
                 } only %}
@@ -212,7 +216,7 @@
               {% include 'components/library-bookplate-fallback.twig' with {
                 bookplate_title: bookshop_book_form.title|default('livro'),
                 bookplate_author: bookshop_book_form.author_name|default(''),
-                bookplate_collection_label: 'Livraria CEDE',
+                bookplate_collection_label: 'Livraria Auta de Sousa',
                 bookplate_section_title: 'Livraria',
                 bookplate_modifier_class: 'is-admin-preview'
               } only %}
@@ -242,16 +246,33 @@
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="stock_minimum">Estoque mínimo <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
             <input class="nc-admin-form-input" id="stock_minimum" name="stock_minimum" type="number" min="0" required placeholder="Ex: 2" value="{{ bookshop_book_form.stock_minimum|default('2') }}">
+            <p class="nc-admin-statute-meta">Define o limite para alertas de reposição. Quando o saldo ficar abaixo desse valor, o item aparece como estoque baixo.</p>
           </div>
 
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sale_price">Preço de venda</label>
             <input class="nc-admin-form-input" id="sale_price" name="sale_price" type="text" inputmode="decimal" placeholder="Ex: 39,90" value="{{ bookshop_book_form.sale_price|default('0.00')|replace({'.': ','}) }}">
+            <p class="nc-admin-statute-meta">Preço-base sugerido no PDV. Alterar aqui não muda os preços já registrados nos lotes.</p>
           </div>
 
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="location_label">Localização</label>
-            <input class="nc-admin-form-input" id="location_label" name="location_label" type="text" placeholder="Ex: Estante A / Prateleira 2" value="{{ bookshop_book_form.location_label|default('') }}">
+            <div class="nc-admin-form-location-grid">
+              <select class="nc-admin-form-input" id="location_shelf" aria-label="Estante">
+                <option value="">Estante</option>
+                {% for shelf in 'A'..'Z' %}
+                  <option value="{{ shelf }}">{{ shelf }}</option>
+                {% endfor %}
+              </select>
+              <select class="nc-admin-form-input" id="location_level" aria-label="Prateleira">
+                <option value="">Prateleira</option>
+                {% for level in 1..10 %}
+                  <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+              </select>
+              <input class="nc-admin-form-input" id="location_label" name="location_label" type="text" placeholder="A1" value="{{ bookshop_book_form.location_label|default('') }}" readonly>
+            </div>
+            <p class="nc-admin-statute-meta">Selecione estante e prateleira para preencher a localização automaticamente no formato letra + número (ex: A1).</p>
           </div>
         </div>
 
@@ -262,4 +283,88 @@
       </form>
     </div>
   </section>
+
+  <script>
+    (function () {
+      var shelfSelect = document.getElementById('location_shelf');
+      var levelSelect = document.getElementById('location_level');
+      var input = document.getElementById('location_label');
+      var collectionSelect = document.getElementById('collection_id');
+      var volumeNumberInput = document.getElementById('volume_number');
+      var volumeLabelInput = document.getElementById('volume_label');
+
+      if (!shelfSelect || !levelSelect || !input) {
+        return;
+      }
+
+      function normalizeValue(value) {
+        return String(value || '').trim();
+      }
+
+      function updateLocationLabel() {
+        var shelf = normalizeValue(shelfSelect.value);
+        var level = normalizeValue(levelSelect.value);
+
+        if (shelf && level) {
+          input.value = shelf + level;
+          return;
+        }
+
+        if (!shelf && !level) {
+          return;
+        }
+      }
+
+      function parseExisting() {
+        var value = normalizeValue(input.value);
+        if (!value) {
+          return;
+        }
+
+        var compactMatch = value.match(/^([a-z])\s*[-\/]?\s*([0-9]{1,2})$/i);
+        var shelfMatch = value.match(/estante\s*([a-z0-9]+)/i);
+        var levelMatch = value.match(/prateleira\s*([0-9]+)/i);
+
+        if (compactMatch) {
+          shelfMatch = [compactMatch[0], compactMatch[1]];
+          levelMatch = [compactMatch[0], compactMatch[2]];
+        }
+
+        if (shelfMatch && shelfMatch[1]) {
+          var shelfValue = shelfMatch[1];
+          shelfSelect.value = shelfValue.toUpperCase();
+        }
+
+        if (levelMatch && levelMatch[1]) {
+          levelSelect.value = String(parseInt(levelMatch[1], 10));
+        }
+      }
+
+      parseExisting();
+
+      function syncVolumeFields(clearValues) {
+        if (!collectionSelect || !volumeNumberInput || !volumeLabelInput) {
+          return;
+        }
+
+        var hasCollection = normalizeValue(collectionSelect.value) !== '';
+        volumeNumberInput.disabled = !hasCollection;
+        volumeLabelInput.disabled = !hasCollection;
+
+        if (!hasCollection && clearValues) {
+          volumeNumberInput.value = '';
+          volumeLabelInput.value = '';
+        }
+      }
+
+      if (collectionSelect && volumeNumberInput && volumeLabelInput) {
+        syncVolumeFields(false);
+        collectionSelect.addEventListener('change', function () {
+          syncVolumeFields(true);
+        });
+      }
+      shelfSelect.addEventListener('change', updateLocationLabel);
+      levelSelect.addEventListener('change', updateLocationLabel);
+    })();
+  </script>
 {% endblock %}

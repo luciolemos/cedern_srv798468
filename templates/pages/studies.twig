@@ -4,13 +4,14 @@
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/features.twig' %}
 
-    <section class="nc-section" aria-label="Caminhos de estudo">
+    <section class="nc-section nc-studies-paths" aria-label="Caminhos de estudo">
       {% include 'components/section-header.twig' with {
         kicker: 'Estudos',
         title: 'Escolha seu caminho de aprofundamento',
         lead: 'Acesse cada frente de estudo e participação conforme sua necessidade espiritual e formativa.'
       } %}
       <div class="nc-actions nc-tonal-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="120">
+        <a class="nc-btn nc-btn-secondary" href="/estudos/eade">EADE</a>
         <a class="nc-btn nc-btn-secondary" href="/estudos/esde">ESDE</a>
         <a class="nc-btn nc-btn-secondary" href="/estudos/palestras">Palestras Públicas</a>
         <a class="nc-btn nc-btn-secondary" href="/estudos/atendimento-fraterno">Atendimento Fraterno</a>

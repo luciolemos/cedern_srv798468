@@ -5,65 +5,63 @@
 {% endblock %}
 
 {% block content %}
-  <main class="nc-main nc-home-flow">
+  <main class="nc-main nc-container nc-home-flow">
     <section class="nc-section" aria-label="Login de membro" data-aos="fade-up" data-aos-delay="0">
-      <div class="nc-container">
-        {% include 'components/section-header.twig' with {
-          kicker: 'Acesso',
-          title: 'Acessar área do membro',
-          lead: 'Use seu e-mail e senha para acessar sua área de membro.'
-        } %}
+      {% include 'components/section-header.twig' with {
+        kicker: 'Acesso',
+        title: 'Acessar área do membro',
+        lead: 'Use seu e-mail e senha para acessar sua área de membro.'
+      } %}
 
-        <article class="nc-card nc-admin-login-card">
-          {% if member_login_success %}
-            <p class="nc-admin-login-success" role="status">{{ member_login_success }}</p>
-          {% endif %}
+      <article class="nc-card nc-admin-login-card">
+        {% if member_login_success %}
+          <p class="nc-admin-login-success" role="status">{{ member_login_success }}</p>
+        {% endif %}
 
-          {% if member_login_error %}
-            <p class="nc-admin-login-error" role="alert">{{ member_login_error }}</p>
-          {% endif %}
+        {% if member_login_error %}
+          <p class="nc-admin-login-error" role="alert">{{ member_login_error }}</p>
+        {% endif %}
 
-          <form class="nc-admin-login-form" method="post" action="/entrar"{% if app_recaptcha_enabled %} data-recaptcha-action="member_login" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
-            <input type="hidden" name="redirect_to" value="{{ member_login_redirect_to|default('/membro') }}">
+        <form class="nc-admin-login-form" method="post" action="/entrar"{% if app_recaptcha_enabled %} data-recaptcha-action="member_login" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
+          <input type="hidden" name="redirect_to" value="{{ member_login_redirect_to|default('/membro') }}">
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="identifier">E-mail ou usuário</label>
-              <input class="nc-admin-login-input" id="identifier" name="identifier" type="text" value="{{ member_login_form.identifier|default('') }}" autocomplete="username" required>
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="identifier">E-mail ou usuário</label>
+            <input class="nc-admin-login-input" id="identifier" name="identifier" type="text" value="{{ member_login_form.identifier|default('') }}" autocomplete="username" required>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="password">Senha</label>
+            <div class="nc-password-toggle-field">
+              <input class="nc-admin-login-input nc-password-toggle-input" id="password" name="password" type="password" autocomplete="current-password" required>
+              <button class="nc-password-toggle-button" type="button" data-password-toggle aria-controls="password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
             </div>
+          </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="password">Senha</label>
-              <div class="nc-password-toggle-field">
-                <input class="nc-admin-login-input nc-password-toggle-input" id="password" name="password" type="password" autocomplete="current-password" required>
-                <button class="nc-password-toggle-button" type="button" data-password-toggle aria-controls="password" aria-label="Mostrar senha" aria-pressed="false">Mostrar</button>
-              </div>
-            </div>
+          <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="80">
+            <button class="nc-btn nc-btn-primary nc-admin-login-submit nc-admin-login-submit-full" type="submit">Entrar</button>
+          </div>
 
-            <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="80">
-              <button class="nc-btn nc-btn-primary nc-admin-login-submit nc-admin-login-submit-full" type="submit">Entrar</button>
-            </div>
+          {% include 'components/recaptcha-fields.twig' %}
 
-            {% include 'components/recaptcha-fields.twig' %}
+          <p class="nc-admin-login-footnote">
+            Esqueci minha senha. <a class="nc-link" href="/esqueci-senha">Redefinir agora</a>
+          </p>
 
-            <p class="nc-admin-login-footnote">
-              Esqueci minha senha. <a class="nc-link" href="/esqueci-senha">Redefinir agora</a>
-            </p>
+          <p class="nc-admin-login-footnote">
+            Não sou membro. <a class="nc-link" href="/cadastro">Desejo ser membro</a>
+          </p>
+        </form>
+      </article>
 
-            <p class="nc-admin-login-footnote">
-              Não sou membro. <a class="nc-link" href="/cadastro">Desejo ser membro</a>
-            </p>
-          </form>
-        </article>
-
-        <article class="nc-card nc-member-login-support-card" data-aos="fade-up" data-aos-delay="100">
-          <h2 class="nc-member-login-support-title">Abrir recuperação no celular</h2>
-          <p class="nc-member-login-support-lead">Aponte a camera para a tela do dispositivo para abrir a página de redefinição de senha sem digitar o endereço.</p>
-          <a class="nc-member-login-qr-link" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer" aria-label="Abrir recuperação de senha no celular">
-            <img class="nc-member-login-qr-image" src="/assets/img/cedern/qr_cedern_esqueci_senha.svg" alt="QR code para abrir a página de recuperação de senha do CEDE">
-          </a>
-          <a class="nc-link nc-member-login-qr-fallback" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer">cedern.org/esqueci-senha</a>
-        </article>
-      </div>
+      <article class="nc-card nc-member-login-support-card" data-aos="fade-up" data-aos-delay="100">
+        <h2 class="nc-member-login-support-title">Abrir recuperação no celular</h2>
+        <p class="nc-member-login-support-lead">Aponte a camera para a tela do dispositivo para abrir a página de redefinição de senha sem digitar o endereço.</p>
+        <a class="nc-member-login-qr-link" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer" aria-label="Abrir recuperação de senha no celular">
+          <img class="nc-member-login-qr-image" src="/assets/img/cedern/qr_cedern_esqueci_senha.svg" alt="QR code para abrir a página de recuperação de senha do CEDE">
+        </a>
+        <a class="nc-link nc-member-login-qr-fallback" href="https://cedern.org/esqueci-senha" target="_blank" rel="noopener noreferrer">cedern.org/esqueci-senha</a>
+      </article>
     </section>
   </main>
 {% endblock %}

@@ -34,26 +34,27 @@
       {% set has_active_toolbar_filters = true %}
     {% endif %}
 
-    <section class="nc-section nc-about-detail-copy" aria-label="Livraria II do CEDE">
+    <section class="nc-section nc-about-detail-copy nc-store-bookshop-overview" aria-label="Livraria Auta de Sousa">
       {% include 'components/section-header.twig' with {
-        kicker: 'Loja | Livraria II',
-        title: 'Livraria do CEDE',
-        lead: 'Uma segunda visualização da vitrine, em lista, para consultar obras, disponibilidade e ficha técnica com leitura mais direta.'
+        kicker: 'Loja | Livraria Auta de Sousa',
+        title: 'Livraria Auta de Sousa',
+        lead: 'Encontre com facilidade as obras que você procura em nossa vitrine principal, organizada para oferecer praticidade e agilidade na sua escolha. Consulte títulos disponíveis, verifique a disponibilidade atualizada e acesse fichas técnicas completas com leitura imediata. Tudo pensado para facilitar sua decisão e aproximar você do conhecimento que transforma.'
       } %}
 
       <div class="nc-library-overview nc-bookshop-overview">
         <article class="nc-card nc-library-overview-card nc-library-overview-card-primary nc-bookshop-overview-card-primary">
-          <p class="nc-library-overview-kicker">Leitura em lista</p>
-          <h3 class="nc-library-overview-title">Uma versão alternativa da vitrine para comparar títulos com mais rapidez</h3>
-          <p class="nc-library-overview-copy">
-            Esta versão organiza o catálogo em linhas, com acesso rápido aos dados principais de cada obra e uma ficha técnica expansível para aprofundar a consulta.
-          </p>
+          <p class="nc-library-overview-kicker">Vitrine principal</p>
+          <h3 class="nc-library-overview-title">Consulta rápida em lista com ficha técnica expandida</h3>
+          <p class="nc-library-overview-copy">A <a class="nc-link is-inline" href="/loja/livraria-auta-de-sousa">Livraria Auta de Sousa</a> é apresentada aqui em linhas, com acesso direto aos dados principais de cada obra e uma ficha técnica para aprofundar a consulta quando necessário.</p>
           {% if site_contact.address|default('') %}
             <p class="nc-bookshop-presential-note">{{ site_contact.address }}</p>
           {% endif %}
           <div class="nc-actions is-stacked-mobile">
-            <a class="nc-btn nc-btn-primary" href="/loja/livraria">Ver vitrine atual</a>
-            <a class="nc-btn nc-btn-secondary" href="/contato">Falar com o CEDE</a>
+            <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+            <a class="nc-btn nc-btn-secondary" href="/loja/livraria-auta-de-sousa">Mais sobre Auta de Sousa</a>
+            {% if site_contact.mapUrl|default('') %}
+              <a class="nc-btn nc-btn-secondary" href="{{ site_contact.mapUrl }}" target="_blank" rel="noopener noreferrer">Como chegar</a>
+            {% endif %}
           </div>
         </article>
 
@@ -210,7 +211,7 @@
                       {% include 'components/library-bookplate-fallback.twig' with {
                         bookplate_title: book.title,
                         bookplate_author: book.author_name|default(''),
-                        bookplate_collection_label: 'Livraria CEDE',
+                        bookplate_collection_label: 'Livraria Auta de Sousa',
                         bookplate_section_title: 'Livraria'
                       } only %}
                     {% endif %}
@@ -219,7 +220,7 @@
 
                 <div class="nc-knowledge-row-main">
                   <div class="nc-library-card-topline">
-                    <span class="nc-library-category-badge">{{ book.category_name|default('Categoria não informada') }}</span>
+                    <span class="nc-library-category-badge">{{ book.genre_name|default('Gênero não informado') }}</span>
                   </div>
 
                   <h3 class="nc-library-card-title">{{ book.title }}</h3>
@@ -238,7 +239,7 @@
                       {% endif %}
                       {% if book.genre_name|default('') %}
                         <div>
-                          <dt>Gênero</dt>
+                          <dt>Gênero literário</dt>
                           <dd>{{ book.genre_name }}</dd>
                         </div>
                       {% endif %}
@@ -300,16 +301,16 @@
                         <dt>Autor</dt>
                         <dd>{{ book.author_name|default('Não informado') }}</dd>
                       </div>
-                      <div>
-                        <dt>Categoria</dt>
-                        <dd>{{ book.category_name|default('Não informada') }}</dd>
-                      </div>
                       {% if book.genre_name|default('') %}
                         <div>
-                          <dt>Gênero</dt>
+                          <dt>Gênero literário</dt>
                           <dd>{{ book.genre_name }}</dd>
                         </div>
                       {% endif %}
+                      <div>
+                        <dt>Categoria doutrinária</dt>
+                        <dd>{{ book.category_name|default('Não informada') }}</dd>
+                      </div>
                       {% if book.collection_name|default('') %}
                         <div>
                           <dt>Coleção</dt>
@@ -418,7 +419,7 @@
             {{ filters.search|default('') or filters.category|default('') or filters.genre|default('') ? 'Nenhum título encontrado para os filtros informados.' : 'A vitrine da livraria ainda não possui títulos publicados no momento.' }}
           </p>
           <div class="nc-actions is-stacked-mobile">
-            <a class="nc-btn nc-btn-primary" href="/loja/livraria">Ver vitrine atual</a>
+            <a class="nc-btn nc-btn-primary" href="/loja">Voltar para Loja</a>
             <a class="nc-btn nc-btn-secondary" href="/loja">Voltar para Loja</a>
           </div>
         </article>
@@ -426,7 +427,7 @@
 
       <article class="nc-card nc-bookshop-presential-card">
         <span class="nc-store-status is-live">Venda presencial</span>
-        <h3 class="nc-store-card-title">Atendimento no balcão da Livraria do CEDE</h3>
+        <h3 class="nc-store-card-title">Atendimento no balcão da Livraria Auta de Sousa</h3>
         <p>A vitrine é apenas informativa. A compra, a conferência final de disponibilidade e a retirada do livro acontecem diretamente no CEDE.</p>
         <div class="nc-actions is-stacked-mobile">
           <a class="nc-btn nc-btn-primary" href="/contato">Tirar dúvidas</a>

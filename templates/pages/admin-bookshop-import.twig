@@ -2,7 +2,8 @@
 
 {% set dashboard_page_kicker = 'Dashboard' %}
 {% set dashboard_page_title = 'Importar Acervo por CSV' %}
-{% set dashboard_page_lead = 'Use a planilha do Excel como origem, exporte para CSV e sincronize o acervo da livraria sem digitação manual.' %}
+{% set dashboard_page_lead = 'Preencha a planilha no Excel, exporte como CSV e envie aqui para criar ou atualizar o acervo sem redigitar livro por livro.' %}
+{% set dashboard_page_lead_html = 'Preencha a planilha no Excel, exporte como CSV e envie aqui para criar ou atualizar o acervo sem redigitar livro por livro.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Importação do acervo da livraria" data-aos="fade-up" data-aos-delay="0">
@@ -11,23 +12,41 @@
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria">Visão geral</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Abrir acervo</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
+      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar/modelo">Baixar modelo CSV</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Ver vendas</a>
     </div>
 
     <div class="nc-bookshop-overview-grid" data-aos="fade-up" data-aos-delay="90">
       <article class="nc-card nc-bookshop-overview-card">
         <h3>Como usar</h3>
-        <ol class="nc-bookshop-flow-list">
-          <li>Abra a planilha no Excel.</li>
-          <li>Exporte em formato CSV UTF-8.</li>
-          <li>Envie o arquivo aqui no painel.</li>
-          <li>O sistema cria ou atualiza itens pelo SKU e, na falta dele, pelo ISBN.</li>
-        </ol>
-      </article>
-
-      <article class="nc-card nc-bookshop-overview-card">
-        <h3>Colunas aceitas</h3>
-        <p class="nc-bookshop-inline-copy">Use preferencialmente: <code>sku</code>, <code>titulo</code>, <code>autor</code>, <code>colecao</code>, <code>volume</code>, <code>rotulo_volume</code>, <code>categoria</code> <small>(categoria doutrinária)</small>, <code>genero</code> <small>(gênero literário)</small>, <code>editora</code>, <code>isbn</code>, <code>codigo_barra</code>, <code>preco_venda</code>, <code>estoque_minimo</code>, <code>status</code> e <code>localizacao</code>.</p>
+        <ul class="nc-checklist">
+          {% include 'components/check-item.twig' with {
+            step: '01',
+            title: 'Baixe o modelo CSV',
+            description: 'Preencha no Excel com os dados do acervo.',
+            delay: 110
+          } %}
+          {% include 'components/check-item.twig' with {
+            step: '02',
+            title: 'Exporte em CSV UTF-8',
+            description: 'Salve em CSV UTF-8 para manter acentos corretamente.',
+            delay: 150
+          } %}
+          {% include 'components/check-item.twig' with {
+            step: '03',
+            title: 'Envie o arquivo no painel',
+            description: 'Faça o upload aqui para iniciar a importação.',
+            delay: 190
+          } %}
+          {% include 'components/check-item.twig' with {
+            step: '04',
+            title: 'Atualização automática',
+            description: 'Itens são atualizados por SKU ou ISBN e novos títulos recebem SKU automático.',
+            delay: 230
+          } %}
+        </ul>
+        <h4>Colunas aceitas</h4>
+        <p class="nc-bookshop-inline-copy">Use preferencialmente: <code>sku</code> <small>(opcional para títulos novos)</small>, <code>titulo</code>, <code>autor</code>, <code>colecao</code>, <code>volume</code>, <code>rotulo_volume</code>, <code>categoria</code> <small>(categoria doutrinária)</small>, <code>genero</code> <small>(gênero literário)</small>, <code>editora</code>, <code>isbn</code>, <code>codigo_barra</code>, <code>preco_venda</code>, <code>estoque_minimo</code>, <code>status</code> e <code>localizacao</code>.</p>
         <p>Se usar campos de volume, informe também a coleção correspondente para o vínculo ficar consistente no acervo. O saldo do item continua sendo controlado depois pela tela de movimentações.</p>
       </article>
     </div>

@@ -122,6 +122,31 @@ return [
         ],
     ],
     'studiesPages' => [
+        'eade' => [
+            'kicker' => 'Estudos',
+            'title' => 'Estudo Aprofundado da Doutrina Espírita (EADE)',
+            'lead' => 'Percurso de aprofundamento para estudantes que desejam revisar temas centrais da Doutrina Espírita com maior profundidade e método.',
+            'topics' => [
+                [
+                    'step' => '01',
+                    'title' => 'Aprofundamento progressivo',
+                    'description' => 'Estudo em etapas, com leituras orientadas e reflexão sistemática sobre princípios doutrinários.',
+                    'delay' => 120,
+                ],
+                [
+                    'step' => '02',
+                    'title' => 'Diálogo e estudo em grupo',
+                    'description' => 'Encontros com troca de experiências, análise de textos e aplicação prática dos conteúdos estudados.',
+                    'delay' => 180,
+                ],
+                [
+                    'step' => '03',
+                    'title' => 'Continuidade formativa',
+                    'description' => 'Indicado para quem já percorreu o ESDE ou deseja aprofundar conteúdos com disciplina e regularidade.',
+                    'delay' => 240,
+                ],
+            ],
+        ],
         'esde' => [
             'kicker' => 'Estudos',
             'title' => 'Estudo Sistematizado da Doutrina Espírita (ESDE)',
@@ -336,6 +361,56 @@ return [
                     'title' => 'Sede e foro',
                     'description' => 'Sede e foro em Parnamirim/RN, à Rua Frejó, nº 44, bairro Nova Parnamirim.',
                     'delay' => 240,
+                ],
+            ],
+        ],
+    ],
+    'bookshopPages' => [
+        'auta-de-sousa' => [
+            'kicker' => 'Livraria',
+            'title' => 'Auta de Sousa',
+            'lead' => 'Poetisa potiguar (Macaíba, 12 de setembro de 1876 — Natal, 7 de fevereiro de 1901), autora de Horto e referência da segunda geração romântica brasileira.',
+            'name' => 'Auta de Sousa',
+            'role' => 'Poetisa potiguar (1876–1901)',
+            'photo' => '/assets/img/face1_620_620.png',
+            'photo_alt' => 'Retrato de Auta de Sousa',
+            'intro' => [
+                'Auta de Sousa escreveu poesia romântica com traços simbolistas e alto valor estético, sendo reconhecida como um dos nomes mais marcantes da literatura potiguar.',
+                'Órfã ainda criança, foi criada pela avó em Recife, onde recebeu educação rigorosa e aprendeu idiomas, música, literatura e desenho. A tuberculose interrompeu seus estudos formais, mas ela seguiu como autodidata.',
+                'Iniciou a escrita aos 16 anos, colaborou com jornais e revistas e publicou seu livro Horto em 1900, com prefácio de Olavo Bilac. Faleceu em 1901, deixando um legado que permanece vivo.',
+            ],
+            'quote' => 'A maior poetisa mística do Brasil.',
+            'quote_attribution' => 'Luís da Câmara Cascudo',
+            'topics' => [
+                [
+                    'step' => '01',
+                    'title' => 'Origem e formação',
+                    'description' => 'Filha de Elói Castriciano de Sousa e Henriqueta Leopoldina Rodrigues. Perdeu os pais ainda criança, foi criada pela avó e recebeu formação sólida no Colégio São Vicente de Paula.',
+                    'delay' => 120,
+                ],
+                [
+                    'step' => '02',
+                    'title' => 'Vida e escrita',
+                    'description' => 'Participou de círculos literários, escreveu poesia religiosa e romântica, colaborou com jornais como A República e A Tribuna, e assinou textos com pseudônimos.',
+                    'delay' => 180,
+                ],
+                [
+                    'step' => '03',
+                    'title' => 'Horto e legado',
+                    'description' => 'Seu único livro, Horto (1900), teve grande repercussão e várias edições posteriores. A autora é lembrada como referência da poesia mística brasileira.',
+                    'delay' => 240,
+                ],
+                [
+                    'step' => '04',
+                    'title' => 'Homenagens e memória',
+                    'description' => 'Recebeu homenagens póstumas, teve poemas musicados, documentário dedicado à sua vida e mantém presença viva na cultura literária do Rio Grande do Norte.',
+                    'delay' => 300,
+                ],
+                [
+                    'step' => '05',
+                    'title' => 'Presença no meio espírita',
+                    'description' => 'O nome de Auta de Sousa foi adotado por instituições espíritas em diversos estados. Desde 1953, a Campanha de Fraternidade Auta de Souza acontece em centenas de centros no Brasil e no exterior. Chico Xavier publicou sonetos atribuídos à autora em obras psicográficas, como Auta de Souza e Parnaso de Além‑Túmulo.',
+                    'delay' => 360,
                 ],
             ],
         ],
@@ -574,8 +649,8 @@ return [
     ],
     'ctaActions' => [
         [
-            'label' => 'Conheça nossa Livraria',
-            'href' => '/loja/livraria',
+            'label' => 'Conheça a Livraria Auta de Sousa',
+            'href' => '/loja/livraria-ii',
             'class' => 'nc-btn nc-btn-primary',
             'loadingOnClick' => false,
         ],

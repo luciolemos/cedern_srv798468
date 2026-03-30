@@ -33,10 +33,10 @@
       {% set has_active_toolbar_filters = true %}
     {% endif %}
 
-    <section class="nc-section nc-about-detail-copy" aria-label="Livraria do CEDE">
+    <section class="nc-section nc-about-detail-copy" aria-label="Livraria Auta de Sousa">
       {% include 'components/section-header.twig' with {
         kicker: 'Loja',
-        title: 'Livraria do CEDE',
+        title: 'Livraria Auta de Sousa',
         lead: 'Consulte o catálogo público da livraria e conheça os títulos disponíveis. A venda é presencial, diretamente no balcão do CEDE.'
       } %}
 
@@ -45,7 +45,7 @@
           <p class="nc-library-overview-kicker">Venda presencial</p>
           <h3 class="nc-library-overview-title">Escolha no catálogo e adquira no balcão da casa</h3>
           <p class="nc-library-overview-copy">
-            Esta vitrine apresenta os títulos cadastrados na Livraria do CEDE. Não há compra online: a retirada e a venda acontecem presencialmente, com atendimento direto no CEDE.
+            Esta vitrine apresenta os títulos cadastrados na Livraria Auta de Sousa. Não há compra online: a retirada e a venda acontecem presencialmente, com atendimento direto no CEDE.
           </p>
           {% if site_contact.address|default('') %}
             <p class="nc-bookshop-presential-note">{{ site_contact.address }}</p>
@@ -198,7 +198,7 @@
                       {% include 'components/library-bookplate-fallback.twig' with {
                         bookplate_title: book.title,
                         bookplate_author: book.author_name|default(''),
-                        bookplate_collection_label: 'Livraria CEDE',
+                        bookplate_collection_label: 'Livraria Auta de Sousa',
                         bookplate_section_title: 'Livraria'
                       } only %}
                     {% endif %}
@@ -353,7 +353,7 @@
 
       <article class="nc-card nc-bookshop-presential-card">
         <span class="nc-store-status is-live">Venda presencial</span>
-        <h3 class="nc-store-card-title">Atendimento no balcão da Livraria do CEDE</h3>
+        <h3 class="nc-store-card-title">Atendimento no balcão da Livraria Auta de Sousa</h3>
         <p>A vitrine é apenas informativa. A compra, a conferência final de disponibilidade e a retirada do livro acontecem diretamente no CEDE.</p>
         <div class="nc-actions is-stacked-mobile">
           <a class="nc-btn nc-btn-primary" href="/contato">Tirar dúvidas</a>

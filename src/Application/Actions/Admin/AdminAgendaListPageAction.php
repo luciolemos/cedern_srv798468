@@ -13,7 +13,9 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
 
     private const DEFAULT_PAGE_SIZE = 5;
 
-    private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
+    private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
+
+    private const ALL_PAGE_SIZE = 'all';
 
     private const SORT_FIELDS = ['id', 'title', 'category_name', 'audience', 'mode', 'starts_at', 'status', 'is_featured'];
 
@@ -89,12 +91,20 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
             return $comparison * $sortMultiplier;
         });
 
-        $requestedPageSize = (int) ($queryParams['per_page'] ?? self::DEFAULT_PAGE_SIZE);
-        $pageSize = in_array($requestedPageSize, self::PAGE_SIZE_OPTIONS, true)
-            ? $requestedPageSize
-            : self::DEFAULT_PAGE_SIZE;
-
         $totalItems = count($events);
+        $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
+        $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
+        $pageSize = self::DEFAULT_PAGE_SIZE;
+
+        if (!$showAllItems) {
+            $requestedPageSizeNumber = (int) $requestedPageSize;
+            $pageSize = in_array($requestedPageSizeNumber, self::PAGE_SIZE_OPTIONS, true)
+                ? $requestedPageSizeNumber
+                : self::DEFAULT_PAGE_SIZE;
+        } else {
+            $pageSize = max($totalItems, 1);
+        }
+
         $totalPages = max(1, (int) ceil($totalItems / $pageSize));
         $currentPage = max(1, (int) ($queryParams['page'] ?? 1));
         $currentPage = min($currentPage, $totalPages);
@@ -105,9 +115,10 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
         $startItem = $totalItems > 0 ? $offset + 1 : 0;
         $endItem = $totalItems > 0 ? min($offset + count($events), $totalItems) : 0;
 
+        $pageSizeQueryValue = $showAllItems ? self::ALL_PAGE_SIZE : (string) $pageSize;
         $basePath = '/painel/eventos';
         $baseQuery = [
-            'per_page' => $pageSize,
+            'per_page' => $pageSizeQueryValue,
             'sort' => $sortBy,
             'dir' => $sortDirection,
         ];
@@ -128,7 +139,7 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
             $sortLinks[$field] = [
                 'url' => $basePath . '?' . http_build_query([
                     'page' => 1,
-                    'per_page' => $pageSize,
+                    'per_page' => $pageSizeQueryValue,
                     'sort' => $field,
                     'dir' => $nextDirection,
                     'q' => $searchTerm,
@@ -143,20 +154,21 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
             $paginationLinks[] = [
                 'number' => $page,
                 'active' => $page === $currentPage,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $page]),
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page])),
             ];
         }
 
         $previousPageUrl = $currentPage > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
             : null;
         $nextPageUrl = $currentPage < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
             : null;
 
         $pageSizeOptions = array_map(static fn (int $option): array => [
-            'value' => $option,
-            'selected' => $option === $pageSize,
+            'value' => (string) $option,
+            'label' => (string) $option,
+            'selected' => !$showAllItems && $option === $pageSize,
             'url' => $basePath . '?' . http_build_query([
                 'page' => 1,
                 'per_page' => $option,
@@ -165,6 +177,18 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
                 'q' => $searchTerm,
             ]),
         ], self::PAGE_SIZE_OPTIONS);
+        $pageSizeOptions[] = [
+            'value' => self::ALL_PAGE_SIZE,
+            'label' => 'Todos',
+            'selected' => $showAllItems,
+            'url' => $basePath . '?' . http_build_query([
+                'page' => 1,
+                'per_page' => self::ALL_PAGE_SIZE,
+                'sort' => $sortBy,
+                'dir' => $sortDirection,
+                'q' => $searchTerm,
+            ]),
+        ];
 
         return $this->renderPage($response, 'pages/admin-agenda.twig', [
             'agenda_events' => $events,
@@ -177,7 +201,7 @@ class AdminAgendaListPageAction extends AbstractAdminAgendaAction
                 'total_items' => $totalItems,
                 'start_item' => $startItem,
                 'end_item' => $endItem,
-                'page_size' => $pageSize,
+                'page_size' => $pageSizeQueryValue,
                 'sort' => $sortBy,
                 'dir' => $sortDirection,
                 'links' => $paginationLinks,

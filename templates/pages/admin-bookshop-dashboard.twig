@@ -6,57 +6,199 @@
 
 {% block admin_content %}
   {% set metrics = bookshop_metrics|default({}) %}
+  {% set attention_rows = bookshop_dashboard_attention|default([]) %}
+  {% set coverage_rows = bookshop_dashboard_coverage|default([]) %}
+  {% set recent_movements = bookshop_dashboard_recent_movements|default([]) %}
+  {% set payment_rows = bookshop_dashboard_payment_summary|default([]) %}
 
-  <section class="nc-section" aria-label="Visão geral da livraria" data-aos="fade-up" data-aos-delay="0">
-    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Abrir acervo</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/relatorios">Relatórios</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/movimentacoes">Movimentações</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Coleções</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias doutrinárias</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros literários</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/manual">Guia operacional</a>
-      <a class="nc-btn nc-btn-primary" href="/painel/livraria/vendas/nova">Nova venda</a>
-    </div>
-
+  <section class="nc-section nc-bookshop-dashboard-home" aria-label="Visão geral da livraria" data-aos="fade-up" data-aos-delay="0">
     <div class="nc-bookshop-kpi-grid" data-aos="fade-up" data-aos-delay="100">
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Títulos cadastrados</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.25 5.75C6.25 4.92157 6.92157 4.25 7.75 4.25H18.25V18.25H7.75C6.92157 18.25 6.25 18.9216 6.25 19.75" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M6.25 5.75V19.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M9.25 7.75H15.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Títulos cadastrados</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.total_titles|default(0) }}</strong>
         <p>{{ metrics.active_titles|default(0) }} ativos • {{ metrics.inactive_titles|default(0) }} inativos</p>
       </article>
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Unidades em estoque</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.25 7.75H18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M5.25 12H18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M5.25 16.25H14.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M16.75 15L18.75 17L21 14.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Unidades em estoque</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.total_units|default(0) }}</strong>
         <p>{{ metrics.low_stock_titles|default(0) }} com estoque baixo • {{ metrics.out_of_stock_titles|default(0) }} zerados</p>
       </article>
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Vendas hoje</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.25 5.25H17.75V18.75H6.25V5.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <path d="M8.75 9.25H15.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M8.75 12H15.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M8.75 14.75H12.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Vendas hoje</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.sales_today_count|default(0) }}</strong>
         <p>{{ metrics.sales_today_total_label|default('R$ 0,00') }}</p>
       </article>
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Faturamento no mês</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.75 17.75L9 12.75L12 15.25L18.75 7.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15.75 7.25H18.75V10.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Faturamento no mês</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.sales_month_total_label|default('R$ 0,00') }}</strong>
         <p>Somente vendas concluídas no PDV.</p>
       </article>
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Valor de custo</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="12" r="3.25" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M13.25 10.25L16.75 6.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M16.75 6.75H19.25V9.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6.75 15.25L4.75 17.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Valor de custo</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.inventory_value_label|default('R$ 0,00') }}</strong>
         <p>Baseado no saldo atual do acervo.</p>
       </article>
       <article class="nc-card nc-bookshop-kpi-card">
-        <span class="nc-metric-label">Potencial de venda</span>
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 16.75L9.25 12.5L12.25 15.5L19 8.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15.75 8.75H19V12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Potencial de venda</span>
+        </div>
         <strong class="nc-metric-value">{{ metrics.potential_revenue_label|default('R$ 0,00') }}</strong>
         <p>Receita bruta estimada com o saldo em mãos.</p>
       </article>
     </div>
 
+    <div class="nc-bookshop-kpi-grid nc-bookshop-kpi-grid-secondary" data-aos="fade-up" data-aos-delay="120">
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M5 12H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Entradas hoje</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.entries_today_count|default(0) }}</strong>
+        <p>{{ metrics.entries_today_units|default(0) }} un lançadas em novas entradas ou doações.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M5 12H12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M15.5 9L19 12.5L15.5 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Ajustes hoje</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.adjustments_today_count|default(0) }}</strong>
+        <p>{{ metrics.adjustments_today_units|default(0) }} un corrigidas por ajuste, perda ou avaria.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Ticket médio</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.average_ticket_label|default('R$ 0,00') }}</strong>
+        <p>Média por venda concluída no mês corrente.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 7L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M17 7L7 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Cancelamentos no mês</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.cancelled_sales_month_count|default(0) }}</strong>
+        <p>{{ metrics.cancelled_sales_month_total_label|default('R$ 0,00') }} em vendas estornadas.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5.25" y="6.25" width="13.5" height="11.5" rx="2" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M9 10.25H15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M9 13.25H13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Sem lote operacional</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.titles_without_lot|default(0) }}</strong>
+        <p>Itens que ainda precisam de Nova entrada para formar estoque.</p>
+      </article>
+      <article class="nc-card nc-bookshop-kpi-card">
+        <div class="nc-dashboard-visit-card-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M12 8.25V12.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <circle cx="12" cy="15.75" r="1" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="nc-metric-label">Cadastros incompletos</span>
+        </div>
+        <strong class="nc-metric-value">{{ metrics.titles_incomplete|default(0) }}</strong>
+        <p>Pendências de capa, classificação, identificação, preço ou localização.</p>
+      </article>
+    </div>
+
     <div class="nc-bookshop-overview-grid" data-aos="fade-up" data-aos-delay="140">
       <article class="nc-card nc-bookshop-overview-card">
-        <h3>Fluxo sugerido</h3>
+        <div class="nc-dashboard-visit-card-head nc-bookshop-overview-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 7.25H14.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M6 12H12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M6 16.75H10.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              <path d="M16.25 7.75L18 9.5L21 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.75 16L15.5 17.75L19 14.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <h3>Fluxo sugerido</h3>
+        </div>
         <ol class="nc-bookshop-flow-list">
           <li>Importe o CSV exportado da planilha do Excel.</li>
           <li>Revise coleção, volume, categoria doutrinária, gênero literário, preço, saldo, SKU e localização do acervo.</li>
@@ -67,7 +209,17 @@
       </article>
 
       <article class="nc-card nc-bookshop-overview-card">
-        <h3>Atalhos da operação</h3>
+        <div class="nc-dashboard-visit-card-head nc-bookshop-overview-head">
+          <span class="nc-dashboard-visit-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4.75" y="4.75" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="13.75" y="4.75" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="4.75" y="13.75" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/>
+              <rect x="13.75" y="13.75" width="5.5" height="5.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/>
+            </svg>
+          </span>
+          <h3>Atalhos da operação</h3>
+        </div>
         <div class="nc-actions nc-bookshop-card-actions">
           <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo/novo">Cadastrar item</a>
           <a class="nc-btn nc-btn-secondary" href="/painel/livraria/colecoes">Gerir coleções</a>
@@ -82,7 +234,140 @@
       </article>
     </div>
 
-    <article class="nc-card nc-bookshop-overview-card" data-aos="fade-up" data-aos-delay="180">
+    <div class="nc-bookshop-dashboard-columns" data-aos="fade-up" data-aos-delay="160">
+      <section class="nc-bookshop-dashboard-panel">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Atenção agora</h3>
+            <p>Leituras rápidas do que merece ação imediata na operação.</p>
+          </div>
+        </div>
+        <ul class="nc-bookshop-dashboard-status-list">
+          {% for row in attention_rows %}
+            <li class="nc-bookshop-dashboard-status-item{{ row.count|default(0) > 0 ? ' is-alert' : '' }}">
+              <div class="nc-bookshop-dashboard-status-main">
+                <strong>{{ row.label }}</strong>
+                <p>{{ row.copy }}</p>
+              </div>
+              <div class="nc-bookshop-dashboard-status-meta">
+                <span class="nc-bookshop-dashboard-status-count">{{ row.count|default(0) }}</span>
+                <a class="nc-link" href="{{ row.href }}">Abrir</a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="nc-bookshop-dashboard-panel">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Cobertura do cadastro</h3>
+            <p>Pendências que enfraquecem a qualidade do acervo e da vitrine.</p>
+          </div>
+        </div>
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table nc-bookshop-dashboard-table">
+            <thead>
+              <tr>
+                <th>Pendência</th>
+                <th>Qtde</th>
+                <th>Impacto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in coverage_rows %}
+                <tr>
+                  <td data-label="Pendência"><strong>{{ row.label }}</strong></td>
+                  <td data-label="Qtde">{{ row.count|default(0) }}</td>
+                  <td data-label="Impacto">{{ row.copy }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="nc-bookshop-dashboard-columns" data-aos="fade-up" data-aos-delay="170">
+      <section class="nc-bookshop-dashboard-panel">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Movimentações recentes</h3>
+            <p>Últimos lançamentos de entrada, ajuste, doação, perda ou avaria.</p>
+          </div>
+          <a class="nc-link" href="/painel/livraria/movimentacoes">Ver histórico</a>
+        </div>
+
+        {% if recent_movements|length == 0 %}
+          <p class="nc-member-empty">Nenhuma movimentação registrada ainda.</p>
+        {% else %}
+          <div class="nc-admin-table-wrap">
+            <table class="nc-admin-table nc-bookshop-dashboard-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Livro</th>
+                  <th>Tipo</th>
+                  <th>Saldo</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for movement in recent_movements %}
+                  <tr>
+                    <td data-label="Código"><strong>{{ movement.movement_code }}</strong></td>
+                    <td data-label="Livro">
+                      <strong>{{ movement.title_snapshot|default('-') }}</strong>
+                      <small>{{ movement.sku_snapshot|default('-') }}</small>
+                    </td>
+                    <td data-label="Tipo">{{ movement.movement_type_label|default('-') }}</td>
+                    <td data-label="Saldo">{{ movement.stock_before|default(0) }} → {{ movement.stock_after|default(0) }}</td>
+                    <td data-label="Data">{{ movement.occurred_at_label|default('-') }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="nc-bookshop-dashboard-panel">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Pagamentos no mês</h3>
+            <p>Distribuição do faturamento das vendas concluídas por forma de pagamento.</p>
+          </div>
+          <a class="nc-link" href="/painel/livraria/relatorios">Ver relatórios</a>
+        </div>
+
+        {% if payment_rows|length == 0 %}
+          <p class="nc-member-empty">Nenhuma venda concluída no mês ainda.</p>
+        {% else %}
+          <div class="nc-admin-table-wrap">
+            <table class="nc-admin-table nc-bookshop-dashboard-table">
+              <thead>
+                <tr>
+                  <th>Pagamento</th>
+                  <th>Vendas</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in payment_rows %}
+                  <tr>
+                    <td data-label="Pagamento"><strong>{{ row.label }}</strong></td>
+                    <td data-label="Vendas">{{ row.count|default(0) }}</td>
+                    <td data-label="Total">{{ row.total_label|default('R$ 0,00') }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+
+    <section class="nc-bookshop-dashboard-panel" data-aos="fade-up" data-aos-delay="180">
       <div class="nc-bookshop-panel-head">
         <div>
           <h3>Vendas recentes</h3>
@@ -134,6 +419,6 @@
           </table>
         </div>
       {% endif %}
-    </article>
+    </section>
   </section>
 {% endblock %}

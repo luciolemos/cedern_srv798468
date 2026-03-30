@@ -1,60 +1,58 @@
 {% extends 'layouts/base.twig' %}
 
 {% block content %}
-  <main class="nc-main nc-home-flow">
-    <section class="nc-section" aria-label="Cadastro de membro" data-aos="fade-up" data-aos-delay="0">
-      <div class="nc-container">
-        {% include 'components/section-header.twig' with {
-          kicker: 'Área do Membro',
-          title: 'Cadastro de frequentador',
-          lead: 'Crie sua conta para solicitar acesso à área de membros. O cadastro será validado pela administração.'
-        } %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section nc-member-register-overview" aria-label="Cadastro de membro" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: 'Área do Membro',
+        title: 'Cadastro de frequentador',
+        lead: 'Crie sua conta para solicitar acesso à área de membros. O cadastro será validado pela administração.'
+      } %}
 
-        <article class="nc-card nc-admin-login-card">
-          {% if member_register_success %}
-            <p class="nc-admin-login-success" role="status">Cadastro enviado com sucesso. Aguarde a aprovação da administração.</p>
-          {% endif %}
+      <article class="nc-card nc-admin-login-card">
+        {% if member_register_success %}
+          <p class="nc-admin-login-success" role="status">Cadastro enviado com sucesso. Aguarde a aprovação da administração.</p>
+        {% endif %}
 
-          {% if member_register_errors %}
-            <div class="nc-admin-login-error" role="alert">
-              <ul>
-                {% for error in member_register_errors %}
-                  <li>{{ error }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
+        {% if member_register_errors %}
+          <div class="nc-admin-login-error" role="alert">
+            <ul>
+              {% for error in member_register_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
 
-          <form class="nc-admin-login-form" method="post" action="/cadastro"{% if app_recaptcha_enabled %} data-recaptcha-action="member_register" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="full_name">Nome completo</label>
-              <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_register_form.full_name|default('') }}" autocomplete="name" placeholder="Ex: Maria da Silva" required>
-            </div>
+        <form class="nc-admin-login-form" method="post" action="/cadastro"{% if app_recaptcha_enabled %} data-recaptcha-action="member_register" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="full_name">Nome completo</label>
+            <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_register_form.full_name|default('') }}" autocomplete="name" placeholder="Ex: Maria da Silva" required>
+          </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="email">E-mail</label>
-              <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ member_register_form.email|default('') }}" autocomplete="email" placeholder="Ex: maria@email.com" required>
-            </div>
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="email">E-mail</label>
+            <input class="nc-admin-login-input" id="email" name="email" type="email" value="{{ member_register_form.email|default('') }}" autocomplete="email" placeholder="Ex: maria@email.com" required>
+          </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="password">Senha</label>
-              <input class="nc-admin-login-input" id="password" name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 8 caracteres" required>
-            </div>
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="password">Senha</label>
+            <input class="nc-admin-login-input" id="password" name="password" type="password" autocomplete="new-password" placeholder="Mínimo de 8 caracteres" required>
+          </div>
 
-            <div class="nc-admin-login-field">
-              <label class="nc-admin-login-label" for="password_confirmation">Confirmar senha</label>
-              <input class="nc-admin-login-input" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" placeholder="Repita a senha cadastrada" required>
-            </div>
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="password_confirmation">Confirmar senha</label>
+            <input class="nc-admin-login-input" id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" placeholder="Repita a senha cadastrada" required>
+          </div>
 
-            {% include 'components/recaptcha-fields.twig' %}
+          {% include 'components/recaptcha-fields.twig' %}
 
-            <div class="nc-actions nc-admin-login-actions nc-member-register-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
-              <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Solicitar cadastro</button>
-              <a class="nc-btn nc-btn-secondary nc-admin-login-back" href="/entrar">Já tenho conta</a>
-            </div>
-          </form>
-        </article>
-      </div>
+          <div class="nc-actions nc-admin-login-actions nc-member-register-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+            <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Solicitar cadastro</button>
+            <a class="nc-btn nc-btn-secondary nc-admin-login-back" href="/entrar">Já tenho conta</a>
+          </div>
+        </form>
+      </article>
     </section>
   </main>
 {% endblock %}

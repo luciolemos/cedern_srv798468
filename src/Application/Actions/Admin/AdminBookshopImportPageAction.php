@@ -81,17 +81,22 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
                             throw new \RuntimeException(implode(' ', $rowErrors));
                         }
 
-                        $existingBook = $this->bookshopRepository->findBookBySku((string) $payload['sku']);
+                        $existingBook = null;
+                        if ((string) ($payload['sku'] ?? '') !== '') {
+                            $existingBook = $this->bookshopRepository->findBookBySku((string) $payload['sku']);
+                        }
                         if ($existingBook === null && (string) ($payload['isbn'] ?? '') !== '') {
                             $existingBook = $this->bookshopRepository->findBookByIsbn((string) $payload['isbn']);
                         }
 
                         if ($existingBook !== null) {
+                            $payload['sku'] = (string) ($existingBook['sku'] ?? '');
                             $payload['cost_price'] = (string) ($existingBook['cost_price'] ?? '0.00');
                             $payload['stock_quantity'] = (int) ($existingBook['stock_quantity'] ?? 0);
                             $this->bookshopRepository->updateBook((int) $existingBook['id'], $payload);
                             $summary['updated']++;
                         } else {
+                            $payload['sku'] = $this->bookshopRepository->generateNextBookSku();
                             $payload['cost_price'] = '0.00';
                             $payload['stock_quantity'] = 0;
                             $this->bookshopRepository->createBook($payload);
@@ -245,10 +250,6 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
         $sku = strtoupper(trim((string) ($row['sku'] ?? '')));
         $isbn = trim((string) ($row['isbn'] ?? ''));
 
-        if ($sku === '' && $isbn !== '') {
-            $sku = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '', $isbn) ?? $isbn);
-        }
-
         $slugInput = trim((string) ($row['slug'] ?? ''));
         $slug = $this->slugify($slugInput !== '' ? $slugInput : ($title . '-' . strtolower($sku)));
         $status = strtolower(trim((string) ($row['status'] ?? 'active')));
@@ -298,10 +299,6 @@ class AdminBookshopImportPageAction extends AbstractAdminBookshopAction
 
         if ((string) ($payload['author_name'] ?? '') === '') {
             $errors[] = 'Autor obrigatório.';
-        }
-
-        if ((string) ($payload['sku'] ?? '') === '') {
-            $errors[] = 'SKU obrigatório ou ISBN utilizável para gerar SKU.';
         }
 
         if ((string) ($payload['slug'] ?? '') === '') {

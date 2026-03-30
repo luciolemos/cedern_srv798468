@@ -54,6 +54,14 @@
       <form class="nc-admin-form" method="post" action="/painel/livraria/movimentacoes/nova?mode={{ bookshop_stock_movement_mode }}" data-bookshop-stock-movement-form data-bookshop-stock-movement-mode="{{ bookshop_stock_movement_mode }}" data-bookshop-options="{{ bookshop_stock_movement_book_options|json_encode|e('html_attr') }}">
         <input type="hidden" name="mode" value="{{ bookshop_stock_movement_form.mode|default(bookshop_stock_movement_mode) }}">
 
+        {% if bookshop_stock_movement_mode == 'adjustment' %}
+          <p class="nc-admin-form-note">
+            <strong>Como funciona o ajuste:</strong>
+            ajuste positivo soma unidades ao lote (custo e preço só mudam se você preencher);
+            ajuste negativo e perda/avaria apenas reduzem a quantidade e não alteram custo/preço.
+          </p>
+        {% endif %}
+
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-stock-movement-head{% if bookshop_stock_movement_mode == 'adjustment' %} nc-admin-form-grid-bookshop-stock-movement-head-adjustment{% endif %}">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="book_id">Livro do acervo</label>
@@ -177,6 +185,7 @@
       var typeSelect = form.querySelector('[data-bookshop-movement-type-select]');
       var quantityInput = form.querySelector('[data-bookshop-movement-quantity-input]');
       var costInput = form.querySelector('[data-bookshop-movement-cost-input]');
+      var saleInput = form.querySelector('#sale_price');
       var titleOutput = summaryScope.querySelector('[data-bookshop-movement-summary-title]');
       var stockOutput = summaryScope.querySelector('[data-bookshop-movement-summary-stock]');
       var deltaOutput = summaryScope.querySelector('[data-bookshop-movement-summary-delta]');
@@ -276,6 +285,8 @@
           element.dataset.salePriceLabel = String(lot.unit_sale_price_label || 'R$ 0,00');
           element.dataset.costLabel = String(lot.unit_cost_label || '-');
           element.dataset.occurredAtLabel = String(lot.occurred_at_label || '');
+          element.dataset.unitCost = String(lot.unit_cost || '');
+          element.dataset.unitSalePrice = String(lot.unit_sale_price || '');
 
           if (selectedLotValue && normalizedLotId === String(selectedLotValue)) {
             element.selected = true;
@@ -332,6 +343,46 @@
         }
       }
 
+      function formatMoneyValue(rawValue) {
+        if (!rawValue) {
+          return '';
+        }
+        if (String(rawValue).indexOf(',') >= 0) {
+          return String(rawValue);
+        }
+        return String(rawValue).replace('.', ',');
+      }
+
+      function refreshLotDependentFields() {
+        if (formMode !== 'adjustment') {
+          return;
+        }
+
+        var movementType = typeSelect.value || '';
+        var lotOption = resolveSelectedLotOption();
+        var shouldLockValues = movementType === 'adjustment_remove' || movementType === 'loss';
+
+        if (costInput) {
+          costInput.readOnly = shouldLockValues;
+        }
+
+        if (saleInput) {
+          saleInput.readOnly = shouldLockValues;
+        }
+
+        if (!lotOption) {
+          return;
+        }
+
+        if (costInput && !costInput.value) {
+          costInput.value = formatMoneyValue(lotOption.dataset.unitCost || '');
+        }
+
+        if (saleInput && !saleInput.value) {
+          saleInput.value = formatMoneyValue(lotOption.dataset.unitSalePrice || '');
+        }
+      }
+
       function refreshSummary() {
         var option = resolveSelectedOption();
         var quantity = parseInt(quantityInput.value || '0', 10);
@@ -360,21 +411,25 @@
 
       bookSelect.addEventListener('change', function () {
         refreshLotFieldState(false);
+        refreshLotDependentFields();
         refreshSummary();
       });
       if (lotSelect) {
         lotSelect.addEventListener('change', function () {
           lotSelect.setAttribute('data-selected-lot', lotSelect.value || '');
+          refreshLotDependentFields();
         });
       }
       typeSelect.addEventListener('change', function () {
         refreshLotFieldState(true);
         refreshCostFieldState();
+        refreshLotDependentFields();
         refreshSummary();
       });
       quantityInput.addEventListener('input', refreshSummary);
       refreshLotFieldState(true);
       refreshCostFieldState();
+      refreshLotDependentFields();
       refreshSummary();
     })();
   </script>

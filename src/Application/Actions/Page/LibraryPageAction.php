@@ -140,15 +140,15 @@ class LibraryPageAction extends AbstractPageAction
             $paginationLinks[] = [
                 'number' => $pageNumber,
                 'active' => $pageNumber === $currentPage,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $pageNumber]),
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $pageNumber])),
             ];
         }
 
         $previousPageUrl = $currentPage > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
             : null;
         $nextPageUrl = $currentPage < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
             : null;
 
         $sortOptions = array_map(

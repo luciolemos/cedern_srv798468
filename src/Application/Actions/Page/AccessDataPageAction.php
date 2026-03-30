@@ -50,8 +50,9 @@ class AccessDataPageAction extends AbstractPageAction
             ]);
         }
 
-        return $this->renderPage($response, 'pages/legal-document.twig', [
+        return $this->renderPage($response, 'pages/access-data.twig', [
             'legal_document' => $document,
+            'access_data_sections' => $this->parseAccessDataBody((string) ($document['body'] ?? '')),
             'page_title' => 'Dados de acesso | CEDE',
             'page_url' => 'https://cedern.org/dados-de-acesso',
             'page_description' => 'Página institucional reservada para dados de acesso do CEDE.',
@@ -96,5 +97,135 @@ class AccessDataPageAction extends AbstractPageAction
         } catch (\Throwable $exception) {
             return '';
         }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function parseAccessDataBody(string $body): array
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $body) ?: [];
+        $sections = [];
+        $currentSection = null;
+        $currentEntry = null;
+
+        $flushEntry = static function (?array &$section, ?array &$entry): void {
+            if ($section === null || $entry === null) {
+                $entry = null;
+
+                return;
+            }
+
+            $fields = (array) ($entry['fields'] ?? []);
+            $displayTitle = '';
+
+            foreach ($fields as $field) {
+                $label = strtolower((string) ($field['label'] ?? ''));
+                if (str_contains($label, 'nome')) {
+                    $displayTitle = (string) ($field['value'] ?? '');
+                    break;
+                }
+            }
+
+            if ($displayTitle === '') {
+                foreach ($fields as $field) {
+                    $label = strtolower((string) ($field['label'] ?? ''));
+                    if (str_contains($label, 'usuário') || str_contains($label, 'username') || str_contains($label, 'login')) {
+                        $displayTitle = (string) ($field['value'] ?? '');
+                        break;
+                    }
+                }
+            }
+
+            $entry['display_title'] = $displayTitle;
+            $section['entries'][] = $entry;
+            $entry = null;
+        };
+
+        $flushSection = static function (array &$allSections, ?array &$section, ?array &$entry) use ($flushEntry): void {
+            if ($section === null) {
+                return;
+            }
+
+            $flushEntry($section, $entry);
+
+            if (($section['entries'] ?? []) !== []) {
+                $allSections[] = $section;
+            }
+
+            $section = null;
+        };
+
+        foreach ($lines as $rawLine) {
+            $line = trim($rawLine);
+
+            if ($line === '' || preg_match('/^=+$/', $line) === 1) {
+                continue;
+            }
+
+            if (preg_match('/^https?:\/\//i', $line) === 1) {
+                if ($currentSection === null) {
+                    $currentSection = [
+                        'title' => 'Acesso',
+                        'entries' => [],
+                    ];
+                }
+
+                $flushEntry($currentSection, $currentEntry);
+                $currentEntry = [
+                    'url' => $line,
+                    'fields' => [],
+                ];
+
+                continue;
+            }
+
+            if (preg_match('/^[-•]\s*(.+?)\s*:\s*(.+)$/u', $line, $matches) === 1) {
+                if ($currentSection === null) {
+                    $currentSection = [
+                        'title' => 'Acesso',
+                        'entries' => [],
+                    ];
+                }
+
+                if ($currentEntry === null) {
+                    $currentEntry = [
+                        'url' => '',
+                        'fields' => [],
+                    ];
+                }
+
+                $label = trim($matches[1]);
+                $value = trim($matches[2]);
+                $labelLower = strtolower($label);
+                $kind = 'text';
+
+                if (str_contains($labelLower, 'senha')) {
+                    $kind = 'secret';
+                } elseif (str_contains($labelLower, 'usuário') || str_contains($labelLower, 'username') || str_contains($labelLower, 'login')) {
+                    $kind = 'login';
+                } elseif (str_contains($labelLower, 'perfil')) {
+                    $kind = 'badge';
+                }
+
+                $currentEntry['fields'][] = [
+                    'label' => $label,
+                    'value' => $value,
+                    'kind' => $kind,
+                ];
+
+                continue;
+            }
+
+            $flushSection($sections, $currentSection, $currentEntry);
+            $currentSection = [
+                'title' => $line,
+                'entries' => [],
+            ];
+        }
+
+        $flushSection($sections, $currentSection, $currentEntry);
+
+        return $sections;
     }
 }

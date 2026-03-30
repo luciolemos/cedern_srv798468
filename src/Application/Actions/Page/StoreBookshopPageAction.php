@@ -53,7 +53,7 @@ class StoreBookshopPageAction extends AbstractPageAction
 
     protected function getPageDescription(): string
     {
-        return 'Consulte o catalogo publico da Livraria do CEDE. '
+        return 'Consulte o catalogo publico da Livraria Auta de Sousa. '
             . 'A venda dos livros e presencial, diretamente no balcao da casa.';
     }
 
@@ -196,14 +196,14 @@ class StoreBookshopPageAction extends AbstractPageAction
         ];
 
         $paginationLinks = $this->buildCompactPaginationLinks($currentPage, $totalPages, static function (int $page) use ($basePath, $baseQuery): string {
-            return $basePath . '?' . http_build_query($baseQuery + ['page' => $page]);
+            return $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page]));
         });
 
         $previousPageUrl = $currentPage > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
             : null;
         $nextPageUrl = $currentPage < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
             : null;
 
         $sortOptions = array_map(
