@@ -46,6 +46,10 @@ interface BookshopRepository
      */
     public function findBookByIsbn(string $isbn): ?array;
 
+    public function generateNextBookSku(): string;
+
+    public function renumberBookSkusSequentially(): int;
+
     /**
      * @param array<string, mixed> $data
      */
@@ -64,6 +68,11 @@ interface BookshopRepository
     public function findAllCategoriesForAdmin(): array;
 
     /**
+     * @return array<int, int>
+     */
+    public function findCategoryBookCounts(): array;
+
+    /**
      * @return array<string, mixed>|null
      */
     public function findCategoryByIdForAdmin(int $id): ?array;
@@ -72,6 +81,11 @@ interface BookshopRepository
      * @return array<int, array<string, mixed>>
      */
     public function findAllGenresForAdmin(): array;
+
+    /**
+     * @return array<int, int>
+     */
+    public function findGenreBookCounts(): array;
 
     /**
      * @return array<string, mixed>|null

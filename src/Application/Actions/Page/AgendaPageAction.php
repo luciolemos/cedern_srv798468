@@ -168,15 +168,15 @@ class AgendaPageAction extends AbstractPageAction
             $paginationLinks[] = [
                 'number' => $pageNumber,
                 'active' => $pageNumber === $page,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $pageNumber]),
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $pageNumber])),
             ];
         }
 
         $previousPageUrl = $page > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $page - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page - 1]))
             : null;
         $nextPageUrl = $page < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $page + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page + 1]))
             : null;
 
         $pageSizeOptions = array_map(static fn (int $option): array => [

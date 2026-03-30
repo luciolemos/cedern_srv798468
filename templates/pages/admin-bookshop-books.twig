@@ -37,6 +37,7 @@
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/categorias">Categorias doutrinárias</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/generos">Gêneros literários</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/importar">Importar CSV</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ bookshop_books_export_url|default('/painel/livraria/acervo/exportar') }}">Exportar CSV</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas</a>
       <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/acervo/novo">+ Novo livro</a>
     </div>
@@ -45,11 +46,41 @@
     {% set sort_links = bookshop_books_sort_links|default({}) %}
     {% set search_term = bookshop_books_search|default('') %}
     {% set filters = bookshop_books_filters|default({}) %}
+    {% set filter_options = bookshop_books_filter_options|default({}) %}
+    {% set genre_options = filter_options.genres|default([]) %}
+    {% set category_options = filter_options.categories|default([]) %}
+    {% set shelf_options = filter_options.shelves|default([]) %}
+    {% set level_options = filter_options.levels|default([]) %}
+    {% set has_active_filters = search_term != '' or filters.status_filter|default('all') != 'all' or filters.stock_filter|default('all') != 'all' or filters.genre_filter|default('all') != 'all' or filters.category_filter|default('all') != 'all' or filters.shelf_filter|default('all') != 'all' or filters.level_filter|default('all') != 'all' %}
 
       <form class="nc-admin-table-search" method="get" action="/painel/livraria/acervo" data-aos="fade-up" data-aos-delay="95">
         <label for="nc-bookshop-books-search">Buscar no acervo</label>
         <div class="nc-admin-table-search-controls nc-bookshop-table-filters nc-bookshop-books-search-controls">
         <input id="nc-bookshop-books-search" name="q" type="search" value="{{ search_term }}" aria-describedby="nc-bookshop-books-search-help" placeholder="SKU, título, autor, coleção, volume, categoria doutrinária, gênero literário, editora, ISBN, código de barras, localização...">
+        <select name="genre_filter" aria-label="Filtrar por gênero literário">
+          <option value="all" {{ filters.genre_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os gêneros</option>
+          {% for option in genre_options %}
+            <option value="{{ option.value }}" {{ filters.genre_filter|default('all') == option.value ? 'selected' : '' }}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+        <select name="category_filter" aria-label="Filtrar por categoria doutrinária">
+          <option value="all" {{ filters.category_filter|default('all') == 'all' ? 'selected' : '' }}>Todas as categorias</option>
+          {% for option in category_options %}
+            <option value="{{ option.value }}" {{ filters.category_filter|default('all') == option.value ? 'selected' : '' }}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+        <select name="shelf_filter" aria-label="Filtrar por estante">
+          <option value="all" {{ filters.shelf_filter|default('all') == 'all' ? 'selected' : '' }}>Todas as estantes</option>
+          {% for option in shelf_options %}
+            <option value="{{ option.value }}" {{ filters.shelf_filter|default('all') == option.value ? 'selected' : '' }}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+        <select name="level_filter" aria-label="Filtrar por prateleira">
+          <option value="all" {{ filters.level_filter|default('all') == 'all' ? 'selected' : '' }}>Todas as prateleiras</option>
+          {% for option in level_options %}
+            <option value="{{ option.value }}" {{ filters.level_filter|default('all') == option.value ? 'selected' : '' }}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
         <select name="status_filter" aria-label="Filtrar por status">
           <option value="all" {{ filters.status_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os status</option>
           <option value="active" {{ filters.status_filter|default('all') == 'active' ? 'selected' : '' }}>Somente ativos</option>
@@ -61,17 +92,20 @@
           <option value="low" {{ filters.stock_filter|default('all') == 'low' ? 'selected' : '' }}>Estoque baixo</option>
           <option value="out" {{ filters.stock_filter|default('all') == 'out' ? 'selected' : '' }}>Sem estoque</option>
         </select>
-        <input type="hidden" name="sort" value="{{ pagination.sort|default('title') }}">
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('sku') }}">
         <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
         <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
         <button class="nc-btn nc-btn-primary" type="submit">Aplicar busca</button>
+        {% if has_active_filters %}
+          <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Limpar filtros</a>
+        {% endif %}
       </div>
       <p class="nc-bookshop-inline-copy" id="nc-bookshop-books-search-help">Digite o termo e clique em <strong>Aplicar busca</strong> ou pressione Enter.</p>
     </form>
 
     {% if bookshop_books|length == 0 %}
       <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="120">
-        <p>{{ search_term or filters.status_filter != 'all' or filters.stock_filter != 'all' ? 'Nenhum item encontrado para os filtros informados.' : 'Nenhum item cadastrado ainda no acervo da livraria.' }}</p>
+        <p>{{ search_term or filters.status_filter != 'all' or filters.stock_filter != 'all' or filters.genre_filter != 'all' or filters.category_filter != 'all' ? 'Nenhum item encontrado para os filtros informados.' : 'Nenhum item cadastrado ainda no acervo da livraria.' }}</p>
       </article>
     {% else %}
       <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="120">
@@ -83,12 +117,16 @@
           <label for="nc-bookshop-books-per-page">Registros por página</label>
           <select id="nc-bookshop-books-per-page" name="per_page" onchange="this.form.submit()">
             {% for option in pagination.page_size_options %}
-              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
             {% endfor %}
           </select>
-          <input type="hidden" name="sort" value="{{ pagination.sort|default('title') }}">
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('sku') }}">
           <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
           <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="genre_filter" value="{{ filters.genre_filter|default('all') }}">
+          <input type="hidden" name="category_filter" value="{{ filters.category_filter|default('all') }}">
+          <input type="hidden" name="shelf_filter" value="{{ filters.shelf_filter|default('all') }}">
+          <input type="hidden" name="level_filter" value="{{ filters.level_filter|default('all') }}">
           <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('all') }}">
           <input type="hidden" name="stock_filter" value="{{ filters.stock_filter|default('all') }}">
         </form>
@@ -99,12 +137,14 @@
           <thead>
             <tr>
               <th>Capa</th>
+              <th><a class="nc-admin-sort-link{% if sort_links.sku.active %} is-active{% endif %}" href="{{ sort_links.sku.url }}">SKU <span aria-hidden="true">{{ sort_links.sku.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.title.active %} is-active{% endif %}" href="{{ sort_links.title.url }}">Título <span aria-hidden="true">{{ sort_links.title.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.author_name.active %} is-active{% endif %}" href="{{ sort_links.author_name.url }}">Autor <span aria-hidden="true">{{ sort_links.author_name.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.genre_name.active %} is-active{% endif %}" href="{{ sort_links.genre_name.url }}">Gênero literário <span aria-hidden="true">{{ sort_links.genre_name.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.category_name.active %} is-active{% endif %}" href="{{ sort_links.category_name.url }}">Categoria doutrinária <span aria-hidden="true">{{ sort_links.category_name.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.isbn.active %} is-active{% endif %}" href="{{ sort_links.isbn.url }}">ISBN <span aria-hidden="true">{{ sort_links.isbn.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.barcode.active %} is-active{% endif %}" href="{{ sort_links.barcode.url }}">Código de barras <span aria-hidden="true">{{ sort_links.barcode.indicator }}</span></a></th>
+              <th>Localização</th>
               <th><a class="nc-admin-sort-link{% if sort_links.stock_quantity.active %} is-active{% endif %}" href="{{ sort_links.stock_quantity.url }}">Estoque <span aria-hidden="true">{{ sort_links.stock_quantity.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.sale_price.active %} is-active{% endif %}" href="{{ sort_links.sale_price.url }}">Venda <span aria-hidden="true">{{ sort_links.sale_price.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a></th>
@@ -127,13 +167,14 @@
                       {% include 'components/library-bookplate-fallback.twig' with {
                         bookplate_title: book.title|default('livro'),
                         bookplate_author: book.author_name|default(''),
-                        bookplate_collection_label: 'Livraria CEDE',
+                        bookplate_collection_label: 'Livraria Auta de Sousa',
                         bookplate_section_title: 'Livraria',
                         bookplate_modifier_class: 'is-admin-list-thumb'
                       } only %}
                     {% endif %}
                   </div>
                 </td>
+                <td class="nc-admin-cell-code" data-label="SKU">{{ book.sku|default('-') ?: '-' }}</td>
                 <td class="nc-agenda-activity-cell" data-label="Título">
                   <strong>{{ book.title }}</strong>
                   {% if book.subtitle|default('') %}
@@ -157,6 +198,7 @@
                 <td data-label="Categoria doutrinária">{{ book.category_name|default('-') ?: '-' }}</td>
                 <td class="nc-admin-cell-code" data-label="ISBN">{{ book.isbn|default('-') ?: '-' }}</td>
                 <td class="nc-admin-cell-code" data-label="Código de barras">{{ book.barcode|default('-') ?: '-' }}</td>
+                <td data-label="Localização">{{ book.location_label|default('-') ?: '-' }}</td>
                 <td data-label="Estoque">
                   <span class="nc-bookshop-stock-pill is-{{ book.stock_state|default('ok') }}">{{ book.stock_quantity|default(0) }}</span>
                   <small>{{ book.stock_state_label|default('') }}</small>

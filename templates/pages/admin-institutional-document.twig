@@ -34,7 +34,9 @@
 
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary" href="{{ admin_document_public_url|default('/') }}" target="_blank" rel="noopener">Ver página pública</a>
+      {% if admin_document_has_public_page|default(true) %}
+        <a class="nc-btn nc-btn-secondary" href="{{ admin_document_public_url|default('/') }}" target="_blank" rel="noopener">Ver página pública</a>
+      {% endif %}
     </div>
 
     <article class="nc-card nc-admin-form-card">
@@ -63,7 +65,9 @@
 
         <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
           <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">Salvar {{ admin_document_label|default('documento') }}</button>
-          <a class="nc-btn nc-btn-secondary" href="{{ admin_document_public_url|default('/') }}" target="_blank" rel="noopener">Ver página pública</a>
+          {% if admin_document_has_public_page|default(true) %}
+            <a class="nc-btn nc-btn-secondary" href="{{ admin_document_public_url|default('/') }}" target="_blank" rel="noopener">Ver página pública</a>
+          {% endif %}
         </div>
       </form>
     </article>

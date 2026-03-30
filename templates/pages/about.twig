@@ -5,7 +5,7 @@
     {% set institutional = site.institutional|default({}) %}
     {% set founder = homeContent.aboutPages.fundador|default({}) %}
 
-    <section class="nc-section" aria-label="Detalhes institucionais">
+    <section class="nc-section nc-about-overview" aria-label="Detalhes institucionais">
       {% include 'components/section-header.twig' with {
         kicker: 'Quem Somos',
         title: 'Conheça nossa identidade',
@@ -23,7 +23,7 @@
       </div>
     </section>
 
-    <section class="nc-section" aria-label="Fundador do CEDE" data-aos="fade-up" data-aos-delay="30">
+    <section class="nc-section nc-about-founder-overview" aria-label="Fundador do CEDE" data-aos="fade-up" data-aos-delay="30">
       {% include 'components/section-header.twig' with {
         kicker: founder.kicker|default('Quem Somos'),
         title: founder.title|default('Nosso Fundador'),

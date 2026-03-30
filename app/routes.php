@@ -17,6 +17,7 @@ use App\Application\Actions\Admin\AdminLoginPageAction;
 use App\Application\Actions\Admin\AdminAgendaListPageAction;
 use App\Application\Actions\Admin\AdminAccessDataPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookDeleteAction;
+use App\Application\Actions\Admin\AdminBookshopBookExportCsvAction;
 use App\Application\Actions\Admin\AdminBookshopBookFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookListPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookLotsPageAction;
@@ -32,6 +33,7 @@ use App\Application\Actions\Admin\AdminBookshopGenreFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreListPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreToggleStatusAction;
 use App\Application\Actions\Admin\AdminBookshopImportPageAction;
+use App\Application\Actions\Admin\AdminBookshopImportTemplateDownloadAction;
 use App\Application\Actions\Admin\AdminBookshopManualPageAction;
 use App\Application\Actions\Admin\AdminBookshopReportsPageAction;
 use App\Application\Actions\Admin\AdminBookshopSaleCancelAction;
@@ -63,9 +65,10 @@ use App\Application\Actions\Admin\AdminLogoutAction;
 use App\Application\Actions\Page\AgendaDetailPageAction;
 use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
-use App\Application\Actions\Page\AccessDataPageAction;
 use App\Application\Actions\Page\BookshopCoverImagePageAction;
+use App\Application\Actions\Page\BookshopAutaDeSousaPageAction;
 use App\Application\Actions\Page\ContactPageAction;
+use App\Application\Actions\Page\EadePageAction;
 use App\Application\Actions\Page\EsdePageAction;
 use App\Application\Actions\Page\FaqPageAction;
 use App\Application\Actions\Page\FaqDoctrinePageAction;
@@ -231,6 +234,7 @@ return function (App $app) {
     $app->get('/quem-somos/nossa-marca', AboutBrandPageAction::class);
     $app->get('/quem-somos/gestao-cede', AboutManagementPageAction::class);
     $app->get('/estudos', StudiesPageAction::class);
+    $app->get('/estudos/eade', EadePageAction::class);
     $app->get('/estudos/esde', EsdePageAction::class);
     $app->get('/estudos/palestras', PublicLecturesPageAction::class);
     $app->get('/estudos/atendimento-fraterno', FraternalServicePageAction::class);
@@ -240,17 +244,29 @@ return function (App $app) {
     $app->get('/media/livraria/capas/{file}', BookshopCoverImagePageAction::class);
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
-    $app->get('/loja/livraria', StoreBookshopPageAction::class);
+    $app->get('/loja/livraria', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
     $app->get('/loja/livraria-ii', StoreBookshopIiPageAction::class);
+    $app->get('/loja/livraria-auta-de-sousa', BookshopAutaDeSousaPageAction::class);
     $app->get('/livraria', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
-        $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');
+        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });
     $app->get('/livraria-ii', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
         $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
+    $app->get('/livraria-auta-de-sousa', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/loja/livraria-auta-de-sousa' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });
@@ -334,6 +350,8 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->get('/livraria/acervo', AdminBookshopBookListPageAction::class)
             ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/acervo/exportar', AdminBookshopBookExportCsvAction::class)
+            ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/acervo/novo', AdminBookshopBookFormPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->get('/livraria/acervo/{id}/lotes', AdminBookshopBookLotsPageAction::class)
@@ -343,6 +361,8 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/livraria/acervo/{id}/editar', AdminBookshopBookFormPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->post('/livraria/acervo/{id}/excluir', AdminBookshopBookDeleteAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/importar/modelo', AdminBookshopImportTemplateDownloadAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->map(['GET', 'POST'], '/livraria/importar', AdminBookshopImportPageAction::class)
             ->add($panelBookshopAccessMiddleware);
@@ -554,7 +574,9 @@ return function (App $app) {
     $app->get('/faq/praticas', FaqPracticesPageAction::class);
     $app->map(['GET', 'POST'], '/contato', ContactPageAction::class);
     $app->get('/politica-de-privacidade', PrivacyPolicyPageAction::class);
-    $app->get('/dados-de-acesso', AccessDataPageAction::class);
+    $app->get('/dados-de-acesso', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/institucional/dados-de-acesso')->withStatus(302);
+    });
     $app->get('/termos-de-uso', TermsOfUsePageAction::class);
 
     $app->get('/users', function (Request $request, Response $response) use ($app) {

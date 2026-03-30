@@ -13,6 +13,10 @@ class MySqlBookshopRepository implements BookshopRepository
 
     private const SALE_DISPLAY_TIMEZONE = 'America/Fortaleza';
 
+    private const BOOK_SKU_PREFIX = 'CEDE-LIV-';
+
+    private const BOOK_SKU_PADDING = 4;
+
     private \PDO $pdo;
 
     private bool $schemaEnsured = false;
@@ -198,6 +202,102 @@ class MySqlBookshopRepository implements BookshopRepository
         return $this->withSchemaRetry($operation);
     }
 
+    public function generateNextBookSku(): string
+    {
+        $operation = function (): string {
+            $statement = $this->pdo->query(<<<SQL
+                SELECT sku
+                FROM bookshop_books
+                WHERE sku REGEXP '^CEDE-LIV-[0-9]{4}$'
+                ORDER BY CAST(RIGHT(sku, 4) AS UNSIGNED) DESC
+                LIMIT 1
+            SQL);
+            $currentSku = (string) ($statement->fetchColumn() ?: '');
+            $nextNumber = $this->extractGeneratedBookSkuNumber($currentSku) + 1;
+
+            return $this->formatGeneratedBookSku($nextNumber);
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
+    public function renumberBookSkusSequentially(): int
+    {
+        $operation = function (): int {
+            $this->pdo->beginTransaction();
+
+            try {
+                $rows = $this->pdo->query(
+                    'SELECT id, sku FROM bookshop_books ORDER BY id ASC FOR UPDATE'
+                )->fetchAll() ?: [];
+
+                if ($rows === []) {
+                    $this->pdo->commit();
+
+                    return 0;
+                }
+
+                $updateBookSku = $this->pdo->prepare(
+                    'UPDATE bookshop_books SET sku = :sku WHERE id = :id LIMIT 1'
+                );
+                $updateSaleSnapshots = $this->pdo->prepare(
+                    'UPDATE bookshop_sale_items SET sku_snapshot = :sku WHERE book_id = :book_id'
+                );
+                $updateMovementSnapshots = $this->pdo->prepare(
+                    'UPDATE bookshop_stock_movements SET sku_snapshot = :sku WHERE book_id = :book_id'
+                );
+
+                foreach ($rows as $row) {
+                    $bookId = (int) ($row['id'] ?? 0);
+                    if ($bookId <= 0) {
+                        continue;
+                    }
+
+                    $updateBookSku->execute([
+                        'sku' => 'TMP-LIV-' . $bookId,
+                        'id' => $bookId,
+                    ]);
+                }
+
+                $position = 0;
+                foreach ($rows as $row) {
+                    $bookId = (int) ($row['id'] ?? 0);
+                    if ($bookId <= 0) {
+                        continue;
+                    }
+
+                    $position++;
+                    $newSku = $this->formatGeneratedBookSku($position);
+
+                    $updateBookSku->execute([
+                        'sku' => $newSku,
+                        'id' => $bookId,
+                    ]);
+                    $updateSaleSnapshots->execute([
+                        'sku' => $newSku,
+                        'book_id' => $bookId,
+                    ]);
+                    $updateMovementSnapshots->execute([
+                        'sku' => $newSku,
+                        'book_id' => $bookId,
+                    ]);
+                }
+
+                $this->pdo->commit();
+
+                return $position;
+            } catch (\Throwable $exception) {
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+
+                throw $exception;
+            }
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
     public function createBook(array $data): int
     {
         $operation = function () use ($data): int {
@@ -232,7 +332,9 @@ class MySqlBookshopRepository implements BookshopRepository
                     stock_quantity,
                     stock_minimum,
                     status,
-                    location_label
+                    location_label,
+                    created_by_member_id,
+                    created_by_name
                 ) VALUES (
                     :sku,
                     :slug,
@@ -366,6 +468,32 @@ class MySqlBookshopRepository implements BookshopRepository
         return $this->withSchemaRetry($operation);
     }
 
+    public function findCategoryBookCounts(): array
+    {
+        $operation = function (): array {
+            $statement = $this->pdo->query(<<<SQL
+                SELECT category_id, COUNT(*) AS total
+                FROM bookshop_books
+                WHERE category_id IS NOT NULL
+                GROUP BY category_id
+            SQL);
+
+            $rows = $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            $counts = [];
+
+            foreach ($rows as $row) {
+                $categoryId = (int) ($row['category_id'] ?? 0);
+                if ($categoryId > 0) {
+                    $counts[$categoryId] = (int) ($row['total'] ?? 0);
+                }
+            }
+
+            return $counts;
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
     public function findCategoryByIdForAdmin(int $id): ?array
     {
         $operation = function () use ($id): ?array {
@@ -402,6 +530,7 @@ class MySqlBookshopRepository implements BookshopRepository
                     slug,
                     name,
                     description,
+                    color,
                     is_active,
                     created_at,
                     updated_at
@@ -410,6 +539,32 @@ class MySqlBookshopRepository implements BookshopRepository
             SQL);
 
             return array_map([$this, 'normalizeGenre'], $statement->fetchAll() ?: []);
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
+    public function findGenreBookCounts(): array
+    {
+        $operation = function (): array {
+            $statement = $this->pdo->query(<<<SQL
+                SELECT genre_id, COUNT(*) AS total
+                FROM bookshop_books
+                WHERE genre_id IS NOT NULL
+                GROUP BY genre_id
+            SQL);
+
+            $rows = $statement->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            $counts = [];
+
+            foreach ($rows as $row) {
+                $genreId = (int) ($row['genre_id'] ?? 0);
+                if ($genreId > 0) {
+                    $counts[$genreId] = (int) ($row['total'] ?? 0);
+                }
+            }
+
+            return $counts;
         };
 
         return $this->withSchemaRetry($operation);
@@ -424,6 +579,7 @@ class MySqlBookshopRepository implements BookshopRepository
                     slug,
                     name,
                     description,
+                    color,
                     is_active,
                     created_at,
                     updated_at
@@ -569,11 +725,13 @@ class MySqlBookshopRepository implements BookshopRepository
                     slug,
                     name,
                     description,
+                    color,
                     is_active
                 ) VALUES (
                     :slug,
                     :name,
                     :description,
+                    :color,
                     :is_active
                 )
             SQL);
@@ -594,6 +752,7 @@ class MySqlBookshopRepository implements BookshopRepository
                     slug = :slug,
                     name = :name,
                     description = :description,
+                    color = :color,
                     is_active = :is_active
                 WHERE id = :id
                 LIMIT 1
@@ -1569,6 +1728,21 @@ class MySqlBookshopRepository implements BookshopRepository
         SQL;
     }
 
+    private function extractGeneratedBookSkuNumber(string $sku): int
+    {
+        if (preg_match('/^CEDE-LIV-(\d{4})$/', trim($sku), $matches) !== 1) {
+            return 0;
+        }
+
+        return (int) $matches[1];
+    }
+
+    private function formatGeneratedBookSku(int $number): string
+    {
+        return self::BOOK_SKU_PREFIX
+            . str_pad((string) max(1, $number), self::BOOK_SKU_PADDING, '0', STR_PAD_LEFT);
+    }
+
     /**
      * @param array<string, mixed> $data
      * @return array<string, mixed>
@@ -1637,6 +1811,7 @@ class MySqlBookshopRepository implements BookshopRepository
             'slug' => trim((string) ($data['slug'] ?? '')),
             'name' => trim((string) ($data['name'] ?? '')),
             'description' => $this->nullableText($data['description'] ?? null),
+            'color' => $this->nullableText($data['color'] ?? null),
             'is_active' => ((int) ($data['is_active'] ?? 0)) === 1 ? 1 : 0,
         ];
     }
@@ -2923,6 +3098,7 @@ class MySqlBookshopRepository implements BookshopRepository
                 slug VARCHAR(120) NOT NULL UNIQUE,
                 name VARCHAR(160) NOT NULL,
                 description TEXT NULL,
+                color VARCHAR(20) NULL,
                 is_active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -3110,6 +3286,12 @@ class MySqlBookshopRepository implements BookshopRepository
                 INDEX idx_bookshop_stock_movements_created_by (created_by_name)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
+
+        $this->ensureColumn(
+            'bookshop_genres',
+            'color',
+            'ALTER TABLE bookshop_genres ADD COLUMN color VARCHAR(20) NULL AFTER description'
+        );
 
         $this->ensureColumn(
             'bookshop_sales',

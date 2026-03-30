@@ -18,12 +18,12 @@ class StoreBookshopIiPageAction extends StoreBookshopPageAction
 
     protected function getPageTitle(): string
     {
-        return 'Livraria II | Loja | CEDE';
+        return 'Livraria Auta de Sousa | Loja | CEDE';
     }
 
     protected function getPageDescription(): string
     {
-        return 'Explore uma segunda visualizacao da Livraria do CEDE, '
+        return 'Vitrine principal da Livraria Auta de Sousa, '
             . 'com o catalogo publico organizado em lista e ficha tecnica expandida.';
     }
 }

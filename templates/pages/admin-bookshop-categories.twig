@@ -74,7 +74,7 @@
           <label for="nc-bookshop-categories-per-page">Registros por página</label>
           <select id="nc-bookshop-categories-per-page" name="per_page" onchange="this.form.submit()">
             {% for option in pagination.page_size_options %}
-              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
             {% endfor %}
           </select>
           <input type="hidden" name="sort" value="{{ pagination.sort|default('name') }}">
@@ -97,6 +97,7 @@
                 <a class="nc-admin-sort-link{% if sort_links.slug.active %} is-active{% endif %}" href="{{ sort_links.slug.url }}">Slug <span aria-hidden="true">{{ sort_links.slug.indicator }}</span></a>
               </th>
               <th>Descrição</th>
+              <th>Títulos</th>
               <th>
                 <a class="nc-admin-sort-link{% if sort_links.is_active.active %} is-active{% endif %}" href="{{ sort_links.is_active.url }}">Status <span aria-hidden="true">{{ sort_links.is_active.indicator }}</span></a>
               </th>
@@ -109,6 +110,7 @@
                 <td data-label="Nome">{{ category.name }}</td>
                 <td class="nc-admin-cell-slug" data-label="Slug" title="{{ category.slug }}"><span>{{ category.slug }}</span></td>
                 <td data-label="Descrição">{{ category.description|default('-') ?: '-' }}</td>
+                <td data-label="Títulos">{{ category.book_count|default(0) }}</td>
                 <td data-label="Status">
                   <span class="nc-admin-featured-flag{{ category.is_active ? ' is-on' : ' is-off' }}">{{ category.is_active ? 'Ativa' : 'Inativa' }}</span>
                 </td>

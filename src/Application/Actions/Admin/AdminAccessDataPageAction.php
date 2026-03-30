@@ -15,7 +15,6 @@ class AdminAccessDataPageAction extends AbstractPageAction
 {
     private const DOCUMENT_SLUG = 'dados-de-acesso';
     private const FORM_ACTION_PATH = '/painel/institucional/dados-de-acesso';
-    private const PUBLIC_PAGE_PATH = '/dados-de-acesso';
     private const DEFAULT_CONTENT_PATH = '/app/content/access-data.php';
     private const FLASH_KEY = 'admin_document_access_data';
 
@@ -233,9 +232,9 @@ class AdminAccessDataPageAction extends AbstractPageAction
             'institution_document_form_errors' => $errors,
             'admin_document_label' => 'Dados de acesso',
             'admin_document_form_action' => self::FORM_ACTION_PATH,
-            'admin_document_public_url' => self::PUBLIC_PAGE_PATH,
+            'admin_document_has_public_page' => false,
             'admin_document_dashboard_title' => 'Dados de acesso',
-            'admin_document_dashboard_lead' => 'Edite a página institucional reservada para dados de acesso exibida em /dados-de-acesso.',
+            'admin_document_dashboard_lead' => 'Edite o registro interno de dados de acesso disponível apenas no painel administrativo.',
             'admin_document_saved_message' => 'Dados de acesso atualizados com sucesso.',
             'admin_document_error_message' => 'Não foi possível salvar Dados de acesso.',
             'page_title' => 'Dados de acesso | Painel CEDE',

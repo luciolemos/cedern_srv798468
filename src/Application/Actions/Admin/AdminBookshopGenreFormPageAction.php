@@ -118,11 +118,17 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
         $slugInput = trim((string) ($input['slug'] ?? ''));
         $slug = $this->slugify($slugInput !== '' ? $slugInput : $name);
         $isActiveRaw = (string) ($input['is_active'] ?? '');
+        $color = trim((string) ($input['color'] ?? ''));
+        if ($color !== '' && $color[0] !== '#') {
+            $color = '#' . $color;
+        }
+        $color = strtolower($color);
 
         return [
             'name' => $name,
             'slug' => $slug,
             'description' => trim((string) ($input['description'] ?? '')),
+            'color' => $color,
             'is_active' => $isActiveRaw === '1' ? 1 : ($isActiveRaw === '0' ? 0 : -1),
         ];
     }
@@ -145,6 +151,11 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
 
         if (!in_array((int) ($payload['is_active'] ?? -1), [0, 1], true)) {
             $errors[] = 'Selecione o status do gênero literário.';
+        }
+
+        $color = (string) ($payload['color'] ?? '');
+        if ($color !== '' && !preg_match('/^#[0-9a-f]{6}$/i', $color)) {
+            $errors[] = 'Cor inválida. Use o formato #RRGGBB.';
         }
 
         return $errors;
@@ -170,6 +181,7 @@ class AdminBookshopGenreFormPageAction extends AbstractAdminBookshopAction
             'name' => $submittedPayload['name'] ?? ($existingGenre['name'] ?? ''),
             'slug' => $submittedPayload['slug'] ?? ($existingGenre['slug'] ?? ''),
             'description' => $submittedPayload['description'] ?? ($existingGenre['description'] ?? ''),
+            'color' => $submittedPayload['color'] ?? ($existingGenre['color'] ?? ''),
             'is_active' => array_key_exists('is_active', $submittedPayload)
                 ? (string) $submittedPayload['is_active']
                 : $existingIsActive,

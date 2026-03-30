@@ -1,0 +1,65 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    <section class="nc-section nc-access-data-page" aria-label="Dados de acesso" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: legal_document.kicker|default('Institucional'),
+        title: legal_document.title|default('Dados de acesso'),
+        lead: legal_document.lead|default('Página institucional reservada para registro de dados de acesso.')
+      } %}
+
+      {% if legal_document.updated_at_label|default('') %}
+        <p class="nc-statute-meta" data-aos="fade-up" data-aos-delay="80">
+          Última atualização: {{ legal_document.updated_at_label }}
+        </p>
+      {% endif %}
+
+      {% if access_data_sections|default([])|length > 0 %}
+        <div class="nc-access-data-layout" data-aos="fade-up" data-aos-delay="120">
+          {% for section in access_data_sections %}
+            <section class="nc-access-data-section">
+              <div class="nc-access-data-section-head">
+                <h2>{{ section.title }}</h2>
+                <p>{{ section.entries|length }} acesso{{ section.entries|length > 1 ? 's' : '' }} registrado{{ section.entries|length > 1 ? 's' : '' }}</p>
+              </div>
+
+              <div class="nc-access-data-entry-list">
+                {% for entry in section.entries|default([]) %}
+                  <article class="nc-access-data-entry">
+                    <div class="nc-access-data-entry-head">
+                      <div>
+                        <h3>{{ entry.display_title|default('Conta de acesso') ?: 'Conta de acesso' }}</h3>
+                        {% if entry.url|default('') %}
+                          <a class="nc-link nc-access-data-entry-link" href="{{ entry.url }}" target="_blank" rel="noopener noreferrer">{{ entry.url }}</a>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <dl class="nc-access-data-fields">
+                      {% for field in entry.fields|default([]) %}
+                        <div class="nc-access-data-field">
+                          <dt>{{ field.label }}</dt>
+                          <dd class="is-{{ field.kind|default('text') }}">{{ field.value }}</dd>
+                        </div>
+                      {% endfor %}
+                    </dl>
+                  </article>
+                {% endfor %}
+              </div>
+            </section>
+          {% endfor %}
+        </div>
+      {% else %}
+        <article class="nc-statute-card" data-aos="fade-up" data-aos-delay="120">
+          <div class="nc-statute-text">{{ legal_document.body|default('Conteúdo indisponível no momento.') }}</div>
+        </article>
+      {% endif %}
+
+      <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="160">
+        <a class="nc-btn nc-btn-secondary" href="/">Voltar para Início</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

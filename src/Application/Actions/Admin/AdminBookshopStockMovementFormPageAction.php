@@ -88,6 +88,7 @@ class AdminBookshopStockMovementFormPageAction extends AbstractAdminBookshopActi
                 'book_id' => (int) $payload['book_id'],
                 'movement_type' => (string) $payload['movement_type'],
                 'quantity' => (int) $payload['quantity'],
+                'stock_lot_id' => (int) ($payload['stock_lot_id'] ?? 0),
                 'unit_cost' => (string) ($payload['unit_cost'] ?? ''),
                 'sale_price' => (string) ($payload['sale_price'] ?? ''),
                 'notes' => (string) ($payload['notes'] ?? ''),
@@ -270,12 +271,19 @@ class AdminBookshopStockMovementFormPageAction extends AbstractAdminBookshopActi
             }
         }
 
-        if (
-            $book !== null
-            && in_array($movementType, ['entry', 'donation', 'adjustment_add'], true)
-            && (float) ($payload['sale_price'] ?? 0) <= 0
-        ) {
-            $errors[] = 'Informe o preço de venda do lote para esta entrada.';
+        if ($book !== null && in_array($movementType, ['entry', 'donation'], true)) {
+            if ((float) ($payload['sale_price'] ?? 0) <= 0) {
+                $errors[] = 'Informe o preço de venda do lote para esta entrada.';
+            }
+        }
+
+        if ($book !== null && $movementType === 'adjustment_add') {
+            $availableLots = $this->resolveSelectableAdjustmentLots($book);
+            $selectedLot = $this->resolveSelectedAdjustmentLot($availableLots, (int) ($payload['stock_lot_id'] ?? 0));
+
+            if ($selectedLot === null && (float) ($payload['sale_price'] ?? 0) <= 0) {
+                $errors[] = 'Informe o preço de venda do lote para este ajuste.';
+            }
         }
 
         if ($book !== null && in_array($movementType, ['adjustment_remove', 'loss'], true)) {

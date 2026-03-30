@@ -796,6 +796,12 @@ h3 {
   transition: var(--comp-link-transition);
 }
 
+.nc-link.is-inline {
+  display: inline;
+  padding: 0;
+  border-radius: 0;
+}
+
 .nc-nav-link-content {
   display: inline-flex;
   align-items: center;
@@ -2625,7 +2631,7 @@ h3 {
 .nc-bookshop-pagination {
   margin-top: clamp(4rem, 8vw, 6rem);
   padding-top: 1.2rem;
-  border-top: 1px solid color-mix(in srgb, var(--surface-border) 76%, transparent);
+  border-top: none;
 }
 
 .nc-bookshop-card-specs,
@@ -3335,6 +3341,67 @@ body.is-library-cover-dialog-open {
   max-width: 70ch;
 }
 
+.nc-studies-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-studies-paths .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-about-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-about-founder-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-agenda-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-agenda-detail .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-store-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-store-bookshop-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-contact-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-member-register-overview .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.nc-study-detail .nc-section-lead {
+  max-width: none;
+  width: 100%;
+}
+
+@media (min-width: 960px) {
+  .nc-study-detail .nc-section-lead {
+    white-space: nowrap;
+  }
+}
+
 .nc-home-testimonials > .nc-section-lead {
   max-width: none;
   text-align: left;
@@ -3830,6 +3897,128 @@ code {
   white-space: pre-wrap;
   line-height: 1.72;
   color: var(--text-main);
+}
+
+.nc-access-data-layout {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+}
+
+.nc-access-data-section {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--surface-border);
+}
+
+.nc-access-data-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.nc-access-data-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.nc-access-data-section-head h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+
+.nc-access-data-section-head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.nc-access-data-entry-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.nc-access-data-entry {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--theme-soft-1) 8%, var(--surface-main));
+}
+
+.nc-access-data-entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.nc-access-data-entry-head h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+}
+
+.nc-access-data-entry-link {
+  word-break: break-all;
+}
+
+.nc-access-data-fields {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.68rem var(--space-3);
+}
+
+.nc-access-data-field {
+  padding: 0.7rem 0.78rem;
+  border: 1px solid color-mix(in srgb, var(--surface-border) 78%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 4%, var(--surface-main));
+}
+
+.nc-access-data-field dt,
+.nc-access-data-field dd {
+  margin: 0;
+}
+
+.nc-access-data-field dt {
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+}
+
+.nc-access-data-field dd {
+  margin-top: 0.28rem;
+  color: var(--text-main);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.nc-access-data-field dd.is-login,
+.nc-access-data-field dd.is-secret {
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+}
+
+.nc-access-data-field dd.is-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 56%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 42%, var(--surface-main));
+  color: color-mix(in srgb, var(--theme-accent-1) 72%, var(--text-main));
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
 }
 
 .nc-statute-meta {
@@ -5452,30 +5641,46 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   top: 50%;
   right: 0.45rem;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 4.85rem;
-  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  border: 1px solid color-mix(in srgb, var(--theme-accent-1) 68%, var(--surface-border));
   border-radius: calc(var(--radius-sm) - 3px);
-  background: color-mix(in srgb, var(--theme-soft-1) 58%, var(--surface-main));
-  color: var(--theme-soft-ink);
+  background: linear-gradient(90deg, var(--theme-accent-1), var(--theme-accent-2));
+  color: var(--btn-primary-text);
   padding: 0.36rem 0.68rem;
   font: inherit;
   font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  transition: border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--theme-accent-1) 24%, transparent);
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast), box-shadow var(--motion-fast), transform var(--motion-fast);
 }
 
 .nc-password-toggle-button:hover,
 .nc-password-toggle-button:focus-visible {
-  border-color: color-mix(in srgb, var(--theme-accent-1) 48%, var(--surface-border));
-  background: color-mix(in srgb, var(--theme-soft-1) 76%, var(--surface-main));
-  color: var(--theme-accent-1);
+  border-color: color-mix(in srgb, var(--theme-accent-1) 82%, var(--surface-border));
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--theme-accent-1) 88%, black),
+    color-mix(in srgb, var(--theme-accent-2) 88%, black)
+  );
+  color: var(--btn-primary-text);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--theme-accent-1) 30%, transparent);
 }
 
 .nc-password-toggle-button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
+}
+
+.nc-password-toggle-button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 88%, var(--surface-border));
+  background: linear-gradient(90deg, var(--theme-accent-2), var(--theme-accent-1));
+  color: var(--btn-primary-text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 22%, transparent);
 }
 
 .nc-admin-login-error {
@@ -6472,6 +6677,17 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   padding-left: 1.1rem;
 }
 
+.nc-admin-form-note {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 42%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  font-size: var(--font-size-sm);
+  text-wrap: pretty;
+}
+
 .nc-admin-form-card {
   width: 100%;
 }
@@ -6608,6 +6824,10 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   grid-template-columns: minmax(240px, 2.2fr) minmax(130px, 0.75fr) minmax(150px, 0.9fr);
 }
 
+.nc-admin-form-grid-category-head {
+  grid-template-columns: minmax(320px, 2.9fr) minmax(150px, 1fr) minmax(150px, 0.95fr);
+}
+
 .nc-admin-form-grid-bookshop-sale-customer {
   grid-template-columns:
     minmax(145px, 0.9fr)
@@ -6655,11 +6875,21 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
     minmax(220px, 1.25fr);
 }
 
+.nc-admin-form-grid-genre-color {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .nc-admin-form-grid-bookshop-pricing {
   grid-template-columns:
-    minmax(120px, 0.85fr)
-    minmax(145px, 1fr)
-    minmax(190px, 1.45fr);
+    minmax(150px, 1.1fr)
+    minmax(140px, 0.95fr)
+    minmax(150px, 0.9fr);
+}
+
+.nc-admin-form-location-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(75px, 0.4fr) minmax(75px, 0.4fr) minmax(110px, 0.5fr);
 }
 
 .nc-admin-form-grid-bookshop-sale-payment {
@@ -6753,6 +6983,45 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--swatch-red-1) 12%, transparent);
 }
 
+.nc-admin-form-input[readonly],
+.nc-admin-form-input[aria-readonly='true'],
+.nc-admin-form-input:disabled {
+  background: color-mix(in srgb, var(--surface-panel) 78%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--text-muted) 18%, var(--surface-border));
+  color: color-mix(in srgb, var(--text-main) 88%, var(--text-muted));
+  opacity: 0.84;
+  cursor: not-allowed;
+}
+
+.nc-admin-form-input[readonly]:hover,
+.nc-admin-form-input[aria-readonly='true']:hover,
+.nc-admin-form-input:disabled:hover {
+  border-color: color-mix(in srgb, var(--text-muted) 18%, var(--surface-border));
+}
+
+.nc-admin-form-color-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+input[type='color'].nc-admin-form-input {
+  width: 3.25rem;
+  min-height: 2.6rem;
+  padding: 0.2rem;
+}
+
+.nc-admin-form-color-field .nc-admin-form-input:not(.nc-admin-form-color-input) {
+  flex: 1 1 180px;
+}
+
+@media (max-width: 560px) {
+  .nc-admin-form-color-field {
+    flex-wrap: wrap;
+  }
+}
+
 [data-mode="dark"] input[type='date'].nc-admin-form-input::-webkit-calendar-picker-indicator,
 [data-mode="dark"] input[type='datetime-local'].nc-admin-form-input::-webkit-calendar-picker-indicator,
 [data-mode="dark"] input[type='time'].nc-admin-form-input::-webkit-calendar-picker-indicator {
@@ -6799,6 +7068,14 @@ textarea.nc-admin-form-input {
   }
 
   .nc-admin-form-grid-triplet > .nc-admin-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .nc-admin-form-grid-category-head {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+  }
+
+  .nc-admin-form-grid-category-head > .nc-admin-form-field:first-child {
     grid-column: 1 / -1;
   }
 
@@ -6871,6 +7148,7 @@ textarea.nc-admin-form-input {
 
   .nc-admin-form-grid-identity,
   .nc-admin-form-grid-triplet,
+  .nc-admin-form-grid-category-head,
   .nc-admin-form-grid-bookshop-sale-customer,
   .nc-admin-form-grid-bookshop-sale-customer-extra,
   .nc-admin-form-grid-bookshop-header,
@@ -6884,6 +7162,10 @@ textarea.nc-admin-form-input {
   .nc-admin-form-grid-bookshop-sale-payment,
   .nc-admin-form-grid-schedule {
     grid-template-columns: 1fr;
+  }
+
+  .nc-admin-form-location-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .nc-admin-form-grid-triplet > .nc-admin-form-field:first-child,
@@ -6924,6 +7206,14 @@ textarea.nc-admin-form-input {
   }
 
   .nc-admin-form-grid-triplet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-category-head {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-admin-form-grid-category-head {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -8314,6 +8604,19 @@ textarea.nc-admin-form-input {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.nc-bookshop-dashboard-home {
+  display: grid;
+  gap: 1rem;
+}
+
+.nc-bookshop-dashboard-home .nc-bookshop-kpi-grid {
+  gap: var(--space-3);
+}
+
+.nc-bookshop-dashboard-home .nc-bookshop-overview-grid {
+  gap: clamp(1rem, 2vw, 1.4rem);
+}
+
 .nc-bookshop-kpi-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -8325,11 +8628,37 @@ textarea.nc-admin-form-input {
   margin-top: 1rem;
 }
 
+.nc-bookshop-dashboard-home .nc-bookshop-kpi-grid + .nc-bookshop-overview-grid,
+.nc-bookshop-dashboard-home .nc-bookshop-overview-grid + .nc-bookshop-dashboard-panel,
+.nc-bookshop-dashboard-home .nc-bookshop-kpi-grid + .nc-bookshop-dashboard-panel {
+  margin-top: 0;
+}
+
 .nc-bookshop-kpi-card,
 .nc-bookshop-overview-card,
 .nc-bookshop-detail-card {
   display: grid;
   gap: 0.5rem;
+}
+
+.nc-bookshop-dashboard-home .nc-bookshop-kpi-card,
+.nc-bookshop-dashboard-home .nc-bookshop-overview-card {
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.nc-bookshop-kpi-grid-secondary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.nc-bookshop-dashboard-panel {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding-top: clamp(1rem, 2vw, 1.35rem);
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-ink) 10%, var(--surface-border));
 }
 
 .nc-bookshop-kpi-card .nc-metric-value,
@@ -8338,9 +8667,29 @@ textarea.nc-admin-form-input {
   line-height: 1;
 }
 
+.nc-bookshop-dashboard-home .nc-bookshop-kpi-card p,
+.nc-bookshop-dashboard-home .nc-bookshop-overview-card p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.nc-bookshop-overview-head {
+  margin-bottom: 0.15rem;
+}
+
 .nc-bookshop-overview-card h3,
 .nc-bookshop-detail-card h3 {
   margin: 0;
+}
+
+.nc-bookshop-dashboard-home .nc-bookshop-overview-card h3 {
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+
+.nc-bookshop-kpi-grid-secondary .nc-metric-value {
+  font-size: clamp(1.45rem, 2.4vw, 1.95rem);
 }
 
 .nc-bookshop-flow-list {
@@ -8358,6 +8707,84 @@ textarea.nc-admin-form-input {
 .nc-bookshop-inline-copy-error {
   color: color-mix(in srgb, var(--swatch-red-1) 78%, var(--text-main));
   font-weight: var(--font-weight-medium);
+}
+
+.nc-bookshop-dashboard-columns {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nc-bookshop-dashboard-status-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.nc-bookshop-dashboard-status-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-soft-ink) 8%, var(--surface-border));
+}
+
+.nc-bookshop-dashboard-status-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.nc-bookshop-dashboard-status-item.is-alert strong {
+  color: color-mix(in srgb, var(--theme-accent-1) 62%, var(--text-main));
+}
+
+.nc-bookshop-dashboard-status-main {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.nc-bookshop-dashboard-status-main strong,
+.nc-bookshop-dashboard-table tbody td strong {
+  display: block;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.nc-bookshop-dashboard-status-main p,
+.nc-bookshop-dashboard-table tbody td small {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-caption);
+  line-height: 1.32;
+}
+
+.nc-bookshop-dashboard-status-meta {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: end;
+  text-align: right;
+}
+
+.nc-bookshop-dashboard-status-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent-1) 18%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-2) 18%, var(--surface-main));
+  color: var(--theme-accent-1);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-bookshop-dashboard-table {
+  min-width: 100%;
 }
 
 .nc-bookshop-manual-book {
@@ -9704,6 +10131,15 @@ body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
   .nc-bookshop-book-view-toolbar .nc-bookshop-book-view-sale-btn {
     justify-self: stretch;
   }
+
+  .nc-bookshop-dashboard-columns,
+  .nc-bookshop-kpi-grid-secondary {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-access-data-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 981px) {
@@ -9726,6 +10162,20 @@ body:has(.nc-bookshop-receipt-card) .nc-utility-stack {
 
   .nc-bookshop-kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-dashboard-status-item {
+    grid-template-columns: 1fr;
+  }
+
+  .nc-bookshop-dashboard-status-meta {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .nc-access-data-section-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .nc-bookshop-manual-nav {

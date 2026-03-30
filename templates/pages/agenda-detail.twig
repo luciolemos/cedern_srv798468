@@ -2,7 +2,7 @@
 
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
-    <section class="nc-section" aria-label="Detalhes da agenda" data-aos="fade-up" data-aos-delay="0">
+    <section class="nc-section nc-agenda-detail" aria-label="Detalhes da agenda" data-aos="fade-up" data-aos-delay="0">
       {% set current_event = agenda_event|default(null) %}
       {% set is_internal_event = current_event and current_event.audience|default('') == 'Público interno' %}
       {% set has_public_online_access = current_event and current_event.meeting_url and current_event.mode|default('') in ['online', 'hibrido'] and not is_internal_event %}

@@ -70,7 +70,7 @@
             <label for="nc-per-page">Registros por página</label>
             <select id="nc-per-page" name="per_page" onchange="this.form.submit()">
               {% for option in pagination.page_size_options %}
-                <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.value }}</option>
+                <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
               {% endfor %}
             </select>
             <input type="hidden" name="sort" value="{{ pagination.sort|default('starts_at') }}">

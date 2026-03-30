@@ -13,7 +13,9 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
 
     private const DEFAULT_PAGE_SIZE = 10;
 
-    private const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
+    private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
+
+    private const ALL_PAGE_SIZE = 'all';
 
     private const SORT_FIELDS = [
         'sold_at',
@@ -94,12 +96,20 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
             return $comparison * $sortMultiplier;
         });
 
-        $requestedPageSize = (int) ($queryParams['per_page'] ?? self::DEFAULT_PAGE_SIZE);
-        $pageSize = in_array($requestedPageSize, self::PAGE_SIZE_OPTIONS, true)
-            ? $requestedPageSize
-            : self::DEFAULT_PAGE_SIZE;
-
         $totalItems = count($sales);
+        $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
+        $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
+        $pageSize = self::DEFAULT_PAGE_SIZE;
+
+        if (!$showAllItems) {
+            $requestedPageSizeNumber = (int) $requestedPageSize;
+            $pageSize = in_array($requestedPageSizeNumber, self::PAGE_SIZE_OPTIONS, true)
+                ? $requestedPageSizeNumber
+                : self::DEFAULT_PAGE_SIZE;
+        } else {
+            $pageSize = max($totalItems, 1);
+        }
+
         $totalPages = max(1, (int) ceil($totalItems / $pageSize));
         $currentPage = max(1, (int) ($queryParams['page'] ?? 1));
         $currentPage = min($currentPage, $totalPages);
@@ -110,9 +120,10 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
         $startItem = $totalItems > 0 ? $offset + 1 : 0;
         $endItem = $totalItems > 0 ? min($offset + count($sales), $totalItems) : 0;
 
+        $pageSizeQueryValue = $showAllItems ? self::ALL_PAGE_SIZE : (string) $pageSize;
         $basePath = '/painel/livraria/vendas';
         $baseQuery = [
-            'per_page' => $pageSize,
+            'per_page' => $pageSizeQueryValue,
             'sort' => $sortBy,
             'dir' => $sortDirection,
             'q' => $searchTerm,
@@ -129,11 +140,11 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
             }
 
             $sortLinks[$field] = [
-                'url' => $basePath . '?' . http_build_query($baseQuery + [
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, [
                     'page' => 1,
                     'sort' => $field,
                     'dir' => $nextDirection,
-                ]),
+                ])),
                 'indicator' => $indicator,
                 'active' => $sortBy === $field,
             ];
@@ -144,21 +155,27 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
             $paginationLinks[] = [
                 'number' => $page,
                 'active' => $page === $currentPage,
-                'url' => $basePath . '?' . http_build_query($baseQuery + ['page' => $page]),
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page])),
             ];
         }
 
         $previousPageUrl = $currentPage > 1
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage - 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
             : null;
         $nextPageUrl = $currentPage < $totalPages
-            ? $basePath . '?' . http_build_query($baseQuery + ['page' => $currentPage + 1])
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
             : null;
 
         $pageSizeOptions = array_map(static fn (int $option): array => [
-            'value' => $option,
-            'selected' => $option === $pageSize,
+            'value' => (string) $option,
+            'label' => (string) $option,
+            'selected' => !$showAllItems && $option === $pageSize,
         ], self::PAGE_SIZE_OPTIONS);
+        $pageSizeOptions[] = [
+            'value' => self::ALL_PAGE_SIZE,
+            'label' => 'Todos',
+            'selected' => $showAllItems,
+        ];
 
         return $this->renderPage($response, 'pages/admin-bookshop-sales.twig', [
             'bookshop_sales' => $sales,
@@ -174,7 +191,7 @@ class AdminBookshopSaleListPageAction extends AbstractAdminBookshopAction
                 'total_items' => $totalItems,
                 'start_item' => $startItem,
                 'end_item' => $endItem,
-                'page_size' => $pageSize,
+                'page_size' => $pageSizeQueryValue,
                 'sort' => $sortBy,
                 'dir' => $sortDirection,
                 'links' => $paginationLinks,

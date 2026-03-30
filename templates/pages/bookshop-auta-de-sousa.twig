@@ -1,0 +1,84 @@
+{% extends 'layouts/base.twig' %}
+
+{% block content %}
+  <main class="nc-main nc-container nc-home-flow">
+    {% set auta = bookshop_auta|default({}) %}
+    {% set auta_name = auta.name|default('')|trim %}
+    {% set auta_role = auta.role|default('Homenageada da livraria')|trim %}
+    {% set auta_photo = auta.photo|default('')|trim %}
+    {% set auta_intro = auta.intro|default([]) %}
+    {% set auta_topics = auta.topics|default([]) %}
+    {% set auta_quote = auta.quote|default('')|trim %}
+    {% set auta_quote_attribution = auta.quote_attribution|default('')|trim %}
+    {% set auta_display_name = auta_name != '' ? auta_name : auta.title|default('Auta de Sousa') %}
+    {% set auta_avatar_label = auta_name != '' ? auta_name : auta_display_name %}
+
+    <section class="nc-section nc-about-founder-page" aria-label="Página dedicada à Livraria Auta de Sousa" data-aos="fade-up" data-aos-delay="0">
+      {% include 'components/section-header.twig' with {
+        kicker: auta.kicker|default('Livraria'),
+        title: auta.title|default('Auta de Sousa'),
+        lead: auta.lead|default('Conheça a inspiração que dá nome à Livraria Auta de Sousa.')
+      } %}
+
+      <article class="nc-card nc-about-founder-profile" data-aos="fade-up" data-aos-delay="80">
+        <div class="nc-about-founder-profile-shell">
+          <div class="nc-about-founder-portrait-wrap">
+            {% if auta_photo %}
+              <img
+                class="nc-about-founder-portrait"
+                src="{{ auta_photo }}"
+                alt="{{ auta.photo_alt|default('Retrato de Auta de Sousa') }}"
+              >
+            {% else %}
+              <span class="nc-about-founder-portrait nc-about-founder-portrait-fallback" aria-hidden="true">
+                {{ auta_avatar_label|slice(0, 1)|upper }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="nc-about-founder-copy">
+            <div class="nc-about-founder-meta">
+              <h2 class="nc-about-founder-name">{{ auta_display_name }}</h2>
+              <p class="nc-about-founder-role">{{ auta_role }}</p>
+            </div>
+
+            <div class="nc-about-founder-intro">
+              {% for paragraph in auta_intro %}
+                <p>{{ paragraph }}</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {% if auta_quote %}
+        <blockquote class="nc-card nc-about-founder-quote" data-aos="fade-up" data-aos-delay="120">
+          <p>"{{ auta_quote }}"</p>
+          {% if auta_quote_attribution %}
+            <footer>{{ auta_quote_attribution }}</footer>
+          {% endif %}
+        </blockquote>
+      {% endif %}
+
+      {% if auta_topics|length > 0 %}
+        <section class="nc-section nc-about-founder-legacy" aria-label="Legado da Livraria Auta de Sousa" data-aos="fade-up" data-aos-delay="140">
+          <ul class="nc-checklist">
+            {% for topic in auta_topics %}
+              {% include 'components/check-item.twig' with {
+                step: topic.step,
+                title: topic.title,
+                description: topic.description,
+                delay: topic.delay|default(160)
+              } %}
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
+
+      <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="180">
+        <a class="nc-btn nc-btn-secondary" href="/loja/livraria-ii">Voltar para a Livraria Auta de Sousa</a>
+        <a class="nc-btn nc-btn-primary" href="/contato">Falar com o CEDE</a>
+      </div>
+    </section>
+  </main>
+{% endblock %}

@@ -164,6 +164,19 @@
             {% if panel_can_bookshop %}
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/livraria' %}open{% endif %}>
                 <summary class="nc-dashboard-user-menu-group-title">LIVRARIA</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/acervo">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
+                      <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
+                      <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Acervo</span>
+                </a>
                 <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -244,19 +257,6 @@
                     </svg>
                   </span>
                   <span>Gêneros literários</span>
-                </a>
-                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/acervo">
-                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
-                      <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
-                      <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
-                    </svg>
-                  </span>
-                  <span>Acervo</span>
                 </a>
                 <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/livraria/importar">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
@@ -466,6 +466,19 @@
           {% if panel_can_bookshop %}
             <details class="nc-admin-nav-group" aria-label="Seção livraria" {% if current_path starts with '/painel/livraria' %}open{% endif %}>
               <summary class="nc-admin-nav-group-title">LIVRARIA</summary>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/acervo' ? ' is-active' : '' }}" href="/painel/livraria/acervo">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
+                    <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
+                    <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Acervo</span>
+              </a>
               <a class="nc-link nc-admin-submenu-link{{ current_path == '/painel/livraria' ? ' is-active' : '' }}" href="/painel/livraria">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -521,19 +534,6 @@
                 </span>
                 <span class="nc-admin-link-label">Coleções</span>
               </a>
-              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/categorias' ? ' is-active' : '' }}" href="/painel/livraria/categorias">
-                <span class="nc-admin-link-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
-                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
-                    <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
-                  </svg>
-                </span>
-                <span class="nc-admin-link-label">Categorias doutrinárias</span>
-              </a>
               <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/generos' ? ' is-active' : '' }}" href="/painel/livraria/generos">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -547,18 +547,18 @@
                 </span>
                 <span class="nc-admin-link-label">Gêneros literários</span>
               </a>
-              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/acervo' ? ' is-active' : '' }}" href="/painel/livraria/acervo">
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/categorias' ? ' is-active' : '' }}" href="/painel/livraria/categorias">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 6.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M4 12H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M4 17.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="7" cy="6.5" r="1.2" fill="currentColor"/>
-                    <circle cx="7" cy="12" r="1.2" fill="currentColor"/>
-                    <circle cx="7" cy="17.5" r="1.2" fill="currentColor"/>
+                    <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Acervo</span>
+                <span class="nc-admin-link-label">Categorias doutrinárias</span>
               </a>
               <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/livraria/importar' ? ' is-active' : '' }}" href="/painel/livraria/importar">
                 <span class="nc-admin-link-icon" aria-hidden="true">
@@ -758,7 +758,8 @@
               {% include 'components/section-header.twig' with {
                 kicker: dashboard_page_kicker|default('Dashboard'),
                 title: dashboard_page_title,
-                lead: dashboard_page_lead|default('')
+                lead: dashboard_page_lead|default(''),
+                lead_html: dashboard_page_lead_html|default('')
               } %}
             </header>
           {% endif %}

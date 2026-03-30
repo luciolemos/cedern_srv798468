@@ -48,6 +48,16 @@ class FallbackBookshopRepository implements BookshopRepository
         return null;
     }
 
+    public function generateNextBookSku(): string
+    {
+        return 'CEDE-LIV-0001';
+    }
+
+    public function renumberBookSkusSequentially(): int
+    {
+        return 0;
+    }
+
     public function createBook(array $data): int
     {
         return 0;
@@ -68,12 +78,22 @@ class FallbackBookshopRepository implements BookshopRepository
         return [];
     }
 
+    public function findCategoryBookCounts(): array
+    {
+        return [];
+    }
+
     public function findCategoryByIdForAdmin(int $id): ?array
     {
         return null;
     }
 
     public function findAllGenresForAdmin(): array
+    {
+        return [];
+    }
+
+    public function findGenreBookCounts(): array
     {
         return [];
     }

@@ -94,12 +94,16 @@ try {
             $payload['genre_id'] = resolveEntityId($payload['genre_name'], $genreMap);
             $payload['collection_id'] = resolveEntityId($payload['collection_name'], $collectionMap);
 
-            $existingBook = $repository->findBookBySku((string) $payload['sku']);
+            $existingBook = null;
+            if ((string) ($payload['sku'] ?? '') !== '') {
+                $existingBook = $repository->findBookBySku((string) $payload['sku']);
+            }
             if ($existingBook === null && (string) ($payload['isbn'] ?? '') !== '') {
                 $existingBook = $repository->findBookByIsbn((string) $payload['isbn']);
             }
 
             if ($existingBook !== null) {
+                $payload['sku'] = (string) ($existingBook['sku'] ?? '');
                 $payload['cost_price'] = (string) ($existingBook['cost_price'] ?? '0.00');
                 $payload['stock_quantity'] = (int) ($existingBook['stock_quantity'] ?? 0);
                 $repository->updateBook((int) $existingBook['id'], $payload);
@@ -107,6 +111,7 @@ try {
                 continue;
             }
 
+            $payload['sku'] = $repository->generateNextBookSku();
             $payload['cost_price'] = '0.00';
             $payload['stock_quantity'] = 0;
             $repository->createBook($payload);
@@ -304,10 +309,6 @@ function normalizeImportRow(array $row): array
     $sku = strtoupper(trim((string) ($row['sku'] ?? '')));
     $isbn = trim((string) ($row['isbn'] ?? ''));
 
-    if ($sku === '' && $isbn !== '') {
-        $sku = strtoupper(preg_replace('/[^a-zA-Z0-9]+/', '', $isbn) ?? $isbn);
-    }
-
     $slugInput = trim((string) ($row['slug'] ?? ''));
     $slug = slugify($slugInput !== '' ? $slugInput : ($title . '-' . strtolower($sku)));
     $status = strtolower(trim((string) ($row['status'] ?? 'active')));
@@ -357,10 +358,6 @@ function validateImportPayload(array $payload): array
 
     if ((string) ($payload['author_name'] ?? '') === '') {
         $errors[] = 'Autor obrigatório.';
-    }
-
-    if ((string) ($payload['sku'] ?? '') === '') {
-        $errors[] = 'SKU obrigatório ou ISBN utilizável para gerar SKU.';
     }
 
     if ((string) ($payload['slug'] ?? '') === '') {
