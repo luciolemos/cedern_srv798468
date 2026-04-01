@@ -244,23 +244,23 @@ return function (App $app) {
     $app->get('/media/livraria/capas/{file}', BookshopCoverImagePageAction::class);
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
-    $app->get('/loja/livraria', function (Request $request, Response $response) {
+    $app->get('/loja/livraria', StoreBookshopIiPageAction::class);
+    $app->get('/loja/livraria-ii', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
-        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+        $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });
-    $app->get('/loja/livraria-ii', StoreBookshopIiPageAction::class);
     $app->get('/loja/livraria-auta-de-sousa', BookshopAutaDeSousaPageAction::class);
     $app->get('/livraria', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
-        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+        $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });
     $app->get('/livraria-ii', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
-        $target = '/loja/livraria-ii' . ($queryString !== '' ? '?' . $queryString : '');
+        $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');
 
         return $response->withHeader('Location', $target)->withStatus(302);
     });

@@ -12,7 +12,7 @@
     {% set filters = bookshop_filters|default({}) %}
     {% set pagination = bookshop_pagination|default({}) %}
     {% set catalog_stats = bookshop_catalog_stats|default({}) %}
-    {% set bookshop_base_path = filters.base_path|default('/loja/livraria-ii') %}
+    {% set bookshop_base_path = filters.base_path|default('/loja/livraria') %}
     {% set active_filter_count = 0 %}
     {% set has_active_toolbar_filters = false %}
     {% if filters.search|default('') %}
@@ -389,7 +389,7 @@
         </div>
 
         {% if pagination.total_pages|default(1) > 1 %}
-          <nav class="nc-admin-pagination nc-bookshop-pagination" aria-label="Paginação da livraria II">
+          <nav class="nc-admin-pagination nc-bookshop-pagination" aria-label="Paginação da livraria">
             {% if pagination.previous_url %}
               <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
             {% else %}

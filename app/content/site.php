@@ -57,7 +57,7 @@ return [
                 'title' => 'Loja',
                 'links' => [
                     ['path' => '/loja', 'key' => 'loja'],
-                    ['path' => '/loja/livraria-ii', 'key' => 'livraria'],
+                    ['path' => '/loja/livraria', 'key' => 'livraria'],
                     ['path' => '/loja/bazar', 'key' => 'bazar'],
                 ],
             ],

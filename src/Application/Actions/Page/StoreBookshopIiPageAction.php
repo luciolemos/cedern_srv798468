@@ -13,7 +13,7 @@ class StoreBookshopIiPageAction extends StoreBookshopPageAction
 
     protected function getFallbackBasePath(): string
     {
-        return '/loja/livraria-ii';
+        return '/loja/livraria';
     }
 
     protected function getPageTitle(): string

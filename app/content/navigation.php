@@ -80,7 +80,7 @@ return [
             'base' => '/loja',
             'items' => [
                 ['path' => '/loja', 'label' => 'Visão geral'],
-                ['path' => '/loja/livraria-ii', 'label' => 'Livraria Auta de Sousa'],
+                ['path' => '/loja/livraria', 'label' => 'Livraria Auta de Sousa'],
                 ['path' => '/loja/bazar', 'key' => 'bazar'],
             ],
         ],

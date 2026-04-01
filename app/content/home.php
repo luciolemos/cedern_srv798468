@@ -650,7 +650,7 @@ return [
     'ctaActions' => [
         [
             'label' => 'Conheça a Livraria Auta de Sousa',
-            'href' => '/loja/livraria-ii',
+            'href' => '/loja/livraria',
             'class' => 'nc-btn nc-btn-primary',
             'loadingOnClick' => false,
         ],
