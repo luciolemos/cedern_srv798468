@@ -12,18 +12,52 @@ use Slim\App;
 use Slim\Views\Twig;
 
 return function (App $app) {
+    $appBaseEnv = getenv('APP_BASE');
+    $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
+    $appBasePath = $appBaseRaw === '' || $appBaseRaw === '/'
+        ? ''
+        : '/' . trim($appBaseRaw, '/');
+
+    $stripBasePath = static function (string $path) use ($appBasePath): string {
+        if ($appBasePath === '') {
+            return $path;
+        }
+
+        if ($path === $appBasePath) {
+            return '/';
+        }
+
+        if (str_starts_with($path, $appBasePath . '/')) {
+            return substr($path, strlen($appBasePath));
+        }
+
+        return $path;
+    };
+
+    $prefixBasePath = static function (string $path) use ($appBasePath): string {
+        if ($appBasePath === '' || $path === '' || !str_starts_with($path, '/') || str_starts_with($path, '//')) {
+            return $path;
+        }
+
+        if ($path === $appBasePath || str_starts_with($path, $appBasePath . '/')) {
+            return $path;
+        }
+
+        return $appBasePath . $path;
+    };
+
     $normalizeTrackedPageKey = static function (string $path): string {
         $normalizedPath = rtrim(trim($path), '/');
 
         return $normalizedPath === '' ? '/' : $normalizedPath;
     };
 
-    $isTrackablePublicPage = static function (Request $request) use ($normalizeTrackedPageKey): bool {
+    $isTrackablePublicPage = static function (Request $request) use ($normalizeTrackedPageKey, $stripBasePath): bool {
         if (strtoupper($request->getMethod()) !== 'GET') {
             return false;
         }
 
-        $path = $normalizeTrackedPageKey($request->getUri()->getPath());
+        $path = $normalizeTrackedPageKey($stripBasePath($request->getUri()->getPath()));
 
         if ($path === '/entrar' || $path === '/cadastro') {
             return false;
@@ -40,12 +74,14 @@ return function (App $app) {
         return true;
     };
 
-    $buildVisitorCookieHeader = static function (string $name, string $value, int $maxAge): string {
+    $buildVisitorCookieHeader = static function (string $name, string $value, int $maxAge) use ($appBasePath): string {
         $expires = gmdate('D, d M Y H:i:s \G\M\T', time() + $maxAge);
+        $cookiePath = $appBasePath !== '' ? $appBasePath : '/';
         $cookieHeader = sprintf(
-            '%s=%s; Path=/; Max-Age=%d; Expires=%s; HttpOnly; SameSite=Lax',
+            '%s=%s; Path=%s; Max-Age=%d; Expires=%s; HttpOnly; SameSite=Lax',
             rawurlencode($name),
             rawurlencode($value),
+            $cookiePath,
             $maxAge,
             $expires
         );
@@ -73,7 +109,8 @@ return function (App $app) {
         $cookieName,
         $cookieMaxAge,
         $isTrackablePublicPage,
-        $normalizeTrackedPageKey
+        $normalizeTrackedPageKey,
+        $stripBasePath
     ) {
         $response = $handler->handle($request);
 
@@ -102,7 +139,7 @@ return function (App $app) {
             }
         }
 
-        $pageKey = $normalizeTrackedPageKey($request->getUri()->getPath());
+        $pageKey = $normalizeTrackedPageKey($stripBasePath($request->getUri()->getPath()));
         $visitorTokenHash = hash('sha256', $visitorToken);
         $trackingKey = $pageKey . '|' . substr($visitorTokenHash, 0, 16);
         $trackedVisits = $_SESSION['_site_visit_tracker'] ?? [];
@@ -135,7 +172,7 @@ return function (App $app) {
         return $response;
     });
 
-    $app->add(function (Request $request, RequestHandler $handler) use ($app) {
+    $app->add(function (Request $request, RequestHandler $handler) use ($app, $stripBasePath) {
         $twig = $app->getContainer()->get(Twig::class);
         $twigEnvironment = $twig->getEnvironment();
         $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
@@ -205,7 +242,8 @@ return function (App $app) {
             }
         }
 
-        $twigEnvironment->addGlobal('current_path', $request->getUri()->getPath());
+        $currentPath = $stripBasePath($request->getUri()->getPath());
+        $twigEnvironment->addGlobal('current_path', $currentPath);
         $twigEnvironment->addGlobal('dashboard_user', $dashboardUser);
         $twigEnvironment->addGlobal('dashboard_user_photo_path', $dashboardUserPhotoPath);
         $twigEnvironment->addGlobal('dashboard_is_authenticated', $dashboardIsAuthenticated);
@@ -289,6 +327,60 @@ return function (App $app) {
         }
 
         return $handler->handle($request);
+    });
+
+    $app->add(function (Request $request, RequestHandler $handler) use ($appBasePath, $prefixBasePath) {
+        $response = $handler->handle($request);
+
+        if ($appBasePath === '') {
+            return $response;
+        }
+
+        if ($response->hasHeader('Location')) {
+            $location = trim($response->getHeaderLine('Location'));
+            if ($location !== '' && str_starts_with($location, '/')) {
+                $response = $response->withHeader('Location', $prefixBasePath($location));
+            }
+        }
+
+        $contentType = strtolower($response->getHeaderLine('Content-Type'));
+        if ($contentType !== '' && !str_contains($contentType, 'text/html')) {
+            return $response;
+        }
+
+        $body = (string) $response->getBody();
+        if ($body === '') {
+            return $response;
+        }
+
+        $rewrittenBody = preg_replace_callback(
+            '#\b(href|src|action)=([\'"])(/[^\'"]*)\2#i',
+            static function (array $matches) use ($prefixBasePath): string {
+                $attribute = $matches[1];
+                $quote = $matches[2];
+                $path = $matches[3];
+                $prefixedPath = $prefixBasePath($path);
+
+                return sprintf('%s=%s%s%s', $attribute, $quote, $prefixedPath, $quote);
+            },
+            $body
+        );
+
+        if ($rewrittenBody === null || $rewrittenBody === $body) {
+            return $response;
+        }
+
+        $streamResource = fopen('php://temp', 'r+');
+        if ($streamResource === false) {
+            return $response;
+        }
+
+        fwrite($streamResource, $rewrittenBody);
+        rewind($streamResource);
+
+        return $response
+            ->withBody(new \Slim\Psr7\Stream($streamResource))
+            ->withoutHeader('Content-Length');
     });
 
     $app->add(SessionMiddleware::class);
