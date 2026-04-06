@@ -45,11 +45,32 @@ $container = $containerBuilder->build();
 // Instantiate the app
 AppFactory::setContainer($container);
 $app = AppFactory::create();
+
+$normalizeBasePath = static function (string $rawBasePath): string {
+    $trimmed = trim($rawBasePath);
+
+    if ($trimmed === '' || $trimmed === '/') {
+        return '';
+    }
+
+    return '/' . trim($trimmed, '/');
+};
+
 $appBaseEnv = getenv('APP_BASE');
 $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
-$appBasePath = $appBaseRaw === '' || $appBaseRaw === '/'
-    ? ''
-    : '/' . trim($appBaseRaw, '/');
+$configuredAppBasePath = $normalizeBasePath($appBaseRaw);
+$requestUriPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+
+if (!is_string($requestUriPath) || $requestUriPath === '') {
+    $requestUriPath = '/';
+}
+
+// Safety fallback: if APP_BASE does not match the current request path, run at root.
+$appBasePath = $configuredAppBasePath === ''
+    || $requestUriPath === $configuredAppBasePath
+    || str_starts_with($requestUriPath, $configuredAppBasePath . '/')
+    ? $configuredAppBasePath
+    : '';
 
 if ($appBasePath !== '') {
     $app->setBasePath($appBasePath);
