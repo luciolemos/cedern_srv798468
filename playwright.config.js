@@ -47,7 +47,10 @@ module.exports = defineConfig({
   webServer: {
     command: 'composer start',
     url: 'http://localhost:8080',
-    reuseExistingServer: true,
+    env: {
+      APP_BASE: '',
+    },
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

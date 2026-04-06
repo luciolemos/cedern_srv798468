@@ -12,7 +12,8 @@ use Slim\App;
 use Slim\Views\Twig;
 
 return function (App $app) {
-    $appBaseRaw = trim((string) ($_ENV['APP_BASE'] ?? ''));
+    $appBaseEnv = getenv('APP_BASE');
+    $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
     $appBasePath = $appBaseRaw === '' || $appBaseRaw === '/'
         ? ''
         : '/' . trim($appBaseRaw, '/');

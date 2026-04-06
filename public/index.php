@@ -45,7 +45,8 @@ $container = $containerBuilder->build();
 // Instantiate the app
 AppFactory::setContainer($container);
 $app = AppFactory::create();
-$appBaseRaw = trim((string) ($_ENV['APP_BASE'] ?? ''));
+$appBaseEnv = getenv('APP_BASE');
+$appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
 $appBasePath = $appBaseRaw === '' || $appBaseRaw === '/'
     ? ''
     : '/' . trim($appBaseRaw, '/');
