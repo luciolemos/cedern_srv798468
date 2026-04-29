@@ -9,7 +9,9 @@ return [
             'title' => 'Centro de Estudos da Doutrina Espírita',
             'tagline' => 'Iluminando consciências, transformando vidas.',
             'lead' => 'Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.',
-            'imageSrc' => '/assets/img/cede.png',
+            'imageSrc' => '/assets/img/hero/hero-1920x1080.jpg',
+            'imageSrcMobile' => '/assets/img/hero/hero-1280x720.jpg',
+            'imageSrcLarge' => '/assets/img/hero/hero-2560x1440.jpg',
             'imageAlt' => 'Ambiente de estudo, acolhimento e convivência no CEDE',
             'imageDelay' => 180,
             'actionsDelay' => 140,
@@ -305,14 +307,18 @@ return [
             'lead' => 'Conheça a inspiração inicial e o legado moral que ajudaram a dar origem ao CEDE e continuam orientando sua presença na comunidade.',
             'name' => 'João Melo',
             'role' => 'Fundador do CEDE',
-            'profile_summary' => 'João Melo foi um dos pilares humanos na consolidação do CEDE: uniu estudo, serviço e compromisso comunitário na construção de uma casa voltada ao acolhimento e à vivência da Doutrina Espírita. Seu exemplo de trabalho e desprendimento segue como referência para as atividades da instituição.',
+            'profile_summary' => [
+                'Reconhecido como um dos principais pilares na consolidação do CEDE, João Melo integrou, de forma exemplar, o estudo, o trabalho e o compromisso comunitário na edificação de uma casa dedicada ao acolhimento e à vivência da Doutrina Espírita. Sua atuação é marcada pela dedicação constante e pelo entendimento de que o serviço no bem se concretiza por meio da ação.',
+                'Seu exemplo de trabalho, disciplina e desprendimento permanece como referência para as atividades desenvolvidas pela instituição, orientando práticas fundamentadas na responsabilidade, na cooperação e no propósito coletivo.',
+                'Nascido em 22 de janeiro de 1956, no município de Macaíba, Rio Grande do Norte, é casado com a Sra. Maria Melo e reside atualmente em Natal. Ao longo de sua trajetória, consolidou uma vida pautada pelo compromisso com a família, com a comunidade e com o serviço ao próximo — valores que se refletem na construção e no desenvolvimento desta casa espírita.',
+            ],
             'photo' => '/assets/img/face3_620_620.png',
             'photo_alt' => 'Retrato do fundador do CEDE',
             'intro' => [
                 'Nossa História: Fé em Movimento e Tijolo por Tijolo
 
 O Centro de Estudos da Doutrina Espírita não nasceu apenas de um ideal, mas do trabalho incansável e das mãos calejadas daqueles que acreditaram que a caridade também se constrói com suor.
-No dia 9 de janeiro de 2021, esse sonho ganhou forma definitiva. No coração deste projeto esteve o nosso fundador, João Melo. Para ele, a Doutrina Espírita não deveria ser apenas estudada nos livros, mas exemplificada na dedicação prática. João não mediu esforços: cada tijolo assentado e cada viga erguida nestas instalações carregam a marca de sua persistência e o esforço físico direto de quem compreendeu que o serviço no bem é o caminho para a evolução.
+No dia 9 de janeiro de 2001, esse sonho ganhou forma definitiva. No coração deste projeto estava o nosso fundador, João Melo. Para ele, a Doutrina Espírita não deveria ser apenas estudada nos livros, mas exemplificada na dedicação prática. João não mediu esforços: cada tijolo assentado e cada viga erguida nestas instalações carregam a marca de sua persistência e o esforço físico direto de quem compreendeu que o serviço no bem é o caminho para a evolução.
 Nossas paredes contam uma história de superação. Houve dias de sol forte e recursos escassos, mas nunca faltou a fé de João Melo e dos companheiros que, junto a ele, transformaram um solo bruto em um porto seguro para a alma.
 
 Um Gesto de Puro Desprendimento
@@ -329,12 +335,12 @@ Nossa atuação é guiada pelos valores que ergueram este Centro, unindo a base 
 2.	Responsabilidade com o Legado: Zelar pelo patrimônio físico da nossa casa é uma forma de gratidão. Honramos o esforço de quem construiu cada parede, mantendo o ambiente limpo, organizado e acolhedor.
 3.	Acolhimento Fraterno: Nossas portas estão abertas para todos, sem distinções. O suor que construiu este local teve como objetivo criar um refúgio de paz para quem sofre e uma escola para quem busca aprender.
 4.	Estudo e Prática Constantes: Acreditamos que o conhecimento da Doutrina só é pleno quando aplicado. Incentivamos o estudo sério das obras básicas aliado à prática da caridade moral e material.
-5.	União e Colaboração: Nenhum tijolo se sustenta sozinho. Valorizamos o esforço de cada colaborador e frequentador, entendendo que o Centro é mantido pela união de todos, mantendo viva a chama da cooperação iniciada em 2021.
+5.	União e Colaboração: Nenhum tijolo se sustenta sozinho. Valorizamos o esforço de cada colaborador e frequentador, entendendo que o Centro é mantido pela união de todos, mantendo viva a chama da cooperação iniciada em 2001.
 6.	Simplicidade e Humildade: Seguimos o exemplo de João Melo, mantendo o foco na essência da mensagem cristã e na simplicidade das ações, onde o fazer é sempre mais importante do que o aparecer.
 ',
                 'Esta página reúne o legado humano e espiritual que sustenta essa origem: dedicação ao conhecimento, simplicidade no servir e compromisso com o bem coletivo.',
             ],
-            'quote' => 'O verdadeiro legado de uma casa espírita está na fidelidade ao estudo, no acolhimento fraterno e no trabalho silencioso em favor do próximo. Nossa gratidão eterna ao fundador João Melo, cujo exemplo de trabalho e desprendimento ilumina nosso caminhar desde 9 de janeiro de 2021.',
+            'quote' => 'O verdadeiro legado de uma casa espírita está na fidelidade ao estudo, no acolhimento fraterno e no trabalho silencioso em favor do próximo. Nossa gratidão eterna ao fundador João Melo, cujo exemplo de trabalho e desprendimento ilumina nosso caminhar desde 9 de janeiro de 2001.',
             'quote_attribution' => 'Princípios que inspiram o CEDE',
             'topics' => [
                 [

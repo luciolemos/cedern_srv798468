@@ -1,5 +1,19 @@
 {% extends 'layouts/base.twig' %}
 
+{% block head %}
+  {% set hero_section = homeContent.sections.hero|default({}) %}
+  {% set hero_desktop_src = hero_section.imageSrc|default('') %}
+  {% set hero_large_src = hero_section.imageSrcLarge|default(hero_desktop_src) %}
+  {% if hero_desktop_src %}
+    {% set hero_desktop_avif = hero_desktop_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
+    <link rel="preload" as="image" href="{{ hero_desktop_avif }}" type="image/avif" media="(min-width: 701px) and (max-width: 1400px)" fetchpriority="high">
+  {% endif %}
+  {% if hero_large_src %}
+    {% set hero_large_avif = hero_large_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
+    <link rel="preload" as="image" href="{{ hero_large_avif }}" type="image/avif" media="(min-width: 1401px)" fetchpriority="high">
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     {% include 'home/hero.twig' %}

@@ -4,10 +4,32 @@
 {% set hero_qr_url = hero.qrUrl|default('') %}
 {% set hero_qr_image = hero.qrImage|default('') %}
 {% set hero_image_src = hero.imageSrc|default('') %}
+{% set hero_image_mobile_src = hero.imageSrcMobile|default('') %}
+{% set hero_image_large_src = hero.imageSrcLarge|default('') %}
 {% set hero_image_url = hero_image_src %}
 {% if hero_image_src and hero_image_src starts with '/' %}
   {% set hero_image_url = (base_url ?? '') ~ hero_image_src %}
 {% endif %}
+{% set hero_image_mobile_url = hero_image_mobile_src %}
+{% if hero_image_mobile_src and hero_image_mobile_src starts with '/' %}
+  {% set hero_image_mobile_url = (base_url ?? '') ~ hero_image_mobile_src %}
+{% endif %}
+{% set hero_image_large_url = hero_image_large_src %}
+{% if hero_image_large_src and hero_image_large_src starts with '/' %}
+  {% set hero_image_large_url = (base_url ?? '') ~ hero_image_large_src %}
+{% endif %}
+{% set hero_image_desktop_fallback_url = hero_image_url %}
+{% set hero_image_mobile_fallback_url = hero_image_mobile_url ?: hero_image_desktop_fallback_url %}
+{% set hero_image_large_fallback_url = hero_image_large_url ?: hero_image_desktop_fallback_url %}
+{% set hero_image_mobile_avif_url = hero_image_mobile_fallback_url|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
+{% set hero_image_mobile_webp_url = hero_image_mobile_fallback_url|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp', '.avif': '.webp'}) %}
+{% set hero_image_mobile_jpg_url = hero_image_mobile_fallback_url|replace({'.jpeg': '.jpg', '.png': '.jpg', '.webp': '.jpg', '.avif': '.jpg'}) %}
+{% set hero_image_desktop_avif_url = hero_image_desktop_fallback_url|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
+{% set hero_image_desktop_webp_url = hero_image_desktop_fallback_url|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp', '.avif': '.webp'}) %}
+{% set hero_image_desktop_jpg_url = hero_image_desktop_fallback_url|replace({'.jpeg': '.jpg', '.png': '.jpg', '.webp': '.jpg', '.avif': '.jpg'}) %}
+{% set hero_image_large_avif_url = hero_image_large_fallback_url|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
+{% set hero_image_large_webp_url = hero_image_large_fallback_url|replace({'.jpg': '.webp', '.jpeg': '.webp', '.png': '.webp', '.avif': '.webp'}) %}
+{% set hero_image_large_jpg_url = hero_image_large_fallback_url|replace({'.jpeg': '.jpg', '.png': '.jpg', '.webp': '.jpg', '.avif': '.jpg'}) %}
 {% set hero_image_alt = hero.imageAlt|default(hero.title|default('CEDE')) %}
 {% set hero_panel_enabled = hero.showPanel is defined ? hero.showPanel : true %}
 {% set hero_panel_has_content = hero_metrics|length > 0 or (hero_qr_url and hero_qr_image) %}
@@ -18,7 +40,7 @@
   aria-label="Hero principal"
   data-aos="fade-up"
   data-aos-delay="0"
-  {% if hero_image_url %}style="--nc-hero-bg-image: url('{{ hero_image_url|e('html_attr') }}');"{% endif %}
+  {% if hero_image_url %}style="--nc-hero-bg-image-fallback: url('{{ hero_image_desktop_fallback_url|e('html_attr') }}'); --nc-hero-bg-image-mobile: image-set(url('{{ hero_image_mobile_avif_url|e('html_attr') }}') type('image/avif'), url('{{ hero_image_mobile_webp_url|e('html_attr') }}') type('image/webp'), url('{{ hero_image_mobile_jpg_url|e('html_attr') }}') type('image/jpeg')); --nc-hero-bg-image-desktop: image-set(url('{{ hero_image_desktop_avif_url|e('html_attr') }}') type('image/avif'), url('{{ hero_image_desktop_webp_url|e('html_attr') }}') type('image/webp'), url('{{ hero_image_desktop_jpg_url|e('html_attr') }}') type('image/jpeg')); --nc-hero-bg-image-large: image-set(url('{{ hero_image_large_avif_url|e('html_attr') }}') type('image/avif'), url('{{ hero_image_large_webp_url|e('html_attr') }}') type('image/webp'), url('{{ hero_image_large_jpg_url|e('html_attr') }}') type('image/jpeg'));"{% endif %}
 >
 
   <div class="nc-hero-grid{% if not show_hero_panel %} is-single-column{% endif %}">
