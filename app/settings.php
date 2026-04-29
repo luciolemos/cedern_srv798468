@@ -8,12 +8,12 @@ use DI\ContainerBuilder;
 use Monolog\Logger;
 
 return function (ContainerBuilder $containerBuilder) {
-    $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? 'production'));
-    $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
-
     // Global Settings Object
     $containerBuilder->addDefinitions([
-        SettingsInterface::class => function () use ($isDevelopment) {
+        SettingsInterface::class => function () {
+            $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? 'production'));
+            $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
+
             return new Settings([
                 'displayErrorDetails' => $isDevelopment,
                 'logError'            => !$isDevelopment,
