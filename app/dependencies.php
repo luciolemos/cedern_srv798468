@@ -57,8 +57,26 @@ return function (ContainerBuilder $containerBuilder) {
             return $pdo;
         },
         Twig::class => function () {
+            $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
+            $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
+            $twigCache = false;
+
+            if (!$isDevelopment) {
+                $twigCacheDirectory = __DIR__ . '/../var/cache/twig';
+                $twigCacheReady = is_dir($twigCacheDirectory) || @mkdir($twigCacheDirectory, 0775, true);
+
+                if ($twigCacheReady && is_writable($twigCacheDirectory)) {
+                    $twigCache = $twigCacheDirectory;
+                } else {
+                    error_log(
+                        '[cedern bootstrap] Twig cache disabled: cache directory is not writable: '
+                        . $twigCacheDirectory
+                    );
+                }
+            }
+
             $twig = Twig::create(__DIR__ . '/../templates', [
-                'cache' => false,
+                'cache' => $twigCache,
             ]);
 
             $uiDefaults = [
@@ -76,8 +94,8 @@ return function (ContainerBuilder $containerBuilder) {
                 ],
             ];
 
-            $resolveEnvChoice = static function (string $key) use ($uiDefaults): string {
-                $config = $uiDefaults[$key];
+            $resolveEnvChoice = static function (string $key, array $defaults): string {
+                $config = $defaults[$key] ?? ['default' => '', 'allowed' => []];
                 $value = strtolower(trim((string) ($_ENV[$key] ?? $config['default'])));
 
                 return in_array($value, $config['allowed'], true)
@@ -124,9 +142,9 @@ return function (ContainerBuilder $containerBuilder) {
                 $appAssetVersion = '1';
             }
 
-            $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME');
-            $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE');
-            $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY');
+            $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME', $uiDefaults);
+            $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE', $uiDefaults);
+            $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY', $uiDefaults);
             $homeContent = require __DIR__ . '/content/home.php';
             $navigationContent = require __DIR__ . '/content/navigation.php';
             $siteContent = require __DIR__ . '/content/site.php';
@@ -210,30 +228,26 @@ return function (ContainerBuilder $containerBuilder) {
             $siteFooter = (array) ($siteContent['footer'] ?? []);
             $siteFooterNavGroups = (array) ($siteFooter['navGroups'] ?? []);
 
-            $siteFooter['navGroups'] = array_map(
-                static function (array $group) use ($navigationLabels): array {
-                    $groupLinks = array_map(
-                        static function (array $link) use ($navigationLabels): array {
-                            $label = trim((string) ($link['label'] ?? ''));
-                            $key = trim((string) ($link['key'] ?? ''));
+            $normalizedFooterNavGroups = [];
+            foreach ($siteFooterNavGroups as $group) {
+                $groupLinks = [];
+                foreach ((array) ($group['links'] ?? []) as $link) {
+                    $label = trim((string) ($link['label'] ?? ''));
+                    $key = trim((string) ($link['key'] ?? ''));
 
-                            if ($label === '' && $key !== '') {
-                                $label = (string) ($navigationLabels[$key] ?? $key);
-                            }
+                    if ($label === '' && $key !== '') {
+                        $label = (string) ($navigationLabels[$key] ?? $key);
+                    }
 
-                            $link['label'] = $label !== '' ? $label : (string) ($link['path'] ?? '');
+                    $link['label'] = $label !== '' ? $label : (string) ($link['path'] ?? '');
+                    $groupLinks[] = $link;
+                }
 
-                            return $link;
-                        },
-                        (array) ($group['links'] ?? [])
-                    );
+                $group['links'] = $groupLinks;
+                $normalizedFooterNavGroups[] = $group;
+            }
 
-                    $group['links'] = $groupLinks;
-
-                    return $group;
-                },
-                $siteFooterNavGroups
-            );
+            $siteFooter['navGroups'] = $normalizedFooterNavGroups;
 
             $siteContent['footer'] = $siteFooter;
 
