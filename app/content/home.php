@@ -303,15 +303,38 @@ return [
             'kicker' => 'Quem Somos',
             'title' => 'Nosso Fundador',
             'lead' => 'Conheça a inspiração inicial e o legado moral que ajudaram a dar origem ao CEDE e continuam orientando sua presença na comunidade.',
-            'name' => '',
+            'name' => 'João Melo',
             'role' => 'Fundador do CEDE',
+            'profile_summary' => 'João Melo foi um dos pilares humanos na consolidação do CEDE: uniu estudo, serviço e compromisso comunitário na construção de uma casa voltada ao acolhimento e à vivência da Doutrina Espírita. Seu exemplo de trabalho e desprendimento segue como referência para as atividades da instituição.',
             'photo' => '/assets/img/face3_620_620.png',
             'photo_alt' => 'Retrato do fundador do CEDE',
             'intro' => [
-                'A história do CEDE começou a partir de um ideal de estudo sério da Doutrina Espírita, vivência do Evangelho e serviço fraterno à comunidade.',
+                'Nossa História: Fé em Movimento e Tijolo por Tijolo
+
+O Centro de Estudos da Doutrina Espírita não nasceu apenas de um ideal, mas do trabalho incansável e das mãos calejadas daqueles que acreditaram que a caridade também se constrói com suor.
+No dia 9 de janeiro de 2021, esse sonho ganhou forma definitiva. No coração deste projeto esteve o nosso fundador, João Melo. Para ele, a Doutrina Espírita não deveria ser apenas estudada nos livros, mas exemplificada na dedicação prática. João não mediu esforços: cada tijolo assentado e cada viga erguida nestas instalações carregam a marca de sua persistência e o esforço físico direto de quem compreendeu que o serviço no bem é o caminho para a evolução.
+Nossas paredes contam uma história de superação. Houve dias de sol forte e recursos escassos, mas nunca faltou a fé de João Melo e dos companheiros que, junto a ele, transformaram um solo bruto em um porto seguro para a alma.
+
+Um Gesto de Puro Desprendimento
+Ao concluir as obras, João Melo nos deu a maior lição de desapego e amor à causa: em uma prova de seu absoluto desprendimento, ele doou integralmente as instalações para que o trabalho espírita fosse desenvolvido e continuado por outros colaboradores. Ele ergueu a casa com o próprio suor, mas entregou as chaves à comunidade, garantindo que o protagonismo fosse sempre da Doutrina e do auxílio ao próximo.
+
+Nosso Reconhecimento e Gratidão
+A atual equipe de colaboradores e todos os que frequentam esta casa guardam um sentimento profundo de reconhecimento e gratidão. Honramos o legado de João Melo mantendo estas portas abertas e o espírito de trabalho vivo. O esforço dele nos lembra que o Centro Espírita é uma construção viva, que exige manutenção constante de nossas estruturas e, acima de tudo, de nossos sentimentos.
+
+O que foi erguido com suor, hoje floresce em luz. Obrigado, João Melo.
+
+Nossos Pilares: O Espírito da Casa
+Nossa atuação é guiada pelos valores que ergueram este Centro, unindo a base sólida da codificação de Allan Kardec ao exemplo de trabalho deixado por nosso fundador:
+1.	Trabalho com Desprendimento: Assim como nossas instalações foram doadas com amor, entendemos que o verdadeiro serviço espírita é aquele realizado sem expectativa de ganhos pessoais, focado apenas no bem comum.
+2.	Responsabilidade com o Legado: Zelar pelo patrimônio físico da nossa casa é uma forma de gratidão. Honramos o esforço de quem construiu cada parede, mantendo o ambiente limpo, organizado e acolhedor.
+3.	Acolhimento Fraterno: Nossas portas estão abertas para todos, sem distinções. O suor que construiu este local teve como objetivo criar um refúgio de paz para quem sofre e uma escola para quem busca aprender.
+4.	Estudo e Prática Constantes: Acreditamos que o conhecimento da Doutrina só é pleno quando aplicado. Incentivamos o estudo sério das obras básicas aliado à prática da caridade moral e material.
+5.	União e Colaboração: Nenhum tijolo se sustenta sozinho. Valorizamos o esforço de cada colaborador e frequentador, entendendo que o Centro é mantido pela união de todos, mantendo viva a chama da cooperação iniciada em 2021.
+6.	Simplicidade e Humildade: Seguimos o exemplo de João Melo, mantendo o foco na essência da mensagem cristã e na simplicidade das ações, onde o fazer é sempre mais importante do que o aparecer.
+',
                 'Esta página reúne o legado humano e espiritual que sustenta essa origem: dedicação ao conhecimento, simplicidade no servir e compromisso com o bem coletivo.',
             ],
-            'quote' => 'O verdadeiro legado de uma casa espírita está na fidelidade ao estudo, no acolhimento fraterno e no trabalho silencioso em favor do próximo.',
+            'quote' => 'O verdadeiro legado de uma casa espírita está na fidelidade ao estudo, no acolhimento fraterno e no trabalho silencioso em favor do próximo. Nossa gratidão eterna ao fundador João Melo, cujo exemplo de trabalho e desprendimento ilumina nosso caminhar desde 9 de janeiro de 2021.',
             'quote_attribution' => 'Princípios que inspiram o CEDE',
             'topics' => [
                 [
