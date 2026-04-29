@@ -6,9 +6,16 @@
     {% set founder_role = founder.role|default('Fundador do CEDE')|trim %}
     {% set founder_photo = founder.photo|default('')|trim %}
     {% set founder_intro = founder.intro|default([]) %}
+    {% set founder_intro_blocks = founder.intro_blocks|default([]) %}
     {% set founder_topics = founder.topics|default([]) %}
     {% set founder_quote = founder.quote|default('')|trim %}
     {% set founder_quote_attribution = founder.quote_attribution|default('')|trim %}
+    {% set founder_summary = founder.profile_summary|default(founder.lead|default('')) %}
+    {% if founder_summary is iterable %}
+      {% set founder_summary_blocks = founder_summary %}
+    {% else %}
+      {% set founder_summary_blocks = [founder_summary|trim] %}
+    {% endif %}
     {% set founder_display_name = founder_name != '' ? founder_name : founder.title|default('Nosso Fundador') %}
     {% set founder_avatar_label = founder_name != '' ? founder_name : founder_display_name %}
 
@@ -40,12 +47,42 @@
               <h2 class="nc-about-founder-name">{{ founder_display_name }}</h2>
               <p class="nc-about-founder-role">{{ founder_role }}</p>
             </div>
+            {% for summary in founder_summary_blocks %}
+              {% if summary|trim != '' %}
+                <p class="nc-about-founder-summary">{{ summary }}</p>
+              {% endif %}
+            {% endfor %}
+          </div>
 
-            <div class="nc-about-founder-intro">
+          <div class="nc-about-founder-intro nc-about-founder-intro-wide">
+            {% if founder_intro_blocks|length > 0 %}
+              {% for block in founder_intro_blocks %}
+                {% if block.type|default('') == 'heading' %}
+                  <h3 class="nc-about-founder-intro-heading">{{ block.text|default('') }}</h3>
+                {% elseif block.type|default('') == 'ordered_list' and block.items is iterable and block.items|length > 0 %}
+                  <ol class="nc-about-founder-pillars">
+                    {% for item in block.items %}
+                      {% set pillar_title = item.title|default('')|trim %}
+                      {% set pillar_description = item.description|default('')|trim %}
+                      <li>
+                        {% if pillar_title != '' %}
+                          <strong>{{ pillar_description != '' ? pillar_title ~ ':' : pillar_title }}</strong>
+                        {% endif %}
+                        {% if pillar_description != '' %}
+                          <span>{{ pillar_description }}</span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ol>
+                {% elseif block.type|default('') == 'paragraph' and block.text|default('')|trim != '' %}
+                  <p>{{ block.text }}</p>
+                {% endif %}
+              {% endfor %}
+            {% else %}
               {% for paragraph in founder_intro %}
                 <p>{{ paragraph }}</p>
               {% endfor %}
-            </div>
+            {% endif %}
           </div>
         </div>
       </article>

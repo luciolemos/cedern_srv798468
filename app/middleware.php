@@ -192,7 +192,7 @@ return function (App $app) {
         return $response;
     });
 
-    $app->add(function (Request $request, RequestHandler $handler) use ($app, $stripBasePath) {
+    $app->add(function (Request $request, RequestHandler $handler) use ($app, $stripBasePath, $appBasePath) {
         $twig = $app->getContainer()->get(Twig::class);
         $twigEnvironment = $twig->getEnvironment();
         $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
@@ -263,6 +263,7 @@ return function (App $app) {
         }
 
         $currentPath = $stripBasePath($request->getUri()->getPath());
+        $twigEnvironment->addGlobal('base_url', $appBasePath);
         $twigEnvironment->addGlobal('current_path', $currentPath);
         $twigEnvironment->addGlobal('dashboard_user', $dashboardUser);
         $twigEnvironment->addGlobal('dashboard_user_photo_path', $dashboardUserPhotoPath);

@@ -1099,6 +1099,7 @@ h3 {
 }
 
 .nc-home-hero.has-background-image {
+  --nc-hero-bg-current: var(--nc-hero-bg-image-desktop, var(--nc-hero-bg-image-fallback));
   min-height: calc(100svh - var(--header-height));
   width: 100vw;
   margin-bottom: calc(-1 * var(--main-padding-y));
@@ -1109,14 +1110,14 @@ h3 {
   background-image:
     linear-gradient(
       90deg,
-      rgb(228 232 238 / 0.82) 0%,
-      rgb(220 225 232 / 0.74) 34%,
-      rgb(199 206 216 / 0.52) 52%,
-      rgb(145 154 167 / 0.24) 72%,
-      rgb(74 85 101 / 0.08) 100%
+      rgb(228 232 238 / 0.58) 0%,
+      rgb(220 225 232 / 0.50) 34%,
+      rgb(199 206 216 / 0.34) 52%,
+      rgb(145 154 167 / 0.16) 72%,
+      rgb(74 85 101 / 0.05) 100%
     ),
-    linear-gradient(180deg, rgb(15 23 42 / 0.14), rgb(15 23 42 / 0.08)),
-    var(--nc-hero-bg-image);
+    linear-gradient(180deg, rgb(15 23 42 / 0.10), rgb(15 23 42 / 0.05)),
+    var(--nc-hero-bg-current);
   background-repeat: no-repeat;
   background-size: auto, auto, cover;
   background-position: center center, center center, 78% center;
@@ -1134,7 +1135,23 @@ h3 {
       rgb(22 34 52 / 0.14) 100%
     ),
     linear-gradient(180deg, rgb(3 8 16 / 0.3), rgb(3 8 16 / 0.12)),
-    var(--nc-hero-bg-image);
+    var(--nc-hero-bg-current);
+}
+
+.nc-home-hero.has-background-image .nc-lead {
+  color: color-mix(in srgb, #111827 78%, var(--text-main));
+  text-shadow: 0 1px 1px rgb(255 255 255 / 0.2);
+}
+
+[data-mode="dark"] .nc-home-hero.has-background-image .nc-lead {
+  color: color-mix(in srgb, #e5e7eb 92%, var(--text-main));
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+@media (min-width: 1401px) {
+  .nc-home-hero.has-background-image {
+    --nc-hero-bg-current: var(--nc-hero-bg-image-large, var(--nc-hero-bg-image-desktop, var(--nc-hero-bg-image-fallback)));
+  }
 }
 
 .nc-card {
@@ -1460,16 +1477,62 @@ h3 {
   color: var(--theme-soft-ink);
 }
 
+.nc-about-founder-summary {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.64;
+  text-wrap: pretty;
+}
+
 .nc-about-founder-intro {
   gap: var(--space-3);
+  max-width: 72ch;
+}
+
+.nc-about-founder-intro-wide {
+  grid-column: 1 / -1;
+}
+
+.nc-about-founder-page .nc-about-founder-intro {
+  max-width: none;
+}
+
+.nc-about-founder-intro-heading {
+  margin: 0;
+  font-size: clamp(1.04rem, 1.7vw, 1.2rem);
+  line-height: 1.35;
+  color: var(--text-main);
 }
 
 .nc-about-founder-intro p {
   margin: 0;
   color: var(--text-muted);
   max-width: none;
-  text-align: justify;
-  text-align-last: left;
+  line-height: 1.72;
+  text-align: left;
+  text-wrap: pretty;
+}
+
+.nc-about-founder-pillars {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.8rem;
+  color: var(--text-muted);
+}
+
+.nc-about-founder-pillars li {
+  line-height: 1.68;
+  padding-left: 0.2rem;
+}
+
+.nc-about-founder-pillars strong {
+  color: var(--text-main);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-about-founder-pillars span {
+  color: var(--text-muted);
 }
 
 .nc-about-founder-quote {
@@ -3133,14 +3196,14 @@ body.is-library-cover-dialog-open {
     background-image:
       radial-gradient(
         circle at 50% 40%,
-        rgb(228 232 238 / 0.84) 0%,
-        rgb(214 220 228 / 0.68) 18%,
-        rgb(184 193 204 / 0.46) 36%,
-        rgb(120 130 144 / 0.18) 58%,
+        rgb(228 232 238 / 0.58) 0%,
+        rgb(214 220 228 / 0.44) 18%,
+        rgb(184 193 204 / 0.28) 36%,
+        rgb(120 130 144 / 0.12) 58%,
         transparent 78%
       ),
-      linear-gradient(180deg, rgb(15 23 42 / 0.16), rgb(15 23 42 / 0.08)),
-      var(--nc-hero-bg-image);
+      linear-gradient(180deg, rgb(15 23 42 / 0.10), rgb(15 23 42 / 0.05)),
+      var(--nc-hero-bg-current);
     background-position: center center, center center, 80% center;
   }
 
@@ -3155,7 +3218,7 @@ body.is-library-cover-dialog-open {
         transparent 78%
       ),
       linear-gradient(180deg, rgb(3 8 16 / 0.28), rgb(3 8 16 / 0.12)),
-      var(--nc-hero-bg-image);
+      var(--nc-hero-bg-current);
   }
 }
 
@@ -3199,6 +3262,7 @@ body.is-library-cover-dialog-open {
   }
 
   .nc-home-hero.has-background-image {
+    --nc-hero-bg-current: var(--nc-hero-bg-image-mobile, var(--nc-hero-bg-image-desktop, var(--nc-hero-bg-image-fallback)));
     min-height: calc(100svh - var(--header-height));
   }
 
@@ -3235,17 +3299,17 @@ body.is-library-cover-dialog-open {
     background-image:
       linear-gradient(
         180deg,
-        rgb(226 230 236 / 0.76) 0%,
-        rgb(210 216 224 / 0.62) 46%,
-        rgb(188 197 208 / 0.48) 100%
+        rgb(226 230 236 / 0.40) 0%,
+        rgb(210 216 224 / 0.28) 46%,
+        rgb(188 197 208 / 0.18) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(219 224 231 / 0.64) 0%,
-        rgb(169 178 190 / 0.3) 44%,
-        rgb(74 85 101 / 0.08) 100%
+        rgb(219 224 231 / 0.24) 0%,
+        rgb(169 178 190 / 0.12) 44%,
+        rgb(74 85 101 / 0.03) 100%
       ),
-      var(--nc-hero-bg-image);
+      var(--nc-hero-bg-current);
     background-position: center center, center center, 82% center;
   }
 
@@ -3253,17 +3317,17 @@ body.is-library-cover-dialog-open {
     background-image:
       linear-gradient(
         180deg,
-        rgb(8 12 20 / 0.82) 0%,
-        rgb(10 16 26 / 0.72) 46%,
-        rgb(12 18 28 / 0.62) 100%
+        rgb(8 12 20 / 0.7) 0%,
+        rgb(10 16 26 / 0.58) 46%,
+        rgb(12 18 28 / 0.46) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(10 16 24 / 0.66) 0%,
-        rgb(16 24 38 / 0.34) 44%,
-        rgb(28 40 58 / 0.12) 100%
+        rgb(10 16 24 / 0.48) 0%,
+        rgb(16 24 38 / 0.24) 44%,
+        rgb(28 40 58 / 0.08) 100%
       ),
-      var(--nc-hero-bg-image);
+      var(--nc-hero-bg-current);
   }
 
   .nc-library-card-actions,
@@ -3422,6 +3486,10 @@ body.is-library-cover-dialog-open {
 
 .nc-about-header .nc-section-lead + .nc-section-lead {
   margin-top: var(--space-3);
+}
+
+.nc-about-header-cta {
+  margin-top: var(--space-4);
 }
 
 .nc-tonal-actions .nc-btn-secondary,
@@ -4334,6 +4402,12 @@ code {
     max-width: none;
   }
 
+  .nc-about-header-cta {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: var(--space-2);
+  }
+
   .nc-logo-list {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -4436,6 +4510,8 @@ code {
     border: 0;
     border-radius: 0;
     background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: none;
     margin-left: auto;
     flex-shrink: 1;
