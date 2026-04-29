@@ -146,6 +146,62 @@ class AdminBookshopStockMovementFormPageActionTest extends TestCase
         $this->assertContains('Informe uma quantidade maior do que zero.', $flash['errors'] ?? []);
     }
 
+    public function testPostWhenCreateStockMovementFailsRedirectsBackWithExceptionMessage(): void
+    {
+        $_SESSION['member_user_id'] = 42;
+        $_SESSION['member_name'] = 'Equipe CEDE';
+
+        $books = [
+            [
+                'id' => 10,
+                'title' => 'Livro de Teste',
+                'stock_quantity' => 5,
+                'stock_lots' => [],
+            ],
+        ];
+
+        $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
+        $bookshopRepositoryProphecy
+            ->findAllBooksForAdmin()
+            ->willReturn($books)
+            ->shouldBeCalledOnce();
+        $bookshopRepositoryProphecy
+            ->createStockMovement(Argument::type('array'))
+            ->willThrow(new \RuntimeException('Falha ao persistir movimentacao.'))
+            ->shouldBeCalledOnce();
+        $bookshopRepositoryProphecy
+            ->findBookByIdForAdmin(Argument::cetera())
+            ->shouldNotBeCalled();
+
+        $action = $this->createAction($bookshopRepositoryProphecy->reveal());
+
+        $request = $this->createRequest('POST', '/painel/livraria/movimentacoes/nova?mode=entry')
+            ->withParsedBody([
+                'mode' => 'entry',
+                'occurred_at' => '2026-04-29T10:30',
+                'book_id' => '10',
+                'movement_type' => 'entry',
+                'quantity' => '3',
+                'unit_cost' => '12,50',
+                'sale_price' => '25,90',
+                'notes' => 'Entrada de reposição',
+            ]);
+
+        $response = $action($request, new Response());
+
+        $this->assertSame(303, $response->getStatusCode());
+        $this->assertSame(
+            '/painel/livraria/movimentacoes/nova?mode=entry',
+            $response->getHeaderLine('Location')
+        );
+
+        $flash = $_SESSION['_codex_flash']['admin_bookshop_stock_movement_form'] ?? null;
+
+        $this->assertIsArray($flash);
+        $this->assertSame('entry', $flash['payload']['mode'] ?? null);
+        $this->assertContains('Falha ao persistir movimentacao.', $flash['errors'] ?? []);
+    }
+
     private function createAction(BookshopRepository $bookshopRepository): AdminBookshopStockMovementFormPageAction
     {
         $app = $this->getAppInstance();
