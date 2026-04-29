@@ -1,6 +1,9 @@
 .idea/
 .vscode/
 .env
+.env.*
+!.env.example
+!tests/visual/.env.visual
 /coverage/
 /vendor/
 /logs/*

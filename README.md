@@ -152,6 +152,16 @@ A interface suporta:
 
 Arquivo: `.env`
 
+Em produção (especialmente com deploy via Git/Webhook), você pode manter o arquivo de ambiente fora da pasta publicada e apontar o caminho com `APP_ENV_FILE`.
+
+Exemplo em Apache (`public/.htaccess` ou vhost):
+
+```apache
+SetEnv APP_ENV_FILE "/home/usuario/.secrets/cedern.prod.env"
+```
+
+Com isso, o bootstrap prioriza `APP_ENV_FILE`; se não estiver definido, usa fallback para `/.env` na raiz do projeto.
+
 Chaves disponíveis:
 
 ```env

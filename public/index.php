@@ -16,7 +16,32 @@ require __DIR__ . '/../vendor/autoload.php';
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $projectRoot = dirname(__DIR__);
-if (is_file($projectRoot . '/.env')) {
+
+$envFileFromServer = '';
+$appEnvFileFromGetenv = getenv('APP_ENV_FILE');
+if ($appEnvFileFromGetenv !== false) {
+    $envFileFromServer = trim((string) $appEnvFileFromGetenv);
+} elseif (isset($_SERVER['APP_ENV_FILE'])) {
+    $envFileFromServer = trim((string) $_SERVER['APP_ENV_FILE']);
+} elseif (isset($_ENV['APP_ENV_FILE'])) {
+    $envFileFromServer = trim((string) $_ENV['APP_ENV_FILE']);
+}
+
+$dotenvLoaded = false;
+if ($envFileFromServer !== '') {
+    $resolvedEnvFilePath = str_starts_with($envFileFromServer, '/')
+        ? $envFileFromServer
+        : $projectRoot . '/' . ltrim($envFileFromServer, '/');
+
+    if (is_file($resolvedEnvFilePath)) {
+        Dotenv::createImmutable(dirname($resolvedEnvFilePath), basename($resolvedEnvFilePath))->safeLoad();
+        $dotenvLoaded = true;
+    } else {
+        error_log('[cedern bootstrap] APP_ENV_FILE not found: ' . $resolvedEnvFilePath);
+    }
+}
+
+if (!$dotenvLoaded && is_file($projectRoot . '/.env')) {
     Dotenv::createImmutable($projectRoot)->safeLoad();
 }
 

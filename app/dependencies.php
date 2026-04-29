@@ -41,7 +41,7 @@ return function (ContainerBuilder $containerBuilder) {
             $timezone = (string) ($db['timezone'] ?? '+00:00');
 
             if ($host === '' || $name === '' || $user === '') {
-                throw new \RuntimeException('Configuração de banco incompleta. Defina DB_HOST, DB_NAME, DB_USER e DB_PASS no .env.');
+                throw new \RuntimeException('Configuração de banco incompleta. Defina DB_HOST, DB_NAME, DB_USER e DB_PASS no .env (ou no arquivo apontado por APP_ENV_FILE).');
             }
 
             $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=%s', $host, $port, $name, $charset);
