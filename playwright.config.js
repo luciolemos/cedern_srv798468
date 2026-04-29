@@ -49,6 +49,7 @@ module.exports = defineConfig({
     url: 'http://localhost:8080',
     env: {
       APP_BASE: '',
+      APP_ENV_FILE: 'tests/visual/.env.visual',
     },
     reuseExistingServer: false,
     timeout: 120_000,
