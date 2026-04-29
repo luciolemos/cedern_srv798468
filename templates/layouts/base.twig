@@ -72,10 +72,13 @@
   {% block head %}{% endblock %}
 </head>
 <body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}">
+  <a class="nc-skip-link" href="#nc-main-content">Ir para o conteúdo principal</a>
   <div class="nc-shell">
     {% include 'components/header.twig' %}
     {% include 'components/breadcrumbs.twig' %}
-    {% block content %}{% endblock %}
+    <div id="nc-main-content" tabindex="-1">
+      {% block content %}{% endblock %}
+    </div>
     {% include 'components/footer.twig' %}
   </div>
   {# <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> #}

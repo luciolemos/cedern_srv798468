@@ -29,10 +29,10 @@
 
       <div class="nc-feature-grid nc-tonal-feature-grid">
         {% include 'components/feature-card.twig' with {
-          title: 'Quem Somos',
-          description: 'Conheça nossa identidade, missão, valores, história e o significado da marca institucional.',
-          href: '/quem-somos',
-          link_label: 'Conhecer o CEDE',
+          title: 'Agenda',
+          description: 'Consulte os dias e horários das atividades públicas e dos encontros semanais do CEDE.',
+          href: '/agenda',
+          link_label: 'Ver agenda',
           delay: 120
         } %}
 
@@ -45,37 +45,42 @@
         } %}
 
         {% include 'components/feature-card.twig' with {
-          title: 'Agenda',
-          description: 'Consulte os dias e horários das atividades públicas e dos encontros semanais do CEDE.',
-          href: '/agenda',
-          link_label: 'Ver agenda',
-          delay: 200
-        } %}
-
-        {% include 'components/feature-card.twig' with {
-          title: 'FAQ',
-          description: 'Tire dúvidas frequentes sobre doutrina, participação e práticas da casa espírita.',
-          href: '/faq',
-          link_label: 'Ler FAQ',
-          delay: 240
-        } %}
-
-        {% include 'components/feature-card.twig' with {
           title: 'Contato',
           description: 'Entre em contato conosco, consulte o endereço e acesse nossos canais oficiais de comunicação.',
           href: '/contato',
           link_label: 'Falar com o CEDE',
-          delay: 280
-        } %}
-
-        {% include 'components/feature-card.twig' with {
-          title: 'Central de Conteúdos',
-          description: 'Acesse a base de conhecimento com materiais, referências e conteúdos de apoio ao estudo.',
-          href: '/quem-somos/base-de-conhecimento',
-          link_label: 'Ver conteúdos',
-          delay: 320
+          delay: 200
         } %}
       </div>
+
+      <details class="nc-home-quick-access-more" data-aos="fade-up" data-aos-delay="220">
+        <summary class="nc-home-quick-access-more-summary">Ver mais caminhos</summary>
+        <div class="nc-feature-grid nc-tonal-feature-grid nc-home-quick-access-extra">
+          {% include 'components/feature-card.twig' with {
+            title: 'Quem Somos',
+            description: 'Conheça nossa identidade, missão, valores, história e o significado da marca institucional.',
+            href: '/quem-somos',
+            link_label: 'Conhecer o CEDE',
+            delay: 240
+          } %}
+
+          {% include 'components/feature-card.twig' with {
+            title: 'FAQ',
+            description: 'Tire dúvidas frequentes sobre doutrina, participação e práticas da casa espírita.',
+            href: '/faq',
+            link_label: 'Ler FAQ',
+            delay: 280
+          } %}
+
+          {% include 'components/feature-card.twig' with {
+            title: 'Central de Conteúdos',
+            description: 'Acesse a base de conhecimento com materiais, referências e conteúdos de apoio ao estudo.',
+            href: '/quem-somos/base-de-conhecimento',
+            link_label: 'Ver conteúdos',
+            delay: 320
+          } %}
+        </div>
+      </details>
     </section>
 
     <section class="nc-section" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="40">

@@ -239,16 +239,6 @@ const initCedernNav = () => {
     }
   });
 
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (!desktopQuery.matches && isMenuOpen()) {
-        closeMenu();
-      }
-    },
-    { passive: true }
-  );
-
   const syncState = () => setState(false);
   const syncNavState = () => {
     syncState();

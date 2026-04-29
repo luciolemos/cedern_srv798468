@@ -121,6 +121,10 @@
   --state-focus-outline-width: 2px;
   --state-focus-outline-offset: 2px;
   --state-focus-outline-color: var(--theme-accent-1);
+  --state-focus-ring-width: 2px;
+  --state-focus-ring-gap: 2px;
+  --state-focus-ring-color: color-mix(in srgb, var(--theme-accent-1) 78%, white);
+  --state-focus-ring-inner: color-mix(in srgb, var(--surface-main) 92%, transparent);
 
   --state-disabled-opacity: 0.58;
   --state-loading-opacity: 0.7;
@@ -148,6 +152,10 @@
   --comp-focus-outline-width: var(--state-focus-outline-width);
   --comp-focus-outline-offset: var(--state-focus-outline-offset);
   --comp-focus-outline-color: var(--state-focus-outline-color);
+  --comp-focus-ring-width: var(--state-focus-ring-width);
+  --comp-focus-ring-gap: var(--state-focus-ring-gap);
+  --comp-focus-ring-color: var(--state-focus-ring-color);
+  --comp-focus-ring-inner: var(--state-focus-ring-inner);
 
   --comp-link-padding-y: 0.7rem;
   --comp-link-padding-x: var(--space-2);
@@ -780,9 +788,22 @@ h3 {
 
 .nc-nav-toggle:focus-visible,
 .nc-btn:focus-visible,
-.nc-link:focus-visible {
+.nc-link:not(.is-inline):focus-visible,
+.nc-nav-group-toggle:focus-visible,
+.nc-nav-submenu-link:focus-visible,
+.nc-home-quick-access-more-summary:focus-visible,
+.nc-skip-link:focus,
+.nc-skip-link:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--comp-focus-ring-gap) var(--comp-focus-ring-inner),
+    0 0 0 calc(var(--comp-focus-ring-gap) + var(--comp-focus-ring-width)) var(--comp-focus-ring-color);
+}
+
+.nc-link.is-inline:focus-visible {
   outline: var(--comp-focus-outline-width) solid var(--comp-focus-outline-color);
   outline-offset: var(--comp-focus-outline-offset);
+  border-radius: 2px;
 }
 
 .nc-link {
@@ -3478,6 +3499,64 @@ body.is-library-cover-dialog-open {
   text-wrap: pretty;
 }
 
+.nc-home-quick-access-more {
+  margin-top: var(--space-4);
+}
+
+.nc-home-quick-access-more-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  cursor: pointer;
+  padding: var(--button-padding-y) var(--button-padding-x);
+  border-radius: var(--button-radius);
+  border: var(--button-border-width) solid color-mix(in srgb, var(--theme-soft-2) 65%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 72%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  font-weight: var(--button-font-weight);
+  line-height: 1.2;
+  transition: var(--comp-btn-transition);
+}
+
+.nc-home-quick-access-more-summary::-webkit-details-marker {
+  display: none;
+}
+
+.nc-home-quick-access-more-summary::after {
+  content: "+";
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base-plus);
+  line-height: 1;
+}
+
+.nc-home-quick-access-more[open] .nc-home-quick-access-more-summary::after {
+  content: "−";
+}
+
+.nc-home-quick-access-more-summary:hover {
+  background: color-mix(in srgb, var(--theme-soft-1) 50%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 65%, var(--surface-border));
+  color: var(--text-main);
+  transform: translateY(var(--comp-btn-hover-lift-y));
+  box-shadow: var(--comp-btn-hover-shadow);
+}
+
+.nc-home-quick-access-more-summary:focus-visible {
+  background: color-mix(in srgb, var(--theme-soft-1) 50%, var(--surface-main));
+  border-color: color-mix(in srgb, var(--theme-accent-1) 65%, var(--surface-border));
+  color: var(--text-main);
+  transform: translateY(var(--comp-btn-hover-lift-y));
+  box-shadow:
+    var(--comp-btn-hover-shadow),
+    0 0 0 var(--comp-focus-ring-gap) var(--comp-focus-ring-inner),
+    0 0 0 calc(var(--comp-focus-ring-gap) + var(--comp-focus-ring-width)) var(--comp-focus-ring-color);
+}
+
+.nc-home-quick-access-extra {
+  margin-top: var(--space-4);
+}
+
 .nc-home-final-cta > .nc-section-lead {
   max-width: none;
   text-align: left;
@@ -4536,6 +4615,12 @@ code {
     padding: 0;
     font-weight: var(--font-weight-medium);
     position: relative;
+  }
+
+  .nc-nav > .nc-link,
+  .nc-nav > .nc-nav-group > .nc-nav-group-toggle {
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--radius-sm);
   }
 
   .nc-nav-group {
@@ -7762,6 +7847,28 @@ textarea.nc-admin-form-input {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.nc-skip-link {
+  position: absolute;
+  top: 0;
+  left: var(--space-3);
+  z-index: 1000;
+  transform: translateY(-180%);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-main);
+  border: 1px solid var(--theme-soft-2);
+  color: var(--text-main);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--motion-fast);
+}
+
+.nc-skip-link:focus,
+.nc-skip-link:focus-visible {
+  transform: translateY(var(--space-2));
 }
 
 .nc-admin-phone-inline {
