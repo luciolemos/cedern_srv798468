@@ -4,6 +4,10 @@
 {% set hero_qr_url = hero.qrUrl|default('') %}
 {% set hero_qr_image = hero.qrImage|default('') %}
 {% set hero_image_src = hero.imageSrc|default('') %}
+{% set hero_image_url = hero_image_src %}
+{% if hero_image_src and hero_image_src starts with '/' %}
+  {% set hero_image_url = (base_url ?? '') ~ hero_image_src %}
+{% endif %}
 {% set hero_image_alt = hero.imageAlt|default(hero.title|default('CEDE')) %}
 {% set hero_panel_enabled = hero.showPanel is defined ? hero.showPanel : true %}
 {% set hero_panel_has_content = hero_metrics|length > 0 or (hero_qr_url and hero_qr_image) %}
@@ -14,7 +18,7 @@
   aria-label="Hero principal"
   data-aos="fade-up"
   data-aos-delay="0"
-  {% if hero_image_src %}style="--nc-hero-bg-image: url('{{ hero_image_src|e('html_attr') }}');"{% endif %}
+  {% if hero_image_url %}style="--nc-hero-bg-image: url('{{ hero_image_url|e('html_attr') }}');"{% endif %}
 >
 
   <div class="nc-hero-grid{% if not show_hero_panel %} is-single-column{% endif %}">
