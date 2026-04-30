@@ -13,7 +13,7 @@
       {% for person in testimonials %}
         <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ person.delay|default(160 + (loop.index0 * 60)) }}"{% if loop.index > 3 %} hidden data-testimonial-extra="true"{% endif %}>
           <div class="nc-testimonial-head">
-            <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}">
+            <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}" width="50" height="50" loading="lazy" decoding="async" fetchpriority="low">
             <div class="nc-testimonial-meta">
               <strong class="nc-testimonial-name">{{ person.name }}</strong>
               <span class="nc-testimonial-role">{{ person.role }}</span>

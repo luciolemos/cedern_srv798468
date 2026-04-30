@@ -50,17 +50,19 @@
       }
     })();
   </script>
+  {% set google_fonts_href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap' %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="{{ google_fonts_href }}" as="style">
+  <link rel="stylesheet" href="{{ google_fonts_href }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ google_fonts_href }}"></noscript>
   {# <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"> #}
   {% set asset_version = app_asset_version|default('1') %}
   <link rel="stylesheet" href="/assets/css/cedern.css?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
-  <link rel="apple-touch-icon" href="/assets/img/brands/cede4_logo.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede4_favicon_32.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede4_favicon_192.png?v={{ asset_version }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/brands/cede4_apple_touch_180.png?v={{ asset_version }}">
   {% if app_recaptcha_enabled and app_recaptcha_site_key|default('') %}
-    <script src="https://www.google.com/recaptcha/api.js?render={{ app_recaptcha_site_key|url_encode }}" async defer></script>
     <script src="/assets/js/cedern-recaptcha.js?v={{ asset_version }}" defer></script>
   {% endif %}
   <script src="/assets/js/cedern-nav.js?v={{ asset_version }}" defer></script>

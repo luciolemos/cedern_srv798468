@@ -95,6 +95,46 @@
     });
   };
 
+  const recaptchaScriptSelector = 'script[data-nc-recaptcha-api="true"]';
+
+  const ensureRecaptchaScript = (siteKey) =>
+    new Promise((resolve, reject) => {
+      const recaptcha = window.grecaptcha;
+      if (
+        recaptcha &&
+        typeof recaptcha.ready === "function" &&
+        typeof recaptcha.execute === "function"
+      ) {
+        resolve();
+        return;
+      }
+
+      const existingScript = document.querySelector(recaptchaScriptSelector);
+      if (existingScript) {
+        if (window.grecaptcha) {
+          resolve();
+          return;
+        }
+
+        existingScript.addEventListener("load", () => resolve(), { once: true });
+        existingScript.addEventListener("error", () => reject(new Error("reCAPTCHA indisponivel")), {
+          once: true,
+        });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
+      script.async = true;
+      script.defer = true;
+      script.dataset.ncRecaptchaApi = "true";
+      script.addEventListener("load", () => resolve(), { once: true });
+      script.addEventListener("error", () => reject(new Error("reCAPTCHA indisponivel")), {
+        once: true,
+      });
+      document.head.appendChild(script);
+    });
+
   const resolveRecaptchaClient = () =>
     new Promise((resolve, reject) => {
       let attempts = 0;
@@ -143,7 +183,8 @@
       setFeedback(form, "");
       setSubmittingState(form, true);
 
-      resolveRecaptchaClient()
+      ensureRecaptchaScript(siteKey)
+        .then(() => resolveRecaptchaClient())
         .then(
           (recaptcha) =>
             new Promise((resolve, reject) => {
