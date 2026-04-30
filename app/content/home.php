@@ -466,28 +466,28 @@ Nossa atuação é guiada pelos valores que ergueram este Centro, unindo a base 
     ],
     'socialProofTestimonials' => [
         [
-            'avatar' => 'https://randomuser.me/api/portraits/women/44.jpg',
+            'avatar' => '/assets/img/testimonials/maria-silva.jpg',
             'alt' => 'Maria Silva',
             'name' => 'Maria Silva',
             'role' => 'Frequentadora',
             'quote' => 'O CEDE mudou minha visão sobre a vida. Encontrei respostas lógicas e consoladoras para minhas dúvidas.',
         ],
          [
-            'avatar' => 'https://randomuser.me/api/portraits/men/32.jpg',
+            'avatar' => '/assets/img/testimonials/joao-souza.jpg',
             'alt' => 'João Souza',
             'name' => 'João Souza',
             'role' => 'Estudante do ESDE',
             'quote' => 'Os estudos são muito bem organizados e o ambiente é acolhedor. Recomendo a todos que buscam conhecimento.',
         ],
          [
-            'avatar' => 'https://randomuser.me/api/portraits/women/68.jpg',
+            'avatar' => '/assets/img/testimonials/ana-pereira.jpg',
             'alt' => 'Ana Pereira',
             'name' => 'Ana Pereira',
             'role' => 'Voluntária',
             'quote' => 'Servir no CEDE é uma alegria. A caridade e o amor ao próximo são praticados aqui todos os dias.',
         ],
          [
-            'avatar' => 'https://randomuser.me/api/portraits/women/90.jpg',
+            'avatar' => '/assets/img/testimonials/solange.jpg',
             'alt' => 'Solange',
             'name' => 'Solange',
             'role' => 'Frequentadora',
