@@ -5,6 +5,29 @@
   margin-top: var(--space-3);
 }
 
+@media (max-width: 768px) {
+  .grecaptcha-badge {
+    right: calc(-186px + env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: none !important;
+    transition: right 0.2s ease !important;
+  }
+
+  .grecaptcha-badge iframe {
+    pointer-events: none;
+  }
+
+  .grecaptcha-badge.is-expanded,
+  .grecaptcha-badge:active,
+  .grecaptcha-badge:focus-within {
+    right: env(safe-area-inset-right, 0px) !important;
+  }
+
+  .grecaptcha-badge.is-expanded iframe {
+    pointer-events: auto;
+  }
+}
+
 .nc-btn-copy-pix {
   font-size: var(--font-size-caption);
   padding: var(--space-1) var(--space-3);
