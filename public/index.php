@@ -52,7 +52,17 @@ $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
 $enableContainerCompilation = !in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
 
 if ($enableContainerCompilation) {
-    $cacheDirectory = $projectRoot . '/var/cache';
+    $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
+    if ($appAssetVersion === '') {
+        $appAssetVersion = '1';
+    }
+
+    $cacheVersionSuffix = preg_replace('/[^a-zA-Z0-9._-]/', '-', $appAssetVersion) ?? '';
+    if ($cacheVersionSuffix === '') {
+        $cacheVersionSuffix = '1';
+    }
+
+    $cacheDirectory = $projectRoot . '/var/cache/container-v' . $cacheVersionSuffix;
     $cacheDirectoryReady = is_dir($cacheDirectory) || @mkdir($cacheDirectory, 0775, true);
 
     if ($cacheDirectoryReady && is_writable($cacheDirectory)) {
