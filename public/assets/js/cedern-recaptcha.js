@@ -68,11 +68,11 @@
     observer.observe(document.body, { childList: true, subtree: true });
   };
 
-  enableMobileBadgeToggle();
-
   if (!forms.length) {
     return;
   }
+
+  enableMobileBadgeToggle();
 
   const recaptchaErrorMessage =
     "Nao foi possivel validar a verificacao anti-spam agora. Atualize a pagina e tente novamente.";

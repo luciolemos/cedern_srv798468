@@ -1,6 +1,7 @@
 {% extends 'layouts/base.twig' %}
 
 {% block head %}
+  {% set asset_version = app_asset_version|default('1') %}
   {% set hero_section = homeContent.sections.hero|default({}) %}
   {% set hero_mobile_src = hero_section.imageSrcMobile|default(hero_section.imageSrc|default('')) %}
   {% set hero_desktop_src = hero_section.imageSrc|default('') %}
@@ -17,6 +18,8 @@
     {% set hero_large_avif = hero_large_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
     <link rel="preload" as="image" href="{{ hero_large_avif }}" type="image/avif" media="(min-width: 1401px)" fetchpriority="high">
   {% endif %}
+  <script src="/assets/js/cedern-pix-copy.js?v={{ asset_version }}" defer></script>
+  <script src="/assets/js/cedern-testimonials-toggle.js?v={{ asset_version }}" defer></script>
 {% endblock %}
 
 {% block content %}

@@ -8,7 +8,7 @@ return [
     'tagline' => 'Estudo, acolhimento fraterno e prática do bem à luz do Espiritismo.',
     'brand' => [
         'homeHref' => '/',
-        'logoSrc' => '/assets/img/brands/cede4_logo.png',
+        'logoSrc' => '/assets/img/brands/cede4_logo_nav.png',
         'logoAlt' => 'CEDE',
         'motto' => 'Iluminando consciências, transformando vidas.',
     ],
