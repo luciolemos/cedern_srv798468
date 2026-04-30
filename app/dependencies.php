@@ -59,10 +59,21 @@ return function (ContainerBuilder $containerBuilder) {
         Twig::class => function () {
             $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
             $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
+            $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
+
+            if ($appAssetVersion === '') {
+                $appAssetVersion = '1';
+            }
+
+            $cacheVersionSuffix = preg_replace('/[^a-zA-Z0-9._-]/', '-', $appAssetVersion) ?? '';
+            if ($cacheVersionSuffix === '') {
+                $cacheVersionSuffix = '1';
+            }
+
             $twigCache = false;
 
             if (!$isDevelopment) {
-                $twigCacheDirectory = __DIR__ . '/../var/cache/twig';
+                $twigCacheDirectory = __DIR__ . '/../var/cache/twig/v' . $cacheVersionSuffix;
                 $twigCacheReady = is_dir($twigCacheDirectory) || @mkdir($twigCacheDirectory, 0775, true);
 
                 if ($twigCacheReady && is_writable($twigCacheDirectory)) {
@@ -109,7 +120,6 @@ return function (ContainerBuilder $containerBuilder) {
             $appDefaultPageImage = trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png'));
             $appDefaultSiteName = trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'));
             $appDefaultTwitterSite = trim((string) ($_ENV['APP_DEFAULT_TWITTER_SITE'] ?? '@cedeoficialrn'));
-            $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
             $recaptchaVerifier = new RecaptchaVerifier();
             $appRecaptchaEnabled = $recaptchaVerifier->isReady();
             $appRecaptchaSiteKey = $recaptchaVerifier->getSiteKey();
@@ -136,10 +146,6 @@ return function (ContainerBuilder $containerBuilder) {
 
             if ($appDefaultTwitterSite === '') {
                 $appDefaultTwitterSite = '@cedeoficialrn';
-            }
-
-            if ($appAssetVersion === '') {
-                $appAssetVersion = '1';
             }
 
             $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME', $uiDefaults);
