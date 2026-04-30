@@ -3,6 +3,7 @@
 {% set site_contact = site.contact|default({}) %}
 {% set site_instagram = site.social.instagram|default({}) %}
 {% set brand = site.brand|default({}) %}
+{% set footer_logo_src = (base_url ?? '') ~ (brand.logoSrc|default('/assets/img/brands/cede4_logo_nav.png')) %}
 {% set institutional = site.institutional|default({}) %}
 
 <footer id="contato" class="nc-footer">
@@ -11,9 +12,14 @@
       <section class="nc-footer-block nc-footer-brand-block" aria-label="Identidade institucional">
         <a class="nc-footer-brand" href="{{ brand.homeHref|default('/') }}" aria-label="{{ site.name|default('CEDE') }} - Início">
           <img
-            src="{{ (base_url ?? '') ~ (brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+            src="{{ footer_logo_src }}"
             alt="{{ brand.logoAlt|default(site.name|default('CEDE')) }}"
             class="footer-logo"
+            width="300"
+            height="276"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="low"
           >
         </a>
         {% if footer.kicker|default('') %}

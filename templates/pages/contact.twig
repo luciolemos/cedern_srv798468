@@ -1,5 +1,11 @@
 {% extends 'layouts/base.twig' %}
 
+{% block head %}
+  {% if app_recaptcha_enabled and app_recaptcha_site_key|default('') %}
+    <script src="/assets/js/cedern-recaptcha.js?v={{ app_asset_version|default('1') }}" defer></script>
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
     {% set site_contact = site.contact|default({}) %}

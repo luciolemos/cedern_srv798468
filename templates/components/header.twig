@@ -6,17 +6,26 @@
   {% set nav_links_after = navigation_links_after_groups|default([]) %}
   {% set member_is_logged = member_is_authenticated|default(false) %}
 
+  {% set brand_logo_src = (base_url ?? '') ~ (site.brand.logoSrc|default('/assets/img/brands/cede4_logo_nav.png')) %}
   <div class="nc-container nc-header-row">
     <a class="nc-brand" href="/" aria-label="CEDE - Início">
       <img
-        src="{{ (base_url ?? '') ~ (site.brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+        src="{{ brand_logo_src }}"
         alt="{{ site.brand.logoAlt|default(site.name|default('CEDE')) }} (tema escuro)"
         class="navbar-logo logo-dark"
+        width="300"
+        height="276"
+        decoding="async"
+        fetchpriority="high"
       >
       <img
-        src="{{ (base_url ?? '') ~ (site.brand.logoSrc|default('/assets/img/brands/cede4_logo.png')) }}"
+        src="{{ brand_logo_src }}"
         alt="{{ site.brand.logoAlt|default(site.name|default('CEDE')) }} (tema claro)"
         class="navbar-logo logo-light"
+        width="300"
+        height="276"
+        decoding="async"
+        fetchpriority="high"
       >
       {# <span class="nc-brand-name">{{ app_name ?? 'CEDE' }}</span> #}
     </a>
