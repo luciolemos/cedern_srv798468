@@ -148,6 +148,26 @@ A interface suporta:
 1. Preferência salva no navegador (`localStorage`)
 2. Defaults vindos do servidor via `.env`
 
+## Acessibilidade (skip link e foco por teclado)
+
+O layout público inclui um atalho de teclado para pular navegação repetitiva e ir direto ao conteúdo principal.
+
+- Atalho no topo da página: `Ir para o conteúdo principal`
+- Implementação: `templates/layouts/base.twig`
+- Destino do atalho: `#nc-main-content`
+- Região alvo com foco programático: `<div id="nc-main-content" tabindex="-1">`
+
+Comportamento esperado:
+
+1. Ao pressionar `Tab` no início da página, o skip link aparece no topo.
+2. Ao ativar o link (`Enter`), o foco vai para o contêiner principal (`#nc-main-content`).
+3. O conteúdo é anunciado de forma mais direta para navegação por teclado e leitores de tela.
+
+Estilos relacionados:
+
+- `.nc-skip-link` em `public/assets/css/cedern.css`
+- foco visível padronizado (`:focus-visible`) para links, botões e itens de navegação no mesmo arquivo.
+
 ## Configuração via .env
 
 Arquivo: `.env`
