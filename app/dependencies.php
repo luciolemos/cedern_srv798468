@@ -148,10 +148,6 @@ return function (ContainerBuilder $containerBuilder) {
                 $appDefaultTwitterSite = '@cedeoficialrn';
             }
 
-            if ($appAssetVersion === '') {
-                $appAssetVersion = '1';
-            }
-
             $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME', $uiDefaults);
             $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE', $uiDefaults);
             $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY', $uiDefaults);
