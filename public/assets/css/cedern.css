@@ -1167,6 +1167,10 @@ h3 {
   background-position: center center, center center, 78% center;
 }
 
+.nc-home-hero.has-background-image .nc-hero-copy {
+  width: min(100%, 44rem);
+}
+
 [data-mode="dark"] .nc-home-hero.has-background-image {
   background-color: color-mix(in srgb, #0b1220 72%, var(--surface-main));
   background-image:
@@ -1180,6 +1184,20 @@ h3 {
     ),
     linear-gradient(180deg, rgb(3 8 16 / 0.3), rgb(3 8 16 / 0.12)),
     var(--nc-hero-bg-current);
+}
+
+.nc-home-hero.has-background-image .nc-section-kicker,
+.nc-home-hero.has-background-image .nc-title,
+.nc-home-hero.has-background-image .nc-hero-tagline {
+  color: color-mix(in srgb, #111827 88%, var(--text-main));
+  text-shadow: 0 1px 2px rgb(255 255 255 / 0.24);
+}
+
+[data-mode="dark"] .nc-home-hero.has-background-image .nc-section-kicker,
+[data-mode="dark"] .nc-home-hero.has-background-image .nc-title,
+[data-mode="dark"] .nc-home-hero.has-background-image .nc-hero-tagline {
+  color: color-mix(in srgb, #f3f4f6 96%, var(--text-main));
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.42);
 }
 
 .nc-home-hero.has-background-image .nc-lead {
@@ -3211,7 +3229,7 @@ body.is-library-cover-dialog-open {
     justify-items: center;
   }
 
-  .nc-home-hero .nc-hero-grid > div:first-child {
+  .nc-home-hero .nc-hero-copy {
     display: grid;
     justify-items: center;
     width: min(100%, 34rem);
@@ -3316,6 +3334,7 @@ body.is-library-cover-dialog-open {
     justify-items: center;
   }
 
+  .nc-home-hero .nc-hero-copy,
   .nc-home-hero .nc-hero-grid > div:first-child {
     display: grid;
     justify-items: center;
@@ -3329,6 +3348,20 @@ body.is-library-cover-dialog-open {
     text-align: center;
   }
 
+  .nc-home-hero.has-background-image .nc-title,
+  .nc-home-hero.has-background-image .nc-hero-tagline,
+  .nc-home-hero.has-background-image .nc-lead {
+    color: color-mix(in srgb, #f8fafc 96%, var(--text-main));
+    text-shadow: 0 2px 10px rgb(0 0 0 / 0.48);
+  }
+
+  .nc-home-hero.has-background-image .nc-section-kicker {
+    color: #f8fafc;
+    background: rgb(15 23 42 / 0.42);
+    border-color: rgb(255 255 255 / 0.34);
+    text-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+  }
+
   .nc-home-hero .nc-lead {
     margin-right: auto;
     margin-left: auto;
@@ -3339,37 +3372,41 @@ body.is-library-cover-dialog-open {
     justify-content: center;
   }
 
+  .nc-home-hero .nc-hero-actions {
+    margin-top: clamp(8.5rem, 40svh, 14rem);
+  }
+
   .nc-home-hero.has-background-image {
     background-image:
       linear-gradient(
         180deg,
-        rgb(226 230 236 / 0.40) 0%,
-        rgb(210 216 224 / 0.28) 46%,
-        rgb(188 197 208 / 0.18) 100%
+        rgb(226 230 236 / 0.28) 0%,
+        rgb(210 216 224 / 0.18) 46%,
+        rgb(188 197 208 / 0.1) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(219 224 231 / 0.24) 0%,
-        rgb(169 178 190 / 0.12) 44%,
-        rgb(74 85 101 / 0.03) 100%
+        rgb(219 224 231 / 0.16) 0%,
+        rgb(169 178 190 / 0.08) 44%,
+        rgb(74 85 101 / 0.02) 100%
       ),
       var(--nc-hero-bg-current);
-    background-position: center center, center center, 82% center;
+    background-position: center center, center center, 24% center;
   }
 
   [data-mode="dark"] .nc-home-hero.has-background-image {
     background-image:
       linear-gradient(
         180deg,
-        rgb(8 12 20 / 0.54) 0%,
-        rgb(10 16 26 / 0.42) 46%,
-        rgb(12 18 28 / 0.3) 100%
+        rgb(8 12 20 / 0.42) 0%,
+        rgb(10 16 26 / 0.31) 46%,
+        rgb(12 18 28 / 0.22) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(10 16 24 / 0.3) 0%,
-        rgb(16 24 38 / 0.14) 44%,
-        rgb(28 40 58 / 0.04) 100%
+        rgb(10 16 24 / 0.22) 0%,
+        rgb(16 24 38 / 0.1) 44%,
+        rgb(28 40 58 / 0.03) 100%
       ),
       var(--nc-hero-bg-current);
   }

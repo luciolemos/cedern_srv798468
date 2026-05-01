@@ -44,13 +44,13 @@
 >
 
   <div class="nc-hero-grid{% if not show_hero_panel %} is-single-column{% endif %}">
-    <div data-aos="fade-up" data-aos-delay="80">
+    <div class="nc-hero-copy" data-aos="fade-up" data-aos-delay="80">
       {% if hero_image_src %}
         <span class="nc-sr-only">{{ hero_image_alt }}</span>
       {% endif %}
       <p class="nc-section-kicker">{{ hero.kicker|default('Início') }}</p>
       {% if hero.badge|default('') %}
-        <span class="nc-badge">{{ hero.badge }}</span>
+        <span class="nc-badge nc-hero-badge">{{ hero.badge }}</span>
       {% endif %}
       <h1 class="nc-title">{{ hero.title|default('CEDE: Centro de Estudos da Doutrina Espírita') }}</h1>
       {% if hero.tagline|default('') %}
@@ -59,10 +59,12 @@
       <p class="nc-lead">
         {{ hero.lead|default('Desenvolvemos sistemas sob medida para melhorar operação, produtividade e resultado. Unimos tecnologia, usabilidade e estratégia para entregar valor de forma prática e contínua.') }}
       </p>
-      <div class="nc-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="{{ hero.actionsDelay|default(140) }}">
+      <div class="nc-actions nc-hero-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="{{ hero.actionsDelay|default(140) }}">
         {% for action in hero_actions %}
+          {% set is_primary_action = loop.first %}
+          {% set action_priority_class = is_primary_action ? ' nc-hero-action-primary' : ' nc-hero-action-secondary' %}
           <a
-            class="{{ action.class }}"
+            class="{{ action.class ~ action_priority_class }}"
             href="{{ action.href }}"
             {% if action.loadingOnClick|default(false) %}data-loading-on-click{% endif %}
             {% if action.ariaDisabled|default(false) %}aria-disabled="true" tabindex="-1"{% endif %}
