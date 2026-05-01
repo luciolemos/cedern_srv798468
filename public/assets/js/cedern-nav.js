@@ -239,6 +239,16 @@ const initCedernNav = () => {
     }
   });
 
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!desktopQuery.matches && isMenuOpen()) {
+        closeMenu();
+      }
+    },
+    { passive: true }
+  );
+
   const syncState = () => setState(false);
   const syncNavState = () => {
     syncState();
@@ -251,6 +261,33 @@ const initCedernNav = () => {
   }
 
   syncNavState();
+
+  const stabilizeHomeTopFoldOnReload = () => {
+    const hasHomeHero = !!document.querySelector(".nc-home-hero");
+    if (!hasHomeHero || window.location.hash) {
+      return;
+    }
+
+    const navEntry =
+      (performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || null;
+    const isReload = navEntry
+      ? navEntry.type === "reload"
+      : performance.navigation && performance.navigation.type === 1;
+
+    if (!isReload || window.scrollY > 24 || window.scrollY <= 0) {
+      return;
+    }
+
+    window.scrollTo(0, 0);
+  };
+
+  window.addEventListener(
+    "pageshow",
+    () => {
+      window.requestAnimationFrame(stabilizeHomeTopFoldOnReload);
+    },
+    { passive: true }
+  );
 
   if (window.location.pathname === "/" && window.location.hash) {
     window.setTimeout(() => scrollToHash(window.location.hash, false), 0);
