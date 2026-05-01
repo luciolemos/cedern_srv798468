@@ -3391,7 +3391,7 @@ body.is-library-cover-dialog-open {
         rgb(74 85 101 / 0.02) 100%
       ),
       var(--nc-hero-bg-current);
-    background-position: center center, center center, 24% center;
+    background-position: center center, center center, 85% center;
   }
 
   [data-mode="dark"] .nc-home-hero.has-background-image {
