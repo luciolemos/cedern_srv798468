@@ -5,21 +5,111 @@
   {% set hero_section = homeContent.sections.hero|default({}) %}
   {% set hero_mobile_src = hero_section.imageSrcMobile|default(hero_section.imageSrc|default('')) %}
   {% set hero_desktop_src = hero_section.imageSrc|default('') %}
-  {% set hero_large_src = hero_section.imageSrcLarge|default(hero_desktop_src) %}
   {% if hero_mobile_src %}
     {% set hero_mobile_avif = hero_mobile_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
     <link rel="preload" as="image" href="{{ hero_mobile_avif }}" type="image/avif" media="(max-width: 700px)" fetchpriority="high">
   {% endif %}
   {% if hero_desktop_src %}
     {% set hero_desktop_avif = hero_desktop_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
-    <link rel="preload" as="image" href="{{ hero_desktop_avif }}" type="image/avif" media="(min-width: 701px) and (max-width: 1400px)" fetchpriority="high">
+    <link rel="preload" as="image" href="{{ hero_desktop_avif }}" type="image/avif" media="(min-width: 701px)" fetchpriority="high">
   {% endif %}
-  {% if hero_large_src %}
-    {% set hero_large_avif = hero_large_src|replace({'.jpg': '.avif', '.jpeg': '.avif', '.png': '.avif', '.webp': '.avif'}) %}
-    <link rel="preload" as="image" href="{{ hero_large_avif }}" type="image/avif" media="(min-width: 1401px)" fetchpriority="high">
-  {% endif %}
-  <script src="/assets/js/cedern-pix-copy.js?v={{ asset_version }}" defer></script>
-  <script src="/assets/js/cedern-testimonials-toggle.js?v={{ asset_version }}" defer></script>
+  <script>
+    (function () {
+      var testimonialsSrc = '/assets/js/cedern-testimonials-toggle.js?v={{ asset_version }}';
+      var pixCopySrc = '/assets/js/cedern-pix-copy.js?v={{ asset_version }}';
+      var testimonialsLoaded = false;
+      var pixCopyLoaded = false;
+
+      var loadScript = function (src, key) {
+        if (document.querySelector('script[data-home-lazy="' + key + '"]')) {
+          return;
+        }
+
+        var script = document.createElement('script');
+        script.src = src;
+        script.defer = true;
+        script.setAttribute('data-home-lazy', key);
+        document.head.appendChild(script);
+      };
+
+      var whenDomReady = function (callback) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', callback, { once: true });
+          return;
+        }
+
+        callback();
+      };
+
+      whenDomReady(function () {
+        var testimonialsToggle = document.querySelector('[data-testimonials-toggle]');
+        var pixCopyButton = document.querySelector('[data-pix-copy]');
+
+        var ensureTestimonialsScript = function () {
+          if (!testimonialsToggle || testimonialsLoaded) {
+            return;
+          }
+
+          testimonialsLoaded = true;
+          loadScript(testimonialsSrc, 'testimonials-toggle');
+        };
+
+        var ensurePixCopyScript = function () {
+          if (!pixCopyButton || pixCopyLoaded) {
+            return;
+          }
+
+          pixCopyLoaded = true;
+          loadScript(pixCopySrc, 'pix-copy');
+        };
+
+        if (!('IntersectionObserver' in window)) {
+          ensureTestimonialsScript();
+          ensurePixCopyScript();
+          return;
+        }
+
+        if (testimonialsToggle) {
+          var testimonialsSection = document.getElementById('testemunhos') || testimonialsToggle;
+          var testimonialsObserver = new IntersectionObserver(function (entries, observer) {
+            if (!entries.some(function (entry) { return entry.isIntersecting; })) {
+              return;
+            }
+
+            ensureTestimonialsScript();
+            observer.disconnect();
+          }, {
+            rootMargin: '200px 0px',
+            threshold: 0.01,
+          });
+
+          testimonialsObserver.observe(testimonialsSection);
+        }
+
+        if (pixCopyButton) {
+          var pixSection = pixCopyButton.closest('section') || pixCopyButton;
+          var pixObserver = new IntersectionObserver(function (entries, observer) {
+            if (!entries.some(function (entry) { return entry.isIntersecting; })) {
+              return;
+            }
+
+            ensurePixCopyScript();
+            observer.disconnect();
+          }, {
+            rootMargin: '240px 0px',
+            threshold: 0.01,
+          });
+
+          pixObserver.observe(pixSection);
+        }
+
+        window.setTimeout(function () {
+          ensureTestimonialsScript();
+          ensurePixCopyScript();
+        }, 4500);
+      });
+    })();
+  </script>
 {% endblock %}
 
 {% block content %}

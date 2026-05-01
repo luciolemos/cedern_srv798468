@@ -23,7 +23,7 @@
             <p>{{ option.description|default('Escolha a forma de doação mais conveniente.') }}</p>
 
             {% if option.qrImage|default('') %}
-              <img class="nc-donation-qr" src="{{ option.qrImage }}" alt="{{ option.qrAlt|default('QR Code de doação') }}">
+              <img class="nc-donation-qr" src="{{ option.qrImage }}" alt="{{ option.qrAlt|default('QR Code de doação') }}" loading="lazy" decoding="async" fetchpriority="low">
             {% else %}
               <div class="nc-donation-qr-placeholder" aria-hidden="true">QR Code</div>
               <p class="nc-donation-helper">{{ option.hint|default('Configure o QR Code desta opção no conteúdo da home.') }}</p>
