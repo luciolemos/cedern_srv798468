@@ -10,7 +10,7 @@ return [
             'tagline' => 'Iluminando consciências, transformando vidas.',
             'lead' => 'Promovendo o estudo, a prática e a difusão do Espiritismo com base nas obras de Allan Kardec, buscando o progresso moral e intelectual do ser humano.',
             'imageSrc' => '/assets/img/hero/hero-1920x1080.jpg',
-            'imageSrcMobile' => '/assets/img/hero/hero-1280x720.jpg',
+            'imageSrcMobile' => '/assets/img/hero/hero-960x540.jpg',
             'imageSrcLarge' => '/assets/img/hero/hero-2560x1440.jpg',
             'imageAlt' => 'Ambiente de estudo, acolhimento e convivência no CEDE',
             'imageDelay' => 180,
