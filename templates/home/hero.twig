@@ -88,7 +88,7 @@
             <h3 class="nc-hero-qr-title">{{ hero.qrTitle|default('Acesse no celular') }}</h3>
             <p class="nc-hero-qr-lead">{{ hero.qrLead|default('Aponte a camera para a tela do dispositivo para abrir o site sem digitar na barra do navegador.') }}</p>
             <a class="nc-hero-qr-link" href="{{ hero_qr_url }}" target="_blank" rel="noopener noreferrer" aria-label="Abrir {{ hero_qr_url }} em uma nova aba">
-              <img class="nc-hero-qr-image" src="{{ hero_qr_image }}" alt="{{ hero.qrAlt|default('QR code para abrir o site no celular') }}">
+              <img class="nc-hero-qr-image" src="{{ hero_qr_image }}" alt="{{ hero.qrAlt|default('QR code para abrir o site no celular') }}" loading="lazy" decoding="async" fetchpriority="low">
             </a>
             <a class="nc-link nc-hero-qr-fallback" href="{{ hero_qr_url }}" target="_blank" rel="noopener noreferrer">{{ hero_qr_url|replace({'https://': '', 'http://': ''}) }}</a>
           </div>
