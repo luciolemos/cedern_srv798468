@@ -2,8 +2,28 @@ const { test, expect } = require('@playwright/test');
 
 async function openHomeReady(page)
 {
+    await page.route('https://fonts.googleapis.com/**', async(route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'text/css; charset=utf-8',
+            body: '/* Visual tests use local deterministic fonts. */',
+        });
+    });
+    await page.route('https://fonts.gstatic.com/**', async(route) => {
+        await route.abort();
+    });
+
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
+    await page.addStyleTag({
+        content: `
+            :root {
+                --font-heading: "DejaVu Serif", Georgia, serif !important;
+                --font-body: "DejaVu Sans", Arial, sans-serif !important;
+                --font-mono: "DejaVu Sans Mono", Consolas, monospace !important;
+            }
+        `,
+    });
     await page.locator('.nc-footer').waitFor();
     await page.waitForFunction(() => {
         const fontsStylesheet = document.querySelector('link[rel="stylesheet"][href*="fonts.googleapis.com"]');
