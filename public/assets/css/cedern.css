@@ -1488,8 +1488,14 @@ h3 {
   width: 100%;
 }
 
+.nc-about-founder-picture {
+  display: block;
+  width: 100%;
+}
+
 .nc-about-founder-portrait {
   width: 100%;
+  height: auto;
   aspect-ratio: 4 / 5;
   display: block;
   object-fit: cover;
@@ -6874,6 +6880,10 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   .nc-about-founder-portrait-wrap {
     display: flex;
     justify-content: center;
+  }
+
+  .nc-about-founder-picture {
+    width: min(100%, 17.5rem);
   }
 
   .nc-about-founder-portrait {

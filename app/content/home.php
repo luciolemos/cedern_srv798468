@@ -312,7 +312,26 @@ return [
                 'Seu exemplo de trabalho, disciplina e desprendimento permanece como referência para as atividades desenvolvidas pela instituição, orientando práticas fundamentadas na responsabilidade, na cooperação e no propósito coletivo.',
                 'Nascido em 22 de janeiro de 1956, no município de Macaíba, Rio Grande do Norte, é casado com a Sra. Maria Melo e reside atualmente em Natal. Ao longo de sua trajetória, consolidou uma vida pautada pelo compromisso com a família, com a comunidade e com o serviço ao próximo — valores que se refletem na construção e no desenvolvimento desta casa espírita.',
             ],
-            'photo' => '/assets/img/face3_620_620.png',
+            'photo' => '/assets/img/fundador/joao-melo-496x620.jpg',
+            'photo_width' => 496,
+            'photo_height' => 620,
+            'photo_sizes' => '(max-width: 859px) min(100vw - 2rem, 17.5rem), 270px',
+            'photo_sources' => [
+                [
+                    'type' => 'image/avif',
+                    'items' => [
+                        ['src' => '/assets/img/fundador/joao-melo-320x400.avif', 'width' => 320],
+                        ['src' => '/assets/img/fundador/joao-melo-496x620.avif', 'width' => 496],
+                    ],
+                ],
+                [
+                    'type' => 'image/webp',
+                    'items' => [
+                        ['src' => '/assets/img/fundador/joao-melo-320x400.webp', 'width' => 320],
+                        ['src' => '/assets/img/fundador/joao-melo-496x620.webp', 'width' => 496],
+                    ],
+                ],
+            ],
             'photo_alt' => 'Retrato do fundador do CEDE',
             'intro' => [
                 'Nossa História: Fé em Movimento e Tijolo por Tijolo
