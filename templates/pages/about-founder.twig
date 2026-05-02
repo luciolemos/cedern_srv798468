@@ -5,6 +5,10 @@
     {% set founder_name = founder.name|default('')|trim %}
     {% set founder_role = founder.role|default('Fundador do CEDE')|trim %}
     {% set founder_photo = founder.photo|default('')|trim %}
+    {% set founder_photo_sources = founder.photo_sources|default([]) %}
+    {% set founder_photo_sizes = founder.photo_sizes|default('(max-width: 859px) min(100vw - 2rem, 17.5rem), 270px') %}
+    {% set founder_photo_width = founder.photo_width|default(496) %}
+    {% set founder_photo_height = founder.photo_height|default(620) %}
     {% set founder_intro = founder.intro|default([]) %}
     {% set founder_intro_blocks = founder.intro_blocks|default([]) %}
     {% set founder_topics = founder.topics|default([]) %}
@@ -18,6 +22,8 @@
     {% endif %}
     {% set founder_display_name = founder_name != '' ? founder_name : founder.title|default('Nosso Fundador') %}
     {% set founder_avatar_label = founder_name != '' ? founder_name : founder_display_name %}
+    {% set asset_base_url = base_url|default('') %}
+    {% set founder_photo_url = founder_photo|slice(0, 1) == '/' ? asset_base_url ~ founder_photo : founder_photo %}
 
     <section class="nc-section nc-about-founder-page" aria-label="Página dedicada ao fundador" data-aos="fade-up" data-aos-delay="0">
       {% include 'components/section-header.twig' with {
@@ -30,11 +36,39 @@
         <div class="nc-about-founder-profile-shell">
           <div class="nc-about-founder-portrait-wrap">
             {% if founder_photo %}
-              <img
-                class="nc-about-founder-portrait"
-                src="{{ founder_photo }}"
-                alt="{{ founder.photo_alt|default('Retrato do fundador do CEDE') }}"
-              >
+              <picture class="nc-about-founder-picture">
+                {% for source in founder_photo_sources %}
+                  {% set source_type = source.type|default('')|trim %}
+                  {% set source_items = source.items|default([]) %}
+                  {% if source_type != '' and source_items is iterable and source_items|length > 0 %}
+                    {% set srcset_parts = [] %}
+                    {% for item in source_items %}
+                      {% set item_src = item.src|default('')|trim %}
+                      {% if item_src != '' %}
+                        {% set item_url = item_src|slice(0, 1) == '/' ? asset_base_url ~ item_src : item_src %}
+                        {% set item_width = item.width|default('') %}
+                        {% set srcset_parts = srcset_parts|merge([item_url ~ (item_width != '' ? ' ' ~ item_width ~ 'w' : '')]) %}
+                      {% endif %}
+                    {% endfor %}
+                    {% if srcset_parts|length > 0 %}
+                      <source
+                        type="{{ source_type }}"
+                        srcset="{{ srcset_parts|join(', ') }}"
+                        sizes="{{ source.sizes|default(founder_photo_sizes) }}"
+                      >
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                <img
+                  class="nc-about-founder-portrait"
+                  src="{{ founder_photo_url }}"
+                  alt="{{ founder.photo_alt|default('Retrato do fundador do CEDE') }}"
+                  width="{{ founder_photo_width }}"
+                  height="{{ founder_photo_height }}"
+                  decoding="async"
+                  fetchpriority="high"
+                >
+              </picture>
             {% else %}
               <span class="nc-about-founder-portrait nc-about-founder-portrait-fallback" aria-hidden="true">
                 {{ founder_avatar_label|slice(0, 1)|upper }}
