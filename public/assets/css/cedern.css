@@ -6774,7 +6774,8 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
 }
 
 .nc-member-profile-field-name,
-.nc-member-profile-field-birth-date {
+.nc-member-profile-field-birth-date,
+.nc-member-profile-field-email {
   min-width: 0;
 }
 
@@ -6917,17 +6918,23 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   }
 
   .nc-member-profile-form {
-    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
   }
 
   .nc-member-profile-fields {
-    grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.8fr);
+    grid-column: 1;
+    grid-template-columns: minmax(0, 1.25fr) minmax(12rem, 0.8fr) minmax(0, 1fr);
+    align-items: start;
   }
 
   .nc-member-photo-field {
-    position: sticky;
-    top: calc(var(--space-4) + 4rem);
+    grid-column: 1;
+    width: 100%;
+  }
+
+  .nc-member-photo-field .nc-member-profile-help {
+    white-space: nowrap;
   }
 }
 
