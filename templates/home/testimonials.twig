@@ -11,15 +11,23 @@
   {% if testimonials|length > 0 %}
     <div class="nc-testimonial-grid" data-testimonials-grid>
       {% for person in testimonials %}
-        <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ person.delay|default(160 + (loop.index0 * 60)) }}"{% if loop.index > 3 %} hidden data-testimonial-extra="true"{% endif %}>
+        {% set person_name = person.name|default('Frequentador do CEDE') %}
+        {% set person_avatar = person.avatar|default('') %}
+        {% set person_alt = person.alt|default(person_name) %}
+        {% set testimonial_delay = person.delay|default(160 + (loop.index0 * 60)) %}
+        <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ testimonial_delay }}" style="--testimonial-enter-delay: {{ testimonial_delay }}ms;"{% if loop.index > 3 %} hidden data-testimonial-extra="true"{% endif %}>
           <div class="nc-testimonial-head">
-            <img class="nc-testimonial-avatar" src="{{ person.avatar }}" alt="{{ person.alt }}" width="50" height="50" loading="lazy" decoding="async" fetchpriority="low">
+            {% if person_avatar %}
+              <img class="nc-testimonial-avatar" src="{{ person_avatar }}" alt="{{ person_alt }}" width="50" height="50" loading="lazy" decoding="async" fetchpriority="low">
+            {% else %}
+              <span class="nc-testimonial-avatar nc-testimonial-avatar-fallback" aria-hidden="true">{{ person_name|slice(0, 1)|upper }}</span>
+            {% endif %}
             <div class="nc-testimonial-meta">
-              <strong class="nc-testimonial-name">{{ person.name }}</strong>
-              <span class="nc-testimonial-role">{{ person.role }}</span>
+              <strong class="nc-testimonial-name">{{ person_name }}</strong>
+              <span class="nc-testimonial-role">{{ person.role|default('Frequentador') }}</span>
             </div>
           </div>
-          <p>"{{ person.quote }}"</p>
+          <p>"{{ person.quote|default('Depoimento em atualização.') }}"</p>
         </article>
       {% endfor %}
     </div>
