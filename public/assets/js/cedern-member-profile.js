@@ -1,5 +1,6 @@
 (() => {
-  const form = document.querySelector('form[action="/membro/perfil/completar"]');
+  const form = document.querySelector('form.nc-member-profile-form')
+    || document.querySelector('form[action$="/membro/perfil/completar"]');
   if (!form) {
     return;
   }
