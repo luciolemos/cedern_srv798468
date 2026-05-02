@@ -356,7 +356,7 @@
   --brand-logo-max-width: min(54vw, 320px);
   --brand-logo-height: clamp(1.45rem, 3.4vw, 2.2rem);
   --brand-logo-mobile-max-width: min(calc(100vw - 6rem), 250px);
-  --brand-logo-mobile-height: clamp(1.55rem, 5.4vw, 2.2rem);
+  --brand-logo-mobile-height: clamp(2rem, 9vw, 3rem);
   --brand-logo-desktop-height: clamp(1.55rem, 2.6vw, 3rem);
   --brand-lockup-max-width-desktop: min(66vw, 980px);
 }
