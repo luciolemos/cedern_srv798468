@@ -3351,8 +3351,8 @@ body.is-library-cover-dialog-open {
   .nc-home-hero.has-background-image .nc-title,
   .nc-home-hero.has-background-image .nc-hero-tagline,
   .nc-home-hero.has-background-image .nc-lead {
-    color: color-mix(in srgb, #f8fafc 96%, var(--text-main));
-    text-shadow: 0 2px 10px rgb(0 0 0 / 0.48);
+    color: color-mix(in srgb, #111827 94%, var(--text-main));
+    text-shadow: 0 1px 2px rgb(255 255 255 / 0.56);
   }
 
   .nc-home-hero.has-background-image .nc-section-kicker {
@@ -3378,20 +3378,28 @@ body.is-library-cover-dialog-open {
 
   .nc-home-hero.has-background-image {
     background-image:
+      radial-gradient(
+        ellipse at 50% 33%,
+        rgb(255 255 255 / 0.82) 0%,
+        rgb(247 250 252 / 0.68) 32%,
+        rgb(241 245 249 / 0.34) 58%,
+        transparent 80%
+      ),
       linear-gradient(
         180deg,
-        rgb(226 230 236 / 0.28) 0%,
-        rgb(210 216 224 / 0.18) 46%,
-        rgb(188 197 208 / 0.1) 100%
+        rgb(255 255 255 / 0.38) 0%,
+        rgb(248 250 252 / 0.24) 46%,
+        rgb(241 245 249 / 0.1) 100%
       ),
       linear-gradient(
         90deg,
-        rgb(219 224 231 / 0.16) 0%,
-        rgb(169 178 190 / 0.08) 44%,
-        rgb(74 85 101 / 0.02) 100%
+        rgb(255 255 255 / 0.2) 0%,
+        rgb(248 250 252 / 0.1) 44%,
+        transparent 100%
       ),
       var(--nc-hero-bg-current);
-    background-position: center center, center center, 85% center;
+    background-size: 100% 100%, 100% 100%, 100% 100%, cover;
+    background-position: center center, center center, center center, 85% center;
   }
 
   [data-mode="dark"] .nc-home-hero.has-background-image {
@@ -3409,6 +3417,8 @@ body.is-library-cover-dialog-open {
         rgb(28 40 58 / 0.03) 100%
       ),
       var(--nc-hero-bg-current);
+    background-size: 100% 100%, 100% 100%, cover;
+    background-position: center center, center center, 85% center;
   }
 
   .nc-library-card-actions,
