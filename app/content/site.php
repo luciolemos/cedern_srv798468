@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 $socialInstagramUrl = trim((string) ($_ENV['APP_SOCIAL_INSTAGRAM_URL'] ?? 'https://www.instagram.com/cedeoficialrn/'));
 $socialFacebookUrl = trim((string) ($_ENV['APP_SOCIAL_FACEBOOK_URL'] ?? ''));
+$publicContactEmail = trim((string) (
+    $_ENV['MAIL_PUBLIC_EMAIL']
+    ?? ($_ENV['MAIL_TO_ADDRESS'] ?? 'cede@cedern.org')
+));
+if ($publicContactEmail === '') {
+    $publicContactEmail = 'cede@cedern.org';
+}
 
 return [
     'name' => 'CEDE',
@@ -16,7 +23,7 @@ return [
         'motto' => 'Iluminando consciências, transformando vidas.',
     ],
     'contact' => [
-        'email' => 'cede@cedern.org',
+        'email' => $publicContactEmail,
         'address' => 'R. Frejó, 44 - Nova Parnamirim, Parnamirim - RN, 59150-663.',
         'mapUrl' => 'https://www.google.com/maps/search/?api=1&query=R.%20Frej%C3%B3%2C%2044%20-%20Nova%20Parnamirim%2C%20Parnamirim%20-%20RN%2C%2059150-663',
     ],

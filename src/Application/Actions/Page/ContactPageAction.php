@@ -59,66 +59,56 @@ class ContactPageAction extends AbstractPageAction
             $form['message'] = trim((string) ($body['message'] ?? ''));
             $form['company'] = trim((string) ($body['company'] ?? ''));
 
-            if ($form['company'] !== '') {
-                $this->storeContactFlash([
-                    'status' => 'sent',
-                    'errors' => [],
-                    'form' => $this->getEmptyForm(),
-                ]);
+            $recaptchaValidation = $this->verifyRecaptchaToken(
+                $request,
+                $this->recaptchaVerifier,
+                (string) ($body['recaptcha_token'] ?? ''),
+                self::RECAPTCHA_ACTION
+            );
+            if (!$recaptchaValidation['ok']) {
+                $errors[] = $recaptchaValidation['message'];
+            }
 
-                return $response->withHeader('Location', '/contato')->withStatus(303);
-            } else {
-                $recaptchaValidation = $this->verifyRecaptchaToken(
-                    $request,
-                    $this->recaptchaVerifier,
-                    (string) ($body['recaptcha_token'] ?? ''),
-                    self::RECAPTCHA_ACTION
-                );
-                if (!$recaptchaValidation['ok']) {
-                    $errors[] = $recaptchaValidation['message'];
-                }
+            if ($form['name'] === '') {
+                $errors[] = 'Informe seu nome.';
+            }
 
-                if ($form['name'] === '') {
-                    $errors[] = 'Informe seu nome.';
-                }
+            if ($form['email'] === '' || filter_var($form['email'], FILTER_VALIDATE_EMAIL) === false) {
+                $errors[] = 'Informe um e-mail válido.';
+            }
 
-                if ($form['email'] === '' || filter_var($form['email'], FILTER_VALIDATE_EMAIL) === false) {
-                    $errors[] = 'Informe um e-mail válido.';
-                }
+            if ($form['message'] === '' || mb_strlen($form['message']) < 10) {
+                $errors[] = 'Escreva uma mensagem com pelo menos 10 caracteres.';
+            }
 
-                if ($form['message'] === '' || mb_strlen($form['message']) < 10) {
-                    $errors[] = 'Escreva uma mensagem com pelo menos 10 caracteres.';
-                }
+            if ($form['subject'] === '') {
+                $form['subject'] = 'Contato pelo formulário do site';
+            }
 
-                if ($form['subject'] === '') {
-                    $form['subject'] = 'Contato pelo formulário do site';
-                }
+            if (empty($errors)) {
+                try {
+                    $this->sendContactEmail($form['name'], $form['email'], $form['subject'], $form['message']);
+                    $this->storeContactFlash([
+                        'status' => 'sent',
+                        'errors' => [],
+                        'form' => $this->getEmptyForm(),
+                    ]);
 
-                if (empty($errors)) {
-                    try {
-                        $this->sendContactEmail($form['name'], $form['email'], $form['subject'], $form['message']);
-                        $this->storeContactFlash([
-                            'status' => 'sent',
-                            'errors' => [],
-                            'form' => $this->getEmptyForm(),
-                        ]);
-
-                        return $response->withHeader('Location', '/contato')->withStatus(303);
-                    } catch (\Throwable $exception) {
-                        $this->logger->error('Falha no envio de e-mail de contato.', [
-                            'error' => $exception->getMessage(),
-                        ]);
-                        error_log('[cedern contato] falha no envio: ' . $exception->getMessage() . ' | APP_ENV='
-                            . (string) ($_ENV['APP_ENV'] ?? '')
-                            . ' | APP_ENV_FILE=' . (string) ($_ENV['APP_ENV_FILE'] ?? '')
-                            . ' | APP_LOG_PATH=' . (string) ($_ENV['APP_LOG_PATH'] ?? '')
-                            . ' | MAIL_HOST=' . (string) ($_ENV['MAIL_HOST'] ?? '')
-                            . ' | MAIL_PORT=' . (string) ($_ENV['MAIL_PORT'] ?? '')
-                            . ' | MAIL_FROM_ADDRESS=' . (string) ($_ENV['MAIL_FROM_ADDRESS'] ?? '')
-                            . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? ''));
-                        $status = 'error';
-                        $errors[] = 'Não foi possível enviar sua mensagem agora. Tente novamente em instantes.';
-                    }
+                    return $response->withHeader('Location', '/contato')->withStatus(303);
+                } catch (\Throwable $exception) {
+                    $this->logger->error('Falha no envio de e-mail de contato.', [
+                        'error' => $exception->getMessage(),
+                    ]);
+                    error_log('[cedern contato] falha no envio: ' . $exception->getMessage() . ' | APP_ENV='
+                        . (string) ($_ENV['APP_ENV'] ?? '')
+                        . ' | APP_ENV_FILE=' . (string) ($_ENV['APP_ENV_FILE'] ?? '')
+                        . ' | APP_LOG_PATH=' . (string) ($_ENV['APP_LOG_PATH'] ?? '')
+                        . ' | MAIL_HOST=' . (string) ($_ENV['MAIL_HOST'] ?? '')
+                        . ' | MAIL_PORT=' . (string) ($_ENV['MAIL_PORT'] ?? '')
+                        . ' | MAIL_FROM_ADDRESS=' . (string) ($_ENV['MAIL_FROM_ADDRESS'] ?? '')
+                        . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? ''));
+                    $status = 'error';
+                    $errors[] = 'Não foi possível enviar sua mensagem agora. Tente novamente em instantes.';
                 }
             }
 
