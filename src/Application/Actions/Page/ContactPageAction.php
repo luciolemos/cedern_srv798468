@@ -156,30 +156,6 @@ class ContactPageAction extends AbstractPageAction
             throw new \RuntimeException('Configuração de e-mail incompleta no .env.');
         }
 
-        $mailer = new PHPMailer(true);
-        $mailer->isSMTP();
-        $mailer->Host = $smtpHost;
-        $mailer->SMTPAuth = true;
-        $mailer->Username = $smtpUser;
-        $mailer->Password = $smtpPass;
-        $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mailer->CharSet = 'UTF-8';
-        $mailer->Sender = $fromEmail;
-
-        $hostFromUrl = (string) parse_url(
-            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
-            PHP_URL_HOST
-        );
-        if ($hostFromUrl !== '') {
-            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
-        }
-
-        $mailer->setFrom($fromEmail, $fromName);
-        $mailer->addAddress($toEmail);
-        $mailer->addReplyTo($email, $name);
-        $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
-
         $normalizedName = $this->normalizeSingleLineValue($name, 'Visitante');
         $normalizedEmail = strtolower(trim($email));
         $normalizedSubject = $this->normalizeSingleLineValue($subject, 'Contato pelo formulário do site');
@@ -195,6 +171,27 @@ class ContactPageAction extends AbstractPageAction
             'UTF-8'
         );
 
+        $subjectLine = '[Contato Site] Novo contato recebido';
+        $altBody = "Novo contato pelo site\n"
+            . "Mensagem recebida pelo formulario institucional.\n\n"
+            . "Nome: {$normalizedName}\n"
+            . "E-mail: {$normalizedEmail}\n"
+            . "Assunto informado: {$normalizedSubject}\n\n"
+            . "Responder: {$this->buildReplyMailToLink($normalizedEmail, $normalizedSubject)}\n\n"
+            . $normalizedMessage;
+
+        $mailer = $this->buildContactMailer(
+            $smtpHost,
+            $smtpPort,
+            $smtpUser,
+            $smtpPass,
+            $fromEmail,
+            $fromName,
+            $toEmail,
+            $email,
+            $name
+        );
+
         $logoCid = 'cedern-logo';
         $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
         $logoSrc = null;
@@ -204,7 +201,6 @@ class ContactPageAction extends AbstractPageAction
         }
 
         $headerMetaHtml = InstitutionalEmailTemplate::buildInstitutionHeaderMeta();
-
         $htmlBody = InstitutionalEmailTemplate::buildLayout(
             'Novo contato pelo site',
             '<p style="margin:0 0 14px;">Mensagem recebida pelo formulario institucional do site do CEDE.</p>'
@@ -232,17 +228,92 @@ class ContactPageAction extends AbstractPageAction
         );
 
         $mailer->isHTML(true);
-        $mailer->Subject = '[Contato Site] Novo contato recebido';
+        $mailer->Subject = $subjectLine;
         $mailer->Body = $htmlBody;
-        $mailer->AltBody = "Novo contato pelo site\n"
-            . "Mensagem recebida pelo formulario institucional.\n\n"
-            . "Nome: {$normalizedName}\n"
-            . "E-mail: {$normalizedEmail}\n"
-            . "Assunto informado: {$normalizedSubject}\n\n"
-            . "Responder: {$this->buildReplyMailToLink($normalizedEmail, $normalizedSubject)}\n\n"
-            . $normalizedMessage;
+        $mailer->AltBody = $altBody;
 
-        $mailer->send();
+        try {
+            $mailer->send();
+        } catch (\Throwable $primaryException) {
+            $errorInfo = $mailer->ErrorInfo;
+            $isDataRejected = stripos($primaryException->getMessage(), 'data not accepted') !== false
+                || stripos($errorInfo, 'data not accepted') !== false;
+
+            if (!$isDataRejected) {
+                throw $primaryException;
+            }
+
+            // Fallback for strict SMTP filters: simplified plain-text-only message.
+            $fallbackMailer = $this->buildContactMailer(
+                $smtpHost,
+                $smtpPort,
+                $smtpUser,
+                $smtpPass,
+                $fromEmail,
+                $fromName,
+                $toEmail,
+                $email,
+                $name
+            );
+            $fallbackMailer->isHTML(false);
+            $fallbackMailer->Subject = $subjectLine;
+            $fallbackMailer->Body = $altBody;
+            $fallbackMailer->AltBody = $altBody;
+            $fallbackMailer->send();
+        }
+    }
+
+    private function buildContactMailer(
+        string $smtpHost,
+        int $smtpPort,
+        string $smtpUser,
+        string $smtpPass,
+        string $fromEmail,
+        string $fromName,
+        string $toEmail,
+        string $replyToEmail,
+        string $replyToName
+    ): PHPMailer {
+        $mailer = new PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = $smtpHost;
+        $mailer->SMTPAuth = true;
+        $mailer->Username = $smtpUser;
+        $mailer->Password = $smtpPass;
+        $mailer->Port = $smtpPort;
+        $mailer->SMTPSecure = $this->resolveSmtpEncryption($smtpPort);
+        $mailer->CharSet = 'UTF-8';
+        $mailer->Sender = $fromEmail;
+        $mailer->setFrom($fromEmail, $fromName);
+        $mailer->addAddress($toEmail);
+        $mailer->addReplyTo($replyToEmail, $replyToName);
+        $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
+
+        $hostFromUrl = (string) parse_url(
+            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
+            PHP_URL_HOST
+        );
+        if ($hostFromUrl !== '') {
+            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
+        }
+
+        return $mailer;
+    }
+
+    private function resolveSmtpEncryption(int $smtpPort): string
+    {
+        $explicitEncryption = strtolower(trim((string) ($_ENV['MAIL_ENCRYPTION'] ?? '')));
+        if ($explicitEncryption === 'ssl' || $explicitEncryption === 'smtps') {
+            return PHPMailer::ENCRYPTION_SMTPS;
+        }
+
+        if ($explicitEncryption === 'tls' || $explicitEncryption === 'starttls') {
+            return PHPMailer::ENCRYPTION_STARTTLS;
+        }
+
+        return $smtpPort === 465
+            ? PHPMailer::ENCRYPTION_SMTPS
+            : PHPMailer::ENCRYPTION_STARTTLS;
     }
 
     private function buildReplyMailToLink(string $email, string $subject): string
