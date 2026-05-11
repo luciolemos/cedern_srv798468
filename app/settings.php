@@ -13,6 +13,16 @@ return function (ContainerBuilder $containerBuilder) {
         SettingsInterface::class => function () {
             $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? 'production'));
             $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
+            $isDockerEnv = filter_var(
+                trim((string) ($_ENV['docker'] ?? '')),
+                FILTER_VALIDATE_BOOLEAN
+            );
+            $customLogPath = trim((string) ($_ENV['APP_LOG_PATH'] ?? ''));
+            $loggerPath = $customLogPath !== ''
+                ? $customLogPath
+                : (($_ENV['APP_ENV'] ?? '') === 'test'
+                    ? 'php://stderr'
+                    : ($isDockerEnv ? 'php://stdout' : __DIR__ . '/../logs/app.log'));
 
             return new Settings([
                 'displayErrorDetails' => $isDevelopment,
@@ -29,9 +39,7 @@ return function (ContainerBuilder $containerBuilder) {
                 ],
                 'logger' => [
                     'name' => 'slim-app',
-                    'path' => ($_ENV['APP_ENV'] ?? '') === 'test'
-                        ? 'php://stderr'
-                        : (isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log'),
+                    'path' => $loggerPath,
                     'level' => Logger::DEBUG,
                 ],
                 'agenda' => [
