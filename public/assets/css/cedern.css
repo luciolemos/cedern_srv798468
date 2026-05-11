@@ -1388,6 +1388,19 @@ h3 {
   border-color: var(--comp-btn-secondary-border);
 }
 
+.nc-btn-organic {
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--theme-soft-1) 68%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  border-color: color-mix(in srgb, var(--theme-soft-2) 65%, var(--surface-border));
+}
+
+.nc-btn-organic:hover,
+.nc-btn-organic:focus-visible {
+  background: color-mix(in srgb, var(--theme-soft-1) 52%, var(--surface-main));
+  color: var(--theme-soft-ink);
+}
+
 .nc-list {
   margin: var(--space-6) 0 0;
   padding: 0;

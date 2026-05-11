@@ -1,6 +1,7 @@
 {% set footer = site.footer|default({}) %}
 {% set footer_nav_groups = footer.navGroups|default([]) %}
 {% set site_contact = site.contact|default({}) %}
+{% set site_facebook = site.social.facebook|default({}) %}
 {% set site_instagram = site.social.instagram|default({}) %}
 {% set brand = site.brand|default({}) %}
 {% set footer_logo_src = (base_url ?? '') ~ (brand.logoSrc|default('/assets/img/brands/cede4_logo_nav.png')) %}
@@ -81,12 +82,21 @@
               </p>
             {% endif %}
 
-            {% if site_instagram.url|default('') %}
-              <p class="nc-footer-copy">
-                <a class="nc-footer-link nc-footer-contact-link" href="{{ site_instagram.url }}" target="_blank" rel="noopener noreferrer">{{ site_instagram.label|default('Instagram oficial') }}</a>
-              </p>
-            {% endif %}
           </address>
+
+          {% if site_facebook.url|default('') or site_instagram.url|default('') %}
+            <div class="nc-footer-social">
+              <h4 class="nc-footer-title">REDES SOCIAIS</h4>
+              <div class="nc-actions is-stacked-mobile">
+                {% if site_facebook.url|default('') %}
+                  <a class="nc-btn nc-btn-secondary nc-btn-organic" href="{{ site_facebook.url }}" target="_blank" rel="noopener noreferrer">{{ site_facebook.label|default('Facebook') }}</a>
+                {% endif %}
+                {% if site_instagram.url|default('') %}
+                  <a class="nc-btn nc-btn-secondary nc-btn-organic" href="{{ site_instagram.url }}" target="_blank" rel="noopener noreferrer">{{ site_instagram.label|default('Instagram') }}</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
 
         </section>
       </div>
