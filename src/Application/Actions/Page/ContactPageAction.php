@@ -115,8 +115,7 @@ class ContactPageAction extends AbstractPageAction
                             . ' | MAIL_HOST=' . (string) ($_ENV['MAIL_HOST'] ?? '')
                             . ' | MAIL_PORT=' . (string) ($_ENV['MAIL_PORT'] ?? '')
                             . ' | MAIL_FROM_ADDRESS=' . (string) ($_ENV['MAIL_FROM_ADDRESS'] ?? '')
-                            . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? '')
-                        );
+                            . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? ''));
                         $status = 'error';
                         $errors[] = 'Não foi possível enviar sua mensagem agora. Tente novamente em instantes.';
                     }
