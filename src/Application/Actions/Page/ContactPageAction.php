@@ -308,17 +308,36 @@ class ContactPageAction extends AbstractPageAction
         $mailer->SMTPSecure = $this->resolveSmtpEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
+        $mailer->Timeout = max(3, (int) ($_ENV['MAIL_TIMEOUT'] ?? 15));
+
+        $smtpDebugEnabled = filter_var(
+            trim((string) ($_ENV['MAIL_SMTP_DEBUG'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        if ($smtpDebugEnabled) {
+            $mailer->SMTPDebug = 2;
+            $mailer->Debugoutput = static function (string $message, int $level): void {
+                error_log('[cedern smtp][L' . $level . '] ' . $message);
+            };
+        }
+
         $mailer->setFrom($fromEmail, $fromName);
         $mailer->addAddress($toEmail);
-        $mailer->addReplyTo($replyToEmail, $replyToName);
+        $allowExternalReplyTo = filter_var(
+            trim((string) ($_ENV['MAIL_ALLOW_EXTERNAL_REPLYTO'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        if ($allowExternalReplyTo) {
+            $mailer->addReplyTo($replyToEmail, $replyToName);
+        } else {
+            $mailer->addReplyTo($fromEmail, $fromName);
+        }
         $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
 
-        $hostFromUrl = (string) parse_url(
-            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
-            PHP_URL_HOST
-        );
-        if ($hostFromUrl !== '') {
-            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
+        $messageIdDomain = strtolower(trim((string) strrchr($fromEmail, '@')));
+        $messageIdDomain = ltrim($messageIdDomain, '@');
+        if ($messageIdDomain !== '') {
+            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $messageIdDomain);
         }
 
         return $mailer;

@@ -246,12 +246,10 @@ class MemberForgotPasswordPageAction extends AbstractPageAction
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 
-        $hostFromUrl = (string) parse_url(
-            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
-            PHP_URL_HOST
-        );
-        if ($hostFromUrl !== '') {
-            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
+        $messageIdDomain = strtolower(trim((string) strrchr($fromEmail, '@')));
+        $messageIdDomain = ltrim($messageIdDomain, '@');
+        if ($messageIdDomain !== '') {
+            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $messageIdDomain);
         }
 
         $mailer->setFrom($fromEmail, $fromName);
