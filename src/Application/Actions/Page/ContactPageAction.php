@@ -190,13 +190,7 @@ class ContactPageAction extends AbstractPageAction
             $name
         );
 
-        $logoCid = 'cedern-logo';
-        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
-        $logoSrc = null;
-        if (is_file($logoPath)) {
-            $mailer->addEmbeddedImage($logoPath, $logoCid, 'cede4_logo.png', 'base64', 'image/png');
-            $logoSrc = 'cid:' . $logoCid;
-        }
+        $logoSrc = $this->resolvePublicLogoUrl();
 
         $headerMetaHtml = InstitutionalEmailTemplate::buildInstitutionHeaderMeta();
         $htmlBody = InstitutionalEmailTemplate::buildLayout(
@@ -346,6 +340,21 @@ class ContactPageAction extends AbstractPageAction
         return $smtpPort === 465
             ? PHPMailer::ENCRYPTION_SMTPS
             : PHPMailer::ENCRYPTION_STARTTLS;
+    }
+
+    private function resolvePublicLogoUrl(): ?string
+    {
+        $logoPath = dirname(__DIR__, 4) . '/public/assets/img/brands/cede4_logo.png';
+        if (!is_file($logoPath)) {
+            return null;
+        }
+
+        $baseUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
+        if ($baseUrl === '') {
+            $baseUrl = 'https://cedern.org';
+        }
+
+        return $baseUrl . '/assets/img/brands/cede4_logo.png';
     }
 
     private function buildReplyMailToLink(string $email, string $subject): string
