@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+$socialInstagramUrl = trim((string) ($_ENV['APP_SOCIAL_INSTAGRAM_URL'] ?? 'https://www.instagram.com/cedeoficialrn/'));
+$socialFacebookUrl = trim((string) ($_ENV['APP_SOCIAL_FACEBOOK_URL'] ?? ''));
+
 return [
     'name' => 'CEDE',
     'legalName' => 'Centro de Estudos da Doutrina Espírita (CEDE)',
@@ -18,9 +21,13 @@ return [
         'mapUrl' => 'https://www.google.com/maps/search/?api=1&query=R.%20Frej%C3%B3%2C%2044%20-%20Nova%20Parnamirim%2C%20Parnamirim%20-%20RN%2C%2059150-663',
     ],
     'social' => [
+        'facebook' => [
+            'url' => $socialFacebookUrl,
+            'label' => 'Facebook oficial',
+        ],
         'instagram' => [
-            'url' => 'https://www.instagram.com/cedeoficialrn/',
-            'label' => 'Instagram oficial: @cedeoficialrn',
+            'url' => $socialInstagramUrl,
+            'label' => 'Instagram oficial',
         ],
     ],
     'institutional' => [
