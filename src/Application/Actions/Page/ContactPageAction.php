@@ -108,6 +108,15 @@ class ContactPageAction extends AbstractPageAction
                         $this->logger->error('Falha no envio de e-mail de contato.', [
                             'error' => $exception->getMessage(),
                         ]);
+                        error_log('[cedern contato] falha no envio: ' . $exception->getMessage() . ' | APP_ENV='
+                            . (string) ($_ENV['APP_ENV'] ?? '')
+                            . ' | APP_ENV_FILE=' . (string) ($_ENV['APP_ENV_FILE'] ?? '')
+                            . ' | APP_LOG_PATH=' . (string) ($_ENV['APP_LOG_PATH'] ?? '')
+                            . ' | MAIL_HOST=' . (string) ($_ENV['MAIL_HOST'] ?? '')
+                            . ' | MAIL_PORT=' . (string) ($_ENV['MAIL_PORT'] ?? '')
+                            . ' | MAIL_FROM_ADDRESS=' . (string) ($_ENV['MAIL_FROM_ADDRESS'] ?? '')
+                            . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? '')
+                        );
                         $status = 'error';
                         $errors[] = 'Não foi possível enviar sua mensagem agora. Tente novamente em instantes.';
                     }
@@ -240,7 +249,12 @@ class ContactPageAction extends AbstractPageAction
                 || stripos($errorInfo, 'data not accepted') !== false;
 
             if (!$isDataRejected) {
-                throw $primaryException;
+                throw new \RuntimeException(
+                    'Falha SMTP primária: ' . $primaryException->getMessage()
+                    . ' | ErrorInfo=' . $errorInfo,
+                    0,
+                    $primaryException
+                );
             }
 
             // Fallback for strict SMTP filters: simplified plain-text-only message.
@@ -259,7 +273,17 @@ class ContactPageAction extends AbstractPageAction
             $fallbackMailer->Subject = $subjectLine;
             $fallbackMailer->Body = $altBody;
             $fallbackMailer->AltBody = $altBody;
-            $fallbackMailer->send();
+            try {
+                $fallbackMailer->send();
+            } catch (\Throwable $fallbackException) {
+                throw new \RuntimeException(
+                    'Falha SMTP no fallback: ' . $fallbackException->getMessage()
+                    . ' | PrimaryErrorInfo=' . $errorInfo
+                    . ' | FallbackErrorInfo=' . $fallbackMailer->ErrorInfo,
+                    0,
+                    $fallbackException
+                );
+            }
         }
     }
 
