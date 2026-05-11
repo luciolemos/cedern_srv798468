@@ -108,6 +108,14 @@ class ContactPageAction extends AbstractPageAction
                         $this->logger->error('Falha no envio de e-mail de contato.', [
                             'error' => $exception->getMessage(),
                         ]);
+                        error_log('[cedern contato] falha no envio: ' . $exception->getMessage() . ' | APP_ENV='
+                            . (string) ($_ENV['APP_ENV'] ?? '')
+                            . ' | APP_ENV_FILE=' . (string) ($_ENV['APP_ENV_FILE'] ?? '')
+                            . ' | APP_LOG_PATH=' . (string) ($_ENV['APP_LOG_PATH'] ?? '')
+                            . ' | MAIL_HOST=' . (string) ($_ENV['MAIL_HOST'] ?? '')
+                            . ' | MAIL_PORT=' . (string) ($_ENV['MAIL_PORT'] ?? '')
+                            . ' | MAIL_FROM_ADDRESS=' . (string) ($_ENV['MAIL_FROM_ADDRESS'] ?? '')
+                            . ' | MAIL_TO_ADDRESS=' . (string) ($_ENV['MAIL_TO_ADDRESS'] ?? ''));
                         $status = 'error';
                         $errors[] = 'Não foi possível enviar sua mensagem agora. Tente novamente em instantes.';
                     }
@@ -240,7 +248,12 @@ class ContactPageAction extends AbstractPageAction
                 || stripos($errorInfo, 'data not accepted') !== false;
 
             if (!$isDataRejected) {
-                throw $primaryException;
+                throw new \RuntimeException(
+                    'Falha SMTP primária: ' . $primaryException->getMessage()
+                    . ' | ErrorInfo=' . $errorInfo,
+                    0,
+                    $primaryException
+                );
             }
 
             // Fallback for strict SMTP filters: simplified plain-text-only message.
@@ -259,7 +272,17 @@ class ContactPageAction extends AbstractPageAction
             $fallbackMailer->Subject = $subjectLine;
             $fallbackMailer->Body = $altBody;
             $fallbackMailer->AltBody = $altBody;
-            $fallbackMailer->send();
+            try {
+                $fallbackMailer->send();
+            } catch (\Throwable $fallbackException) {
+                throw new \RuntimeException(
+                    'Falha SMTP no fallback: ' . $fallbackException->getMessage()
+                    . ' | PrimaryErrorInfo=' . $errorInfo
+                    . ' | FallbackErrorInfo=' . $fallbackMailer->ErrorInfo,
+                    0,
+                    $fallbackException
+                );
+            }
         }
     }
 
@@ -284,17 +307,36 @@ class ContactPageAction extends AbstractPageAction
         $mailer->SMTPSecure = $this->resolveSmtpEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
+        $mailer->Timeout = max(3, (int) ($_ENV['MAIL_TIMEOUT'] ?? 15));
+
+        $smtpDebugEnabled = filter_var(
+            trim((string) ($_ENV['MAIL_SMTP_DEBUG'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        if ($smtpDebugEnabled) {
+            $mailer->SMTPDebug = 2;
+            $mailer->Debugoutput = static function (string $message, int $level): void {
+                error_log('[cedern smtp][L' . $level . '] ' . $message);
+            };
+        }
+
         $mailer->setFrom($fromEmail, $fromName);
         $mailer->addAddress($toEmail);
-        $mailer->addReplyTo($replyToEmail, $replyToName);
+        $allowExternalReplyTo = filter_var(
+            trim((string) ($_ENV['MAIL_ALLOW_EXTERNAL_REPLYTO'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        if ($allowExternalReplyTo) {
+            $mailer->addReplyTo($replyToEmail, $replyToName);
+        } else {
+            $mailer->addReplyTo($fromEmail, $fromName);
+        }
         $mailer->addCustomHeader('X-Auto-Response-Suppress', 'All');
 
-        $hostFromUrl = (string) parse_url(
-            (string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'),
-            PHP_URL_HOST
-        );
-        if ($hostFromUrl !== '') {
-            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $hostFromUrl);
+        $messageIdDomain = strtolower(trim((string) strrchr($fromEmail, '@')));
+        $messageIdDomain = ltrim($messageIdDomain, '@');
+        if ($messageIdDomain !== '') {
+            $mailer->MessageID = sprintf('<%s@%s>', bin2hex(random_bytes(12)), $messageIdDomain);
         }
 
         return $mailer;
