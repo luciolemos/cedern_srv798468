@@ -673,6 +673,10 @@ h3 {
   font-weight: var(--font-weight-semibold);
 }
 
+.nc-footer-social-actions {
+  align-items: center;
+}
+
 .nc-footer-bottom {
   margin-top: var(--space-4);
   padding-top: var(--space-3);
@@ -6106,6 +6110,11 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   .nc-actions.is-stacked-mobile .nc-btn {
     width: 100%;
     min-width: 0;
+  }
+
+  .nc-footer-social-actions .nc-btn {
+    width: 2.2rem;
+    min-width: 2.2rem;
   }
 
   .nc-actions-edge-button {
