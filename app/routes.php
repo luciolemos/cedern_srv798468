@@ -132,6 +132,19 @@ return function (App $app) {
         return in_array($memberRoleKey, $allowedRoleKeys, true);
     };
 
+    $diagnosticRoutesEnabled = static function (): bool {
+        $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
+
+        if (in_array($appEnv, ['dev', 'development', 'local', 'test', 'testing', 'qa', 'homolog'], true)) {
+            return true;
+        }
+
+        return filter_var(
+            trim((string) ($_ENV['APP_ENABLE_DIAGNOSTIC_ROUTES'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
+    };
+
     $memberHasPanelAccess = static function () use ($memberHasAnyRole, $memberHasMinimumRole): bool {
         return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator']);
     };
@@ -579,175 +592,189 @@ return function (App $app) {
     });
     $app->get('/termos-de-uso', TermsOfUsePageAction::class);
 
-    $app->get('/users', function (Request $request, Response $response) use ($app) {
-        $twig = $app->getContainer()->get(Twig::class);
-        $repository = $app->getContainer()->get(UserRepository::class);
-        $users = array_map(
-            static fn ($user): array => $user->jsonSerialize(),
-            $repository->findAll()
-        );
+    if ($diagnosticRoutesEnabled()) {
+        $app->get('/users', function (Request $request, Response $response) use ($app) {
+            $twig = $app->getContainer()->get(Twig::class);
+            $repository = $app->getContainer()->get(UserRepository::class);
+            $users = array_map(
+                static fn ($user): array => $user->jsonSerialize(),
+                $repository->findAll()
+            );
 
-        return $twig->render($response, 'users.twig', ['users' => $users]);
-    });
+            return $twig->render($response, 'users.twig', ['users' => $users]);
+        });
 
-    $app->get('/health/render', function (Request $request, Response $response) use ($app) {
-        $twigView = $app->getContainer()->get(Twig::class);
-        $twig = $twigView->getEnvironment();
-        $homeContent = require __DIR__ . '/content/home.php';
+        $app->get('/health/render', function (Request $request, Response $response) use ($app) {
+            $twigView = $app->getContainer()->get(Twig::class);
+            $twig = $twigView->getEnvironment();
+            $homeContent = require __DIR__ . '/content/home.php';
 
-        $checks = [
-            ['template' => 'components/header.twig', 'context' => []],
-            ['template' => 'home/hero.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/features.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/social-proof.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/testimonials.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/roadmap.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/faq.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'home/final-cta.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'components/theme-palette.twig', 'context' => []],
-            ['template' => 'components/footer.twig', 'context' => []],
-            ['template' => 'home.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/about.twig', 'context' => ['homeContent' => $homeContent]],
-            [
-                'template' => 'pages/about-detail.twig',
-                'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['missao'] ?? []],
-            ],
-            [
-                'template' => 'pages/about-detail.twig',
-                'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['estatuto'] ?? []],
-            ],
-            [
-                'template' => 'pages/about-founder.twig',
-                'context' => ['homeContent' => $homeContent, 'founder' => $homeContent['aboutPages']['fundador'] ?? []],
-            ],
-            [
-                'template' => 'pages/about-statute.twig',
-                'context' => ['homeContent' => $homeContent, 'statute' => (require __DIR__ . '/content/statute.php')],
-            ],
-            [
-                'template' => 'pages/legal-document.twig',
-                'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/privacy-policy.php')],
-            ],
-            [
-                'template' => 'pages/legal-document.twig',
-                'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/terms-of-use.php')],
-            ],
-            ['template' => 'pages/about-brand.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/studies.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/study-detail.twig', 'context' => ['homeContent' => $homeContent, 'study' => $homeContent['studiesPages']['esde'] ?? []]],
-            ['template' => 'pages/library.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/admin-library-books.twig', 'context' => ['library_books' => []]],
-            ['template' => 'pages/admin-library-book-form.twig', 'context' => ['library_book_form' => [], 'library_book_categories' => []]],
-            ['template' => 'pages/admin-library-categories.twig', 'context' => ['library_categories' => []]],
-            ['template' => 'pages/admin-library-category-form.twig', 'context' => ['library_category_form' => []]],
-            ['template' => 'pages/admin-bookshop-dashboard.twig', 'context' => ['bookshop_metrics' => []]],
-            ['template' => 'pages/admin-bookshop-books.twig', 'context' => ['bookshop_books' => []]],
-            ['template' => 'pages/admin-bookshop-collections.twig', 'context' => ['bookshop_collections' => []]],
-            ['template' => 'pages/admin-bookshop-collection-form.twig', 'context' => ['bookshop_collection_form' => []]],
-            ['template' => 'pages/admin-bookshop-categories.twig', 'context' => ['bookshop_categories' => []]],
-            ['template' => 'pages/admin-bookshop-category-form.twig', 'context' => ['bookshop_category_form' => []]],
-            ['template' => 'pages/admin-bookshop-genres.twig', 'context' => ['bookshop_genres' => []]],
-            ['template' => 'pages/admin-bookshop-genre-form.twig', 'context' => ['bookshop_genre_form' => []]],
-            [
-                'template' => 'pages/admin-bookshop-book-form.twig',
-                'context' => [
-                    'bookshop_book_form' => [],
-                    'bookshop_book_collections' => [],
-                    'bookshop_book_categories' => [],
-                    'bookshop_book_genres' => [],
-                    'bookshop_book_language_options' => [],
+            $checks = [
+                ['template' => 'components/header.twig', 'context' => []],
+                ['template' => 'home/hero.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/features.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/social-proof.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/testimonials.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/roadmap.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/faq.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'home/final-cta.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'components/theme-palette.twig', 'context' => []],
+                ['template' => 'components/footer.twig', 'context' => []],
+                ['template' => 'home.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/about.twig', 'context' => ['homeContent' => $homeContent]],
+                [
+                    'template' => 'pages/about-detail.twig',
+                    'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['missao'] ?? []],
                 ],
-            ],
-            ['template' => 'pages/admin-bookshop-manual.twig', 'context' => []],
-            ['template' => 'pages/admin-bookshop-reports.twig', 'context' => []],
-            ['template' => 'pages/admin-bookshop-stock-movements.twig', 'context' => ['bookshop_stock_movements' => []]],
-            ['template' => 'pages/admin-bookshop-stock-movement-form.twig', 'context' => ['bookshop_stock_movement_book_options' => [], 'bookshop_stock_movement_type_options' => []]],
-            ['template' => 'pages/admin-bookshop-import.twig', 'context' => []],
-            ['template' => 'pages/admin-bookshop-sales.twig', 'context' => ['bookshop_sales' => []]],
-            [
-                'template' => 'pages/admin-bookshop-sale-form.twig',
-                'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
-            ],
-            ['template' => 'pages/admin-bookshop-sale-view.twig', 'context' => ['bookshop_sale' => ['items' => []]]],
-            ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
-            ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/store-bazaar.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/store-bookshop.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/store-bookshop-ii.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/faq.twig', 'context' => ['homeContent' => $homeContent]],
-            ['template' => 'pages/faq-category.twig', 'context' => ['homeContent' => $homeContent, 'faq_category_slug' => 'doutrina']],
-            ['template' => 'pages/contact.twig', 'context' => ['homeContent' => $homeContent]],
-        ];
+                [
+                    'template' => 'pages/about-detail.twig',
+                    'context' => ['homeContent' => $homeContent, 'about' => $homeContent['aboutPages']['estatuto'] ?? []],
+                ],
+                [
+                    'template' => 'pages/about-founder.twig',
+                    'context' => ['homeContent' => $homeContent, 'founder' => $homeContent['aboutPages']['fundador'] ?? []],
+                ],
+                [
+                    'template' => 'pages/about-statute.twig',
+                    'context' => ['homeContent' => $homeContent, 'statute' => (require __DIR__ . '/content/statute.php')],
+                ],
+                [
+                    'template' => 'pages/legal-document.twig',
+                    'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/privacy-policy.php')],
+                ],
+                [
+                    'template' => 'pages/legal-document.twig',
+                    'context' => ['homeContent' => $homeContent, 'legal_document' => (require __DIR__ . '/content/terms-of-use.php')],
+                ],
+                ['template' => 'pages/about-brand.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/studies.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/study-detail.twig', 'context' => ['homeContent' => $homeContent, 'study' => $homeContent['studiesPages']['esde'] ?? []]],
+                ['template' => 'pages/library.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/admin-library-books.twig', 'context' => ['library_books' => []]],
+                ['template' => 'pages/admin-library-book-form.twig', 'context' => ['library_book_form' => [], 'library_book_categories' => []]],
+                ['template' => 'pages/admin-library-categories.twig', 'context' => ['library_categories' => []]],
+                ['template' => 'pages/admin-library-category-form.twig', 'context' => ['library_category_form' => []]],
+                ['template' => 'pages/admin-bookshop-dashboard.twig', 'context' => ['bookshop_metrics' => []]],
+                ['template' => 'pages/admin-bookshop-books.twig', 'context' => ['bookshop_books' => []]],
+                ['template' => 'pages/admin-bookshop-collections.twig', 'context' => ['bookshop_collections' => []]],
+                ['template' => 'pages/admin-bookshop-collection-form.twig', 'context' => ['bookshop_collection_form' => []]],
+                ['template' => 'pages/admin-bookshop-categories.twig', 'context' => ['bookshop_categories' => []]],
+                ['template' => 'pages/admin-bookshop-category-form.twig', 'context' => ['bookshop_category_form' => []]],
+                ['template' => 'pages/admin-bookshop-genres.twig', 'context' => ['bookshop_genres' => []]],
+                ['template' => 'pages/admin-bookshop-genre-form.twig', 'context' => ['bookshop_genre_form' => []]],
+                [
+                    'template' => 'pages/admin-bookshop-book-form.twig',
+                    'context' => [
+                        'bookshop_book_form' => [],
+                        'bookshop_book_collections' => [],
+                        'bookshop_book_categories' => [],
+                        'bookshop_book_genres' => [],
+                        'bookshop_book_language_options' => [],
+                    ],
+                ],
+                ['template' => 'pages/admin-bookshop-manual.twig', 'context' => []],
+                ['template' => 'pages/admin-bookshop-reports.twig', 'context' => []],
+                ['template' => 'pages/admin-bookshop-stock-movements.twig', 'context' => ['bookshop_stock_movements' => []]],
+                ['template' => 'pages/admin-bookshop-stock-movement-form.twig', 'context' => ['bookshop_stock_movement_book_options' => [], 'bookshop_stock_movement_type_options' => []]],
+                ['template' => 'pages/admin-bookshop-import.twig', 'context' => []],
+                ['template' => 'pages/admin-bookshop-sales.twig', 'context' => ['bookshop_sales' => []]],
+                [
+                    'template' => 'pages/admin-bookshop-sale-form.twig',
+                    'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
+                ],
+                ['template' => 'pages/admin-bookshop-sale-view.twig', 'context' => ['bookshop_sale' => ['items' => []]]],
+                ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
+                ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/store-bazaar.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/store-bookshop.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/store-bookshop-ii.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/faq.twig', 'context' => ['homeContent' => $homeContent]],
+                ['template' => 'pages/faq-category.twig', 'context' => ['homeContent' => $homeContent, 'faq_category_slug' => 'doutrina']],
+                ['template' => 'pages/contact.twig', 'context' => ['homeContent' => $homeContent]],
+            ];
 
-        $results = [];
+            $results = [];
 
-        foreach ($checks as $check) {
-            $template = $check['template'];
-            $context = $check['context'];
+            foreach ($checks as $check) {
+                $template = $check['template'];
+                $context = $check['context'];
 
-            try {
-                $html = $twig->render($template, $context);
-                $results[] = [
-                    'template' => $template,
-                    'ok' => true,
-                    'length' => strlen($html),
-                ];
-            } catch (\Throwable $exception) {
-                $results[] = [
-                    'template' => $template,
-                    'ok' => false,
-                    'error' => $exception->getMessage(),
-                ];
+                try {
+                    $html = $twig->render($template, $context);
+                    $results[] = [
+                        'template' => $template,
+                        'ok' => true,
+                        'length' => strlen($html),
+                    ];
+                } catch (\Throwable $exception) {
+                    $results[] = [
+                        'template' => $template,
+                        'ok' => false,
+                        'error' => $exception->getMessage(),
+                    ];
+                }
             }
-        }
-
-        $payload = [
-            'status' => 'ok',
-            'php' => PHP_VERSION,
-            'results' => $results,
-        ];
-
-        $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    });
-
-    $app->get('/health/db', function (Request $request, Response $response) use ($app) {
-        try {
-            /** @var \PDO $pdo */
-            $pdo = $app->getContainer()->get(\PDO::class);
-            $row = $pdo->query('SELECT 1 AS ok')->fetch();
-            $status = ((int) ($row['ok'] ?? 0) === 1) ? 'ok' : 'degraded';
-            $code = ($status === 'ok') ? 200 : 503;
 
             $payload = [
-                'status' => $status,
-                'db' => 'connected',
+                'status' => 'ok',
+                'php' => PHP_VERSION,
+                'results' => $results,
             ];
 
             $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-            return $response
-                ->withStatus($code)
-                ->withHeader('Content-Type', 'application/json');
-        } catch (\Throwable $exception) {
-            $payload = [
-                'status' => 'error',
-                'db' => 'unavailable',
-                'message' => $exception->getMessage(),
-            ];
+            return $response->withHeader('Content-Type', 'application/json');
+        });
 
-            $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $app->get('/health/db', function (Request $request, Response $response) use ($app) {
+            try {
+                /** @var \PDO $pdo */
+                $pdo = $app->getContainer()->get(\PDO::class);
+                $row = $pdo->query('SELECT 1 AS ok')->fetch();
+                $status = ((int) ($row['ok'] ?? 0) === 1) ? 'ok' : 'degraded';
+                $code = ($status === 'ok') ? 200 : 503;
 
-            return $response
-                ->withStatus(503)
-                ->withHeader('Content-Type', 'application/json');
-        }
-    });
+                $payload = [
+                    'status' => $status,
+                    'db' => 'connected',
+                ];
 
-    $app->group('/api/users', function (Group $group) {
-        $group->get('', ListUsersAction::class);
-        $group->get('/{id}', ViewUserAction::class);
-    });
+                $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                return $response
+                    ->withStatus($code)
+                    ->withHeader('Content-Type', 'application/json');
+            } catch (\Throwable $exception) {
+                $payload = [
+                    'status' => 'error',
+                    'db' => 'unavailable',
+                    'message' => $exception->getMessage(),
+                ];
+
+                $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+                return $response
+                    ->withStatus(503)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        });
+
+        $app->group('/api/users', function (Group $group) {
+            $group->get('', ListUsersAction::class);
+            $group->get('/{id}', ViewUserAction::class);
+        });
+    } else {
+        $disabledDiagnosticRoute = function (Request $request, Response $response): Response {
+            return $response->withStatus(404);
+        };
+
+        $app->get('/users', $disabledDiagnosticRoute);
+        $app->get('/health/render', $disabledDiagnosticRoute);
+        $app->get('/health/db', $disabledDiagnosticRoute);
+        $app->group('/api/users', function (Group $group) use ($disabledDiagnosticRoute) {
+            $group->get('', $disabledDiagnosticRoute);
+            $group->get('/{id}', $disabledDiagnosticRoute);
+        });
+    }
 };

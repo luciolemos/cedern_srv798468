@@ -185,6 +185,7 @@
                         <a class="nc-link" href="/agenda/{{ event.slug|default('') }}">Ver detalhes</a>
                         <a class="nc-link" href="/agenda/{{ event.slug|default('') }}/ics">Baixar .ics</a>
                         <form method="post" action="/membro/eventos/{{ event.id|default(0) }}/participacao">
+                          {% include 'components/csrf-field.twig' %}
                           <input type="hidden" name="redirect_to" value="/membro">
                           <input type="hidden" name="intent" value="{{ event.member_interested|default(false) ? 'remove' : 'add' }}">
                           <button class="nc-link nc-link-button" type="submit">
@@ -251,6 +252,7 @@
               <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Editar dados do perfil</a>
               <a class="nc-btn nc-btn-secondary" href="/">Voltar ao site</a>
               <form method="post" action="/membro/sair" onsubmit="return confirm('Deseja realmente encerrar sua sessão?');">
+                {% include 'components/csrf-field.twig' %}
                 <button class="nc-btn nc-admin-action-delete" type="submit">Encerrar sessão</button>
               </form>
             </div>

@@ -98,6 +98,10 @@ class MemberLoginPageAction extends AbstractPageAction
                 } elseif ((string) ($user['status'] ?? '') === 'blocked') {
                     $error = 'Seu acesso está bloqueado. Procure a administração.';
                 } else {
+                    if (session_status() === PHP_SESSION_ACTIVE) {
+                        session_regenerate_id(true);
+                    }
+
                     $_SESSION['member_authenticated'] = true;
                     $_SESSION['member_user_id'] = (int) ($user['id'] ?? 0);
                     $_SESSION['member_name'] = (string) ($user['full_name'] ?? 'Membro');

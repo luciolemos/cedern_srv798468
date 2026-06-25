@@ -87,6 +87,7 @@
           {% if current_event.member_authenticated|default(false) %}
             {% if current_event.member_profile_completed|default(false) %}
               <form method="post" action="/membro/eventos/{{ current_event.id|default(0) }}/participacao">
+                {% include 'components/csrf-field.twig' %}
                 <input type="hidden" name="redirect_to" value="/agenda/{{ current_event.slug|default('') }}">
                 <input type="hidden" name="intent" value="{{ current_event.member_interested|default(false) ? 'remove' : 'add' }}">
                 <button class="nc-btn nc-btn-secondary nc-btn-block-mobile" type="submit">

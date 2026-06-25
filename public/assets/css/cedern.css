@@ -776,9 +776,13 @@ h3 {
   border-left: 0;
   border-right: 0;
   border-radius: 0;
-  background: color-mix(in srgb, var(--surface-main) 92%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface-main) 98%, transparent);
+  backdrop-filter: blur(12px);
   box-shadow: var(--shadow-soft);
+}
+
+body.is-nav-open {
+  overflow: hidden;
 }
 
 .nc-nav.is-open {

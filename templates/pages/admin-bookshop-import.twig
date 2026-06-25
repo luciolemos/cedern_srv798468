@@ -53,6 +53,7 @@
 
     <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="120">
       <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="/painel/livraria/importar">
+        {% include 'components/csrf-field.twig' %}
         <div class="nc-admin-form-field nc-admin-form-field-full">
           <label class="nc-admin-form-label" for="inventory_file">Arquivo CSV</label>
           <input class="nc-admin-form-input" id="inventory_file" name="inventory_file" type="file" accept=".csv,text/csv" required>

@@ -39,6 +39,7 @@
       <button class="nc-btn nc-btn-secondary" type="button" onclick="window.print()">Imprimir comprovante</button>
       {% if bookshop_sale.status == 'completed' %}
         <form method="post" action="/painel/livraria/vendas/{{ bookshop_sale.id }}/cancelar" onsubmit="return confirm('Cancelar esta venda e devolver os itens ao estoque?');">
+          {% include 'components/csrf-field.twig' %}
           <button class="nc-btn nc-btn-secondary" type="submit">Cancelar venda</button>
         </form>
       {% endif %}

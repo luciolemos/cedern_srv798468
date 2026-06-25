@@ -24,6 +24,7 @@
 
       <article class="nc-admin-form-card">
         <form class="nc-admin-form" method="post" action="{{ agenda_category_form_is_edit ? '/painel/categorias/' ~ agenda_category_id ~ '/editar' : '/painel/categorias/nova' }}">
+          {% include 'components/csrf-field.twig' %}
           <div class="nc-admin-form-grid nc-admin-form-grid-category-head">
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="name">Nome da categoria</label>

@@ -1,0 +1,3 @@
+{% if csrf_token|default('') %}
+  <input type="hidden" name="{{ csrf_field_name|default('_csrf_token') }}" value="{{ csrf_token }}">
+{% endif %}

@@ -24,6 +24,7 @@
 
     <article class="nc-card nc-admin-form-card">
       <form class="nc-admin-form" method="post" action="{{ bookshop_collection_form_is_edit ? '/painel/livraria/colecoes/' ~ bookshop_collection_id ~ '/editar' : '/painel/livraria/colecoes/nova' }}">
+        {% include 'components/csrf-field.twig' %}
         <div class="nc-admin-form-grid nc-admin-form-grid-triplet">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="name">Nome da coleção</label>

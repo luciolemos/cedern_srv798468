@@ -163,6 +163,7 @@
 
       {% if panel_can_visit_reset %}
         <form method="post" action="/painel/visitas/nova-contagem" onsubmit="return confirm('Iniciar uma nova contagem de visitas a partir de hoje?');">
+          {% include 'components/csrf-field.twig' %}
           <button class="nc-btn nc-btn-secondary" type="submit">Iniciar nova contagem</button>
         </form>
       {% endif %}

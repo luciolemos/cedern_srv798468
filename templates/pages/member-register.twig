@@ -31,6 +31,7 @@
         {% endif %}
 
         <form class="nc-admin-login-form" method="post" action="/cadastro"{% if app_recaptcha_enabled %} data-recaptcha-action="member_register" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
+          {% include 'components/csrf-field.twig' %}
           <div class="nc-admin-login-field">
             <label class="nc-admin-login-label" for="full_name">Nome completo</label>
             <input class="nc-admin-login-input" id="full_name" name="full_name" type="text" value="{{ member_register_form.full_name|default('') }}" autocomplete="name" placeholder="Ex: Maria da Silva" required>

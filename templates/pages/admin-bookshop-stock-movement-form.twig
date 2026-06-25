@@ -52,6 +52,7 @@
       </div>
 
       <form class="nc-admin-form" method="post" action="/painel/livraria/movimentacoes/nova?mode={{ bookshop_stock_movement_mode }}" data-bookshop-stock-movement-form data-bookshop-stock-movement-mode="{{ bookshop_stock_movement_mode }}" data-bookshop-options="{{ bookshop_stock_movement_book_options|json_encode|e('html_attr') }}">
+        {% include 'components/csrf-field.twig' %}
         <input type="hidden" name="mode" value="{{ bookshop_stock_movement_form.mode|default(bookshop_stock_movement_mode) }}">
 
         {% if bookshop_stock_movement_mode == 'adjustment' %}

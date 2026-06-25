@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Application\Middleware\CsrfMiddleware;
+use App\Application\Middleware\SessionMiddleware;
+use App\Application\Security\CsrfToken;
 use App\Domain\Agenda\AgendaRepository;
 use App\Domain\Analytics\SiteVisitRepository;
 use App\Domain\Member\MemberAuthRepository;
-use App\Application\Middleware\SessionMiddleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
@@ -106,7 +108,8 @@ return function (App $app) {
             $expires
         );
 
-        $isHttps = str_starts_with(strtolower((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/')), 'https://')
+        $defaultPageUrl = strtolower((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'));
+        $isHttps = str_starts_with($defaultPageUrl, 'https://')
             || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https'
             || (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off');
 
@@ -263,8 +266,11 @@ return function (App $app) {
         }
 
         $currentPath = $stripBasePath($request->getUri()->getPath());
+        $csrfToken = CsrfToken::get();
         $twigEnvironment->addGlobal('base_url', $appBasePath);
         $twigEnvironment->addGlobal('current_path', $currentPath);
+        $twigEnvironment->addGlobal('csrf_token', $csrfToken);
+        $twigEnvironment->addGlobal('csrf_field_name', CsrfToken::fieldName());
         $twigEnvironment->addGlobal('dashboard_user', $dashboardUser);
         $twigEnvironment->addGlobal('dashboard_user_photo_path', $dashboardUserPhotoPath);
         $twigEnvironment->addGlobal('dashboard_is_authenticated', $dashboardIsAuthenticated);
@@ -404,5 +410,6 @@ return function (App $app) {
             ->withoutHeader('Content-Length');
     });
 
+    $app->add(CsrfMiddleware::class);
     $app->add(SessionMiddleware::class);
 };

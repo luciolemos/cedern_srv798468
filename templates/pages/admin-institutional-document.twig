@@ -41,6 +41,7 @@
 
     <article class="nc-card nc-admin-form-card">
       <form class="nc-admin-form" method="post" action="{{ admin_document_form_action|default('/painel') }}">
+        {% include 'components/csrf-field.twig' %}
         <div class="nc-admin-form-grid">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="title">Título público</label>

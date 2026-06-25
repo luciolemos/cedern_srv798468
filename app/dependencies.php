@@ -123,6 +123,10 @@ return function (ContainerBuilder $containerBuilder) {
             $recaptchaVerifier = new RecaptchaVerifier();
             $appRecaptchaEnabled = $recaptchaVerifier->isReady();
             $appRecaptchaSiteKey = $recaptchaVerifier->getSiteKey();
+            $appThemePaletteEnabled = filter_var(
+                trim((string) ($_ENV['APP_ENABLE_THEME_PALETTE'] ?? ($isDevelopment ? 'true' : 'false'))),
+                FILTER_VALIDATE_BOOLEAN
+            );
 
             if ($appDefaultPageTitle === '') {
                 $appDefaultPageTitle = 'CEDE | Centro de Estudos da Doutrina Espírita';
@@ -268,6 +272,8 @@ return function (ContainerBuilder $containerBuilder) {
             $twig->getEnvironment()->addGlobal('app_default_site_name', $appDefaultSiteName);
             $twig->getEnvironment()->addGlobal('app_default_twitter_site', $appDefaultTwitterSite);
             $twig->getEnvironment()->addGlobal('app_asset_version', $appAssetVersion);
+            $twig->getEnvironment()->addGlobal('app_env', $appEnv);
+            $twig->getEnvironment()->addGlobal('app_theme_palette_enabled', $appThemePaletteEnabled);
             $twig->getEnvironment()->addGlobal('app_recaptcha_enabled', $appRecaptchaEnabled);
             $twig->getEnvironment()->addGlobal('app_recaptcha_site_key', $appRecaptchaSiteKey);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);
