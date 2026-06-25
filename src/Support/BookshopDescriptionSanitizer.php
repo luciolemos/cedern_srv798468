@@ -159,7 +159,7 @@ final class BookshopDescriptionSanitizer
 
         while ($element->attributes->length > 0) {
             $attribute = $element->attributes->item(0);
-            if ($attribute === null) {
+            if (!$attribute instanceof \DOMAttr) {
                 break;
             }
 
