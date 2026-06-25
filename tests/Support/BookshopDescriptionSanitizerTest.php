@@ -24,6 +24,26 @@ final class BookshopDescriptionSanitizerTest extends TestCase
         $this->assertNull($result['error']);
     }
 
+    public function testLegacyPlainTextDescriptionIsConvertedIntoParagraphs(): void
+    {
+        $input = <<<'TEXT'
+Em "A Casa do Penhasco", o espírito Antônio Carlos constrói uma narrativa eletrizante que mistura suspense cotidiano com profundas lições doutrinárias. A história gira em torno de uma família comum que, atraída pelo valor excessivamente barato do aluguel, decide se mudar para uma imponente residência isolada, conhecida exatamente como a Casa do Penhasco.  Pouco tempo após a mudança, o lar é tomado por acontecimentos estranhos, inexplicáveis e profundamente assustadores. O alvo principal dessa perseguição invisível e maléfica é o filho do casal. Sem entender a origem dos fenômenos perturbadores que ameaçam a sanidade e a segurança do menino, os pais, em completo desespero, são conduzidos a buscar respostas e auxílio nos fundamentos do Espiritismo.  A partir daí, a obra descortina os bastidores magnéticos da obsessão espiritual e os resgates de vidas passadas, demonstrando como o plano espiritual inferior se aproveita de construções impregnadas de fluidos densos para agir. Acima de tudo, o livro foca no poder da prece, da evangelização e do tratamento mediúnico sério como os únicos caminhos reais para desarmar as forças das sombras e devolver a paz ao ambiente doméstico.
+
+✨ Por que vale a pena ler este romance de Vera Lúcia?Se você gosta de histórias dinâmicas que prendem a atenção do início ao fim com um clima de mistério, mas que não abrem mão do compromisso doutrinário, este livro é uma excelente escolha. O espírito Antônio Carlos possui uma linguagem muito visual e direta, ideal para explicar como funcionam as influências espirituais em nossa própria casa.  "A Casa do Penhasco" funciona como um grande alerta sobre a importância de cuidarmos da atmosfera psíquica do nosso lar através de bons pensamentos e atitudes equilibradas. Uma leitura emocionante, envolvente e repleta de ensinamentos práticos para blindar a nossa família contra as correntes da invigilância!
+TEXT;
+        $result = BookshopDescriptionSanitizer::sanitize($input);
+
+        $this->assertStringContainsString('<p>Em &quot;A Casa do Penhasco&quot;', $result['content']);
+        $this->assertStringContainsString('<p>Pouco tempo após a mudança', $result['content']);
+        $this->assertStringContainsString('<p>A partir daí, a obra descortina', $result['content']);
+        $this->assertStringContainsString('<p>Por que vale a pena ler este romance de Vera Lúcia?</p>', $result['content']);
+        $this->assertStringContainsString('<p>Se você gosta de histórias dinâmicas', $result['content']);
+        $this->assertStringContainsString('<p>&quot;A Casa do Penhasco&quot; funciona como um grande alerta', $result['content']);
+        $this->assertStringContainsString('<p>Uma leitura emocionante, envolvente', $result['content']);
+        $this->assertStringNotContainsString('✨ Por que vale', $result['content']);
+        $this->assertNull($result['error']);
+    }
+
     public function testAllowedHtmlTagsAreKept(): void
     {
         $input = '<p>Bold text: <strong>Important</strong></p>';
