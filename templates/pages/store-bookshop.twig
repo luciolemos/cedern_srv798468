@@ -304,8 +304,8 @@
                     <summary class="nc-bookshop-card-synopsis-summary">
                       <span>Ver sinopse</span>
                     </summary>
-                    <div class="nc-bookshop-card-synopsis-copy">
-                      <p class="nc-library-card-summary">{{ book.description }}</p>
+                    <div class="nc-bookshop-card-synopsis-copy nc-bookshop-synopsis-content">
+                      {{ book.description|raw }}
                     </div>
                   </details>
                 </section>
