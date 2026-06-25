@@ -23,30 +23,11 @@
   <meta name="twitter:description" content="{{ page_description }}">
   <meta name="twitter:image" content="{{ page_image }}">
   <meta name="twitter:site" content="{{ twitter_site }}">
+  {% include 'components/theme-head-config.twig' with { theme_palette_enabled: app_dashboard_theme_palette_enabled|default(true) } %}
   <script>
     (function () {
       try {
         var root = document.documentElement;
-        var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
-        var allowedModes = ['light', 'dark'];
-        var allowedDarkIntensities = ['neutral', 'vivid'];
-
-        var savedTheme = (localStorage.getItem('natalcode_theme') || '').toLowerCase();
-        var savedMode = (localStorage.getItem('natalcode_mode') || '').toLowerCase();
-        var savedDarkIntensity = (localStorage.getItem('natalcode_dark_intensity') || '').toLowerCase();
-
-        if (allowedThemes.indexOf(savedTheme) !== -1) {
-          root.setAttribute('data-theme', savedTheme);
-        }
-
-        if (allowedModes.indexOf(savedMode) !== -1) {
-          root.setAttribute('data-mode', savedMode);
-        }
-
-        if (allowedDarkIntensities.indexOf(savedDarkIntensity) !== -1) {
-          root.setAttribute('data-dark-intensity', savedDarkIntensity);
-        }
-
         var isDesktop = window.matchMedia && window.matchMedia('(min-width: 981px)').matches;
         var savedSidebarCollapsed = localStorage.getItem('natalcode_dashboard_sidebar_collapsed') === '1';
 
@@ -73,8 +54,8 @@
   <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>
   {% block head %}{% endblock %}
 </head>
-<body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}" data-theme-palette="enabled">
+<body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}" data-theme-palette="{{ app_dashboard_theme_palette_enabled|default(true) ? 'enabled' : 'disabled' }}">
   {% block content %}{% endblock %}
-  {% include 'components/theme-palette.twig' %}
+  {% include 'components/theme-palette.twig' with { theme_palette_enabled: app_dashboard_theme_palette_enabled|default(true) } %}
 </body>
 </html>

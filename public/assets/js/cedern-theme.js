@@ -6,12 +6,90 @@ function initCedernTheme() {
   var darkIntensityStorageKey = 'natalcode_dark_intensity';
   var desktopPalettePositionStorageKey = 'natalcode_desktop_palette_position';
   var mobilePalettePositionStorageKey = 'natalcode_mobile_palette_position';
-  var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
-  var allowedModes = ['light', 'dark'];
-  var allowedDarkIntensities = ['neutral', 'vivid'];
+  var themeDefinitions = {
+    amber: { label: 'Amber', ariaLabel: 'Ativar tema âmbar', dotClass: 'nc-dot-amber' },
+    blue: { label: 'Blue', ariaLabel: 'Ativar tema azul', dotClass: 'nc-dot-blue' },
+    green: { label: 'Green', ariaLabel: 'Ativar tema verde', dotClass: 'nc-dot-green' },
+    red: { label: 'Red', ariaLabel: 'Ativar tema vermelho', dotClass: 'nc-dot-red' },
+    violet: { label: 'Violet', ariaLabel: 'Ativar tema violeta', dotClass: 'nc-dot-violet' }
+  };
+  var modeDefinitions = {
+    light: { label: 'Light', ariaLabel: 'Ativar modo claro' },
+    dark: { label: 'Dark', ariaLabel: 'Ativar modo escuro' }
+  };
+  var darkIntensityDefinitions = {
+    neutral: { label: 'Neutral', ariaLabel: 'Ativar escuro neutro' },
+    vivid: { label: 'Vivid', ariaLabel: 'Ativar escuro vívido' }
+  };
+  var runtimeThemeConfig = window.cedernThemeConfig || {};
+  var allowedThemes = resolveAllowedValues(runtimeThemeConfig.allowedThemes, themeDefinitions);
+  var allowedModes = resolveAllowedValues(runtimeThemeConfig.allowedModes, modeDefinitions);
+  var allowedDarkIntensities = resolveAllowedValues(
+    runtimeThemeConfig.allowedDarkIntensities,
+    darkIntensityDefinitions
+  );
+  var themePreferencesEnabled = isThemePaletteEnabled();
 
   function isThemePaletteEnabled() {
     return body && body.getAttribute('data-theme-palette') === 'enabled';
+  }
+
+  function resolveAllowedValues(values, definitions) {
+    var definitionKeys = Object.keys(definitions);
+    if (!Array.isArray(values)) {
+      return definitionKeys;
+    }
+
+    var allowedValues = [];
+
+    values.forEach(function (value) {
+      var normalized = String(value || '').toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(definitions, normalized)) {
+        return;
+      }
+
+      if (allowedValues.indexOf(normalized) !== -1) {
+        return;
+      }
+
+      allowedValues.push(normalized);
+    });
+
+    return allowedValues.length > 0 ? allowedValues : definitionKeys;
+  }
+
+  function hasPaletteControls() {
+    if (allowedThemes.length > 1 || allowedModes.length > 1) {
+      return true;
+    }
+
+    return allowedModes.indexOf('dark') !== -1 && allowedDarkIntensities.length > 1;
+  }
+
+  function buildModeButtons(values, definitions, dataAttribute) {
+    return values.map(function (value) {
+      var definition = definitions[value];
+      if (!definition) {
+        return '';
+      }
+
+      return '<button type="button" class="nc-mode-btn" '
+        + dataAttribute + '="' + value + '" aria-pressed="false" aria-label="'
+        + definition.ariaLabel + '">' + definition.label + '</button>';
+    }).join('');
+  }
+
+  function buildThemeSwatches() {
+    return allowedThemes.map(function (value) {
+      var definition = themeDefinitions[value];
+      if (!definition) {
+        return '';
+      }
+
+      return '<button type="button" class="nc-swatch" data-theme-value="' + value
+        + '" aria-pressed="false" aria-label="' + definition.ariaLabel + '"><span class="nc-swatch-dot '
+        + definition.dotClass + '"></span><span class="nc-swatch-label">' + definition.label + '</span></button>';
+    }).join('');
   }
 
   function ensurePaletteMarkup() {
@@ -24,33 +102,42 @@ function initCedernTheme() {
       return;
     }
 
-    var paletteMarkup = isThemePaletteEnabled()
-      ? '<section class="nc-palette" aria-label="Paleta de cores do site">'
-      + '<button type="button" class="nc-palette-toggle" data-palette-toggle aria-expanded="false" aria-controls="nc-palette-panel"><span class="nc-palette-toggle-label-full">Personalizar cores</span><span class="nc-palette-toggle-label-mobile">Cores</span></button>'
-      + '<div class="nc-palette-panel" id="nc-palette-panel" data-palette-panel hidden>'
-      + '<p class="nc-palette-title">Modo</p>'
-      + '<div class="nc-mode-group" role="group" aria-label="Alternar modo claro e escuro">'
-      + '<button type="button" class="nc-mode-btn" data-mode-value="light" aria-pressed="false" aria-label="Ativar modo claro">Light</button>'
-      + '<button type="button" class="nc-mode-btn" data-mode-value="dark" aria-pressed="false" aria-label="Ativar modo escuro">Dark</button>'
-      + '</div>'
-      + '<div class="nc-intensity-wrap" data-dark-intensity-wrap hidden>'
-      + '<p class="nc-palette-title">Intensidade (modo escuro)</p>'
-      + '<div class="nc-mode-group" role="group" aria-label="Alternar intensidade do modo escuro">'
-      + '<button type="button" class="nc-mode-btn" data-dark-intensity-value="neutral" aria-pressed="false" aria-label="Ativar escuro neutro">Neutral</button>'
-      + '<button type="button" class="nc-mode-btn" data-dark-intensity-value="vivid" aria-pressed="false" aria-label="Ativar escuro vívido">Vivid</button>'
-      + '</div>'
-      + '</div>'
-      + '<p class="nc-palette-title">Paleta de cores</p>'
-      + '<div class="nc-palette-grid">'
-      + '<button type="button" class="nc-swatch" data-theme-value="blue" aria-pressed="false" aria-label="Ativar tema azul"><span class="nc-swatch-dot nc-dot-blue"></span><span class="nc-swatch-label">Blue</span></button>'
-      + '<button type="button" class="nc-swatch" data-theme-value="red" aria-pressed="false" aria-label="Ativar tema vermelho"><span class="nc-swatch-dot nc-dot-red"></span><span class="nc-swatch-label">Red</span></button>'
-      + '<button type="button" class="nc-swatch" data-theme-value="green" aria-pressed="false" aria-label="Ativar tema verde"><span class="nc-swatch-dot nc-dot-green"></span><span class="nc-swatch-label">Green</span></button>'
-      + '<button type="button" class="nc-swatch" data-theme-value="violet" aria-pressed="false" aria-label="Ativar tema violeta"><span class="nc-swatch-dot nc-dot-violet"></span><span class="nc-swatch-label">Violet</span></button>'
-      + '<button type="button" class="nc-swatch" data-theme-value="amber" aria-pressed="false" aria-label="Ativar tema âmbar"><span class="nc-swatch-dot nc-dot-amber"></span><span class="nc-swatch-label">Amber</span></button>'
-      + '</div>'
-      + '</div>'
-      + '</section>'
-      : '';
+    var paletteMarkup = '';
+    if (isThemePaletteEnabled() && hasPaletteControls()) {
+      var paletteSections = '';
+
+      if (allowedModes.length > 1) {
+        paletteSections += '<p class="nc-palette-title">Modo</p>'
+          + '<div class="nc-mode-group" role="group" aria-label="Alternar modo claro e escuro">'
+          + buildModeButtons(allowedModes, modeDefinitions, 'data-mode-value')
+          + '</div>';
+      }
+
+      if (allowedModes.indexOf('dark') !== -1 && allowedDarkIntensities.length > 1) {
+        paletteSections += '<div class="nc-intensity-wrap" data-dark-intensity-wrap hidden>'
+          + '<p class="nc-palette-title">Intensidade (modo escuro)</p>'
+          + '<div class="nc-mode-group" role="group" aria-label="Alternar intensidade do modo escuro">'
+          + buildModeButtons(allowedDarkIntensities, darkIntensityDefinitions, 'data-dark-intensity-value')
+          + '</div>'
+          + '</div>';
+      }
+
+      if (allowedThemes.length > 1) {
+        paletteSections += '<p class="nc-palette-title">Paleta de cores</p>'
+          + '<div class="nc-palette-grid">'
+          + buildThemeSwatches()
+          + '</div>';
+      }
+
+      if (paletteSections !== '') {
+        paletteMarkup = '<section class="nc-palette" aria-label="Paleta de cores do site">'
+          + '<button type="button" class="nc-palette-toggle" data-palette-toggle aria-expanded="false" aria-controls="nc-palette-panel"><span class="nc-palette-toggle-label-full">Personalizar cores</span><span class="nc-palette-toggle-label-mobile">Cores</span></button>'
+          + '<div class="nc-palette-panel" id="nc-palette-panel" data-palette-panel hidden>'
+          + paletteSections
+          + '</div>'
+          + '</section>';
+      }
+    }
 
     var utilityMarkup =
       '<aside class="nc-utility-stack" data-utility-stack data-scroll-threshold-mobile="110" data-scroll-threshold-desktop="260" aria-label="Ferramentas de interface">'
@@ -357,7 +444,7 @@ function initCedernTheme() {
 
   var defaultTheme = getBodyDefault('data-default-theme', allowedThemes, 'amber');
   var rootTheme = getRootValue('data-theme', allowedThemes, '');
-  var savedTheme = (localStorage.getItem(themeStorageKey) || '').toLowerCase();
+  var savedTheme = themePreferencesEnabled ? (localStorage.getItem(themeStorageKey) || '').toLowerCase() : '';
   var initialTheme = rootTheme || (allowedThemes.indexOf(savedTheme) !== -1 ? savedTheme : defaultTheme);
   applyTheme(initialTheme);
 
@@ -365,13 +452,13 @@ function initCedernTheme() {
   var rootMode = getRootValue('data-mode', allowedModes, '');
   var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   var fallbackMode = defaultMode || (prefersDark ? 'dark' : 'light');
-  var savedMode = (localStorage.getItem(modeStorageKey) || '').toLowerCase();
+  var savedMode = themePreferencesEnabled ? (localStorage.getItem(modeStorageKey) || '').toLowerCase() : '';
   var initialMode = rootMode || (allowedModes.indexOf(savedMode) !== -1 ? savedMode : fallbackMode);
   applyMode(initialMode);
 
   var defaultDarkIntensity = getBodyDefault('data-default-dark-intensity', allowedDarkIntensities, 'neutral');
   var rootDarkIntensity = getRootValue('data-dark-intensity', allowedDarkIntensities, '');
-  var savedIntensity = (localStorage.getItem(darkIntensityStorageKey) || '').toLowerCase();
+  var savedIntensity = themePreferencesEnabled ? (localStorage.getItem(darkIntensityStorageKey) || '').toLowerCase() : '';
   var initialIntensity = rootDarkIntensity || (allowedDarkIntensities.indexOf(savedIntensity) !== -1 ? savedIntensity : defaultDarkIntensity);
   applyDarkIntensity(initialIntensity);
   setPanelState(false);
