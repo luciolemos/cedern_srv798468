@@ -1,3 +1,12 @@
+{% set theme_palette_enabled = theme_palette_enabled|default(false) %}
+{% set theme_options = app_theme_options|default([]) %}
+{% set mode_options = app_mode_options|default([]) %}
+{% set dark_intensity_options = app_dark_intensity_options|default([]) %}
+{% set allowed_modes = app_theme_allowed_modes|default([]) %}
+{% set has_mode_controls = theme_palette_enabled and mode_options|length > 1 %}
+{% set has_dark_intensity_controls = theme_palette_enabled and ('dark' in allowed_modes) and dark_intensity_options|length > 1 %}
+{% set has_theme_controls = theme_palette_enabled and theme_options|length > 1 %}
+{% set has_palette_controls = has_mode_controls or has_dark_intensity_controls or has_theme_controls %}
 <aside
   class="nc-utility-stack"
   data-utility-stack
@@ -9,6 +18,7 @@
     ↑
   </button>
 
+  {% if has_palette_controls %}
   <section class="nc-palette" aria-label="Paleta de cores do site">
     <button type="button" class="nc-palette-toggle" data-palette-toggle aria-expanded="false" aria-controls="nc-palette-panel">
       <span class="nc-palette-toggle-label-full">Personalizar cores</span>
@@ -16,51 +26,42 @@
     </button>
 
     <div class="nc-palette-panel" id="nc-palette-panel" data-palette-panel hidden>
+      {% if has_mode_controls %}
       <p class="nc-palette-title">Modo</p>
       <div class="nc-mode-group" role="group" aria-label="Alternar modo claro e escuro">
-        <button type="button" class="nc-mode-btn" data-mode-value="light" aria-pressed="false" aria-label="Ativar modo claro">
-          Light
-        </button>
-        <button type="button" class="nc-mode-btn" data-mode-value="dark" aria-pressed="false" aria-label="Ativar modo escuro">
-          Dark
-        </button>
+        {% for mode_option in mode_options %}
+          <button type="button" class="nc-mode-btn" data-mode-value="{{ mode_option.value }}" aria-pressed="false" aria-label="{{ mode_option.aria_label }}">
+            {{ mode_option.label }}
+          </button>
+        {% endfor %}
       </div>
+      {% endif %}
 
+      {% if has_dark_intensity_controls %}
       <div class="nc-intensity-wrap" data-dark-intensity-wrap hidden>
         <p class="nc-palette-title">Intensidade (modo escuro)</p>
         <div class="nc-mode-group" role="group" aria-label="Alternar intensidade do modo escuro">
-          <button type="button" class="nc-mode-btn" data-dark-intensity-value="neutral" aria-pressed="false" aria-label="Ativar escuro neutro">
-            Neutral
-          </button>
-          <button type="button" class="nc-mode-btn" data-dark-intensity-value="vivid" aria-pressed="false" aria-label="Ativar escuro vívido">
-            Vivid
-          </button>
+          {% for intensity_option in dark_intensity_options %}
+            <button type="button" class="nc-mode-btn" data-dark-intensity-value="{{ intensity_option.value }}" aria-pressed="false" aria-label="{{ intensity_option.aria_label }}">
+              {{ intensity_option.label }}
+            </button>
+          {% endfor %}
         </div>
       </div>
+      {% endif %}
 
+      {% if has_theme_controls %}
       <p class="nc-palette-title">Paleta de cores</p>
       <div class="nc-palette-grid">
-        <button type="button" class="nc-swatch" data-theme-value="blue" aria-pressed="false" aria-label="Ativar tema azul">
-          <span class="nc-swatch-dot nc-dot-blue"></span>
-          <span class="nc-swatch-label">Blue</span>
-        </button>
-        <button type="button" class="nc-swatch" data-theme-value="red" aria-pressed="false" aria-label="Ativar tema vermelho">
-          <span class="nc-swatch-dot nc-dot-red"></span>
-          <span class="nc-swatch-label">Red</span>
-        </button>
-        <button type="button" class="nc-swatch" data-theme-value="green" aria-pressed="false" aria-label="Ativar tema verde">
-          <span class="nc-swatch-dot nc-dot-green"></span>
-          <span class="nc-swatch-label">Green</span>
-        </button>
-        <button type="button" class="nc-swatch" data-theme-value="violet" aria-pressed="false" aria-label="Ativar tema violeta">
-          <span class="nc-swatch-dot nc-dot-violet"></span>
-          <span class="nc-swatch-label">Violet</span>
-        </button>
-        <button type="button" class="nc-swatch" data-theme-value="amber" aria-pressed="false" aria-label="Ativar tema âmbar">
-          <span class="nc-swatch-dot nc-dot-amber"></span>
-          <span class="nc-swatch-label">Amber</span>
-        </button>
+        {% for theme_option in theme_options %}
+          <button type="button" class="nc-swatch" data-theme-value="{{ theme_option.value }}" aria-pressed="false" aria-label="{{ theme_option.aria_label }}">
+            <span class="nc-swatch-dot {{ theme_option.swatch_dot_class|default('') }}"></span>
+            <span class="nc-swatch-label">{{ theme_option.label }}</span>
+          </button>
+        {% endfor %}
       </div>
+      {% endif %}
     </div>
   </section>
+  {% endif %}
 </aside>

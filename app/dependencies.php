@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Settings\SettingsInterface;
 use App\Application\Security\RecaptchaVerifier;
+use App\Support\ThemeConfig;
 use DI\ContainerBuilder;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -90,30 +91,6 @@ return function (ContainerBuilder $containerBuilder) {
                 'cache' => $twigCache,
             ]);
 
-            $uiDefaults = [
-                'APP_DEFAULT_THEME' => [
-                    'default' => 'amber',
-                    'allowed' => ['blue', 'red', 'green', 'violet', 'amber'],
-                ],
-                'APP_DEFAULT_MODE' => [
-                    'default' => 'light',
-                    'allowed' => ['light', 'dark'],
-                ],
-                'APP_DEFAULT_DARK_INTENSITY' => [
-                    'default' => 'neutral',
-                    'allowed' => ['neutral', 'vivid'],
-                ],
-            ];
-
-            $resolveEnvChoice = static function (string $key, array $defaults): string {
-                $config = $defaults[$key] ?? ['default' => '', 'allowed' => []];
-                $value = strtolower(trim((string) ($_ENV[$key] ?? $config['default'])));
-
-                return in_array($value, $config['allowed'], true)
-                    ? $value
-                    : $config['default'];
-            };
-
             $appDefaultPageTitle = trim((string) ($_ENV['APP_DEFAULT_PAGE_TITLE'] ?? 'CEDE | Centro de Estudos da Doutrina Espírita'));
             $appDefaultPageDescription = trim((string) ($_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.'));
             $appDefaultPageUrl = trim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'));
@@ -123,10 +100,7 @@ return function (ContainerBuilder $containerBuilder) {
             $recaptchaVerifier = new RecaptchaVerifier();
             $appRecaptchaEnabled = $recaptchaVerifier->isReady();
             $appRecaptchaSiteKey = $recaptchaVerifier->getSiteKey();
-            $appThemePaletteEnabled = filter_var(
-                trim((string) ($_ENV['APP_ENABLE_THEME_PALETTE'] ?? ($isDevelopment ? 'true' : 'false'))),
-                FILTER_VALIDATE_BOOLEAN
-            );
+            $themeConfig = ThemeConfig::resolve($_ENV);
 
             if ($appDefaultPageTitle === '') {
                 $appDefaultPageTitle = 'CEDE | Centro de Estudos da Doutrina Espírita';
@@ -152,9 +126,9 @@ return function (ContainerBuilder $containerBuilder) {
                 $appDefaultTwitterSite = '@cedeoficialrn';
             }
 
-            $defaultTheme = $resolveEnvChoice('APP_DEFAULT_THEME', $uiDefaults);
-            $defaultMode = $resolveEnvChoice('APP_DEFAULT_MODE', $uiDefaults);
-            $defaultDarkIntensity = $resolveEnvChoice('APP_DEFAULT_DARK_INTENSITY', $uiDefaults);
+            $defaultTheme = $themeConfig['default_theme'];
+            $defaultMode = $themeConfig['default_mode'];
+            $defaultDarkIntensity = $themeConfig['default_dark_intensity'];
             $homeContent = require __DIR__ . '/content/home.php';
             $navigationContent = require __DIR__ . '/content/navigation.php';
             $siteContent = require __DIR__ . '/content/site.php';
@@ -273,7 +247,14 @@ return function (ContainerBuilder $containerBuilder) {
             $twig->getEnvironment()->addGlobal('app_default_twitter_site', $appDefaultTwitterSite);
             $twig->getEnvironment()->addGlobal('app_asset_version', $appAssetVersion);
             $twig->getEnvironment()->addGlobal('app_env', $appEnv);
-            $twig->getEnvironment()->addGlobal('app_theme_palette_enabled', $appThemePaletteEnabled);
+            $twig->getEnvironment()->addGlobal('app_theme_palette_enabled', $themeConfig['theme_palette_enabled']);
+            $twig->getEnvironment()->addGlobal('app_dashboard_theme_palette_enabled', $themeConfig['dashboard_theme_palette_enabled']);
+            $twig->getEnvironment()->addGlobal('app_theme_allowed_themes', $themeConfig['allowed_themes']);
+            $twig->getEnvironment()->addGlobal('app_theme_allowed_modes', $themeConfig['allowed_modes']);
+            $twig->getEnvironment()->addGlobal('app_theme_allowed_dark_intensities', $themeConfig['allowed_dark_intensities']);
+            $twig->getEnvironment()->addGlobal('app_theme_options', $themeConfig['theme_options']);
+            $twig->getEnvironment()->addGlobal('app_mode_options', $themeConfig['mode_options']);
+            $twig->getEnvironment()->addGlobal('app_dark_intensity_options', $themeConfig['dark_intensity_options']);
             $twig->getEnvironment()->addGlobal('app_recaptcha_enabled', $appRecaptchaEnabled);
             $twig->getEnvironment()->addGlobal('app_recaptcha_site_key', $appRecaptchaSiteKey);
             $twig->getEnvironment()->addGlobal('default_theme', $defaultTheme);

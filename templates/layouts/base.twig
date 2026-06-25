@@ -23,33 +23,7 @@
   <meta name="twitter:description" content="{{ page_description }}">
   <meta name="twitter:image" content="{{ page_image }}">
   <meta name="twitter:site" content="{{ twitter_site }}">
-  <script>
-    (function () {
-      try {
-        var root = document.documentElement;
-        var allowedThemes = ['blue', 'red', 'green', 'violet', 'amber'];
-        var allowedModes = ['light', 'dark'];
-        var allowedDarkIntensities = ['neutral', 'vivid'];
-
-        var savedTheme = (localStorage.getItem('natalcode_theme') || '').toLowerCase();
-        var savedMode = (localStorage.getItem('natalcode_mode') || '').toLowerCase();
-        var savedDarkIntensity = (localStorage.getItem('natalcode_dark_intensity') || '').toLowerCase();
-
-        if (allowedThemes.indexOf(savedTheme) !== -1) {
-          root.setAttribute('data-theme', savedTheme);
-        }
-
-        if (allowedModes.indexOf(savedMode) !== -1) {
-          root.setAttribute('data-mode', savedMode);
-        }
-
-        if (allowedDarkIntensities.indexOf(savedDarkIntensity) !== -1) {
-          root.setAttribute('data-dark-intensity', savedDarkIntensity);
-        }
-      } catch (error) {
-      }
-    })();
-  </script>
+  {% include 'components/theme-head-config.twig' with { theme_palette_enabled: app_theme_palette_enabled|default(false) } %}
   {% set google_fonts_href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap' %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +52,7 @@
     </div>
     {% include 'components/footer.twig' %}
   </div>
+  {% include 'components/theme-palette.twig' with { theme_palette_enabled: app_theme_palette_enabled|default(false) } %}
   {# <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script> #}
   {# <script src="/assets/js/aos-init.js" defer></script> #}
 </body>

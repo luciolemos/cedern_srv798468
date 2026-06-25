@@ -1,0 +1,43 @@
+{% set theme_palette_enabled = theme_palette_enabled|default(false) %}
+{% set allowed_themes = app_theme_allowed_themes|default(['amber']) %}
+{% set allowed_modes = app_theme_allowed_modes|default(['light']) %}
+{% set allowed_dark_intensities = app_theme_allowed_dark_intensities|default(['neutral']) %}
+<script>
+  window.cedernThemeConfig = {
+    allowedThemes: {{ allowed_themes|json_encode|raw }},
+    allowedModes: {{ allowed_modes|json_encode|raw }},
+    allowedDarkIntensities: {{ allowed_dark_intensities|json_encode|raw }}
+  };
+
+  (function () {
+    try {
+      var themePaletteEnabled = {{ theme_palette_enabled ? 'true' : 'false' }};
+      if (!themePaletteEnabled) {
+        return;
+      }
+
+      var root = document.documentElement;
+      var themeConfig = window.cedernThemeConfig || {};
+      var allowedThemes = Array.isArray(themeConfig.allowedThemes) ? themeConfig.allowedThemes : ['amber'];
+      var allowedModes = Array.isArray(themeConfig.allowedModes) ? themeConfig.allowedModes : ['light'];
+      var allowedDarkIntensities = Array.isArray(themeConfig.allowedDarkIntensities) ? themeConfig.allowedDarkIntensities : ['neutral'];
+
+      var savedTheme = (localStorage.getItem('natalcode_theme') || '').toLowerCase();
+      var savedMode = (localStorage.getItem('natalcode_mode') || '').toLowerCase();
+      var savedDarkIntensity = (localStorage.getItem('natalcode_dark_intensity') || '').toLowerCase();
+
+      if (allowedThemes.indexOf(savedTheme) !== -1) {
+        root.setAttribute('data-theme', savedTheme);
+      }
+
+      if (allowedModes.indexOf(savedMode) !== -1) {
+        root.setAttribute('data-mode', savedMode);
+      }
+
+      if (allowedDarkIntensities.indexOf(savedDarkIntensity) !== -1) {
+        root.setAttribute('data-dark-intensity', savedDarkIntensity);
+      }
+    } catch (error) {
+    }
+  })();
+</script>
