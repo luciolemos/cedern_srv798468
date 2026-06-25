@@ -122,6 +122,7 @@
                     <span class="nc-sr-only">Editar</span>
                   </a>
                   <form method="post" action="/painel/livraria/categorias/{{ category.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status desta categoria doutrinária?');">
+                    {% include 'components/csrf-field.twig' %}
                     <button class="nc-btn nc-btn-secondary nc-btn-icon {{ category.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ category.is_active ? 'Inativar' : 'Ativar' }} categoria doutrinária {{ category.name }}" title="{{ category.is_active ? 'Inativar' : 'Ativar' }}">
                       {% if category.is_active %}
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

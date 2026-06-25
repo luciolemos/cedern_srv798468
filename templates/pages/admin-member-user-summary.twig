@@ -102,6 +102,7 @@
         <p class="nc-member-subtitle">Apenas os campos administrativos podem ser alterados pelo painel.</p>
 
         <form class="nc-admin-login-form" method="post" action="/painel/usuarios/{{ summary_user.id }}/atribuir-papel">
+          {% include 'components/csrf-field.twig' %}
           <input type="hidden" name="redirect_to" value="/painel/usuarios">
 
           <div class="nc-admin-login-field">

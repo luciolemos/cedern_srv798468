@@ -124,6 +124,7 @@
                     <span class="nc-sr-only">Editar</span>
                   </a>
                   <form method="post" action="/painel/livraria/generos/{{ genre.id }}/alternar-status" onsubmit="return confirm('Deseja alterar o status deste gênero literário?');">
+                    {% include 'components/csrf-field.twig' %}
                     <button class="nc-btn nc-btn-secondary nc-btn-icon {{ genre.is_active ? 'nc-admin-action-delete' : 'nc-admin-action-open' }}" type="submit" aria-label="{{ genre.is_active ? 'Inativar' : 'Ativar' }} gênero literário {{ genre.name }}" title="{{ genre.is_active ? 'Inativar' : 'Ativar' }}">
                       {% if genre.is_active %}
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

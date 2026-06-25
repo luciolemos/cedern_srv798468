@@ -42,6 +42,7 @@ const initCedernNav = () => {
   const setState = (open) => {
     const isDesktop = desktopQuery.matches;
     const expanded = isDesktop ? true : open;
+    const body = document.body;
 
     toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
     toggle.setAttribute("aria-label", expanded ? "Fechar menu" : "Abrir menu");
@@ -54,6 +55,10 @@ const initCedernNav = () => {
       nav.classList.add("is-open");
     } else {
       nav.classList.remove("is-open");
+    }
+
+    if (body) {
+      body.classList.toggle("is-nav-open", expanded && !isDesktop);
     }
   };
 

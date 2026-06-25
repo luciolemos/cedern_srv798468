@@ -36,6 +36,7 @@
 
     <div class="nc-admin-form-shell">
       <form class="nc-admin-form" method="post" action="/painel/livraria/vendas/nova" data-bookshop-sale-builder data-bookshop-options="{{ bookshop_sale_book_options|json_encode|e('html_attr') }}">
+        {% include 'components/csrf-field.twig' %}
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sold_at">Data e hora</label>

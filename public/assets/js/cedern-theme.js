@@ -10,6 +10,10 @@ function initCedernTheme() {
   var allowedModes = ['light', 'dark'];
   var allowedDarkIntensities = ['neutral', 'vivid'];
 
+  function isThemePaletteEnabled() {
+    return body && body.getAttribute('data-theme-palette') === 'enabled';
+  }
+
   function ensurePaletteMarkup() {
     if (document.querySelector('[data-utility-stack]')) {
       return;
@@ -20,10 +24,8 @@ function initCedernTheme() {
       return;
     }
 
-    var utilityMarkup =
-      '<aside class="nc-utility-stack" data-utility-stack data-scroll-threshold-mobile="110" data-scroll-threshold-desktop="260" aria-label="Ferramentas de interface">'
-      + '<button type="button" class="nc-scroll-top" data-scroll-top aria-label="Voltar ao topo" hidden>↑</button>'
-      + '<section class="nc-palette" aria-label="Paleta de cores do site">'
+    var paletteMarkup = isThemePaletteEnabled()
+      ? '<section class="nc-palette" aria-label="Paleta de cores do site">'
       + '<button type="button" class="nc-palette-toggle" data-palette-toggle aria-expanded="false" aria-controls="nc-palette-panel"><span class="nc-palette-toggle-label-full">Personalizar cores</span><span class="nc-palette-toggle-label-mobile">Cores</span></button>'
       + '<div class="nc-palette-panel" id="nc-palette-panel" data-palette-panel hidden>'
       + '<p class="nc-palette-title">Modo</p>'
@@ -48,6 +50,12 @@ function initCedernTheme() {
       + '</div>'
       + '</div>'
       + '</section>'
+      : '';
+
+    var utilityMarkup =
+      '<aside class="nc-utility-stack" data-utility-stack data-scroll-threshold-mobile="110" data-scroll-threshold-desktop="260" aria-label="Ferramentas de interface">'
+      + '<button type="button" class="nc-scroll-top" data-scroll-top aria-label="Voltar ao topo" hidden>↑</button>'
+      + paletteMarkup
       + '</aside>';
 
     var footerNode = shell.querySelector('.nc-footer');
@@ -143,7 +151,7 @@ function initCedernTheme() {
   }
 
   function syncPalettePosition() {
-    if (!utilityStack) {
+    if (!utilityStack || !paletteToggle) {
       return;
     }
 

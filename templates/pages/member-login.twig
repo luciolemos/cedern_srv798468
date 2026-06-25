@@ -14,6 +14,7 @@
       {% include 'components/section-header.twig' with {
         kicker: 'Acesso',
         title: 'Acessar área do membro',
+        heading_level: 1,
         lead: 'Use seu e-mail e senha para acessar sua área de membro.'
       } %}
 
@@ -27,6 +28,7 @@
         {% endif %}
 
         <form class="nc-admin-login-form" method="post" action="/entrar"{% if app_recaptcha_enabled %} data-recaptcha-action="member_login" data-recaptcha-site-key="{{ app_recaptcha_site_key }}"{% endif %}>
+          {% include 'components/csrf-field.twig' %}
           <input type="hidden" name="redirect_to" value="{{ member_login_redirect_to|default('/membro') }}">
 
           <div class="nc-admin-login-field">

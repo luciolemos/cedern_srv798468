@@ -52,6 +52,7 @@
       {% endif %}
 
       <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="{{ bookshop_book_form_is_edit ? '/painel/livraria/acervo/' ~ bookshop_book_id ~ '/editar' : '/painel/livraria/acervo/novo' }}" data-bookshop-cover-preview-form>
+        {% include 'components/csrf-field.twig' %}
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-header">
           <div class="nc-admin-form-field">
             <label class="nc-admin-form-label" for="sku">SKU <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>

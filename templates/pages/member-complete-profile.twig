@@ -48,6 +48,7 @@
           {% endif %}
 
           <form class="nc-admin-login-form nc-member-profile-form" method="post" action="/membro/perfil/completar" enctype="multipart/form-data">
+            {% include 'components/csrf-field.twig' %}
             <input type="hidden" name="redirect_to" value="{{ member_profile_redirect_to|default('/membro') }}">
 
             <div class="nc-member-photo-field">
