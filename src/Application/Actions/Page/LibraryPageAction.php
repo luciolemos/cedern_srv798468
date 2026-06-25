@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Page;
 
 use App\Domain\Library\LibraryRepository;
+use App\Support\BookshopDescriptionSanitizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -124,6 +125,13 @@ class LibraryPageAction extends AbstractPageAction
         $currentPage = min($currentPage, $totalPages);
         $offset = ($currentPage - 1) * $pageSize;
         $books = array_slice($books, $offset, $pageSize);
+        $books = array_map(static function (array $book): array {
+            $book['description'] = BookshopDescriptionSanitizer::sanitizeForDisplay(
+                (string) ($book['description'] ?? '')
+            );
+
+            return $book;
+        }, $books);
 
         $startItem = $totalBooks > 0 ? $offset + 1 : 0;
         $endItem = $totalBooks > 0 ? min($offset + count($books), $totalBooks) : 0;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Admin;
 
+use App\Support\BookshopDescriptionSanitizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -30,6 +31,8 @@ class AdminBookshopBookViewPageAction extends AbstractAdminBookshopAction
 
             return $response->withHeader('Location', '/painel/livraria/acervo')->withStatus(303);
         }
+
+        $book['description'] = BookshopDescriptionSanitizer::sanitizeForDisplay((string) ($book['description'] ?? ''));
 
         return $this->renderPage($response, 'pages/admin-bookshop-book-view.twig', [
             'bookshop_book' => $book,

@@ -319,7 +319,9 @@
                   {% if book.description|default('') %}
                     <article class="nc-knowledge-details-card is-full">
                       <h4 class="nc-knowledge-details-title">Sinopse</h4>
-                      <p class="nc-knowledge-details-copy">{{ book.description }}</p>
+                      <div class="nc-knowledge-details-copy nc-bookshop-synopsis-content">
+                        {{ book.description|raw }}
+                      </div>
                     </article>
                   {% endif %}
                 </div>

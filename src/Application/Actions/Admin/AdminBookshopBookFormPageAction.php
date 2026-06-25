@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Admin;
 
 use App\Support\BookshopTextNormalizer;
+use App\Support\BookshopDescriptionSanitizer;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UploadedFileInterface;
@@ -256,6 +257,7 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             'page_count' => ctype_digit($pageCount) ? (int) $pageCount : null,
             'language' => $this->normalizeBookshopLanguage($input['language'] ?? ''),
             'description' => trim((string) ($input['description'] ?? '')),
+            'description_sanitization_error' => null,
             'cost_price' => $this->normalizeMoneyInput($input['cost_price'] ?? '0'),
             'sale_price' => $this->normalizeMoneyInput($input['sale_price'] ?? '0'),
             'stock_quantity' => max(0, $this->normalizeIntegerInput($input['stock_quantity'] ?? 0, 0)),
@@ -273,9 +275,19 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
      * @param array<string, mixed> $payload
      * @return array<int, string>
      */
-    private function validatePayload(array $payload): array
+    private function validatePayload(array &$payload): array
     {
         $errors = [];
+
+        $descriptionRaw = (string) ($payload['description'] ?? '');
+        if ($descriptionRaw !== '') {
+            $sanitizationResult = BookshopDescriptionSanitizer::sanitize($descriptionRaw);
+            if ($sanitizationResult['error'] !== null) {
+                $errors[] = $sanitizationResult['error'];
+            } else {
+                $payload['description'] = $sanitizationResult['content'];
+            }
+        }
 
         if ((string) ($payload['sku'] ?? '') === '') {
             $errors[] = 'SKU é obrigatório.';
@@ -447,7 +459,9 @@ class AdminBookshopBookFormPageAction extends AbstractAdminBookshopAction
             'language' => array_key_exists('language', $submittedPayload)
                 ? $this->normalizeBookshopLanguage($submittedPayload['language'] ?? '')
                 : $this->normalizeBookshopLanguage($existingBook['language'] ?? ''),
-            'description' => $submittedPayload['description'] ?? ($existingBook['description'] ?? ''),
+            'description' => BookshopDescriptionSanitizer::sanitizeForDisplay(
+                (string) ($submittedPayload['description'] ?? ($existingBook['description'] ?? ''))
+            ),
             'cost_price' => array_key_exists('cost_price', $submittedPayload)
                 ? $this->normalizeMoneyInput($submittedPayload['cost_price'] ?? '0')
                 : $this->normalizeMoneyInput($existingBook['cost_price'] ?? '0'),

@@ -5,7 +5,9 @@
 {% set dashboard_page_lead = 'Cadastre o título, envie opcionalmente a capa e controle o estoque somente pelas movimentações da livraria.' %}
 
 {% block head %}
+  <link href="/assets/css/cedern-bookshop-description-editor.css?v={{ app_asset_version|default('1') }}" rel="stylesheet">
   <script src="/assets/js/cedern-bookshop-cover-preview.js?v={{ app_asset_version|default('1') }}" defer></script>
+  <script src="/assets/js/cedern-bookshop-description-editor.js?v={{ app_asset_version|default('1') }}" defer></script>
 {% endblock %}
 
 {% block admin_content %}
@@ -187,7 +189,12 @@
 
         <div class="nc-admin-form-field nc-admin-form-field-full">
           <label class="nc-admin-form-label" for="description">SINOPSE</label>
-          <textarea class="nc-admin-form-input" id="description" name="description" rows="5" placeholder="Sinopse curta da obra para identificação interna e apoio ao atendimento.">{{ bookshop_book_form.description|default('') }}</textarea>
+          <div class="nc-admin-form-help-text">{{ 5000 }} caracteres máximo. Tags permitidas: &lt;p&gt;, &lt;br&gt;, &lt;strong&gt;, &lt;b&gt;, &lt;em&gt;, &lt;i&gt;, &lt;u&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, &lt;blockquote&gt;, &lt;a&gt;</div>
+          <div id="description-editor" class="nc-admin-form-wysiwyg-editor" data-initial-content="{{ bookshop_book_form.description|default('')|escape('html') }}" data-placeholder="Sinopse curta da obra para identificação interna e apoio ao atendimento."></div>
+          <input type="hidden" id="description" name="description" value="{{ bookshop_book_form.description|default('')|escape('html') }}">
+          <div class="nc-admin-form-char-count">
+            <span class="nc-char-count-display">0</span> / 5000
+          </div>
         </div>
 
         <div class="nc-admin-form-grid">
