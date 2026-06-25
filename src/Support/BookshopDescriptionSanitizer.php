@@ -9,6 +9,17 @@ final class BookshopDescriptionSanitizer
     private const MAX_DESCRIPTION_LENGTH = 5000;
 
     /**
+     * @var list<string>
+     */
+    private const PLAIN_TEXT_PARAGRAPH_CUES = [
+        'Pouco tempo',
+        'A partir daí',
+        'Por que vale',
+        'Se você',
+        'Uma leitura',
+    ];
+
+    /**
      * @var array<string, true>
      */
     private const ALLOWED_TAGS = [
@@ -91,7 +102,83 @@ final class BookshopDescriptionSanitizer
             return '';
         }
 
+        if (!self::looksLikeHtml($trimmed)) {
+            return self::formatPlainText($trimmed);
+        }
+
         return trim(self::sanitizeHtml($trimmed));
+    }
+
+    private static function looksLikeHtml(string $content): bool
+    {
+        return preg_match('/<\/?[a-z][^>]*>/i', $content) === 1;
+    }
+
+    private static function formatPlainText(string $content): string
+    {
+        $normalized = str_replace(["\r\n", "\r"], "\n", $content);
+        $normalized = preg_replace('/\x{00A0}/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace("/[ \t]+\n/u", "\n", $normalized) ?? $normalized;
+        $normalized = preg_replace("/\n[ \t]+/u", "\n", $normalized) ?? $normalized;
+        $normalized = self::insertParagraphBreaks($normalized);
+        $normalized = trim($normalized);
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        $paragraphs = preg_split("/\n{2,}/u", $normalized) ?: [];
+        $paragraphs = array_values(array_filter(array_map(static function (string $paragraph): string {
+            $paragraph = trim(preg_replace('/[ \t]{2,}/u', ' ', $paragraph) ?? $paragraph);
+
+            return $paragraph;
+        }, $paragraphs), static fn (string $paragraph): bool => $paragraph !== ''));
+
+        if ($paragraphs === []) {
+            return '';
+        }
+
+        if (count($paragraphs) === 1 && !str_contains($paragraphs[0], "\n")) {
+            return htmlspecialchars($paragraphs[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        }
+
+        $htmlParagraphs = array_map(static function (string $paragraph): string {
+            $escaped = htmlspecialchars($paragraph, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            $escaped = str_replace("\n", '<br>', $escaped);
+
+            return '<p>' . $escaped . '</p>';
+        }, $paragraphs);
+
+        return implode('', $htmlParagraphs);
+    }
+
+    private static function insertParagraphBreaks(string $content): string
+    {
+        $normalized = preg_replace(
+            '/([.!?]) {2,}(?=(?:"|“|[[:upper:]]|✨))/u',
+            "$1\n\n",
+            $content
+        ) ?? $content;
+
+        $normalized = preg_replace('/\s*✨\s*(?=Por que vale)/u', "\n\n", $normalized) ?? $normalized;
+        $normalized = preg_replace(
+            '/([.!?])\s*(?=(?:"|“)[[:upper:]])/u',
+            "$1\n\n",
+            $normalized
+        ) ?? $normalized;
+
+        $cuePattern = implode('|', array_map(
+            static fn (string $cue): string => preg_quote($cue, '/'),
+            self::PLAIN_TEXT_PARAGRAPH_CUES
+        ));
+
+        $normalized = preg_replace(
+            '/([.!?])\s*(?=(?:' . $cuePattern . '))/u',
+            "$1\n\n",
+            $normalized
+        ) ?? $normalized;
+
+        return preg_replace("/(?:\n{2,}){2,}/u", "\n\n", $normalized) ?? $normalized;
     }
 
     private static function sanitizeHtml(string $html): string
