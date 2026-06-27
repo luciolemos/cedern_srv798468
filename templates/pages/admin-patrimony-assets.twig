@@ -240,6 +240,7 @@
         <table class="nc-admin-table">
           <thead>
             <tr>
+              <th>Foto</th>
               <th><a class="nc-admin-sort-link{% if sort_links.asset_code.active %} is-active{% endif %}" href="{{ sort_links.asset_code.url }}">Código <span aria-hidden="true">{{ sort_links.asset_code.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.name.active %} is-active{% endif %}" href="{{ sort_links.name.url }}">Bem <span aria-hidden="true">{{ sort_links.name.indicator }}</span></a></th>
               <th><a class="nc-admin-sort-link{% if sort_links.category_name.active %} is-active{% endif %}" href="{{ sort_links.category_name.url }}">Categoria <span aria-hidden="true">{{ sort_links.category_name.indicator }}</span></a></th>
@@ -253,11 +254,29 @@
           </thead>
           <tbody>
             {% for asset in patrimony_assets %}
+              {% set asset_photo_url = asset.main_photo_url|default('')|trim %}
+              {% if asset_photo_url starts with '/' %}
+                {% set asset_photo_url = patrimony_base_url ~ asset_photo_url %}
+              {% endif %}
               <tr>
+                <td class="nc-admin-asset-photo-cell" data-label="Foto">
+                  {% if asset_photo_url %}
+                    <a class="nc-admin-asset-photo" href="{{ asset_photo_url }}" target="_blank" rel="noopener" aria-label="Abrir foto de {{ asset.name }}">
+                      <img src="{{ asset_photo_url }}" alt="" loading="lazy">
+                    </a>
+                  {% else %}
+                    <span class="nc-admin-asset-photo is-empty" aria-hidden="true">{{ asset.name|default('P')|slice(0, 1)|upper }}</span>
+                  {% endif %}
+                </td>
                 <td data-label="Código"><strong>{{ asset.asset_code }}</strong></td>
-                <td data-label="Bem">
+                {% set asset_identity_meta = (asset.brand|default('') ~ ' ' ~ asset.model|default(''))|trim %}
+                <td class="nc-agenda-activity-cell" data-label="Bem">
                   <strong>{{ asset.name }}</strong>
-                  <small>{{ asset.brand|default('') }} {{ asset.model|default('') }}{% if asset.serial_number|default('') %} · Série {{ asset.serial_number }}{% endif %}</small>
+                  {% if asset_identity_meta or asset.serial_number|default('') %}
+                    <small>
+                      {{ asset_identity_meta }}{% if asset.serial_number|default('') %}{% if asset_identity_meta %} · {% endif %}Série {{ asset.serial_number }}{% endif %}
+                    </small>
+                  {% endif %}
                 </td>
                 <td data-label="Categoria">{{ asset.category_name|default('Sem categoria') }}</td>
                 <td data-label="Localização">{{ asset.current_location_display|default('-') }}</td>
@@ -267,12 +286,14 @@
                 <td data-label="Responsável">{{ asset.current_responsible|default('-') ?: '-' }}</td>
                 <td data-label="Garantia">
                   {% if asset.warranty_expires_at %}
-                    <span>{{ asset.warranty_expires_at|date('d/m/Y') }}</span>
-                    {% if asset.warranty_expired %}
-                      <small class="nc-admin-login-error">Vencida</small>
-                    {% elseif asset.warranty_expires_soon %}
-                      <small class="nc-admin-login-success">Vence em {{ asset.warranty_days_remaining }} dia(s)</small>
-                    {% endif %}
+                    <div class="nc-admin-asset-warranty">
+                      <span class="nc-admin-asset-warranty-date">{{ asset.warranty_expires_at|date('d/m/Y') }}</span>
+                      {% if asset.warranty_expired %}
+                        <small class="nc-admin-login-error nc-admin-asset-warranty-status">Vencida</small>
+                      {% elseif asset.warranty_expires_soon %}
+                        <small class="nc-admin-login-success nc-admin-asset-warranty-status">Vence em {{ asset.warranty_days_remaining }} dia(s)</small>
+                      {% endif %}
+                    </div>
                   {% else %}
                     <span>-</span>
                   {% endif %}
