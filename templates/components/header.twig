@@ -117,11 +117,12 @@
         {% set member_display_name = member_name|default('Membro') %}
         {% set member_role_label = member_role_name|default('Membro') %}
         {% set member_photo_path = member_profile_photo_path|default('') %}
+        {% set member_photo_url = member_photo_path ? ((base_url ?? '') ~ '/' ~ (member_photo_path|trim('/'))) : '' %}
         <div class="nc-nav-group nc-member-nav-group{{ member_area_active ? ' is-active' : '' }}" data-nav-group>
           <button class="nc-nav-group-toggle nc-member-nav-toggle{{ member_area_active ? ' is-active' : '' }}" type="button" aria-expanded="false" aria-controls="nc-submenu-member-user" {% if member_area_active %}aria-current="page"{% endif %}>
             <span class="nc-member-nav-avatar" aria-hidden="true">
-              {% if member_photo_path %}
-                <img src="/{{ member_photo_path }}" alt="">
+              {% if member_photo_url %}
+                <img src="{{ member_photo_url }}" alt="">
               {% else %}
                 <span>{{ member_display_name|slice(0, 1)|upper }}</span>
               {% endif %}

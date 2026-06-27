@@ -54,8 +54,9 @@
             <div class="nc-member-photo-field">
               <p class="nc-admin-login-label">Foto de perfil <span class="nc-member-profile-tag is-required">Obrigatório</span></p>
               <div class="nc-member-photo-preview-wrap">
-                {% if member_profile_form.profile_photo_path %}
-                  <img class="nc-member-photo-preview" src="/{{ member_profile_form.profile_photo_path }}" alt="Foto atual do perfil">
+                {% set member_profile_photo_path = member_profile_form.profile_photo_path|default('')|trim %}
+                {% if member_profile_photo_path %}
+                  <img class="nc-member-photo-preview" src="{{ (base_url ?? '') ~ '/' ~ (member_profile_photo_path|trim('/')) }}" alt="Foto atual do perfil">
                 {% else %}
                   <div class="nc-member-photo-placeholder" aria-hidden="true">Sem foto</div>
                 {% endif %}

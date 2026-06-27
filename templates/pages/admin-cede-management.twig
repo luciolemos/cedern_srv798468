@@ -123,8 +123,9 @@
               <tr>
                 <td class="nc-admin-user-photo-cell" data-label="Foto">
                   <span class="nc-admin-user-photo" aria-hidden="true">
-                    {% if user.profile_photo_path|default('') %}
-                      <img src="/{{ user.profile_photo_path }}" alt="">
+                    {% set user_photo_path = user.profile_photo_path|default('')|trim %}
+                    {% if user_photo_path %}
+                      <img src="{{ (base_url ?? '') ~ '/' ~ (user_photo_path|trim('/')) }}" alt="">
                     {% else %}
                       <span>{{ (user.full_name|default(user.email|default('U'))|slice(0, 1)|upper) }}</span>
                     {% endif %}

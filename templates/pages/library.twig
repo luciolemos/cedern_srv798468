@@ -144,6 +144,13 @@
           {% for book in library_books %}
             {% set category_color = book.category_color|default('')|trim %}
             {% set cover_image_url = book.cover_image_url|default('')|trim %}
+            {% if cover_image_url starts with '/' %}
+              {% set cover_image_url = (base_url ?? '') ~ cover_image_url %}
+            {% endif %}
+            {% set library_pdf_url = book.pdf_url|default('')|trim %}
+            {% if library_pdf_url starts with '/' %}
+              {% set library_pdf_url = (base_url ?? '') ~ library_pdf_url %}
+            {% endif %}
             <article class="nc-card nc-library-card nc-knowledge-row{% if category_color %} is-colored{% endif %}" id="livro-{{ book.slug|default('item-' ~ loop.index) }}"{% if category_color %} style="--nc-library-category-color: {{ category_color|e('html_attr') }};"{% endif %}>
               <div class="nc-library-card-shell nc-knowledge-row-shell">
                 <button
@@ -166,7 +173,8 @@
                     {% else %}
                       {% include 'components/library-bookplate-fallback.twig' with {
                         bookplate_title: book.title,
-                        bookplate_author: book.author_name|default('')
+                        bookplate_author: book.author_name|default(''),
+                        base_url: base_url|default('')
                       } only %}
                     {% endif %}
                   </div>
@@ -188,11 +196,11 @@
 
                 <div class="nc-actions nc-library-card-actions nc-knowledge-row-actions is-stacked-mobile">
                   <p class="nc-knowledge-row-column-title">Acesso</p>
-                  {% if book.pdf_url|default('') %}
+                  {% if library_pdf_url %}
                     {% if book.pdf_size_label|default('') %}
                       <p class="nc-knowledge-row-file-meta">PDF {{ book.pdf_size_label }}</p>
                     {% endif %}
-                    <a class="nc-btn nc-btn-primary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ book.pdf_url }}" target="_blank" rel="noopener">
+                    <a class="nc-btn nc-btn-primary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ library_pdf_url }}" target="_blank" rel="noopener">
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -200,7 +208,7 @@
                       </svg>
                       <span>Ler PDF</span>
                     </a>
-                    <a class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ book.pdf_url }}" download>
+                    <a class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn" href="{{ library_pdf_url }}" download>
                       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M12 4V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                         <path d="M8 11L12 15L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>

@@ -14,6 +14,8 @@ use Throwable;
 
 class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 {
+    use MemberProfilePhotoStorageTrait;
+
     private const FLASH_KEY = 'member_complete_profile';
     private const PRIVACY_NOTICE_VERSION = 'member-profile-privacy-v1';
 
@@ -319,52 +321,13 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             return ['error' => 'Formato de foto inválido. Use JPG, PNG ou WEBP.'];
         }
 
-        $projectRoot = dirname(__DIR__, 4);
-        $candidateDirectories = [
-            $projectRoot . '/public/assets/img/member-photos',
-            $projectRoot . '/public/assets/img/avatar',
-        ];
-
-        $targetDirectory = null;
-        $directoryDiagnostics = [];
-        foreach ($candidateDirectories as $directory) {
-            $beforeExists = is_dir($directory);
-
-            if (!is_dir($directory)) {
-                if (!@mkdir($directory, 0775, true) && !is_dir($directory)) {
-                    $directoryDiagnostics[] = [
-                        'path' => $directory,
-                        'exists' => $beforeExists,
-                        'exists_after_mkdir' => is_dir($directory),
-                        'writable' => is_writable($directory),
-                        'permissions' => is_dir($directory)
-                            ? substr(sprintf('%o', (int) @fileperms($directory)), -4)
-                            : null,
-                    ];
-                    continue;
-                }
-            }
-
-            $directoryDiagnostics[] = [
-                'path' => $directory,
-                'exists' => $beforeExists,
-                'exists_after_mkdir' => is_dir($directory),
-                'writable' => is_writable($directory),
-                'permissions' => is_dir($directory) ? substr(sprintf('%o', (int) @fileperms($directory)), -4) : null,
-            ];
-
-            if (is_writable($directory)) {
-                $targetDirectory = $directory;
-                break;
-            }
-        }
-
-        if ($targetDirectory === null) {
+        $storage = $this->resolveWritableMemberProfilePhotoStorage();
+        if ($storage === null) {
             $uploadTmpDir = (string) ini_get('upload_tmp_dir');
             $effectiveTmpDir = $uploadTmpDir !== '' ? $uploadTmpDir : sys_get_temp_dir();
 
             $this->logger->warning('Diretório de upload de foto indisponível.', [
-                'candidate_directories' => $directoryDiagnostics,
+                'candidate_directories' => $this->resolveMemberProfilePhotoStorageDiagnostics(),
                 'upload_tmp_dir' => $uploadTmpDir,
                 'effective_tmp_dir' => $effectiveTmpDir,
                 'effective_tmp_dir_writable' => is_dir($effectiveTmpDir)
@@ -376,6 +339,9 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     . 'Seus outros dados foram atualizados.',
             ];
         }
+
+        $targetDirectory = $storage['directory'];
+        $publicPrefix = $storage['public_prefix'];
 
         try {
             $timestamp = date('YmdHis');
@@ -405,10 +371,27 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             return ['warning' => 'Não foi possível salvar a foto agora. Seus outros dados foram atualizados.'];
         }
 
-        $relativePath = str_starts_with($targetDirectory, $projectRoot . '/public/')
-            ? substr($targetDirectory, strlen($projectRoot . '/public/')) . '/' . $fileName
-            : 'assets/img/member-photos/' . $fileName;
+        return ['path' => $this->buildManagedMemberProfilePhotoRelativePath($fileName, $publicPrefix)];
+    }
 
-        return ['path' => ltrim($relativePath, '/')];
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveMemberProfilePhotoStorageDiagnostics(): array
+    {
+        $diagnostics = [];
+
+        foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
+            $directory = $definition['directory'];
+            $diagnostics[] = [
+                'path' => $directory,
+                'public_prefix' => $definition['public_prefix'],
+                'exists' => is_dir($directory),
+                'writable' => is_dir($directory) && is_writable($directory),
+                'permissions' => is_dir($directory) ? substr(sprintf('%o', (int) @fileperms($directory)), -4) : null,
+            ];
+        }
+
+        return $diagnostics;
     }
 }

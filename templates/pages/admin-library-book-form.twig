@@ -127,6 +127,9 @@
               <label class="nc-admin-form-label" for="cover_image_file">Capa do livro</label>
               <div class="nc-library-admin-cover-preview-wrap">
                 {% set admin_cover_image_url = library_book_form.cover_image_url|default('')|trim %}
+                {% if admin_cover_image_url starts with '/' %}
+                  {% set admin_cover_image_url = (base_url ?? '') ~ admin_cover_image_url %}
+                {% endif %}
                 {% set admin_cover_remove_requested = library_book_form.remove_cover_image|default(false) %}
                 {% if admin_cover_image_url and not admin_cover_remove_requested %}
                   <img
@@ -138,7 +141,8 @@
                   {% include 'components/library-bookplate-fallback.twig' with {
                     bookplate_title: library_book_form.title|default('livro'),
                     bookplate_author: library_book_form.author_name|default(''),
-                    bookplate_modifier_class: 'is-admin-preview'
+                    bookplate_modifier_class: 'is-admin-preview',
+                    base_url: base_url|default('')
                   } only %}
                 {% endif %}
               </div>
@@ -162,8 +166,12 @@
             <div class="nc-admin-form-field">
               <label class="nc-admin-form-label" for="pdf_file">PDF do livro</label>
               <input class="nc-admin-form-input" id="pdf_file" name="pdf_file" type="file" accept="application/pdf"{% if not library_book_form.pdf_path|default('') %} required{% endif %}>
-              {% if library_book_form.pdf_url|default('') %}
-                <p class="nc-admin-statute-meta">Arquivo atual: <a class="nc-link" href="{{ library_book_form.pdf_url }}" target="_blank" rel="noopener">abrir PDF</a>{% if library_book_form.pdf_size_label|default('') %} • {{ library_book_form.pdf_size_label }}{% endif %}</p>
+              {% set library_pdf_url = library_book_form.pdf_url|default('')|trim %}
+              {% if library_pdf_url starts with '/' %}
+                {% set library_pdf_url = (base_url ?? '') ~ library_pdf_url %}
+              {% endif %}
+              {% if library_pdf_url %}
+                <p class="nc-admin-statute-meta">Arquivo atual: <a class="nc-link" href="{{ library_pdf_url }}" target="_blank" rel="noopener">abrir PDF</a>{% if library_book_form.pdf_size_label|default('') %} • {{ library_book_form.pdf_size_label }}{% endif %}</p>
               {% endif %}
             </div>
           </div>

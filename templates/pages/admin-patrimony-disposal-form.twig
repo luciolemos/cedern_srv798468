@@ -1,0 +1,71 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Baixa patrimonial' %}
+{% set dashboard_page_lead = 'Registre a baixa sem perder o histórico do bem no patrimônio do CEDE.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Baixa patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% if patrimony_disposal_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in patrimony_disposal_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Voltar ao patrimônio</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <p><strong>{{ patrimony_asset.asset_code }}</strong> · {{ patrimony_asset.name }}</p>
+      <p class="nc-member-empty">A baixa altera a situação do bem para <strong>Baixado</strong> e mantém todo o histórico disponível.</p>
+
+      <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/baixa">
+        {% include 'components/csrf-field.twig' %}
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="disposed_at">Data da baixa</label>
+            <input class="nc-admin-form-input" id="disposed_at" name="disposed_at" type="datetime-local" value="{{ patrimony_disposal_form.disposed_at|default('') }}" required>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="disposal_reason">Motivo</label>
+            <select class="nc-admin-form-input" id="disposal_reason" name="disposal_reason" required>
+              <option value="">Selecione</option>
+              {% for key, label in patrimony_disposal_reason_options %}
+                <option value="{{ key }}"{% if patrimony_disposal_form.disposal_reason|default('') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="disposal_responsible">Responsável pela baixa</label>
+            <input class="nc-admin-form-input" id="disposal_responsible" name="disposal_responsible" type="text" value="{{ patrimony_disposal_form.disposal_responsible|default('') }}" required>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="document_file">Documento comprobatório</label>
+            <input class="nc-admin-form-input" id="document_file" name="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="notes">Observações</label>
+          <textarea class="nc-admin-form-input" id="notes" name="notes" rows="4">{{ patrimony_disposal_form.notes|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">Registrar baixa</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

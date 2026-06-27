@@ -10,6 +10,7 @@
   {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_cede_management = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
+  {% set panel_can_patrimony = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
 
   <main class="nc-dashboard-shell" aria-label="Dashboard administrativo">
     <header class="nc-dashboard-topbar">
@@ -74,10 +75,11 @@
           }[panel_role_key]|default('Membro')) %}
           {% set dashboard_user_initial = dashboard_user_label|slice(0, 1)|upper %}
           {% set dashboard_user_photo_path = dashboard_user_photo_path|default('') %}
+          {% set dashboard_user_photo_url = dashboard_user_photo_path ? ((base_url ?? '') ~ '/' ~ (dashboard_user_photo_path|trim('/'))) : '' %}
           <summary>
             <span class="nc-dashboard-user-avatar">
-              {% if dashboard_user_photo_path %}
-                <img src="/{{ dashboard_user_photo_path }}" alt="">
+              {% if dashboard_user_photo_url %}
+                <img src="{{ dashboard_user_photo_url }}" alt="">
               {% else %}
                 {{ dashboard_user_initial }}
               {% endif %}
@@ -386,6 +388,34 @@
                 <span>Gestão CEDE</span>
               </a>
             {% endif %}
+            {% if panel_can_patrimony %}
+              <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/patrimonio' %}open{% endif %}>
+                <summary class="nc-dashboard-user-menu-group-title">PATRIMÔNIO</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="{{ base_url ?? '' }}/painel/patrimonio">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4.5" y="5" width="15" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M8 9H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 13H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Controle patrimonial</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="{{ base_url ?? '' }}/painel/patrimonio/categorias">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                      <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Categorias patrimoniais</span>
+                </a>
+              </details>
+            {% endif %}
             <a class="nc-link nc-dashboard-user-menu-link" href="/membro/perfil/completar">
               <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -623,6 +653,36 @@
               </span>
               <span class="nc-admin-link-label">Gestão CEDE</span>
             </a>
+          {% endif %}
+
+          {% if panel_can_patrimony %}
+            <details class="nc-admin-nav-group" aria-label="Seção patrimônio" {% if current_path starts with '/painel/patrimonio' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">PATRIMÔNIO</summary>
+              {% set patrimony_assets_path_active = current_path == '/painel/patrimonio' or (current_path starts with '/painel/patrimonio/' and not (current_path starts with '/painel/patrimonio/categorias')) %}
+              <a class="nc-link nc-admin-submenu-link{{ patrimony_assets_path_active ? ' is-active' : '' }}" href="{{ base_url ?? '' }}/painel/patrimonio">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4.5" y="5" width="15" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 9H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 13H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Controle patrimonial</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/patrimonio/categorias' ? ' is-active' : '' }}" href="{{ base_url ?? '' }}/painel/patrimonio/categorias">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Categorias patrimoniais</span>
+              </a>
+            </details>
           {% endif %}
 
           {% if panel_can_library_books %}

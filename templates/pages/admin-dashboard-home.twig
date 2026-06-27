@@ -23,6 +23,7 @@
   {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_visit_reset = panel_is_superuser or panel_role_key == 'admin' %}
+  {% set panel_can_patrimony = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set visit_metrics = dashboard_visit_metrics|default({}) %}
   {% set member_metrics = dashboard_member_metrics|default({}) %}
 
@@ -263,16 +264,29 @@
       } %}
     {% endif %}
 
-    {% if panel_can_bookshop %}
+    {% if panel_can_patrimony %}
       {% include 'components/check-item.twig' with {
         step: '05',
+        title: 'Patrimônio',
+        description: 'Cadastre bens, controle movimentações, baixas e acompanhe garantias do CEDE.',
+        href: (base_url ?? '') ~ '/painel/patrimonio',
+        link_label: 'Abrir patrimônio',
+        link_icon: 'list',
+        link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
+        delay: 300
+      } %}
+    {% endif %}
+
+    {% if panel_can_bookshop %}
+      {% include 'components/check-item.twig' with {
+        step: '06',
         title: 'Livraria',
         description: 'Controle o acervo, importe o CSV da planilha e opere as vendas de balcão.',
         href: '/painel/livraria',
         link_label: 'Abrir livraria',
         link_icon: 'list',
         link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
-        delay: 300
+        delay: 340
       } %}
     {% endif %}
   </ul>

@@ -1,0 +1,64 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Adicionar anexo' %}
+{% set dashboard_page_lead = 'Centralize manuais, fotos, notas fiscais e demais documentos do bem patrimonial.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Adicionar anexo patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% if patrimony_attachment_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in patrimony_attachment_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Voltar ao patrimônio</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <p><strong>{{ patrimony_asset.asset_code }}</strong> · {{ patrimony_asset.name }}</p>
+
+      <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/anexos/novo">
+        {% include 'components/csrf-field.twig' %}
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="attachment_type">Tipo de anexo</label>
+            <select class="nc-admin-form-input" id="attachment_type" name="attachment_type" required>
+              {% for key, label in patrimony_attachment_type_options %}
+                <option value="{{ key }}"{% if patrimony_attachment_form.attachment_type|default('outro') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="label">Título do anexo</label>
+            <input class="nc-admin-form-input" id="label" name="label" type="text" value="{{ patrimony_attachment_form.label|default('') }}" placeholder="Ex: Manual original / Nota fiscal digitalizada">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="attachment_file">Arquivo</label>
+            <input class="nc-admin-form-input" id="attachment_file" name="attachment_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" required>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="notes">Observações</label>
+          <textarea class="nc-admin-form-input" id="notes" name="notes" rows="4">{{ patrimony_attachment_form.notes|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">Salvar anexo</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

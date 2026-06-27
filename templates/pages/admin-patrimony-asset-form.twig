@@ -1,0 +1,382 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = patrimony_asset_form_is_edit ? 'Editar patrimônio' : 'Novo patrimônio' %}
+{% set dashboard_page_lead = 'Mantenha o cadastro patrimonial atualizado e centralize histórico, anexos e manutenção.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if patrimony_asset_detail_status == 'movement-created' %}
+      {% set toast_message = 'Movimentação registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'maintenance-created' %}
+      {% set toast_message = 'Manutenção registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'disposal-created' %}
+      {% set toast_message = 'Baixa patrimonial registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-created' %}
+      {% set toast_message = 'Anexo incluído com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-deleted' %}
+      {% set toast_message = 'Anexo removido com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'movement-blocked' %}
+      {% set toast_message = 'Bens baixados não podem ser movimentados.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'disposal-blocked' %}
+      {% set toast_message = 'Este bem já está baixado.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-not-found' %}
+      {% set toast_message = 'Anexo não encontrado.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-delete-error' %}
+      {% set toast_message = 'Não foi possível remover o anexo.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    {% if patrimony_asset_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in patrimony_asset_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio">Voltar à lista</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/categorias">Categorias</a>
+      {% if patrimony_asset_form_is_edit %}
+        <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/movimentar">Movimentar</a>
+        <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/manutencoes/nova">Nova manutenção</a>
+        <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/anexos/novo">Novo anexo</a>
+        {% if patrimony_asset.current_status|default('') != 'baixado' %}
+          <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/baixa">Registrar baixa</a>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <form class="nc-admin-form" method="post" enctype="multipart/form-data" action="{{ patrimony_base_url }}{{ patrimony_asset_form_is_edit ? '/painel/patrimonio/' ~ patrimony_asset_id ~ '/editar' : '/painel/patrimonio/novo' }}">
+        {% include 'components/csrf-field.twig' %}
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="asset_code">Código patrimonial</label>
+            <input class="nc-admin-form-input" id="asset_code" name="asset_code" type="text" readonly value="{{ patrimony_asset_form.asset_code|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="name">Nome do material</label>
+            <input class="nc-admin-form-input" id="name" name="name" type="text" required value="{{ patrimony_asset_form.name|default('') }}" placeholder="Ex: Notebook Dell Latitude">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="category_id">Categoria</label>
+            <select class="nc-admin-form-input" id="category_id" name="category_id" required>
+              <option value="">Selecione</option>
+              {% for category in patrimony_asset_categories %}
+                <option value="{{ category.id }}"{% if patrimony_asset_form.category_id|default('') == category.id|striptags|trim %} selected{% endif %}>{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="subcategory">Subcategoria</label>
+            <input class="nc-admin-form-input" id="subcategory" name="subcategory" type="text" value="{{ patrimony_asset_form.subcategory|default('') }}" placeholder="Ex: Notebook / Mobiliário / TV">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="brand">Marca</label>
+            <input class="nc-admin-form-input" id="brand" name="brand" type="text" value="{{ patrimony_asset_form.brand|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="model">Modelo</label>
+            <input class="nc-admin-form-input" id="model" name="model" type="text" value="{{ patrimony_asset_form.model|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="serial_number">Número de série</label>
+            <input class="nc-admin-form-input" id="serial_number" name="serial_number" type="text" value="{{ patrimony_asset_form.serial_number|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="quantity">Quantidade</label>
+            <input class="nc-admin-form-input" id="quantity" name="quantity" type="number" step="0.001" min="0.001" value="{{ patrimony_asset_form.quantity|default('1') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="unit_of_measure">Unidade de medida</label>
+            <input class="nc-admin-form-input" id="unit_of_measure" name="unit_of_measure" type="text" value="{{ patrimony_asset_form.unit_of_measure|default('un') }}" placeholder="Ex: un, conjunto, caixa">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="is_tagged">Patrimônio tombado</label>
+            <select class="nc-admin-form-input" id="is_tagged" name="is_tagged">
+              <option value="0" {{ patrimony_asset_form.is_tagged|default(0) == 0 ? 'selected' : '' }}>Não</option>
+              <option value="1" {{ patrimony_asset_form.is_tagged|default(0) == 1 ? 'selected' : '' }}>Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">Descrição detalhada</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="4" placeholder="Informações complementares, especificações, observações técnicas...">{{ patrimony_asset_form.description|default('') }}</textarea>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="acquisition_type">Tipo de aquisição</label>
+            <select class="nc-admin-form-input" id="acquisition_type" name="acquisition_type" required>
+              {% for key, label in patrimony_asset_acquisition_types %}
+                <option value="{{ key }}"{% if patrimony_asset_form.acquisition_type|default('outro') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="acquisition_date">Data de aquisição</label>
+            <input class="nc-admin-form-input" id="acquisition_date" name="acquisition_date" type="date" value="{{ patrimony_asset_form.acquisition_date|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="acquisition_value">Valor de aquisição</label>
+            <input class="nc-admin-form-input" id="acquisition_value" name="acquisition_value" type="text" value="{{ patrimony_asset_form.acquisition_value|default('') }}" placeholder="Ex: 1250,00">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="supplier_name">Fornecedor</label>
+            <input class="nc-admin-form-input" id="supplier_name" name="supplier_name" type="text" value="{{ patrimony_asset_form.supplier_name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="invoice_number">Número da nota fiscal</label>
+            <input class="nc-admin-form-input" id="invoice_number" name="invoice_number" type="text" value="{{ patrimony_asset_form.invoice_number|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="warranty_expires_at">Garantia até</label>
+            <input class="nc-admin-form-input" id="warranty_expires_at" name="warranty_expires_at" type="date" value="{{ patrimony_asset_form.warranty_expires_at|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="payment_method">Forma de pagamento</label>
+            <input class="nc-admin-form-input" id="payment_method" name="payment_method" type="text" value="{{ patrimony_asset_form.payment_method|default('') }}" placeholder="Opcional">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="current_status">Situação do bem</label>
+            <select class="nc-admin-form-input" id="current_status" name="current_status" required>
+              {% for key, label in patrimony_asset_status_options %}
+                <option value="{{ key }}"{% if patrimony_asset_form.current_status|default('em_uso') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="conservation_state">Estado de conservação</label>
+            <select class="nc-admin-form-input" id="conservation_state" name="conservation_state" required>
+              {% for key, label in patrimony_asset_conservation_options %}
+                <option value="{{ key }}"{% if patrimony_asset_form.conservation_state|default('bom') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        {% if not patrimony_asset_form_is_edit %}
+          <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+            <div class="nc-admin-form-field">
+              <label class="nc-admin-form-label" for="current_location_id">Localização inicial</label>
+              <select class="nc-admin-form-input" id="current_location_id" name="current_location_id" required>
+                <option value="">Selecione</option>
+                {% for location in patrimony_asset_locations %}
+                  <option value="{{ location.id }}"{% if patrimony_asset_form.current_location_id|default('') == location.id|striptags|trim %} selected{% endif %}>{{ location.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="nc-admin-form-field">
+              <label class="nc-admin-form-label" for="current_location_complement">Complemento do local</label>
+              <input class="nc-admin-form-input" id="current_location_complement" name="current_location_complement" type="text" value="{{ patrimony_asset_form.current_location_complement|default('') }}" placeholder="Ex: Armário 02 / Prateleira A">
+            </div>
+          </div>
+        {% else %}
+          <article class="nc-card nc-admin-form-card">
+            <h3 class="nc-dashboard-visit-panel-title">Localização atual</h3>
+            <p>{{ patrimony_asset.current_location_display|default('-') }}</p>
+            <p class="nc-member-empty">Para alterar a localização e preservar o histórico, use a ação de movimentação.</p>
+          </article>
+        {% endif %}
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="current_responsible">Responsável atual</label>
+            <input class="nc-admin-form-input" id="current_responsible" name="current_responsible" type="text" value="{{ patrimony_asset_form.current_responsible|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="responsible_department">Departamento responsável</label>
+            <input class="nc-admin-form-input" id="responsible_department" name="responsible_department" type="text" value="{{ patrimony_asset_form.responsible_department|default('') }}">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="main_photo_file">Foto principal</label>
+            <input class="nc-admin-form-input" id="main_photo_file" name="main_photo_file" type="file" accept=".jpg,.jpeg,.png,.webp,image/*">
+            {% if patrimony_asset.main_photo_url|default('') %}
+              <small><a class="nc-link" href="{{ patrimony_base_url }}{{ patrimony_asset.main_photo_url }}" target="_blank" rel="noopener">Abrir foto atual</a></small>
+              <label><input type="checkbox" name="remove_main_photo" value="1"> Remover foto atual</label>
+            {% endif %}
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="purchase_document_file">Documento da compra</label>
+            <input class="nc-admin-form-input" id="purchase_document_file" name="purchase_document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx">
+            {% if patrimony_asset.purchase_document_url|default('') %}
+              <small><a class="nc-link" href="{{ patrimony_base_url }}{{ patrimony_asset.purchase_document_url }}" target="_blank" rel="noopener">Abrir documento atual</a></small>
+              <label><input type="checkbox" name="remove_purchase_document" value="1"> Remover documento atual</label>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="notes">Observações</label>
+          <textarea class="nc-admin-form-input" id="notes" name="notes" rows="4">{{ patrimony_asset_form.notes|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ patrimony_asset_form_is_edit ? 'Salvar alterações' : 'Cadastrar patrimônio' }}</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio">Voltar</a>
+        </div>
+      </form>
+    </article>
+
+    {% if patrimony_asset_form_is_edit %}
+      <div class="nc-dashboard-visit-grid" data-aos="fade-up" data-aos-delay="140">
+        <article class="nc-card nc-admin-form-card">
+          <h3 class="nc-dashboard-visit-panel-title">Histórico de movimentações</h3>
+          {% if patrimony_asset_movements|length > 0 %}
+            <ul class="nc-dashboard-visit-top-list">
+              {% for movement in patrimony_asset_movements %}
+                <li>
+                  <div>
+                    <strong>{{ movement.origin_display }} → {{ movement.destination_display }}</strong>
+                    <p>{{ movement.movement_reason|default('-') }} · {{ movement.movement_responsible|default('-') }}</p>
+                  </div>
+                  <span>{{ movement.moved_at|date('d/m/Y H:i') }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="nc-member-empty">Nenhuma movimentação registrada.</p>
+          {% endif %}
+        </article>
+
+        <article class="nc-card nc-admin-form-card">
+          <h3 class="nc-dashboard-visit-panel-title">Manutenções</h3>
+          {% if patrimony_asset_maintenances|length > 0 %}
+            <ul class="nc-dashboard-visit-top-list">
+              {% for maintenance in patrimony_asset_maintenances %}
+                <li>
+                  <div>
+                    <strong>{{ maintenance.maintenance_type|default('-') }}</strong>
+                    <p>{{ maintenance.vendor_name|default('Sem empresa') }}{% if maintenance.cost_amount_label|default('') %} · {{ maintenance.cost_amount_label }}{% endif %}</p>
+                  </div>
+                  <span>{{ maintenance.maintenance_date|date('d/m/Y H:i') }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="nc-member-empty">Nenhuma manutenção registrada.</p>
+          {% endif %}
+        </article>
+
+        <article class="nc-card nc-admin-form-card">
+          <h3 class="nc-dashboard-visit-panel-title">Baixas patrimoniais</h3>
+          {% if patrimony_asset_disposals|length > 0 %}
+            <ul class="nc-dashboard-visit-top-list">
+              {% for disposal in patrimony_asset_disposals %}
+                <li>
+                  <div>
+                    <strong>{{ disposal.disposal_reason|default('-')|replace({'_': ' '})|title }}</strong>
+                    <p>{{ disposal.disposal_responsible|default('-') }}</p>
+                  </div>
+                  <span>{{ disposal.disposed_at|date('d/m/Y H:i') }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="nc-member-empty">Nenhuma baixa registrada.</p>
+          {% endif %}
+        </article>
+      </div>
+
+      <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="160">
+        <div class="nc-actions nc-admin-toolbar">
+          <h3 class="nc-dashboard-visit-panel-title">Anexos complementares</h3>
+          <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/anexos/novo">Adicionar anexo</a>
+        </div>
+        {% if patrimony_asset_attachments|length > 0 %}
+          <div class="nc-admin-table-wrap">
+            <table class="nc-admin-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Arquivo</th>
+                  <th>Observações</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for attachment in patrimony_asset_attachments %}
+                  <tr>
+                    <td data-label="Tipo">{{ attachment.attachment_type_label|default('-') }}</td>
+                    <td data-label="Arquivo">
+                      <strong>{{ attachment.label|default(attachment.original_file_name|default('Arquivo')) }}</strong>
+                      <small>{{ attachment.original_file_name|default('-') }}{% if attachment.size_label|default('') %} · {{ attachment.size_label }}{% endif %}</small>
+                    </td>
+                    <td data-label="Observações">{{ attachment.notes|default('-') ?: '-' }}</td>
+                    <td class="nc-admin-table-actions" data-label="Ações">
+                      {% if attachment.file_url|default('') %}
+                        <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ patrimony_base_url }}{{ attachment.file_url }}" target="_blank" rel="noopener" aria-label="Abrir anexo {{ attachment.original_file_name|default('arquivo') }}" title="Abrir">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                          </svg>
+                          <span class="nc-sr-only">Abrir</span>
+                        </a>
+                      {% endif %}
+                      <form method="post" action="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset_id }}/anexos/{{ attachment.id }}/excluir" onsubmit="return confirm('Remover este anexo?');">
+                        {% include 'components/csrf-field.twig' %}
+                        <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-delete" type="submit" aria-label="Excluir anexo {{ attachment.original_file_name|default('arquivo') }}" title="Excluir">
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M9 11V17M15 11V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M7 7L8 19C8.08 19.9 8.84 20.6 9.75 20.6H14.25C15.16 20.6 15.92 19.9 16 19L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 4H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                          </svg>
+                          <span class="nc-sr-only">Excluir</span>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="nc-member-empty">Nenhum anexo complementar cadastrado.</p>
+        {% endif %}
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

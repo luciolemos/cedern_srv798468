@@ -43,6 +43,9 @@
         <div class="nc-bookshop-book-view-cover-col">
           <div class="nc-bookshop-book-view-cover-wrap">
             {% set cover_url = book.cover_image_url|default('')|trim %}
+            {% if cover_url starts with '/' %}
+              {% set cover_url = (base_url ?? '') ~ cover_url %}
+            {% endif %}
             {% if cover_url %}
               <img
                 class="nc-library-admin-cover-preview"
@@ -55,7 +58,8 @@
                 bookplate_author: book.author_name|default(''),
                 bookplate_collection_label: 'Livraria Auta de Sousa',
                 bookplate_section_title: 'Livraria',
-                bookplate_modifier_class: 'is-admin-preview'
+                bookplate_modifier_class: 'is-admin-preview',
+                base_url: base_url|default('')
               } only %}
             {% endif %}
           </div>

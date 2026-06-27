@@ -18,8 +18,8 @@ class BookshopCoverImagePageAction extends AbstractAdminBookshopAction
             return $response->withStatus(404);
         }
 
-        $absolutePath = $this->resolveBookshopPrivateCoverFileAbsolutePath($fileName);
-        if (!is_file($absolutePath) || !is_readable($absolutePath)) {
+        $absolutePath = $this->resolveManagedBookshopCoverAbsolutePath('media/livraria/capas/' . $fileName);
+        if ($absolutePath === null || !is_file($absolutePath) || !is_readable($absolutePath)) {
             return $response->withStatus(404);
         }
 
@@ -42,7 +42,8 @@ class BookshopCoverImagePageAction extends AbstractAdminBookshopAction
 
         return $response
             ->withHeader('Content-Type', $mimeType)
-            ->withHeader('Cache-Control', 'public, max-age=86400');
+            ->withHeader('Cache-Control', 'public, max-age=86400')
+            ->withHeader('X-Content-Type-Options', 'nosniff');
     }
 
     private function resolveMimeType(string $absolutePath): string
@@ -56,17 +57,5 @@ class BookshopCoverImagePageAction extends AbstractAdminBookshopAction
         ];
 
         return (string) ($mimeTypes[$extension] ?? 'application/octet-stream');
-    }
-
-    private function resolveBookshopPrivateCoverFileAbsolutePath(string $fileName): string
-    {
-        foreach ($this->resolveBookshopPrivateCoverDirectories() as $directory) {
-            $candidate = rtrim($directory, '/') . '/' . $fileName;
-            if (is_file($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return rtrim($this->resolveBookshopCoverFallbackUploadDirectory(), '/') . '/' . $fileName;
     }
 }

@@ -176,6 +176,9 @@
         <div class="nc-list nc-library-list nc-bookshop-list">
           {% for book in bookshop_books %}
             {% set cover_image_url = book.cover_image_url|default('')|trim %}
+            {% if cover_image_url starts with '/' %}
+              {% set cover_image_url = (base_url ?? '') ~ cover_image_url %}
+            {% endif %}
             <article class="nc-card nc-library-card nc-bookshop-card" id="livraria-{{ book.slug|default('item-' ~ loop.index) }}">
               <div class="nc-library-card-shell">
                 <button
@@ -200,7 +203,8 @@
                         bookplate_title: book.title,
                         bookplate_author: book.author_name|default(''),
                         bookplate_collection_label: 'Livraria Auta de Sousa',
-                        bookplate_section_title: 'Livraria'
+                        bookplate_section_title: 'Livraria',
+                        base_url: base_url|default('')
                       } only %}
                     {% endif %}
                   </div>

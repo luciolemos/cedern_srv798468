@@ -54,6 +54,17 @@ use App\Application\Actions\Admin\AdminLibraryCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetAttachmentDeleteAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetAttachmentFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetDeleteAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetDisposalFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetListPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetMaintenanceFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetMovementFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryListPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminCedeManagementPageAction;
 use App\Application\Actions\Admin\AdminPrivacyPolicyPageAction;
 use App\Application\Actions\Admin\AdminPracticalGuidePageAction;
@@ -67,6 +78,9 @@ use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
 use App\Application\Actions\Page\BookshopCoverImagePageAction;
 use App\Application\Actions\Page\BookshopAutaDeSousaPageAction;
+use App\Application\Actions\Page\LibraryManagedFilePageAction;
+use App\Application\Actions\Page\MemberProfilePhotoPageAction;
+use App\Application\Actions\Page\PatrimonyManagedFilePageAction;
 use App\Application\Actions\Page\ContactPageAction;
 use App\Application\Actions\Page\EadePageAction;
 use App\Application\Actions\Page\EsdePageAction;
@@ -255,6 +269,9 @@ return function (App $app) {
     $app->get('/agenda/{slug}', AgendaDetailPageAction::class);
     $app->get('/agenda/{slug}/ics', AgendaEventIcsDownloadAction::class);
     $app->get('/media/livraria/capas/{file}', BookshopCoverImagePageAction::class);
+    $app->get('/media/biblioteca/{bucket}/{file}', LibraryManagedFilePageAction::class);
+    $app->get('/media/membros/fotos/{file}', MemberProfilePhotoPageAction::class);
+    $app->get('/media/patrimonio/{bucket}/{file}', PatrimonyManagedFilePageAction::class);
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
     $app->get('/loja/livraria', StoreBookshopIiPageAction::class);
@@ -389,6 +406,19 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio', AdminPatrimonyAssetListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/novo', AdminPatrimonyAssetFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/editar', AdminPatrimonyAssetFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/{id}/excluir', AdminPatrimonyAssetDeleteAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/movimentar', AdminPatrimonyAssetMovementFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/baixa', AdminPatrimonyAssetDisposalFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/manutencoes/nova', AdminPatrimonyAssetMaintenanceFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/anexos/novo', AdminPatrimonyAssetAttachmentFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/{id}/anexos/{attachmentId}/excluir', AdminPatrimonyAssetAttachmentDeleteAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio/categorias', AdminPatrimonyCategoryListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/categorias/nova', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/categorias/{id}/editar', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/categorias/{id}/alternar-status', AdminPatrimonyCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/visitas/nova-contagem', AdminVisitCounterResetAction::class)->add($panelRoleMiddlewareFactory('admin'));
@@ -547,6 +577,12 @@ return function (App $app) {
     $app->get('/admin/gestao-cede', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/gestao-cede')->withStatus(302);
     });
+    $app->get('/admin/patrimonio', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/patrimonio')->withStatus(302);
+    });
+    $app->get('/admin/patrimonio/categorias', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/patrimonio/categorias')->withStatus(302);
+    });
     $app->get('/admin/usuarios/{id}/resumo', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/usuarios/' . $id . '/resumo')->withStatus(302);
@@ -683,6 +719,36 @@ return function (App $app) {
                     'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
                 ],
                 ['template' => 'pages/admin-bookshop-sale-view.twig', 'context' => ['bookshop_sale' => ['items' => []]]],
+                [
+                    'template' => 'pages/admin-patrimony-assets.twig',
+                    'context' => [
+                        'patrimony_assets' => [],
+                        'patrimony_assets_filter_options' => ['categories' => [], 'locations' => [], 'status' => [], 'conservation' => [], 'acquisition_types' => []],
+                        'patrimony_dashboard_summary' => ['metrics' => [], 'category_rows' => [], 'location_rows' => [], 'warranty_alerts' => []],
+                        'patrimony_recent_movements' => [],
+                    ],
+                ],
+                [
+                    'template' => 'pages/admin-patrimony-asset-form.twig',
+                    'context' => [
+                        'patrimony_asset_form' => [],
+                        'patrimony_asset_categories' => [],
+                        'patrimony_asset_locations' => [],
+                        'patrimony_asset_acquisition_types' => [],
+                        'patrimony_asset_status_options' => [],
+                        'patrimony_asset_conservation_options' => [],
+                        'patrimony_asset_movements' => [],
+                        'patrimony_asset_maintenances' => [],
+                        'patrimony_asset_disposals' => [],
+                        'patrimony_asset_attachments' => [],
+                    ],
+                ],
+                ['template' => 'pages/admin-patrimony-categories.twig', 'context' => ['patrimony_categories' => []]],
+                ['template' => 'pages/admin-patrimony-category-form.twig', 'context' => ['patrimony_category_form' => []]],
+                ['template' => 'pages/admin-patrimony-movement-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_locations' => [], 'patrimony_status_options' => []]],
+                ['template' => 'pages/admin-patrimony-disposal-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_disposal_reason_options' => []]],
+                ['template' => 'pages/admin-patrimony-maintenance-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_status_options' => []]],
+                ['template' => 'pages/admin-patrimony-attachment-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_attachment_type_options' => []]],
                 ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
                 ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
                 ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],

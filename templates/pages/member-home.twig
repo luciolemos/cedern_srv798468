@@ -63,8 +63,9 @@
                   <li class="{{ birthday_member.is_current_member ? 'is-current-member' : '' }}">
                     <div class="nc-member-birthday-person">
                       <span class="nc-member-birthday-avatar" aria-hidden="true">
-                        {% if birthday_member.profile_photo_path|default('') %}
-                          <img src="/{{ birthday_member.profile_photo_path }}" alt="">
+                        {% set birthday_photo_path = birthday_member.profile_photo_path|default('')|trim %}
+                        {% if birthday_photo_path %}
+                          <img src="{{ (base_url ?? '') ~ '/' ~ (birthday_photo_path|trim('/')) }}" alt="">
                         {% else %}
                           <span>{{ birthday_member.initial|default('M') }}</span>
                         {% endif %}
@@ -225,8 +226,9 @@
           <article class="nc-card nc-member-panel">
             <div class="nc-member-header">
               <div class="nc-member-avatar-wrap" aria-hidden="true">
-                {% if member_data.profile_photo_path %}
-                  <img class="nc-member-avatar" src="/{{ member_data.profile_photo_path }}" alt="">
+                {% set member_data_photo_path = member_data.profile_photo_path|default('')|trim %}
+                {% if member_data_photo_path %}
+                  <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (member_data_photo_path|trim('/')) }}" alt="">
                 {% else %}
                   <div class="nc-member-avatar-placeholder">{{ (member_data.full_name|default('M')|slice(0, 1)|upper) }}</div>
                 {% endif %}

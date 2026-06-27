@@ -12,8 +12,10 @@ use Slim\Views\Twig;
 
 abstract class AbstractAdminBookshopAction extends AbstractPageAction
 {
-    private const DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR = 'public/assets/img/bookshop-covers';
-    private const DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX = 'assets/img/bookshop-covers';
+    private const DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR = 'var/storage/bookshop/covers';
+    private const DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX = 'media/livraria/capas';
+    private const LEGACY_BOOKSHOP_COVER_UPLOAD_DIR = 'public/assets/img/bookshop-covers';
+    private const LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX = 'assets/img/bookshop-covers';
     private const FALLBACK_BOOKSHOP_COVER_UPLOAD_DIR = 'var/cache/bookshop-covers';
     private const FALLBACK_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX = 'media/livraria/capas';
     private const TEMP_BOOKSHOP_COVER_UPLOAD_SUBDIR = 'natalcode/bookshop-covers';
@@ -318,17 +320,27 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveManagedBookshopCoverAbsolutePath(?string $relativePath): ?string
     {
-        $primaryPath = $this->resolveManagedAbsolutePath(
-            $relativePath,
-            $this->resolveBookshopCoverUploadPublicPrefix(),
-            $this->resolveBookshopCoverUploadDirectory()
-        );
+        $fallbackPath = null;
 
-        if ($primaryPath !== null) {
-            return $primaryPath;
+        foreach ($this->resolveBookshopManagedStorageDefinitions() as $storage) {
+            $absolutePath = $this->resolveManagedAbsolutePath(
+                $relativePath,
+                $storage['public_prefix'],
+                $storage['directory']
+            );
+
+            if ($absolutePath === null) {
+                continue;
+            }
+
+            if (is_file($absolutePath)) {
+                return $absolutePath;
+            }
+
+            $fallbackPath ??= $absolutePath;
         }
 
-        return $this->resolveManagedPrivateBookshopCoverAbsolutePath($relativePath);
+        return $fallbackPath;
     }
 
     private function normalizeBookshopLanguageKey(string $value): string
@@ -848,6 +860,50 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
             $this->resolveBookshopCoverFallbackUploadDirectory(),
             $this->resolveBookshopCoverTemporaryUploadDirectory(),
         ];
+    }
+
+    /**
+     * @return array<int, array{directory: string, public_prefix: string}>
+     */
+    private function resolveBookshopManagedStorageDefinitions(): array
+    {
+        $definitions = [
+            [
+                'directory' => $this->resolveBookshopCoverUploadDirectory(),
+                'public_prefix' => $this->resolveBookshopCoverUploadPublicPrefix(),
+            ],
+            [
+                'directory' => $this->resolveProjectRoot() . '/' . self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR,
+                'public_prefix' => trim(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
+            ],
+            [
+                'directory' => $this->resolveProjectRoot() . '/' . self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
+                'public_prefix' => trim(self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
+            ],
+            [
+                'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
+                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+            ],
+            [
+                'directory' => $this->resolveBookshopCoverTemporaryUploadDirectory(),
+                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+            ],
+        ];
+
+        $uniqueDefinitions = [];
+        $seenDefinitions = [];
+
+        foreach ($definitions as $definition) {
+            $definitionHash = $definition['directory'] . '|' . $definition['public_prefix'];
+            if (isset($seenDefinitions[$definitionHash])) {
+                continue;
+            }
+
+            $seenDefinitions[$definitionHash] = true;
+            $uniqueDefinitions[] = $definition;
+        }
+
+        return $uniqueDefinitions;
     }
 
     private function ensureWritableDirectory(string $directory): bool
