@@ -151,6 +151,11 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
             : '/painel/patrimonio/novo';
     }
 
+    protected function assetViewPath(int $assetId): string
+    {
+        return '/painel/patrimonio/' . $assetId;
+    }
+
     protected function assetMovementPath(int $assetId): string
     {
         return '/painel/patrimonio/' . $assetId . '/movimentar';

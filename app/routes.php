@@ -29,6 +29,8 @@ use App\Application\Actions\Admin\AdminBookshopCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryListPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminBookshopDashboardPageAction;
+use App\Application\Actions\Admin\AdminFinanceSalesPageAction;
+use App\Application\Actions\Admin\AdminFinanceSaleViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreListPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreToggleStatusAction;
@@ -62,6 +64,7 @@ use App\Application\Actions\Admin\AdminPatrimonyAssetFormPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyAssetListPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyAssetMaintenanceFormPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyAssetMovementFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetViewPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyCategoryListPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyCategoryToggleStatusAction;
@@ -160,7 +163,7 @@ return function (App $app) {
     };
 
     $memberHasPanelAccess = static function () use ($memberHasAnyRole, $memberHasMinimumRole): bool {
-        return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator']);
+        return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator', 'finance_operator']);
     };
 
     $adminSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasPanelAccess): Response {
@@ -209,6 +212,20 @@ return function (App $app) {
 
     $panelBookshopAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasAnyRole): Response {
         if ($memberHasAnyRole(['bookshop_operator', 'admin'])) {
+            return $handler->handle($request);
+        }
+
+        $response = $app->getResponseFactory()->createResponse(302);
+
+        if (!empty($_SESSION['member_authenticated'])) {
+            return $response->withHeader('Location', '/membro?status=forbidden');
+        }
+
+        return $response->withHeader('Location', '/entrar');
+    };
+
+    $panelFinanceAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasAnyRole): Response {
+        if ($memberHasAnyRole(['finance_operator', 'admin'])) {
             return $handler->handle($request);
         }
 
@@ -326,7 +343,7 @@ return function (App $app) {
     $app->get('/membro/administracao', MemberAdminAreaPageAction::class);
     $app->map(['GET', 'POST'], '/painel/login', AdminLoginPageAction::class);
     $app->get('/painel/logout', AdminLogoutAction::class);
-    $app->group('/painel', function (Group $group) use ($panelBookshopAccessMiddleware, $panelDashboardAccessMiddleware, $panelRoleMiddlewareFactory) {
+    $app->group('/painel', function (Group $group) use ($panelBookshopAccessMiddleware, $panelDashboardAccessMiddleware, $panelFinanceAccessMiddleware, $panelRoleMiddlewareFactory) {
         $group->get('', AdminDashboardPageAction::class)->add($panelDashboardAccessMiddleware);
         $group->get('/eventos', AdminAgendaListPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
         $group->map(['GET', 'POST'], '/eventos/novo', AdminAgendaFormPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
@@ -404,6 +421,10 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->post('/livraria/vendas/{id}/cancelar', AdminBookshopSaleCancelAction::class)
             ->add($panelBookshopAccessMiddleware);
+        $group->get('/financas', AdminFinanceSalesPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/patrimonio', AdminPatrimonyAssetListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
@@ -419,6 +440,7 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/patrimonio/categorias/nova', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->map(['GET', 'POST'], '/patrimonio/categorias/{id}/editar', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->post('/patrimonio/categorias/{id}/alternar-status', AdminPatrimonyCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio/{id}', AdminPatrimonyAssetViewPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/visitas/nova-contagem', AdminVisitCounterResetAction::class)->add($panelRoleMiddlewareFactory('admin'));
@@ -441,6 +463,14 @@ return function (App $app) {
     });
     $app->get('/admin/dashboard', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel')->withStatus(302);
+    });
+    $app->get('/admin/financas', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/financas')->withStatus(302);
+    });
+    $app->get('/admin/financas/vendas/{id}', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/financas/vendas/' . $id)->withStatus(302);
     });
     $app->get('/admin/agenda', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/eventos')->withStatus(302);
@@ -715,6 +745,14 @@ return function (App $app) {
                 ['template' => 'pages/admin-bookshop-import.twig', 'context' => []],
                 ['template' => 'pages/admin-bookshop-sales.twig', 'context' => ['bookshop_sales' => []]],
                 [
+                    'template' => 'pages/admin-finance-sales.twig',
+                    'context' => [
+                        'finance_sales' => [],
+                        'finance_sales_summary' => [],
+                        'finance_sales_filter_options' => ['payment_methods' => [], 'sellers' => []],
+                    ],
+                ],
+                [
                     'template' => 'pages/admin-bookshop-sale-form.twig',
                     'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
                 ],
@@ -737,6 +775,16 @@ return function (App $app) {
                         'patrimony_asset_acquisition_types' => [],
                         'patrimony_asset_status_options' => [],
                         'patrimony_asset_conservation_options' => [],
+                        'patrimony_asset_movements' => [],
+                        'patrimony_asset_maintenances' => [],
+                        'patrimony_asset_disposals' => [],
+                        'patrimony_asset_attachments' => [],
+                    ],
+                ],
+                [
+                    'template' => 'pages/admin-patrimony-asset-view.twig',
+                    'context' => [
+                        'patrimony_asset' => [],
                         'patrimony_asset_movements' => [],
                         'patrimony_asset_maintenances' => [],
                         'patrimony_asset_disposals' => [],

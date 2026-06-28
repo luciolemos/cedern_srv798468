@@ -1,0 +1,462 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Application\Actions\Admin;
+
+use DateTimeImmutable;
+use DateTimeZone;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
+class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
+{
+    public const FLASH_KEY = 'admin_finance_sales_list';
+
+    private const DEFAULT_PAGE_SIZE = 10;
+
+    private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
+
+    private const ALL_PAGE_SIZE = 'all';
+
+    private const PERIOD_FIELDS = ['sold_at', 'cancelled_at'];
+
+    private const SORT_FIELDS = [
+        'sold_at',
+        'sale_code',
+        'customer_name',
+        'items_summary',
+        'created_by_name',
+        'payment_method',
+        'total_amount',
+        'status',
+        'cancelled_at',
+    ];
+
+    public function __invoke(Request $request, Response $response): Response
+    {
+        $sales = [];
+
+        try {
+            $sales = $this->bookshopRepository->findAllSalesForAdmin();
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Falha ao carregar a visão financeira da livraria.', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        $queryParams = $request->getQueryParams();
+        $flash = $this->consumeSessionFlash(self::FLASH_KEY);
+        $status = trim((string) ($flash['status'] ?? ''));
+        $searchTerm = trim((string) ($queryParams['q'] ?? ''));
+        $statusFilter = trim((string) ($queryParams['status_filter'] ?? 'all'));
+        $paymentFilter = trim((string) ($queryParams['payment_filter'] ?? 'all'));
+        $sellerFilter = trim((string) ($queryParams['seller_filter'] ?? 'all'));
+        $periodField = trim((string) ($queryParams['period_field'] ?? 'sold_at'));
+        $dateFrom = $this->normalizeDateInput($queryParams['date_from'] ?? null);
+        $dateTo = $this->normalizeDateInput($queryParams['date_to'] ?? null);
+        $amountMin = $this->normalizeAmountFilter($queryParams['amount_min'] ?? null);
+        $amountMax = $this->normalizeAmountFilter($queryParams['amount_max'] ?? null);
+
+        $paymentOptions = $this->buildPaymentOptions($sales);
+        $sellerOptions = $this->buildSellerOptions($sales);
+
+        if (!in_array($statusFilter, ['all', 'completed', 'cancelled'], true)) {
+            $statusFilter = 'all';
+        }
+
+        if (!array_key_exists($paymentFilter, $paymentOptions)) {
+            $paymentFilter = 'all';
+        }
+
+        if (!array_key_exists($sellerFilter, $sellerOptions)) {
+            $sellerFilter = 'all';
+        }
+
+        if (!in_array($periodField, self::PERIOD_FIELDS, true)) {
+            $periodField = 'sold_at';
+        }
+
+        if ($dateFrom !== null && $dateTo !== null && $dateFrom > $dateTo) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+
+        if ($statusFilter !== 'all') {
+            $sales = array_values(array_filter(
+                $sales,
+                static fn (array $sale): bool => (string) ($sale['status'] ?? '') === $statusFilter
+            ));
+        }
+
+        if ($paymentFilter !== 'all') {
+            $sales = array_values(array_filter(
+                $sales,
+                static fn (array $sale): bool => (string) ($sale['payment_method'] ?? '') === $paymentFilter
+            ));
+        }
+
+        if ($sellerFilter !== 'all') {
+            $sales = array_values(array_filter(
+                $sales,
+                static fn (array $sale): bool => trim((string) ($sale['created_by_name'] ?? '')) === $sellerFilter
+            ));
+        }
+
+        if ($dateFrom !== null || $dateTo !== null) {
+            $sales = array_values(array_filter(
+                $sales,
+                fn (array $sale): bool => $this->matchesDateRange($sale, $periodField, $dateFrom, $dateTo)
+            ));
+        }
+
+        if ($amountMin !== null || $amountMax !== null) {
+            $sales = array_values(array_filter(
+                $sales,
+                static function (array $sale) use ($amountMin, $amountMax): bool {
+                    $totalAmount = (float) ($sale['total_amount'] ?? 0);
+
+                    if ($amountMin !== null && $totalAmount < $amountMin) {
+                        return false;
+                    }
+
+                    if ($amountMax !== null && $totalAmount > $amountMax) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            ));
+        }
+
+        if ($searchTerm !== '') {
+            $normalizedSearch = strtolower($searchTerm);
+
+            $sales = array_values(array_filter(
+                $sales,
+                static function (array $sale) use ($normalizedSearch): bool {
+                    $haystack = implode(' ', [
+                        (string) ($sale['sale_code'] ?? ''),
+                        (string) ($sale['customer_name_display'] ?? $sale['customer_name'] ?? ''),
+                        (string) ($sale['customer_phone_display'] ?? ''),
+                        (string) ($sale['customer_email'] ?? ''),
+                        (string) ($sale['customer_cpf_display'] ?? ''),
+                        (string) ($sale['items_summary'] ?? ''),
+                        (string) ($sale['payment_method_label'] ?? ''),
+                        (string) ($sale['created_by_name'] ?? ''),
+                        (string) ($sale['cancelled_by_name'] ?? ''),
+                        (string) ($sale['status_label'] ?? ''),
+                    ]);
+
+                    return stripos(strtolower($haystack), $normalizedSearch) !== false;
+                }
+            ));
+        }
+
+        $summary = $this->buildSummary($sales);
+
+        $sortBy = (string) ($queryParams['sort'] ?? 'sold_at');
+        if (!in_array($sortBy, self::SORT_FIELDS, true)) {
+            $sortBy = 'sold_at';
+        }
+
+        $sortDirection = strtolower((string) ($queryParams['dir'] ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortMultiplier = $sortDirection === 'desc' ? -1 : 1;
+
+        usort($sales, static function (array $firstSale, array $secondSale) use ($sortBy, $sortMultiplier): int {
+            $firstValue = $firstSale[$sortBy] ?? '';
+            $secondValue = $secondSale[$sortBy] ?? '';
+
+            if ($sortBy === 'total_amount') {
+                return (((float) $firstValue) <=> ((float) $secondValue)) * $sortMultiplier;
+            }
+
+            return strnatcasecmp((string) $firstValue, (string) $secondValue) * $sortMultiplier;
+        });
+
+        $totalItems = count($sales);
+        $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
+        $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
+        $pageSize = self::DEFAULT_PAGE_SIZE;
+
+        if (!$showAllItems) {
+            $requestedPageSizeNumber = (int) $requestedPageSize;
+            $pageSize = in_array($requestedPageSizeNumber, self::PAGE_SIZE_OPTIONS, true)
+                ? $requestedPageSizeNumber
+                : self::DEFAULT_PAGE_SIZE;
+        } else {
+            $pageSize = max($totalItems, 1);
+        }
+
+        $totalPages = max(1, (int) ceil($totalItems / $pageSize));
+        $currentPage = max(1, (int) ($queryParams['page'] ?? 1));
+        $currentPage = min($currentPage, $totalPages);
+
+        $offset = ($currentPage - 1) * $pageSize;
+        $sales = array_slice($sales, $offset, $pageSize);
+
+        $startItem = $totalItems > 0 ? $offset + 1 : 0;
+        $endItem = $totalItems > 0 ? min($offset + count($sales), $totalItems) : 0;
+
+        $pageSizeQueryValue = $showAllItems ? self::ALL_PAGE_SIZE : (string) $pageSize;
+        $basePath = '/painel/financas';
+        $baseQuery = [
+            'per_page' => $pageSizeQueryValue,
+            'sort' => $sortBy,
+            'dir' => $sortDirection,
+            'q' => $searchTerm,
+            'status_filter' => $statusFilter,
+            'payment_filter' => $paymentFilter,
+            'seller_filter' => $sellerFilter,
+            'period_field' => $periodField,
+            'date_from' => $dateFrom ?? '',
+            'date_to' => $dateTo ?? '',
+            'amount_min' => $this->formatAmountFilterValue($amountMin),
+            'amount_max' => $this->formatAmountFilterValue($amountMax),
+        ];
+
+        $sortLinks = [];
+        foreach (self::SORT_FIELDS as $field) {
+            $nextDirection = $sortBy === $field && $sortDirection === 'asc' ? 'desc' : 'asc';
+            $indicator = '↕';
+
+            if ($sortBy === $field) {
+                $indicator = $sortDirection === 'asc' ? '↑' : '↓';
+            }
+
+            $sortLinks[$field] = [
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, [
+                    'page' => 1,
+                    'sort' => $field,
+                    'dir' => $nextDirection,
+                ])),
+                'indicator' => $indicator,
+                'active' => $sortBy === $field,
+            ];
+        }
+
+        $paginationLinks = [];
+        for ($page = 1; $page <= $totalPages; $page++) {
+            $paginationLinks[] = [
+                'number' => $page,
+                'active' => $page === $currentPage,
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page])),
+            ];
+        }
+
+        $previousPageUrl = $currentPage > 1
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
+            : null;
+        $nextPageUrl = $currentPage < $totalPages
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
+            : null;
+
+        $pageSizeOptions = array_map(static fn (int $option): array => [
+            'value' => (string) $option,
+            'label' => (string) $option,
+            'selected' => !$showAllItems && $option === $pageSize,
+        ], self::PAGE_SIZE_OPTIONS);
+        $pageSizeOptions[] = [
+            'value' => self::ALL_PAGE_SIZE,
+            'label' => 'Todos',
+            'selected' => $showAllItems,
+        ];
+
+        return $this->renderPage($response, 'pages/admin-finance-sales.twig', [
+            'finance_sales' => $sales,
+            'finance_sales_summary' => $summary,
+            'finance_sales_sort_links' => $sortLinks,
+            'finance_sales_search' => $searchTerm,
+            'finance_sales_filters' => [
+                'status_filter' => $statusFilter,
+                'payment_filter' => $paymentFilter,
+                'seller_filter' => $sellerFilter,
+                'period_field' => $periodField,
+                'date_from' => $dateFrom ?? '',
+                'date_to' => $dateTo ?? '',
+                'amount_min' => $this->formatAmountFilterValue($amountMin),
+                'amount_max' => $this->formatAmountFilterValue($amountMax),
+            ],
+            'finance_sales_filter_options' => [
+                'payment_methods' => $paymentOptions,
+                'sellers' => $sellerOptions,
+            ],
+            'finance_sales_pagination' => [
+                'current_page' => $currentPage,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'start_item' => $startItem,
+                'end_item' => $endItem,
+                'page_size' => $pageSizeQueryValue,
+                'sort' => $sortBy,
+                'dir' => $sortDirection,
+                'links' => $paginationLinks,
+                'previous_url' => $previousPageUrl,
+                'next_url' => $nextPageUrl,
+                'page_size_options' => $pageSizeOptions,
+            ],
+            'admin_status' => $status,
+            'page_title' => 'Finanças | Dashboard',
+            'page_url' => 'https://cedern.org/painel/financas',
+            'page_description' => 'Consulta financeira de vendas e cancelamentos da livraria do CEDE.',
+        ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $sales
+     * @return array<string, string>
+     */
+    private function buildPaymentOptions(array $sales): array
+    {
+        $options = ['all' => 'Todos os meios'];
+
+        foreach ($sales as $sale) {
+            $paymentMethod = trim((string) ($sale['payment_method'] ?? ''));
+            $paymentLabel = trim((string) ($sale['payment_method_label'] ?? ''));
+
+            if ($paymentMethod === '' || isset($options[$paymentMethod])) {
+                continue;
+            }
+
+            $options[$paymentMethod] = $paymentLabel !== '' ? $paymentLabel : ucfirst($paymentMethod);
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $sales
+     * @return array<string, string>
+     */
+    private function buildSellerOptions(array $sales): array
+    {
+        $options = ['all' => 'Todos os vendedores'];
+
+        foreach ($sales as $sale) {
+            $seller = trim((string) ($sale['created_by_name'] ?? ''));
+
+            if ($seller === '' || isset($options[$seller])) {
+                continue;
+            }
+
+            $options[$seller] = $seller;
+        }
+
+        asort($options, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return ['all' => 'Todos os vendedores'] + array_diff_key($options, ['all' => true]);
+    }
+
+    /**
+     * @param array<string, mixed> $sale
+     */
+    private function matchesDateRange(array $sale, string $periodField, ?string $dateFrom, ?string $dateTo): bool
+    {
+        $saleDate = $this->resolveSaleFilterDate($sale, $periodField);
+        if ($saleDate === null) {
+            return false;
+        }
+
+        if ($dateFrom !== null && $saleDate < $dateFrom) {
+            return false;
+        }
+
+        if ($dateTo !== null && $saleDate > $dateTo) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $sale
+     */
+    private function resolveSaleFilterDate(array $sale, string $periodField): ?string
+    {
+        $field = $periodField === 'cancelled_at' ? 'cancelled_at' : 'sold_at';
+        $rawValue = trim((string) ($sale[$field] ?? ''));
+        if ($rawValue === '') {
+            return null;
+        }
+
+        try {
+            $date = new DateTimeImmutable($rawValue, new DateTimeZone('UTC'));
+
+            return $date->setTimezone(new DateTimeZone('America/Fortaleza'))->format('Y-m-d');
+        } catch (\Throwable) {
+            return preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue) === 1
+                ? substr($rawValue, 0, 10)
+                : null;
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $sales
+     * @return array<string, mixed>
+     */
+    private function buildSummary(array $sales): array
+    {
+        $completedCount = 0;
+        $cancelledCount = 0;
+        $completedTotal = 0.0;
+        $cancelledTotal = 0.0;
+
+        foreach ($sales as $sale) {
+            $status = (string) ($sale['status'] ?? '');
+            $totalAmount = (float) ($sale['total_amount'] ?? 0);
+
+            if ($status === 'cancelled') {
+                $cancelledCount++;
+                $cancelledTotal += $totalAmount;
+
+                continue;
+            }
+
+            $completedCount++;
+            $completedTotal += $totalAmount;
+        }
+
+        $averageTicket = $completedCount > 0 ? ($completedTotal / $completedCount) : 0.0;
+
+        return [
+            'completed_count' => $completedCount,
+            'completed_total_label' => $this->formatMoney($completedTotal),
+            'cancelled_count' => $cancelledCount,
+            'cancelled_total_label' => $this->formatMoney($cancelledTotal),
+            'recognized_total_label' => $this->formatMoney($completedTotal),
+            'average_ticket_label' => $this->formatMoney($averageTicket),
+        ];
+    }
+
+    private function normalizeDateInput(mixed $value): ?string
+    {
+        $normalizedValue = trim((string) $value);
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $normalizedValue) === 1
+            ? $normalizedValue
+            : null;
+    }
+
+    private function normalizeAmountFilter(mixed $value): ?float
+    {
+        $normalizedValue = trim((string) $value);
+        if ($normalizedValue === '' || preg_match('/\d/', $normalizedValue) !== 1) {
+            return null;
+        }
+
+        return (float) $this->normalizeMoneyInput($normalizedValue);
+    }
+
+    private function formatAmountFilterValue(?float $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        return number_format($value, 2, '.', '');
+    }
+
+    private function formatMoney(float $value): string
+    {
+        return 'R$ ' . number_format($value, 2, ',', '.');
+    }
+}

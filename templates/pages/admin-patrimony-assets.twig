@@ -300,6 +300,13 @@
                 </td>
                 <td data-label="Valor">{{ asset.acquisition_value_label|default('-') ?: '-' }}</td>
                 <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}" aria-label="Visualizar patrimônio {{ asset.name }}" title="Visualizar">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <ellipse cx="12" cy="12" rx="10" ry="6.5" stroke="currentColor" stroke-width="1.8"/>
+                      <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span class="nc-sr-only">Visualizar</span>
+                  </a>
                   <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/editar" aria-label="Editar patrimônio {{ asset.name }}" title="Editar">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                       <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>

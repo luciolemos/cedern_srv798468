@@ -9,6 +9,9 @@
 {% elseif panel_role_key == 'bookshop_operator' %}
   {% set dashboard_page_title = 'Área da livraria' %}
   {% set dashboard_page_lead = 'Acesso dedicado ao acervo, ao PDV e às rotinas internas da Livraria.' %}
+{% elseif panel_role_key == 'finance_operator' %}
+  {% set dashboard_page_title = 'Área financeira' %}
+  {% set dashboard_page_lead = 'Acesso dedicado ao acompanhamento de vendas, pagamentos e cancelamentos da livraria.' %}
 {% elseif panel_role_key == 'manager' %}
   {% set dashboard_page_title = 'Área de gestão' %}
   {% set dashboard_page_lead = 'Acesso de gestão: organize eventos e categorias da agenda.' %}
@@ -21,6 +24,7 @@
   {% set panel_can_events = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
+  {% set panel_can_finance = panel_is_superuser or panel_role_key in ['finance_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_visit_reset = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_patrimony = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
@@ -287,6 +291,19 @@
         link_icon: 'list',
         link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
         delay: 340
+      } %}
+    {% endif %}
+
+    {% if panel_can_finance %}
+      {% include 'components/check-item.twig' with {
+        step: '07',
+        title: 'Finanças',
+        description: 'Consulte vendas, cancelamentos, clientes, pagamentos e operadores da livraria.',
+        href: '/painel/financas',
+        link_label: 'Abrir finanças',
+        link_icon: 'list',
+        link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
+        delay: 380
       } %}
     {% endif %}
   </ul>

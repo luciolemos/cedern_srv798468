@@ -220,7 +220,7 @@ return function (App $app) {
         $memberRoleKey = trim((string) ($_SESSION['member_role_key'] ?? 'member'));
         $memberRoleWeight = (int) ($dashboardRoleWeights[$memberRoleKey] ?? 0);
         $memberHasDashboardAccess = !empty($_SESSION['member_authenticated'])
-            && ($memberRoleWeight >= 20 || $memberRoleKey === 'bookshop_operator');
+            && ($memberRoleWeight >= 20 || in_array($memberRoleKey, ['bookshop_operator', 'finance_operator'], true));
         $memberCanManageUsers = !empty($_SESSION['member_authenticated'])
             && in_array($memberRoleKey, ['admin'], true);
 

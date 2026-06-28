@@ -1,11 +1,24 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
-{% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Resumo da venda' %}
-{% set dashboard_page_lead = 'Conferência detalhada dos itens, valores e estorno de estoque quando necessário.' %}
+{% set dashboard_page_kicker = bookshop_sale_dashboard_kicker|default('Dashboard') %}
+{% set dashboard_page_title = bookshop_sale_dashboard_title|default('Resumo da venda') %}
+{% set dashboard_page_lead = bookshop_sale_dashboard_lead|default('Conferência detalhada dos itens, valores e estorno de estoque quando necessário.') %}
 {% set brand = site.brand|default({}) %}
 {% set site_contact = site.contact|default({}) %}
 {% set footer = site.footer|default({}) %}
+{% set sale_back_url = bookshop_sale_back_url|default('/painel') %}
+{% set sale_back_label = bookshop_sale_back_label|default('Voltar ao painel') %}
+{% set sale_list_url = bookshop_sale_list_url|default('/painel/livraria/vendas') %}
+{% set sale_list_label = bookshop_sale_list_label|default('Vendas') %}
+{% set sale_inventory_url = bookshop_sale_inventory_url|default('/painel/livraria/acervo') %}
+{% set sale_inventory_label = bookshop_sale_inventory_label|default('Acervo') %}
+{% set sale_show_inventory_link = bookshop_sale_show_inventory_link is defined ? bookshop_sale_show_inventory_link : true %}
+{% set sale_show_cancel_button = bookshop_sale_show_cancel_button is defined ? bookshop_sale_show_cancel_button : true %}
+{% set sale_show_create_button = bookshop_sale_show_create_button is defined ? bookshop_sale_show_create_button : true %}
+{% set sale_show_print_button = bookshop_sale_show_print_button is defined ? bookshop_sale_show_print_button : true %}
+{% set sale_create_url = bookshop_sale_create_url|default('/painel/livraria/vendas/nova') %}
+{% set sale_create_label = bookshop_sale_create_label|default('+ Nova venda') %}
+{% set sale_cancel_url = bookshop_sale_cancel_url|default('/painel/livraria/vendas/' ~ bookshop_sale.id ~ '/cancelar') %}
 
 {% block admin_content %}
   <style media="print">
@@ -33,17 +46,23 @@
     } %}
 
     <div class="nc-actions nc-bookshop-toolbar nc-print-hidden" data-aos="fade-up" data-aos-delay="60">
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/vendas">Vendas</a>
-      <a class="nc-btn nc-btn-secondary" href="/painel/livraria/acervo">Acervo</a>
-      <button class="nc-btn nc-btn-secondary" type="button" onclick="window.print()">Imprimir comprovante</button>
-      {% if bookshop_sale.status == 'completed' %}
-        <form method="post" action="/painel/livraria/vendas/{{ bookshop_sale.id }}/cancelar" onsubmit="return confirm('Cancelar esta venda e devolver os itens ao estoque?');">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ sale_back_url }}">{{ sale_back_label }}</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ sale_list_url }}">{{ sale_list_label }}</a>
+      {% if sale_show_inventory_link %}
+        <a class="nc-btn nc-btn-secondary" href="{{ sale_inventory_url }}">{{ sale_inventory_label }}</a>
+      {% endif %}
+      {% if sale_show_print_button %}
+        <button class="nc-btn nc-btn-secondary" type="button" onclick="window.print()">Imprimir comprovante</button>
+      {% endif %}
+      {% if sale_show_cancel_button and bookshop_sale.status == 'completed' %}
+        <form method="post" action="{{ sale_cancel_url }}" onsubmit="return confirm('Cancelar esta venda e devolver os itens ao estoque?');">
           {% include 'components/csrf-field.twig' %}
           <button class="nc-btn nc-btn-secondary" type="submit">Cancelar venda</button>
         </form>
       {% endif %}
-      <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="/painel/livraria/vendas/nova">+ Nova venda</a>
+      {% if sale_show_create_button %}
+        <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="{{ sale_create_url }}">{{ sale_create_label }}</a>
+      {% endif %}
     </div>
 
     <article class="nc-card nc-bookshop-sale-summary-card nc-print-hidden" data-aos="fade-up" data-aos-delay="100">

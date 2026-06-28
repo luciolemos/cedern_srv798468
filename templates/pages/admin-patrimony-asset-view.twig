@@ -1,0 +1,420 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set asset = patrimony_asset|default({}) %}
+{% set dashboard_page_kicker = 'Controle patrimonial' %}
+{% set dashboard_page_title = asset.name|default('Patrimônio') %}
+{% set dashboard_page_lead = 'Resumo do bem patrimonial com identificação, aquisição, localização e histórico operacional.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+{% set asset_photo_url = asset.main_photo_url|default('')|trim %}
+{% if asset_photo_url starts with '/' %}
+  {% set asset_photo_url = patrimony_base_url ~ asset_photo_url %}
+{% endif %}
+{% set purchase_document_url = asset.purchase_document_url|default('')|trim %}
+{% if purchase_document_url starts with '/' %}
+  {% set purchase_document_url = patrimony_base_url ~ purchase_document_url %}
+{% endif %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Visualização do patrimônio" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if patrimony_asset_detail_status == 'movement-created' %}
+      {% set toast_message = 'Movimentação registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'maintenance-created' %}
+      {% set toast_message = 'Manutenção registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'disposal-created' %}
+      {% set toast_message = 'Baixa patrimonial registrada com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-created' %}
+      {% set toast_message = 'Anexo incluído com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-deleted' %}
+      {% set toast_message = 'Anexo removido com sucesso.' %}
+    {% elseif patrimony_asset_detail_status == 'movement-blocked' %}
+      {% set toast_message = 'Bens baixados não podem ser movimentados.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'disposal-blocked' %}
+      {% set toast_message = 'Este bem já está baixado.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-not-found' %}
+      {% set toast_message = 'Anexo não encontrado.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_asset_detail_status == 'attachment-delete-error' %}
+      {% set toast_message = 'Não foi possível remover o anexo.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-admin-toolbar nc-patrimony-view-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio">Voltar à lista</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/editar">Editar cadastro</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/movimentar">Movimentar</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/manutencoes/nova">Nova manutenção</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/anexos/novo">Novo anexo</a>
+      {% if asset.current_status|default('') != 'baixado' %}
+        <a class="nc-btn nc-btn-primary nc-actions-edge-button" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/baixa">Registrar baixa</a>
+      {% endif %}
+    </div>
+
+    <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="90">
+      <div class="nc-patrimony-view-hero">
+        <div class="nc-patrimony-view-media">
+          <div class="nc-patrimony-view-photo-wrap">
+            {% if asset_photo_url %}
+              <img src="{{ asset_photo_url }}" alt="Foto de {{ asset.name|default('patrimônio') }}">
+            {% else %}
+              <span class="nc-patrimony-view-photo-placeholder" aria-hidden="true">{{ asset.name|default('P')|slice(0, 1)|upper }}</span>
+            {% endif %}
+          </div>
+
+          <span class="nc-admin-featured-flag{{ asset.current_status|default('') == 'baixado' ? ' is-off' : ' is-on' }}">{{ asset.current_status_label|default(asset.current_status|default('-')) }}</span>
+
+          <div class="nc-patrimony-view-chip-row">
+            <span class="nc-patrimony-view-chip">{{ asset.category_name|default('Sem categoria') }}</span>
+            <span class="nc-patrimony-view-chip">{{ asset.conservation_state_label|default('-') }}</span>
+            <span class="nc-patrimony-view-chip">{{ asset.quantity_label|default('0') }} {{ asset.unit_of_measure|default('un') }}</span>
+          </div>
+        </div>
+
+        <div class="nc-patrimony-view-body">
+          <div>
+            <p class="nc-patrimony-view-code">{{ asset.asset_code|default('-') }}</p>
+            <h3 class="nc-patrimony-view-title">{{ asset.name|default('Patrimônio') }}</h3>
+            {% if asset.description|default('') %}
+              <div class="nc-patrimony-view-description">{{ asset.description|nl2br }}</div>
+            {% endif %}
+          </div>
+
+          <div class="nc-patrimony-view-summary-grid">
+            <article class="nc-patrimony-view-summary-item">
+              <span class="nc-metric-label">Localização</span>
+              <strong>{{ asset.current_location_display|default('-') }}</strong>
+              <p>{{ asset.subcategory|default('Sem subcategoria') ?: 'Sem subcategoria' }}</p>
+            </article>
+
+            <article class="nc-patrimony-view-summary-item">
+              <span class="nc-metric-label">Responsável</span>
+              <strong>{{ asset.current_responsible|default('Não informado') ?: 'Não informado' }}</strong>
+              <p>{{ asset.responsible_department|default('Setor não informado') ?: 'Setor não informado' }}</p>
+            </article>
+
+            <article class="nc-patrimony-view-summary-item">
+              <span class="nc-metric-label">Aquisição</span>
+              <strong>{{ asset.acquisition_value_label|default('Sem valor') ?: 'Sem valor' }}</strong>
+              <p>{{ asset.acquisition_type_label|default('-') }}{% if asset.acquisition_date|default('') %} · {{ asset.acquisition_date|date('d/m/Y') }}{% endif %}</p>
+            </article>
+
+            <article class="nc-patrimony-view-summary-item">
+              <span class="nc-metric-label">Garantia</span>
+              <strong>
+                {% if asset.warranty_expires_at|default('') %}
+                  {{ asset.warranty_expires_at|date('d/m/Y') }}
+                {% else %}
+                  Sem garantia
+                {% endif %}
+              </strong>
+              <p>
+                {% if asset.warranty_expired %}
+                  Vencida
+                {% elseif asset.warranty_expires_soon %}
+                  Vence em {{ asset.warranty_days_remaining }} dia(s)
+                {% else %}
+                  {{ asset.warranty_expires_at|default('') ? 'Sem alerta' : 'Não informada' }}
+                {% endif %}
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <div class="nc-dashboard-visit-grid" data-aos="fade-up" data-aos-delay="110">
+      <article class="nc-card nc-admin-form-card">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Identificação e uso</h3>
+            <p>Dados básicos do bem patrimonial e seu estado atual.</p>
+          </div>
+        </div>
+
+        <dl class="nc-patrimony-view-inline" aria-label="Dados de identificação do patrimônio">
+          <div>
+            <dt>Código patrimonial</dt>
+            <dd>{{ asset.asset_code|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Categoria</dt>
+            <dd>{{ asset.category_name|default('Sem categoria') }}</dd>
+          </div>
+          <div>
+            <dt>Subcategoria</dt>
+            <dd>{{ asset.subcategory|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Marca</dt>
+            <dd>{{ asset.brand|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Modelo</dt>
+            <dd>{{ asset.model|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Número de série</dt>
+            <dd>{{ asset.serial_number|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Quantidade</dt>
+            <dd>{{ asset.quantity_label|default('0') }} {{ asset.unit_of_measure|default('un') }}</dd>
+          </div>
+          <div>
+            <dt>Patrimônio tombado</dt>
+            <dd>{{ asset.is_tagged ? 'Sim' : 'Não' }}</dd>
+          </div>
+          <div>
+            <dt>Situação</dt>
+            <dd>{{ asset.current_status_label|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Conservação</dt>
+            <dd>{{ asset.conservation_state_label|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Responsável atual</dt>
+            <dd>{{ asset.current_responsible|default('Não informado') ?: 'Não informado' }}</dd>
+          </div>
+          <div>
+            <dt>Setor responsável</dt>
+            <dd>{{ asset.responsible_department|default('Não informado') ?: 'Não informado' }}</dd>
+          </div>
+          <div>
+            <dt>Última movimentação</dt>
+            <dd>{{ asset.last_movement_at|default('') ? asset.last_movement_at|date('d/m/Y H:i') : 'Sem movimentação registrada' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-admin-form-card">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Aquisição e documentos</h3>
+            <p>Informações de compra, garantia e arquivos principais do item.</p>
+          </div>
+        </div>
+
+        <dl class="nc-patrimony-view-inline" aria-label="Dados de aquisição do patrimônio">
+          <div>
+            <dt>Tipo de aquisição</dt>
+            <dd>{{ asset.acquisition_type_label|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Data de aquisição</dt>
+            <dd>{{ asset.acquisition_date|default('') ? asset.acquisition_date|date('d/m/Y') : '-' }}</dd>
+          </div>
+          <div>
+            <dt>Valor de aquisição</dt>
+            <dd>{{ asset.acquisition_value_label|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Fornecedor</dt>
+            <dd>{{ asset.supplier_name|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Nota fiscal</dt>
+            <dd>{{ asset.invoice_number|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Forma de pagamento</dt>
+            <dd>{{ asset.payment_method|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>Garantia até</dt>
+            <dd>{{ asset.warranty_expires_at|default('') ? asset.warranty_expires_at|date('d/m/Y') : '-' }}</dd>
+          </div>
+        </dl>
+
+        <div class="nc-patrimony-view-files">
+          {% if asset_photo_url %}
+            <a class="nc-btn nc-btn-secondary" href="{{ asset_photo_url }}" target="_blank" rel="noopener">
+              Abrir foto principal{% if asset.main_photo_size_label|default('') %} · {{ asset.main_photo_size_label }}{% endif %}
+            </a>
+          {% endif %}
+          {% if purchase_document_url %}
+            <a class="nc-btn nc-btn-secondary" href="{{ purchase_document_url }}" target="_blank" rel="noopener">
+              Abrir documento da compra{% if asset.purchase_document_size_label|default('') %} · {{ asset.purchase_document_size_label }}{% endif %}
+            </a>
+          {% endif %}
+          {% if not asset_photo_url and not purchase_document_url %}
+            <p class="nc-member-empty">Nenhum arquivo principal vinculado a este cadastro.</p>
+          {% endif %}
+        </div>
+      </article>
+    </div>
+
+    {% if asset.notes|default('') %}
+      <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="130">
+        <div class="nc-bookshop-panel-head">
+          <div>
+            <h3>Observações</h3>
+          </div>
+        </div>
+        <div class="nc-patrimony-view-description">{{ asset.notes|nl2br }}</div>
+      </article>
+    {% endif %}
+
+    <div class="nc-dashboard-visit-grid" data-aos="fade-up" data-aos-delay="150">
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Histórico de movimentações</h3>
+        {% if patrimony_asset_movements|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for movement in patrimony_asset_movements %}
+              <li>
+                <div>
+                  <strong>{{ movement.origin_display|default('-') }} → {{ movement.destination_display|default('-') }}</strong>
+                  <p>{{ movement.movement_reason|default('-') }} · {{ movement.movement_responsible|default('-') }}{% if movement.assigned_responsible|default('') %} · Novo responsável: {{ movement.assigned_responsible }}{% endif %}</p>
+                </div>
+                <span>{{ movement.moved_at|default('') ? movement.moved_at|date('d/m/Y H:i') : '-' }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma movimentação registrada.</p>
+        {% endif %}
+      </article>
+
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Manutenções</h3>
+        {% if patrimony_asset_maintenances|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for maintenance in patrimony_asset_maintenances %}
+              {% set maintenance_attachment_url = maintenance.attachment_url|default('')|trim %}
+              {% if maintenance_attachment_url starts with '/' %}
+                {% set maintenance_attachment_url = patrimony_base_url ~ maintenance_attachment_url %}
+              {% endif %}
+              <li>
+                <div>
+                  <strong>{{ maintenance.maintenance_type|default('-') }}</strong>
+                  <p>{{ maintenance.vendor_name|default('Sem empresa') ?: 'Sem empresa' }}{% if maintenance.cost_amount_label|default('') %} · {{ maintenance.cost_amount_label }}{% endif %}</p>
+                  {% if maintenance_attachment_url %}
+                    <p><a class="nc-link" href="{{ maintenance_attachment_url }}" target="_blank" rel="noopener">Abrir anexo da manutenção</a></p>
+                  {% endif %}
+                </div>
+                <span>{{ maintenance.maintenance_date|default('') ? maintenance.maintenance_date|date('d/m/Y H:i') : '-' }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma manutenção registrada.</p>
+        {% endif %}
+      </article>
+
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Baixas patrimoniais</h3>
+        {% if patrimony_asset_disposals|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for disposal in patrimony_asset_disposals %}
+              {% set disposal_document_url = disposal.document_url|default('')|trim %}
+              {% if disposal_document_url starts with '/' %}
+                {% set disposal_document_url = patrimony_base_url ~ disposal_document_url %}
+              {% endif %}
+              <li>
+                <div>
+                  <strong>{{ disposal.disposal_reason|default('-')|replace({'_': ' '})|title }}</strong>
+                  <p>{{ disposal.disposal_responsible|default('-') }}</p>
+                  {% if disposal_document_url %}
+                    <p><a class="nc-link" href="{{ disposal_document_url }}" target="_blank" rel="noopener">Abrir documento da baixa</a></p>
+                  {% endif %}
+                </div>
+                <span>{{ disposal.disposed_at|default('') ? disposal.disposed_at|date('d/m/Y H:i') : '-' }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma baixa registrada.</p>
+        {% endif %}
+      </article>
+    </div>
+
+    <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="170">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Anexos complementares</h3>
+          <p>Arquivos adicionais vinculados a este patrimônio.</p>
+        </div>
+        <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/anexos/novo">Adicionar anexo</a>
+      </div>
+
+      {% if patrimony_asset_attachments|default([])|length > 0 %}
+        <div class="nc-admin-table-wrap">
+          <table class="nc-admin-table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Arquivo</th>
+                <th>Observações</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attachment in patrimony_asset_attachments %}
+                {% set attachment_url = attachment.file_url|default('')|trim %}
+                {% if attachment_url starts with '/' %}
+                  {% set attachment_url = patrimony_base_url ~ attachment_url %}
+                {% endif %}
+                <tr>
+                  <td data-label="Tipo">{{ attachment.attachment_type_label|default('-') }}</td>
+                  <td class="nc-agenda-activity-cell" data-label="Arquivo">
+                    <strong>{{ attachment.label|default(attachment.original_file_name|default('Arquivo')) }}</strong>
+                    <small>{{ attachment.original_file_name|default('-') }}{% if attachment.size_label|default('') %} · {{ attachment.size_label }}{% endif %}</small>
+                  </td>
+                  <td data-label="Observações">{{ attachment.notes|default('-') ?: '-' }}</td>
+                  <td class="nc-admin-table-actions" data-label="Ações">
+                    {% if attachment_url %}
+                      <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ attachment_url }}" target="_blank" rel="noopener" aria-label="Abrir anexo {{ attachment.original_file_name|default('arquivo') }}" title="Abrir">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                          <rect x="5" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        </svg>
+                        <span class="nc-sr-only">Abrir</span>
+                      </a>
+                    {% endif %}
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/editar" aria-label="Editar patrimônio {{ asset.name|default('patrimônio') }}" title="Editar cadastro">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span class="nc-sr-only">Editar cadastro</span>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="nc-member-empty">Nenhum anexo complementar cadastrado.</p>
+      {% endif %}
+    </article>
+
+    <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="190">
+      <div class="nc-bookshop-panel-head">
+        <div>
+          <h3>Registro</h3>
+          <p>Datas de criação e última atualização do cadastro.</p>
+        </div>
+      </div>
+
+      <dl class="nc-patrimony-view-inline" aria-label="Dados de registro do patrimônio">
+        <div>
+          <dt>Criado em</dt>
+          <dd>{{ asset.created_at|default('') ? asset.created_at|date('d/m/Y H:i') : '-' }}</dd>
+        </div>
+        <div>
+          <dt>Atualizado em</dt>
+          <dd>{{ asset.updated_at|default('') ? asset.updated_at|date('d/m/Y H:i') : '-' }}</dd>
+        </div>
+      </dl>
+    </article>
+  </section>
+{% endblock %}

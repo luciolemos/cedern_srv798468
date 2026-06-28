@@ -389,6 +389,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     'name' => 'Operador da Livraria',
                     'description' => 'Acesso exclusivo ao módulo interno da Livraria.',
                 ],
+                [
+                    'id' => 6,
+                    'role_key' => 'finance_operator',
+                    'name' => 'Operador Financeiro',
+                    'description' => 'Acesso exclusivo ao acompanhamento financeiro de vendas e cancelamentos.',
+                ],
             ];
         }
     }
@@ -886,6 +892,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             3 => 'manager',
             4 => 'admin',
             5 => 'bookshop_operator',
+            6 => 'finance_operator',
         ];
         $roleNameById = [
             1 => 'Membro',
@@ -893,6 +900,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             3 => 'Gerente',
             4 => 'Administrador',
             5 => 'Operador da Livraria',
+            6 => 'Operador Financeiro',
         ];
 
         $fallbackRoleKey = (string) ($roleKeyById[$roleId] ?? 'member');
@@ -1295,7 +1303,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 ('operator', 'Operador', 'Operação de funcionalidades internas específicas.'),
                 ('manager', 'Gerente', 'Coordenação de conteúdos e fluxos internos.'),
                 ('admin', 'Administrador', 'Gestão completa de usuários e permissões.'),
-                ('bookshop_operator', 'Operador da Livraria', 'Acesso exclusivo ao módulo interno da Livraria.')
+                ('bookshop_operator', 'Operador da Livraria', 'Acesso exclusivo ao módulo interno da Livraria.'),
+                ('finance_operator', 'Operador Financeiro', 'Acesso exclusivo ao acompanhamento financeiro de vendas e cancelamentos.')
             ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 description = VALUES(description)

@@ -8,6 +8,7 @@
   {% set panel_can_library_books = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_library_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
+  {% set panel_can_finance = panel_is_superuser or panel_role_key in ['finance_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_cede_management = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_patrimony = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
@@ -69,6 +70,7 @@
           {% set dashboard_user_role_label = member_role_name|default({
             'admin': 'Administrador',
             'bookshop_operator': 'Operador da Livraria',
+            'finance_operator': 'Operador Financeiro',
             'manager': 'Gestor',
             'operator': 'Operador',
             'member': 'Membro'
@@ -103,35 +105,37 @@
               </span>
               <span>Início do painel</span>
             </a>
-            <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
-              <summary class="nc-dashboard-user-menu-group-title">AGENDA</summary>
-              <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/eventos">
-                <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 7H20M8 12H20M8 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="4.5" cy="7" r="1.5" fill="currentColor"/>
-                    <circle cx="4.5" cy="12" r="1.5" fill="currentColor"/>
-                    <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
-                  </svg>
-                </span>
-                <span>Lista de eventos</span>
-              </a>
-              {% if panel_can_categories %}
-                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/categorias">
+            {% if panel_can_events %}
+              <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
+                <summary class="nc-dashboard-user-menu-group-title">AGENDA</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/eventos">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                      <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
-                      <circle cx="4" cy="12" r="1" fill="currentColor"/>
-                      <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                      <path d="M8 7H20M8 12H20M8 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="4.5" cy="7" r="1.5" fill="currentColor"/>
+                      <circle cx="4.5" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
                     </svg>
                   </span>
-                  <span>Lista de categorias</span>
+                  <span>Lista de eventos</span>
                 </a>
-              {% endif %}
-            </details>
+                {% if panel_can_categories %}
+                  <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/categorias">
+                    <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 6.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M5 17.5H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="4" cy="6.5" r="1" fill="currentColor"/>
+                        <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                        <circle cx="4" cy="17.5" r="1" fill="currentColor"/>
+                      </svg>
+                    </span>
+                    <span>Lista de categorias</span>
+                  </a>
+                {% endif %}
+              </details>
+            {% endif %}
             {% if panel_can_library_books %}
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/biblioteca/' %}open{% endif %}>
                 <summary class="nc-dashboard-user-menu-group-title">CONTEÚDOS</summary>
@@ -279,6 +283,22 @@
                     </svg>
                   </span>
                   <span>Vendas PDV</span>
+                </a>
+              </details>
+            {% endif %}
+            {% if panel_can_finance %}
+              <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/financas' %}open{% endif %}>
+                <summary class="nc-dashboard-user-menu-group-title">FINANÇAS</summary>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/financas">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Vendas e cancelamentos</span>
                 </a>
               </details>
             {% endif %}
@@ -465,21 +485,10 @@
             <span class="nc-admin-link-label">Dashboard</span>
           </a>
 
-          <details class="nc-admin-nav-group" aria-label="Seção agenda" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
-            <summary class="nc-admin-nav-group-title">AGENDA</summary>
-            <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/eventos' ? ' is-active' : '' }}" href="/painel/eventos">
-              <span class="nc-admin-link-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 7H20M8 12H20M8 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                  <circle cx="4.5" cy="7" r="1.5" fill="currentColor"/>
-                  <circle cx="4.5" cy="12" r="1.5" fill="currentColor"/>
-                  <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
-                </svg>
-              </span>
-              <span class="nc-admin-link-label">Gestão de eventos</span>
-            </a>
-            {% if panel_can_categories %}
-              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/categorias' ? ' is-active' : '' }}" href="/painel/categorias">
+          {% if panel_can_events %}
+            <details class="nc-admin-nav-group" aria-label="Seção agenda" {% if current_path starts with '/painel/eventos' or current_path starts with '/painel/categorias' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">AGENDA</summary>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/eventos' ? ' is-active' : '' }}" href="/painel/eventos">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 7H20M8 12H20M8 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -488,10 +497,23 @@
                     <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Gestão de categorias</span>
+                <span class="nc-admin-link-label">Gestão de eventos</span>
               </a>
-            {% endif %}
-          </details>
+              {% if panel_can_categories %}
+                <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/categorias' ? ' is-active' : '' }}" href="/painel/categorias">
+                  <span class="nc-admin-link-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 7H20M8 12H20M8 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="4.5" cy="7" r="1.5" fill="currentColor"/>
+                      <circle cx="4.5" cy="12" r="1.5" fill="currentColor"/>
+                      <circle cx="4.5" cy="17" r="1.5" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span class="nc-admin-link-label">Gestão de categorias</span>
+                </a>
+              {% endif %}
+            </details>
+          {% endif %}
 
           {% if panel_can_bookshop %}
             <details class="nc-admin-nav-group" aria-label="Seção livraria" {% if current_path starts with '/painel/livraria' %}open{% endif %}>
@@ -609,6 +631,23 @@
                   </svg>
                 </span>
                 <span class="nc-admin-link-label">Vendas PDV</span>
+              </a>
+            </details>
+          {% endif %}
+
+          {% if panel_can_finance %}
+            <details class="nc-admin-nav-group" aria-label="Seção finanças" {% if current_path starts with '/painel/financas' %}open{% endif %}>
+              <summary class="nc-admin-nav-group-title">FINANÇAS</summary>
+              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/financas' ? ' is-active' : '' }}" href="/painel/financas">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Vendas e cancelamentos</span>
               </a>
             </details>
           {% endif %}

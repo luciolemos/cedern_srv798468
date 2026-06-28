@@ -40,6 +40,13 @@ class AdminDashboardPageAction extends AbstractPageAction
             return $response->withHeader('Location', '/painel/livraria')->withStatus(302);
         }
 
+        if (
+            empty($_SESSION['admin_authenticated'])
+            && (string) ($_SESSION['member_role_key'] ?? '') === 'finance_operator'
+        ) {
+            return $response->withHeader('Location', '/painel/financas')->withStatus(302);
+        }
+
         $flash = $this->consumeSessionFlash(self::FLASH_KEY);
         $visitMetrics = [
             'baseline_started_at' => null,
