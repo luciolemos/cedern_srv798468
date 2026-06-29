@@ -30,6 +30,20 @@ CREATE TABLE IF NOT EXISTS member_users (
     phone_landline VARCHAR(30) NULL,
     birth_date DATE NULL,
     birth_place VARCHAR(140) NULL,
+    cpf VARCHAR(14) NULL,
+    postal_code VARCHAR(9) NULL,
+    street_address VARCHAR(160) NULL,
+    address_number VARCHAR(20) NULL,
+    address_complement VARCHAR(120) NULL,
+    neighborhood VARCHAR(120) NULL,
+    address_city VARCHAR(120) NULL,
+    address_state CHAR(2) NULL,
+    preferred_due_day TINYINT UNSIGNED NULL,
+    contribution_amount DECIMAL(10,2) NULL,
+    contribution_plan_label VARCHAR(120) NULL,
+    preferred_payment_method VARCHAR(30) NULL,
+    billing_email_opt_in TINYINT(1) NOT NULL DEFAULT 0,
+    billing_whatsapp_opt_in TINYINT(1) NOT NULL DEFAULT 0,
     institutional_role VARCHAR(120) NULL,
     member_type VARCHAR(20) NULL,
     profile_photo_path VARCHAR(255) NULL,
@@ -102,6 +116,60 @@ CREATE TABLE IF NOT EXISTS member_management_roles (
         FOREIGN KEY (management_id) REFERENCES institutional_managements(id)
         ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_member_management_roles_member
+        FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS member_contribution_charges (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    member_user_id BIGINT UNSIGNED NOT NULL,
+    competence CHAR(7) NOT NULL,
+    due_date DATE NOT NULL,
+    amount_due DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    preferred_payment_method VARCHAR(30) NULL,
+    payment_recorded_method VARCHAR(30) NULL,
+    paid_at DATETIME NULL,
+    exemption_reason VARCHAR(255) NULL,
+    gateway_provider VARCHAR(30) NULL,
+    gateway_customer_id VARCHAR(64) NULL,
+    gateway_payment_id VARCHAR(64) NULL,
+    gateway_billing_type VARCHAR(20) NULL,
+    gateway_status VARCHAR(40) NULL,
+    gateway_invoice_url VARCHAR(255) NULL,
+    gateway_bank_slip_url VARCHAR(255) NULL,
+    gateway_transaction_receipt_url VARCHAR(255) NULL,
+    gateway_pix_payload LONGTEXT NULL,
+    gateway_pix_encoded_image LONGTEXT NULL,
+    gateway_pix_expiration_date DATETIME NULL,
+    gateway_last_synced_at DATETIME NULL,
+    generated_by_user_id BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_member_contribution_charge_member_competence (member_user_id, competence),
+    KEY idx_member_contribution_charge_status_due (status, due_date),
+    KEY idx_member_contribution_charge_member (member_user_id),
+    KEY idx_member_contribution_charge_gateway_payment (gateway_payment_id),
+    CONSTRAINT fk_member_contribution_charge_member
+        FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS member_contribution_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    charge_id BIGINT UNSIGNED NOT NULL,
+    member_user_id BIGINT UNSIGNED NOT NULL,
+    event_type VARCHAR(40) NOT NULL,
+    event_description VARCHAR(255) NOT NULL,
+    acted_by_user_id BIGINT UNSIGNED NULL,
+    payload_json LONGTEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_member_contribution_events_charge (charge_id),
+    KEY idx_member_contribution_events_member (member_user_id),
+    CONSTRAINT fk_member_contribution_events_charge
+        FOREIGN KEY (charge_id) REFERENCES member_contribution_charges(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_member_contribution_events_member
         FOREIGN KEY (member_user_id) REFERENCES member_users(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

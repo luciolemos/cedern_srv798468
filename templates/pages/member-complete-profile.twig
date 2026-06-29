@@ -18,10 +18,10 @@
 
         <div class="nc-member-profile-notice" role="note" aria-label="Orientações sobre dados do perfil">
           <strong>Dados necessários para ativar sua área do membro</strong>
-          <p>Usamos essas informações para identificar seu cadastro, manter contato com você e proteger o acesso à área restrita do CEDE.</p>
+          <p>Usamos essas informações para identificar seu cadastro, manter contato com você, organizar a contribuição mensal e proteger o acesso à área restrita do CEDE.</p>
           <ul class="nc-member-profile-notice-list">
-            <li><span>Obrigatórios:</span> foto de perfil, celular e data de nascimento.</li>
-            <li><span>Opcional:</span> telefone fixo.</li>
+            <li><span>Obrigatórios:</span> foto de perfil, celular, data de nascimento, CPF, endereço e dados básicos da contribuição.</li>
+            <li><span>Opcional:</span> telefone fixo, complemento do endereço e autorizações de lembrete.</li>
             <li class="nc-member-profile-notice-line"><span>Transparência:</span> o tratamento segue a <a class="nc-link" href="/politica-de-privacidade">Política de Privacidade</a> do CEDE.</li>
           </ul>
         </div>
@@ -96,33 +96,9 @@
                 <label class="nc-admin-login-label" for="birth_state">UF de nascimento</label>
                 <select class="nc-admin-login-input" id="birth_state" name="birth_state" data-member-birth-state required>
                   <option value="">Selecione a UF</option>
-                  <option value="AC"{% if member_profile_form.birth_state|default('') == 'AC' %} selected{% endif %}>Acre</option>
-                  <option value="AL"{% if member_profile_form.birth_state|default('') == 'AL' %} selected{% endif %}>Alagoas</option>
-                  <option value="AP"{% if member_profile_form.birth_state|default('') == 'AP' %} selected{% endif %}>Amapá</option>
-                  <option value="AM"{% if member_profile_form.birth_state|default('') == 'AM' %} selected{% endif %}>Amazonas</option>
-                  <option value="BA"{% if member_profile_form.birth_state|default('') == 'BA' %} selected{% endif %}>Bahia</option>
-                  <option value="CE"{% if member_profile_form.birth_state|default('') == 'CE' %} selected{% endif %}>Ceará</option>
-                  <option value="DF"{% if member_profile_form.birth_state|default('') == 'DF' %} selected{% endif %}>Distrito Federal</option>
-                  <option value="ES"{% if member_profile_form.birth_state|default('') == 'ES' %} selected{% endif %}>Espírito Santo</option>
-                  <option value="GO"{% if member_profile_form.birth_state|default('') == 'GO' %} selected{% endif %}>Goiás</option>
-                  <option value="MA"{% if member_profile_form.birth_state|default('') == 'MA' %} selected{% endif %}>Maranhão</option>
-                  <option value="MT"{% if member_profile_form.birth_state|default('') == 'MT' %} selected{% endif %}>Mato Grosso</option>
-                  <option value="MS"{% if member_profile_form.birth_state|default('') == 'MS' %} selected{% endif %}>Mato Grosso do Sul</option>
-                  <option value="MG"{% if member_profile_form.birth_state|default('') == 'MG' %} selected{% endif %}>Minas Gerais</option>
-                  <option value="PA"{% if member_profile_form.birth_state|default('') == 'PA' %} selected{% endif %}>Pará</option>
-                  <option value="PB"{% if member_profile_form.birth_state|default('') == 'PB' %} selected{% endif %}>Paraíba</option>
-                  <option value="PR"{% if member_profile_form.birth_state|default('') == 'PR' %} selected{% endif %}>Paraná</option>
-                  <option value="PE"{% if member_profile_form.birth_state|default('') == 'PE' %} selected{% endif %}>Pernambuco</option>
-                  <option value="PI"{% if member_profile_form.birth_state|default('') == 'PI' %} selected{% endif %}>Piauí</option>
-                  <option value="RJ"{% if member_profile_form.birth_state|default('') == 'RJ' %} selected{% endif %}>Rio de Janeiro</option>
-                  <option value="RN"{% if member_profile_form.birth_state|default('') == 'RN' %} selected{% endif %}>Rio Grande do Norte</option>
-                  <option value="RS"{% if member_profile_form.birth_state|default('') == 'RS' %} selected{% endif %}>Rio Grande do Sul</option>
-                  <option value="RO"{% if member_profile_form.birth_state|default('') == 'RO' %} selected{% endif %}>Rondônia</option>
-                  <option value="RR"{% if member_profile_form.birth_state|default('') == 'RR' %} selected{% endif %}>Roraima</option>
-                  <option value="SC"{% if member_profile_form.birth_state|default('') == 'SC' %} selected{% endif %}>Santa Catarina</option>
-                  <option value="SP"{% if member_profile_form.birth_state|default('') == 'SP' %} selected{% endif %}>São Paulo</option>
-                  <option value="SE"{% if member_profile_form.birth_state|default('') == 'SE' %} selected{% endif %}>Sergipe</option>
-                  <option value="TO"{% if member_profile_form.birth_state|default('') == 'TO' %} selected{% endif %}>Tocantins</option>
+                  {% for state_code, state_label in member_profile_state_options|default({}) %}
+                    <option value="{{ state_code }}"{% if member_profile_form.birth_state|default('') == state_code %} selected{% endif %}>{{ state_label }}</option>
+                  {% endfor %}
                 </select>
               </div>
 
@@ -132,6 +108,103 @@
                   <option value="">Selecione a cidade</option>
                 </select>
                 <input type="hidden" name="birth_place" value="{{ member_profile_form.birth_place|default('') }}">
+              </div>
+
+              <div class="nc-member-profile-field-full nc-member-profile-section-intro">
+                <h3>Dados financeiros da contribuição</h3>
+                <p class="nc-member-subtitle">Essas informações permitem organizar mensalidades, cobranças e lembretes sem depender de controles paralelos.</p>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="cpf">CPF <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="cpf" name="cpf" type="text" value="{{ member_profile_form.cpf|default('') }}" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="postal_code">CEP <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="postal_code" name="postal_code" type="text" value="{{ member_profile_form.postal_code|default('') }}" inputmode="numeric" maxlength="9" placeholder="00000-000" required>
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-admin-login-label" for="street_address">Logradouro <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="street_address" name="street_address" type="text" value="{{ member_profile_form.street_address|default('') }}" autocomplete="address-line1" placeholder="Rua, avenida, travessa..." required>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="address_number">Número <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="address_number" name="address_number" type="text" value="{{ member_profile_form.address_number|default('') }}" autocomplete="address-line2" placeholder="Ex: 123" required>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="address_complement">Complemento <span class="nc-member-profile-tag is-optional">Opcional</span></label>
+                <input class="nc-admin-login-input" id="address_complement" name="address_complement" type="text" value="{{ member_profile_form.address_complement|default('') }}" placeholder="Apto, bloco, referência...">
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="neighborhood">Bairro <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="neighborhood" name="neighborhood" type="text" value="{{ member_profile_form.neighborhood|default('') }}" autocomplete="address-level3" required>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="address_city">Cidade <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <input class="nc-admin-login-input" id="address_city" name="address_city" type="text" value="{{ member_profile_form.address_city|default('') }}" autocomplete="address-level2" required>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="address_state">UF <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <select class="nc-admin-login-input" id="address_state" name="address_state" autocomplete="address-level1" required>
+                  <option value="">Selecione a UF</option>
+                  {% for state_code, state_label in member_profile_state_options|default({}) %}
+                    <option value="{{ state_code }}"{% if member_profile_form.address_state|default('') == state_code %} selected{% endif %}>{{ state_label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="preferred_due_day">Dia de vencimento preferido <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <select class="nc-admin-login-input" id="preferred_due_day" name="preferred_due_day" required>
+                  <option value="">Selecione o dia</option>
+                  {% for day in 1..28 %}
+                    {% set day_value = day ~ '' %}
+                    <option value="{{ day_value }}"{% if member_profile_form.preferred_due_day|default('') == day_value %} selected{% endif %}>Dia {{ '%02d'|format(day) }}</option>
+                  {% endfor %}
+                </select>
+                <small class="nc-member-profile-help">Limitamos até o dia 28 para evitar inconsistências em meses menores.</small>
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="contribution_amount">Valor da contribuição</label>
+                <input class="nc-admin-login-input" id="contribution_amount" name="contribution_amount" type="text" value="{{ member_profile_form.contribution_amount|default('') }}" inputmode="decimal" placeholder="Ex: 50,00">
+                <small class="nc-member-profile-help">Preencha este valor ou informe abaixo o plano definido pela diretoria.</small>
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-admin-login-label" for="contribution_plan_label">Plano definido pela diretoria</label>
+                <input class="nc-admin-login-input" id="contribution_plan_label" name="contribution_plan_label" type="text" value="{{ member_profile_form.contribution_plan_label|default('') }}" placeholder="Ex: Plano associado efetivo 2026">
+              </div>
+
+              <div class="nc-admin-login-field">
+                <label class="nc-admin-login-label" for="preferred_payment_method">Forma preferida <span class="nc-member-profile-tag is-required">Obrigatório</span></label>
+                <select class="nc-admin-login-input" id="preferred_payment_method" name="preferred_payment_method" required>
+                  <option value="">Selecione a forma</option>
+                  {% for payment_value, payment_label in member_profile_payment_method_options|default({}) %}
+                    <option value="{{ payment_value }}"{% if member_profile_form.preferred_payment_method|default('') == payment_value %} selected{% endif %}>{{ payment_label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-member-profile-consent" for="billing_email_opt_in">
+                  <input id="billing_email_opt_in" name="billing_email_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_email_opt_in|default('') == '1' %} checked{% endif %}>
+                  <span>Autorizo o CEDE a enviar cobranças e segunda via por e-mail.</span>
+                </label>
+              </div>
+
+              <div class="nc-admin-login-field nc-member-profile-field-full">
+                <label class="nc-member-profile-consent" for="billing_whatsapp_opt_in">
+                  <input id="billing_whatsapp_opt_in" name="billing_whatsapp_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_whatsapp_opt_in|default('') == '1' %} checked{% endif %}>
+                  <span>Autorizo o CEDE a enviar lembretes de contribuição por WhatsApp.</span>
+                </label>
               </div>
 
               <div class="nc-admin-login-field nc-member-profile-field-full">

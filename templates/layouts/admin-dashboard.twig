@@ -288,6 +288,7 @@
             {% endif %}
             {% if panel_can_finance %}
               {% set finance_livraria_active = current_path == '/painel/financas' or current_path starts with '/painel/financas/vendas/' %}
+              {% set finance_contribuicoes_active = current_path starts with '/painel/financas/contribuicoes' %}
               {% set finance_cantina_active = current_path starts with '/painel/financas/cantina' %}
               {% set finance_bazar_active = current_path starts with '/painel/financas/bazar' %}
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/financas' %}open{% endif %}>
@@ -302,6 +303,15 @@
                     </svg>
                   </span>
                   <span>Livraria</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink{{ finance_contribuicoes_active ? ' is-active' : '' }}" href="{{ base_url ?? '' }}/painel/financas/contribuicoes">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  <span>Contribuições</span>
                 </a>
                 <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink{{ finance_cantina_active ? ' is-active' : '' }}" href="/painel/financas/cantina">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
@@ -662,6 +672,7 @@
 
           {% if panel_can_finance %}
             {% set finance_livraria_active = current_path == '/painel/financas' or current_path starts with '/painel/financas/vendas/' %}
+            {% set finance_contribuicoes_active = current_path starts with '/painel/financas/contribuicoes' %}
             {% set finance_cantina_active = current_path starts with '/painel/financas/cantina' %}
             {% set finance_bazar_active = current_path starts with '/painel/financas/bazar' %}
             <details class="nc-admin-nav-group" aria-label="Seção finanças" {% if current_path starts with '/painel/financas' %}open{% endif %}>
@@ -676,6 +687,15 @@
                   </svg>
                 </span>
                 <span class="nc-admin-link-label">Livraria</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ finance_contribuicoes_active ? ' is-active' : '' }}" href="{{ base_url ?? '' }}/painel/financas/contribuicoes">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Contribuições</span>
               </a>
               <a class="nc-link nc-admin-submenu-link{{ finance_cantina_active ? ' is-active' : '' }}" href="/painel/financas/cantina">
                 <span class="nc-admin-link-icon" aria-hidden="true">

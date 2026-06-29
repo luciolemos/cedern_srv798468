@@ -10,6 +10,8 @@
   const photoInput = form.querySelector('#profile_photo');
   const phoneMobileInput = form.querySelector('#phone_mobile');
   const phoneLandlineInput = form.querySelector('#phone_landline');
+  const cpfInput = form.querySelector('#cpf');
+  const postalCodeInput = form.querySelector('#postal_code');
 
   const cityCache = new Map();
   const requestTimeoutMs = 5000;
@@ -79,6 +81,34 @@
     }
 
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6, 10)}`;
+  };
+
+  const formatCpf = (value) => {
+    const digits = sanitizeDigits(value).slice(0, 11);
+
+    if (digits.length <= 3) {
+      return digits;
+    }
+
+    if (digits.length <= 6) {
+      return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    }
+
+    if (digits.length <= 9) {
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    }
+
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+  };
+
+  const formatPostalCode = (value) => {
+    const digits = sanitizeDigits(value).slice(0, 8);
+
+    if (digits.length <= 5) {
+      return digits;
+    }
+
+    return `${digits.slice(0, 5)}-${digits.slice(5, 8)}`;
   };
 
   const applyPhoneMask = (input, formatter) => {
@@ -303,6 +333,8 @@
 
   applyPhoneMask(phoneMobileInput, formatMobilePhone);
   applyPhoneMask(phoneLandlineInput, formatLandlinePhone);
+  applyPhoneMask(cpfInput, formatCpf);
+  applyPhoneMask(postalCodeInput, formatPostalCode);
   initCityCascade();
   initPhotoPreview();
 })();

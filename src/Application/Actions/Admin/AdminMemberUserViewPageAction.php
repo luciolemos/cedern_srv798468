@@ -24,6 +24,12 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         'pending' => 'Pendente',
         'blocked' => 'Bloqueado',
     ];
+    private const PAYMENT_METHOD_LABELS = [
+        'boleto' => 'Boleto',
+        'pix' => 'Pix',
+        'pix_automatico' => 'Pix Automático',
+        'manual' => 'Pagamento manual',
+    ];
 
     private MemberAuthRepository $memberAuthRepository;
 
@@ -100,6 +106,18 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
         $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
         $user['birth_date_display'] = $this->formatDate((string) ($user['birth_date'] ?? ''));
+        $user['cpf_display'] = $this->formatCpf((string) ($user['cpf'] ?? ''));
+        $user['postal_code_display'] = $this->formatPostalCode((string) ($user['postal_code'] ?? ''));
+        $user['address_display'] = $this->formatAddress($user);
+        $user['preferred_due_day_display'] = $this->formatDueDay($user['preferred_due_day'] ?? null);
+        $user['contribution_amount_display'] = $this->formatCurrency((string) ($user['contribution_amount'] ?? ''));
+        $user['contribution_plan_label_display'] = trim((string) ($user['contribution_plan_label'] ?? '')) !== ''
+            ? (string) $user['contribution_plan_label']
+            : 'Não definido';
+        $preferredPaymentMethod = strtolower(trim((string) ($user['preferred_payment_method'] ?? '')));
+        $user['preferred_payment_method_display'] = self::PAYMENT_METHOD_LABELS[$preferredPaymentMethod] ?? 'Não definido';
+        $user['billing_email_opt_in_label'] = (int) ($user['billing_email_opt_in'] ?? 0) === 1 ? 'Autorizado' : 'Não autorizado';
+        $user['billing_whatsapp_opt_in_label'] = (int) ($user['billing_whatsapp_opt_in'] ?? 0) === 1 ? 'Autorizado' : 'Não autorizado';
         $user['privacy_notice_accepted_at_display'] = $this->formatDateTime((string) ($user['privacy_notice_accepted_at'] ?? ''));
         $user['privacy_notice_version_display'] = trim((string) ($user['privacy_notice_version'] ?? '')) !== ''
             ? (string) $user['privacy_notice_version']
@@ -141,6 +159,81 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         }
 
         return $value;
+    }
+
+    private function formatCpf(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        if (strlen($digits) !== 11) {
+            return trim($value) !== '' ? $value : '-';
+        }
+
+        return sprintf(
+            '%s.%s.%s-%s',
+            substr($digits, 0, 3),
+            substr($digits, 3, 3),
+            substr($digits, 6, 3),
+            substr($digits, 9, 2)
+        );
+    }
+
+    private function formatPostalCode(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        if (strlen($digits) !== 8) {
+            return trim($value) !== '' ? $value : '-';
+        }
+
+        return sprintf('%s-%s', substr($digits, 0, 5), substr($digits, 5, 3));
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function formatAddress(array $user): string
+    {
+        $street = trim((string) ($user['street_address'] ?? ''));
+        $number = trim((string) ($user['address_number'] ?? ''));
+        $complement = trim((string) ($user['address_complement'] ?? ''));
+        $neighborhood = trim((string) ($user['neighborhood'] ?? ''));
+        $city = trim((string) ($user['address_city'] ?? ''));
+        $state = strtoupper(trim((string) ($user['address_state'] ?? '')));
+        $postalCode = $this->formatPostalCode((string) ($user['postal_code'] ?? ''));
+
+        $lineOne = trim(implode(', ', array_filter([$street, $number], static fn (string $part): bool => $part !== '')));
+        if ($complement !== '') {
+            $lineOne = trim($lineOne . ' - ' . $complement);
+        }
+
+        $lineTwo = trim(implode(' - ', array_filter([
+            $neighborhood,
+            trim(implode('/', array_filter([$city, $state], static fn (string $part): bool => $part !== ''))),
+            $postalCode !== '-' ? 'CEP ' . $postalCode : '',
+        ], static fn (string $part): bool => $part !== '')));
+
+        $address = trim(implode("\n", array_filter([$lineOne, $lineTwo], static fn (string $part): bool => $part !== '')));
+
+        return $address !== '' ? $address : '-';
+    }
+
+    private function formatDueDay(mixed $value): string
+    {
+        $day = (int) $value;
+        if ($day < 1 || $day > 28) {
+            return 'Não definido';
+        }
+
+        return 'Dia ' . sprintf('%02d', $day);
+    }
+
+    private function formatCurrency(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return 'Não definido';
+        }
+
+        return 'R$ ' . number_format((float) $normalized, 2, ',', '.');
     }
 
     private function formatDate(string $value): string

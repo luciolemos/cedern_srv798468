@@ -29,6 +29,16 @@ use App\Application\Actions\Admin\AdminBookshopCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryListPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminBookshopDashboardPageAction;
+use App\Application\Actions\Admin\AdminFinanceContributionsGenerateAction;
+use App\Application\Actions\Admin\AdminFinanceContributionsPageAction;
+use App\Application\Actions\Admin\AdminFinanceContributionMarkExemptAction;
+use App\Application\Actions\Admin\AdminFinanceContributionMarkPaidAction;
+use App\Application\Actions\Admin\AdminFinanceContributionOpenWhatsappAction;
+use App\Application\Actions\Admin\AdminFinanceContributionSendEmailAction;
+use App\Application\Actions\Admin\AdminFinanceContributionAsaasWebhookAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewayCreateAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewaySyncAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewayViewPageAction;
 use App\Application\Actions\Admin\AdminFinanceSectionPlaceholderPageAction;
 use App\Application\Actions\Admin\AdminFinanceSalesPageAction;
 use App\Application\Actions\Admin\AdminFinanceSaleViewPageAction;
@@ -425,6 +435,24 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->get('/financas', AdminFinanceSalesPageAction::class)
             ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/contribuicoes', AdminFinanceContributionsPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/gerar', AdminFinanceContributionsGenerateAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/{id}/receber', AdminFinanceContributionMarkPaidAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/{id}/isentar', AdminFinanceContributionMarkExemptAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/contribuicoes/{id}/cobranca', AdminFinanceContributionGatewayViewPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/{id}/cobranca/criar', AdminFinanceContributionGatewayCreateAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/{id}/cobranca/sincronizar', AdminFinanceContributionGatewaySyncAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/{id}/enviar-email', AdminFinanceContributionSendEmailAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/contribuicoes/{id}/whatsapp', AdminFinanceContributionOpenWhatsappAction::class)
+            ->add($panelFinanceAccessMiddleware);
         $group->get('/financas/{section:cantina|bazar}', AdminFinanceSectionPlaceholderPageAction::class)
             ->add($panelFinanceAccessMiddleware);
         $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)
@@ -472,11 +500,20 @@ return function (App $app) {
     $app->get('/admin/financas', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/financas')->withStatus(302);
     });
+    $app->get('/admin/financas/contribuicoes', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/financas/contribuicoes')->withStatus(302);
+    });
+    $app->get('/admin/financas/contribuicoes/{id}/cobranca', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/financas/contribuicoes/' . $id . '/cobranca')->withStatus(302);
+    });
     $app->get('/admin/financas/vendas/{id}', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
 
         return $response->withHeader('Location', '/painel/financas/vendas/' . $id)->withStatus(302);
     });
+    $app->post('/webhooks/asaas/contribuicoes', AdminFinanceContributionAsaasWebhookAction::class);
     $app->get('/admin/agenda', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/eventos')->withStatus(302);
     });

@@ -6805,6 +6805,24 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   grid-column: 1 / -1;
 }
 
+.nc-member-profile-section-intro {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 36%, var(--surface-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-soft-1) 12%, var(--surface-main));
+}
+
+.nc-member-profile-section-intro h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.nc-member-profile-section-intro .nc-member-subtitle {
+  margin: 0;
+}
+
 .nc-member-profile-field-name,
 .nc-member-profile-field-birth-date,
 .nc-member-profile-field-email {
@@ -7902,6 +7920,24 @@ textarea.nc-admin-form-input {
   color: var(--text-muted);
 }
 
+.nc-admin-featured-flag.is-info {
+  border-color: color-mix(in srgb, var(--swatch-blue-1) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--swatch-blue-1) 12%, var(--surface-main));
+  color: color-mix(in srgb, var(--swatch-blue-1) 82%, var(--text-main));
+}
+
+.nc-admin-featured-flag.is-warning {
+  border-color: color-mix(in srgb, var(--swatch-orange-1) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--swatch-orange-1) 14%, var(--surface-main));
+  color: color-mix(in srgb, var(--swatch-orange-1) 82%, var(--text-main));
+}
+
+.nc-admin-featured-flag.is-critical {
+  border-color: color-mix(in srgb, var(--swatch-red-1) 46%, var(--surface-border));
+  background: color-mix(in srgb, var(--swatch-red-1) 14%, var(--surface-main));
+  color: color-mix(in srgb, var(--swatch-red-3) 78%, var(--text-main));
+}
+
 .nc-admin-user-photo-cell {
   width: 62px;
 }
@@ -8361,6 +8397,104 @@ textarea.nc-admin-form-input {
   outline: none;
   border-color: color-mix(in srgb, var(--theme-accent-1) 58%, var(--surface-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent-1) 18%, transparent);
+}
+
+.nc-contribution-actions {
+  white-space: normal;
+}
+
+.nc-contribution-actions .nc-admin-inline-form {
+  width: 100%;
+}
+
+.nc-contribution-action-note {
+  display: inline-flex;
+  max-width: 18rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nc-contribution-gateway-actions,
+.nc-contribution-gateway-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.nc-contribution-charge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nc-admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 0 0;
+}
+
+.nc-admin-summary-grid dt {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-bottom: 0.24rem;
+}
+
+.nc-admin-summary-grid dd {
+  margin: 0;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.nc-contribution-pix-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.nc-contribution-pix-layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+}
+
+.nc-contribution-pix-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--theme-soft-1) 10%, var(--surface-main));
+}
+
+.nc-contribution-pix-qr img {
+  display: block;
+  width: min(100%, 220px);
+  height: auto;
+}
+
+.nc-contribution-pix-data {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.nc-contribution-textarea {
+  min-height: 7.5rem;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 820px) {
+  .nc-contribution-pix-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .nc-admin-action-edit {

@@ -18,6 +18,41 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 
     private const FLASH_KEY = 'member_complete_profile';
     private const PRIVACY_NOTICE_VERSION = 'member-profile-privacy-v1';
+    private const BRAZIL_STATE_OPTIONS = [
+        'AC' => 'Acre',
+        'AL' => 'Alagoas',
+        'AP' => 'Amapá',
+        'AM' => 'Amazonas',
+        'BA' => 'Bahia',
+        'CE' => 'Ceará',
+        'DF' => 'Distrito Federal',
+        'ES' => 'Espírito Santo',
+        'GO' => 'Goiás',
+        'MA' => 'Maranhão',
+        'MT' => 'Mato Grosso',
+        'MS' => 'Mato Grosso do Sul',
+        'MG' => 'Minas Gerais',
+        'PA' => 'Pará',
+        'PB' => 'Paraíba',
+        'PR' => 'Paraná',
+        'PE' => 'Pernambuco',
+        'PI' => 'Piauí',
+        'RJ' => 'Rio de Janeiro',
+        'RN' => 'Rio Grande do Norte',
+        'RS' => 'Rio Grande do Sul',
+        'RO' => 'Rondônia',
+        'RR' => 'Roraima',
+        'SC' => 'Santa Catarina',
+        'SP' => 'São Paulo',
+        'SE' => 'Sergipe',
+        'TO' => 'Tocantins',
+    ];
+    private const PAYMENT_METHOD_OPTIONS = [
+        'boleto' => 'Boleto',
+        'pix' => 'Pix',
+        'pix_automatico' => 'Pix Automático',
+        'manual' => 'Pagamento manual',
+    ];
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
     {
@@ -61,6 +96,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'birth_city' => $existingBirthCity,
             'birth_place' => (string) ($member['birth_place'] ?? ''),
             'profile_photo_path' => (string) ($member['profile_photo_path'] ?? ''),
+            'cpf' => (string) ($member['cpf'] ?? ''),
+            'postal_code' => (string) ($member['postal_code'] ?? ''),
+            'street_address' => (string) ($member['street_address'] ?? ''),
+            'address_number' => (string) ($member['address_number'] ?? ''),
+            'address_complement' => (string) ($member['address_complement'] ?? ''),
+            'neighborhood' => (string) ($member['neighborhood'] ?? ''),
+            'address_city' => (string) ($member['address_city'] ?? ''),
+            'address_state' => (string) ($member['address_state'] ?? ''),
+            'preferred_due_day' => (string) ($member['preferred_due_day'] ?? ''),
+            'contribution_amount' => $this->formatCurrencyInput((string) ($member['contribution_amount'] ?? '')),
+            'contribution_plan_label' => (string) ($member['contribution_plan_label'] ?? ''),
+            'preferred_payment_method' => (string) ($member['preferred_payment_method'] ?? ''),
+            'billing_email_opt_in' => (int) ($member['billing_email_opt_in'] ?? 0) === 1 ? '1' : '',
+            'billing_whatsapp_opt_in' => (int) ($member['billing_whatsapp_opt_in'] ?? 0) === 1 ? '1' : '',
             'privacy_notice_acknowledged' => $privacyNoticeAlreadyAccepted ? '1' : '',
         ];
 
@@ -86,6 +135,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'birth_city' => trim((string) ($flashForm['birth_city'] ?? $form['birth_city'])),
                     'birth_place' => trim((string) ($flashForm['birth_place'] ?? $form['birth_place'])),
                     'profile_photo_path' => (string) ($flashForm['profile_photo_path'] ?? $form['profile_photo_path']),
+                    'cpf' => trim((string) ($flashForm['cpf'] ?? $form['cpf'])),
+                    'postal_code' => trim((string) ($flashForm['postal_code'] ?? $form['postal_code'])),
+                    'street_address' => trim((string) ($flashForm['street_address'] ?? $form['street_address'])),
+                    'address_number' => trim((string) ($flashForm['address_number'] ?? $form['address_number'])),
+                    'address_complement' => trim((string) ($flashForm['address_complement'] ?? $form['address_complement'])),
+                    'neighborhood' => trim((string) ($flashForm['neighborhood'] ?? $form['neighborhood'])),
+                    'address_city' => trim((string) ($flashForm['address_city'] ?? $form['address_city'])),
+                    'address_state' => strtoupper(trim((string) ($flashForm['address_state'] ?? $form['address_state']))),
+                    'preferred_due_day' => trim((string) ($flashForm['preferred_due_day'] ?? $form['preferred_due_day'])),
+                    'contribution_amount' => trim((string) ($flashForm['contribution_amount'] ?? $form['contribution_amount'])),
+                    'contribution_plan_label' => trim((string) ($flashForm['contribution_plan_label'] ?? $form['contribution_plan_label'])),
+                    'preferred_payment_method' => trim((string) ($flashForm['preferred_payment_method'] ?? $form['preferred_payment_method'])),
+                    'billing_email_opt_in' => (string) ($flashForm['billing_email_opt_in'] ?? $form['billing_email_opt_in']),
+                    'billing_whatsapp_opt_in' => (string) ($flashForm['billing_whatsapp_opt_in'] ?? $form['billing_whatsapp_opt_in']),
                     'privacy_notice_acknowledged' => (string) ($flashForm['privacy_notice_acknowledged'] ?? $form['privacy_notice_acknowledged']),
                 ]);
             }
@@ -102,6 +165,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             $form['birth_state'] = strtoupper(trim((string) ($body['birth_state'] ?? '')));
             $form['birth_city'] = trim((string) ($body['birth_city'] ?? ''));
             $form['birth_place'] = trim((string) ($body['birth_place'] ?? ''));
+            $form['cpf'] = trim((string) ($body['cpf'] ?? ''));
+            $form['postal_code'] = trim((string) ($body['postal_code'] ?? ''));
+            $form['street_address'] = trim((string) ($body['street_address'] ?? ''));
+            $form['address_number'] = trim((string) ($body['address_number'] ?? ''));
+            $form['address_complement'] = trim((string) ($body['address_complement'] ?? ''));
+            $form['neighborhood'] = trim((string) ($body['neighborhood'] ?? ''));
+            $form['address_city'] = trim((string) ($body['address_city'] ?? ''));
+            $form['address_state'] = strtoupper(trim((string) ($body['address_state'] ?? '')));
+            $form['preferred_due_day'] = trim((string) ($body['preferred_due_day'] ?? ''));
+            $form['contribution_amount'] = trim((string) ($body['contribution_amount'] ?? ''));
+            $form['contribution_plan_label'] = trim((string) ($body['contribution_plan_label'] ?? ''));
+            $form['preferred_payment_method'] = trim((string) ($body['preferred_payment_method'] ?? ''));
+            $form['billing_email_opt_in'] = (($body['billing_email_opt_in'] ?? '') === '1') ? '1' : '';
+            $form['billing_whatsapp_opt_in'] = (($body['billing_whatsapp_opt_in'] ?? '') === '1') ? '1' : '';
             $form['privacy_notice_acknowledged'] = (($body['privacy_notice_acknowledged'] ?? '') === '1') ? '1' : '';
 
             if ($form['full_name'] === '') {
@@ -159,6 +236,76 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $errors[] = 'A naturalidade deve ter no máximo 140 caracteres.';
             }
 
+            $cpfDigits = preg_replace('/\D+/', '', $form['cpf']) ?? '';
+            if (!$this->isValidCpf($cpfDigits)) {
+                $errors[] = 'Informe um CPF válido.';
+            } else {
+                $form['cpf'] = $this->formatCpf($cpfDigits);
+            }
+
+            $postalCodeDigits = preg_replace('/\D+/', '', $form['postal_code']) ?? '';
+            if (strlen($postalCodeDigits) !== 8) {
+                $errors[] = 'Informe um CEP válido.';
+            } else {
+                $form['postal_code'] = $this->formatPostalCode($postalCodeDigits);
+            }
+
+            if ($form['street_address'] === '') {
+                $errors[] = 'Informe o logradouro.';
+            } elseif (mb_strlen($form['street_address']) > 160) {
+                $errors[] = 'O logradouro deve ter no máximo 160 caracteres.';
+            }
+
+            if ($form['address_number'] === '') {
+                $errors[] = 'Informe o número do endereço.';
+            } elseif (mb_strlen($form['address_number']) > 20) {
+                $errors[] = 'O número do endereço deve ter no máximo 20 caracteres.';
+            }
+
+            if (mb_strlen($form['address_complement']) > 120) {
+                $errors[] = 'O complemento deve ter no máximo 120 caracteres.';
+            }
+
+            if ($form['neighborhood'] === '') {
+                $errors[] = 'Informe o bairro.';
+            } elseif (mb_strlen($form['neighborhood']) > 120) {
+                $errors[] = 'O bairro deve ter no máximo 120 caracteres.';
+            }
+
+            if ($form['address_city'] === '') {
+                $errors[] = 'Informe a cidade.';
+            } elseif (mb_strlen($form['address_city']) > 120) {
+                $errors[] = 'A cidade deve ter no máximo 120 caracteres.';
+            }
+
+            if ($form['address_state'] === '') {
+                $errors[] = 'Selecione a UF do endereço.';
+            } elseif (!array_key_exists($form['address_state'], self::BRAZIL_STATE_OPTIONS)) {
+                $errors[] = 'UF do endereço inválida.';
+            }
+
+            $preferredDueDay = (int) $form['preferred_due_day'];
+            if ($preferredDueDay < 1 || $preferredDueDay > 28) {
+                $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28.';
+            }
+
+            $normalizedContributionAmount = $this->normalizeCurrencyInput($form['contribution_amount']);
+            if ($form['contribution_amount'] !== '' && $normalizedContributionAmount === null) {
+                $errors[] = 'Informe um valor de contribuição válido.';
+            }
+
+            if ($form['contribution_plan_label'] !== '' && mb_strlen($form['contribution_plan_label']) > 120) {
+                $errors[] = 'O vínculo com plano deve ter no máximo 120 caracteres.';
+            }
+
+            if ($normalizedContributionAmount === null && $form['contribution_plan_label'] === '') {
+                $errors[] = 'Informe o valor da contribuição ou o plano definido pela diretoria.';
+            }
+
+            if (!array_key_exists($form['preferred_payment_method'], self::PAYMENT_METHOD_OPTIONS)) {
+                $errors[] = 'Selecione a forma preferida de pagamento.';
+            }
+
             $uploadedFiles = $request->getUploadedFiles();
             $photoUpload = $uploadedFiles['profile_photo'] ?? null;
             $photoPath = $form['profile_photo_path'];
@@ -203,6 +350,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'birth_date' => $form['birth_date'],
                         'birth_place' => $composedBirthPlace,
                         'profile_photo_path' => $photoPath,
+                        'cpf' => $cpfDigits,
+                        'postal_code' => $postalCodeDigits,
+                        'street_address' => $form['street_address'],
+                        'address_number' => $form['address_number'],
+                        'address_complement' => $form['address_complement'],
+                        'neighborhood' => $form['neighborhood'],
+                        'address_city' => $form['address_city'],
+                        'address_state' => $form['address_state'],
+                        'preferred_due_day' => $preferredDueDay,
+                        'contribution_amount' => $normalizedContributionAmount,
+                        'contribution_plan_label' => $form['contribution_plan_label'],
+                        'preferred_payment_method' => $form['preferred_payment_method'],
+                        'billing_email_opt_in' => $form['billing_email_opt_in'] === '1' ? 1 : 0,
+                        'billing_whatsapp_opt_in' => $form['billing_whatsapp_opt_in'] === '1' ? 1 : 0,
                         'privacy_notice_version' => $acceptedNoticeVersion,
                         'privacy_notice_accepted_at' => $acceptedNoticeAt,
                         'profile_completed' => 1,
@@ -250,6 +411,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     'birth_city' => $form['birth_city'],
                     'birth_place' => $form['birth_place'],
                     'profile_photo_path' => $form['profile_photo_path'],
+                    'cpf' => $form['cpf'],
+                    'postal_code' => $form['postal_code'],
+                    'street_address' => $form['street_address'],
+                    'address_number' => $form['address_number'],
+                    'address_complement' => $form['address_complement'],
+                    'neighborhood' => $form['neighborhood'],
+                    'address_city' => $form['address_city'],
+                    'address_state' => $form['address_state'],
+                    'preferred_due_day' => $form['preferred_due_day'],
+                    'contribution_amount' => $form['contribution_amount'],
+                    'contribution_plan_label' => $form['contribution_plan_label'],
+                    'preferred_payment_method' => $form['preferred_payment_method'],
+                    'billing_email_opt_in' => $form['billing_email_opt_in'],
+                    'billing_whatsapp_opt_in' => $form['billing_whatsapp_opt_in'],
                     'privacy_notice_acknowledged' => $form['privacy_notice_acknowledged'],
                 ],
                 'redirect_to' => $redirectTo,
@@ -268,12 +443,14 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'member_profile_warnings' => $warnings,
             'member_profile_form' => $form,
             'member_profile_redirect_to' => $redirectTo,
+            'member_profile_state_options' => self::BRAZIL_STATE_OPTIONS,
+            'member_profile_payment_method_options' => self::PAYMENT_METHOD_OPTIONS,
             'member_profile_privacy_notice_required' => !$privacyNoticeAlreadyAccepted,
             'member_profile_privacy_notice_version' => self::PRIVACY_NOTICE_VERSION,
             'member_profile_privacy_notice_acknowledged_at' => $privacyNoticeAcceptedAt,
             'page_title' => 'Completar Perfil | CEDE',
             'page_url' => 'https://cedern.org/membro/perfil/completar',
-            'page_description' => 'Complete seus dados de contato para liberar a área de membro.',
+            'page_description' => 'Complete seus dados cadastrais e financeiros para liberar a área de membro.',
         ]);
     }
 
@@ -293,6 +470,95 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
         return str_starts_with($redirectTo, '/agenda/')
             ? AgendaDetailPageAction::FLASH_KEY
             : MemberHomePageAction::FLASH_KEY;
+    }
+
+    private function normalizeCurrencyInput(string $value): ?string
+    {
+        $normalized = preg_replace('/\s+/', '', trim($value)) ?? '';
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
+            $lastComma = strrpos($normalized, ',');
+            $lastDot = strrpos($normalized, '.');
+            if ($lastComma !== false && $lastDot !== false && $lastComma > $lastDot) {
+                $normalized = str_replace('.', '', $normalized);
+                $normalized = str_replace(',', '.', $normalized);
+            } else {
+                $normalized = str_replace(',', '', $normalized);
+            }
+        } elseif (str_contains($normalized, ',')) {
+            $normalized = str_replace('.', '', $normalized);
+            $normalized = str_replace(',', '.', $normalized);
+        }
+
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+
+        $amount = (float) $normalized;
+        if ($amount <= 0) {
+            return null;
+        }
+
+        return number_format($amount, 2, '.', '');
+    }
+
+    private function formatCurrencyInput(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return '';
+        }
+
+        return number_format((float) $normalized, 2, ',', '.');
+    }
+
+    private function formatCpf(string $digits): string
+    {
+        if (strlen($digits) !== 11) {
+            return $digits;
+        }
+
+        return sprintf(
+            '%s.%s.%s-%s',
+            substr($digits, 0, 3),
+            substr($digits, 3, 3),
+            substr($digits, 6, 3),
+            substr($digits, 9, 2)
+        );
+    }
+
+    private function formatPostalCode(string $digits): string
+    {
+        if (strlen($digits) !== 8) {
+            return $digits;
+        }
+
+        return sprintf('%s-%s', substr($digits, 0, 5), substr($digits, 5, 3));
+    }
+
+    private function isValidCpf(string $digits): bool
+    {
+        if (strlen($digits) !== 11 || preg_match('/^(\d)\1{10}$/', $digits) === 1) {
+            return false;
+        }
+
+        for ($position = 9; $position < 11; $position++) {
+            $sum = 0;
+            for ($index = 0; $index < $position; $index++) {
+                $sum += ((int) $digits[$index]) * (($position + 1) - $index);
+            }
+
+            $remainder = ($sum * 10) % 11;
+            $digit = $remainder === 10 ? 0 : $remainder;
+            if ($digit !== (int) $digits[$position]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

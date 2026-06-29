@@ -123,6 +123,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    u.cpf,
+                    u.postal_code,
+                    u.street_address,
+                    u.address_number,
+                    u.address_complement,
+                    u.neighborhood,
+                    u.address_city,
+                    u.address_state,
+                    u.preferred_due_day,
+                    u.contribution_amount,
+                    u.contribution_plan_label,
+                    u.preferred_payment_method,
+                    u.billing_email_opt_in,
+                    u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
                     u.profile_photo_path,
@@ -166,6 +180,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         u.profile_photo_path,
@@ -196,6 +224,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS profile_photo_path,
@@ -237,6 +279,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    u.cpf,
+                    u.postal_code,
+                    u.street_address,
+                    u.address_number,
+                    u.address_complement,
+                    u.neighborhood,
+                    u.address_city,
+                    u.address_state,
+                    u.preferred_due_day,
+                    u.contribution_amount,
+                    u.contribution_plan_label,
+                    u.preferred_payment_method,
+                    u.billing_email_opt_in,
+                    u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
                     u.profile_photo_path,
@@ -280,6 +336,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         u.profile_photo_path,
@@ -310,6 +380,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS profile_photo_path,
@@ -433,6 +517,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 phone_landline = :phone_landline,
                 birth_date = :birth_date,
                 birth_place = :birth_place,
+                cpf = :cpf,
+                postal_code = :postal_code,
+                street_address = :street_address,
+                address_number = :address_number,
+                address_complement = :address_complement,
+                neighborhood = :neighborhood,
+                address_city = :address_city,
+                address_state = :address_state,
+                preferred_due_day = :preferred_due_day,
+                contribution_amount = :contribution_amount,
+                contribution_plan_label = :contribution_plan_label,
+                preferred_payment_method = :preferred_payment_method,
+                billing_email_opt_in = :billing_email_opt_in,
+                billing_whatsapp_opt_in = :billing_whatsapp_opt_in,
                 profile_photo_path = :profile_photo_path,
                 privacy_notice_version = :privacy_notice_version,
                 privacy_notice_accepted_at = :privacy_notice_accepted_at,
@@ -448,6 +546,24 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'phone_landline' => $this->nullableText($data['phone_landline'] ?? null),
             'birth_date' => $this->nullableText($data['birth_date'] ?? null),
             'birth_place' => $this->nullableText($data['birth_place'] ?? null),
+            'cpf' => $this->nullableText($data['cpf'] ?? null),
+            'postal_code' => $this->nullableText($data['postal_code'] ?? null),
+            'street_address' => $this->nullableText($data['street_address'] ?? null),
+            'address_number' => $this->nullableText($data['address_number'] ?? null),
+            'address_complement' => $this->nullableText($data['address_complement'] ?? null),
+            'neighborhood' => $this->nullableText($data['neighborhood'] ?? null),
+            'address_city' => $this->nullableText($data['address_city'] ?? null),
+            'address_state' => $this->nullableText($data['address_state'] ?? null),
+            'preferred_due_day' => ($data['preferred_due_day'] ?? null) !== null
+                ? (int) ($data['preferred_due_day'] ?? 0)
+                : null,
+            'contribution_amount' => ($data['contribution_amount'] ?? null) !== null
+                ? (string) ($data['contribution_amount'] ?? '')
+                : null,
+            'contribution_plan_label' => $this->nullableText($data['contribution_plan_label'] ?? null),
+            'preferred_payment_method' => $this->nullableText($data['preferred_payment_method'] ?? null),
+            'billing_email_opt_in' => (int) ($data['billing_email_opt_in'] ?? 0),
+            'billing_whatsapp_opt_in' => (int) ($data['billing_whatsapp_opt_in'] ?? 0),
             'profile_photo_path' => $this->nullableText($data['profile_photo_path'] ?? null),
             'privacy_notice_version' => $this->nullableText($data['privacy_notice_version'] ?? null),
             'privacy_notice_accepted_at' => $this->nullableText($data['privacy_notice_accepted_at'] ?? null),
@@ -659,6 +775,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.phone_landline,
                     u.birth_date,
                     u.birth_place,
+                    u.cpf,
+                    u.postal_code,
+                    u.street_address,
+                    u.address_number,
+                    u.address_complement,
+                    u.neighborhood,
+                    u.address_city,
+                    u.address_state,
+                    u.preferred_due_day,
+                    u.contribution_amount,
+                    u.contribution_plan_label,
+                    u.preferred_payment_method,
+                    u.billing_email_opt_in,
+                    u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
                     u.profile_photo_path,
@@ -698,6 +828,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         u.phone_landline,
                         u.birth_date,
                         u.birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         u.profile_photo_path,
@@ -725,6 +869,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS phone_landline,
                         NULL AS birth_date,
                         NULL AS birth_place,
+                        NULL AS cpf,
+                        NULL AS postal_code,
+                        NULL AS street_address,
+                        NULL AS address_number,
+                        NULL AS address_complement,
+                        NULL AS neighborhood,
+                        NULL AS address_city,
+                        NULL AS address_state,
+                        NULL AS preferred_due_day,
+                        NULL AS contribution_amount,
+                        NULL AS contribution_plan_label,
+                        NULL AS preferred_payment_method,
+                        0 AS billing_email_opt_in,
+                        0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS profile_photo_path,
@@ -743,6 +901,518 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             }
 
             return array_map(fn (array $row): array => $this->normalizeMemberRowWithDefaults($row), $rows);
+        }
+    }
+
+    public function findContributionMembersByCompetence(string $competence): array
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedCompetence = $this->normalizeCompetence($competence);
+        $today = date('Y-m-d');
+
+        try {
+            $sql = <<<SQL
+                SELECT
+                    u.id,
+                    u.full_name,
+                    u.email,
+                    u.password_hash,
+                    u.status,
+                    u.phone_mobile,
+                    u.phone_landline,
+                    u.birth_date,
+                    u.birth_place,
+                    u.cpf,
+                    u.postal_code,
+                    u.street_address,
+                    u.address_number,
+                    u.address_complement,
+                    u.neighborhood,
+                    u.address_city,
+                    u.address_state,
+                    u.preferred_due_day,
+                    u.contribution_amount,
+                    u.contribution_plan_label,
+                    u.preferred_payment_method,
+                    u.billing_email_opt_in,
+                    u.billing_whatsapp_opt_in,
+                    COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
+                    u.member_type,
+                    u.profile_photo_path,
+                    u.privacy_notice_version,
+                    u.privacy_notice_accepted_at,
+                    u.profile_completed,
+                    u.role_id,
+                    r.role_key,
+                    r.name AS role_name,
+                    c.id AS charge_id,
+                    c.competence AS charge_competence,
+                    c.due_date AS charge_due_date,
+                    c.amount_due AS charge_amount_due,
+                    c.status AS charge_status,
+                    c.preferred_payment_method AS charge_preferred_payment_method,
+                    c.payment_recorded_method AS charge_payment_recorded_method,
+                    c.paid_at AS charge_paid_at,
+                    c.exemption_reason AS charge_exemption_reason,
+                    c.gateway_provider AS charge_gateway_provider,
+                    c.gateway_customer_id AS charge_gateway_customer_id,
+                    c.gateway_payment_id AS charge_gateway_payment_id,
+                    c.gateway_billing_type AS charge_gateway_billing_type,
+                    c.gateway_status AS charge_gateway_status,
+                    c.gateway_invoice_url AS charge_gateway_invoice_url,
+                    c.gateway_bank_slip_url AS charge_gateway_bank_slip_url,
+                    c.gateway_transaction_receipt_url AS charge_gateway_transaction_receipt_url,
+                    c.gateway_pix_payload AS charge_gateway_pix_payload,
+                    c.gateway_pix_encoded_image AS charge_gateway_pix_encoded_image,
+                    c.gateway_pix_expiration_date AS charge_gateway_pix_expiration_date,
+                    c.gateway_last_synced_at AS charge_gateway_last_synced_at,
+                    COALESCE(stats.overdue_charge_count, 0) AS overdue_charge_count,
+                    stats.oldest_overdue_due_date,
+                    stats.last_paid_at
+                FROM member_users u
+                LEFT JOIN roles r ON r.id = u.role_id
+                LEFT JOIN member_management_roles mmr
+                    ON mmr.member_user_id = u.id
+                   AND mmr.ends_at IS NULL
+                   AND mmr.management_id = (
+                        SELECT m.id
+                        FROM institutional_managements m
+                        WHERE m.is_current = 1
+                        ORDER BY m.id DESC
+                        LIMIT 1
+                   )
+                LEFT JOIN member_contribution_charges c
+                    ON c.member_user_id = u.id
+                   AND c.competence = :competence
+                LEFT JOIN (
+                    SELECT
+                        member_user_id,
+                        SUM(CASE WHEN status = 'pending' AND due_date < :today THEN 1 ELSE 0 END)
+                            AS overdue_charge_count,
+                        MIN(CASE WHEN status = 'pending' AND due_date < :today THEN due_date ELSE NULL END)
+                            AS oldest_overdue_due_date,
+                        MAX(CASE WHEN status = 'paid' THEN paid_at ELSE NULL END) AS last_paid_at
+                    FROM member_contribution_charges
+                    GROUP BY member_user_id
+                ) stats ON stats.member_user_id = u.id
+                WHERE u.status = 'active'
+                  AND u.member_type IS NOT NULL
+                  AND TRIM(u.member_type) <> ''
+                ORDER BY u.full_name ASC, u.id ASC
+            SQL;
+
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute([
+                'competence' => $normalizedCompetence,
+                'today' => $today,
+            ]);
+
+            $rows = $statement->fetchAll() ?: [];
+
+            return array_map(
+                fn (array $row): array => $this->normalizeContributionMemberRow($row, $normalizedCompetence),
+                $rows
+            );
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao consultar associados para contribuições.', $exception, [
+                'competence' => $normalizedCompetence,
+            ]);
+
+            return [];
+        }
+    }
+
+    public function generateContributionCharges(string $competence, ?int $generatedByUserId = null): array
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedCompetence = $this->normalizeCompetence($competence);
+        $created = 0;
+        $skippedExisting = 0;
+        $skippedIncompleteProfile = 0;
+
+        $insertStatement = $this->pdo->prepare(<<<SQL
+            INSERT INTO member_contribution_charges (
+                member_user_id,
+                competence,
+                due_date,
+                amount_due,
+                status,
+                preferred_payment_method,
+                payment_recorded_method,
+                paid_at,
+                exemption_reason,
+                generated_by_user_id
+            ) VALUES (
+                :member_user_id,
+                :competence,
+                :due_date,
+                :amount_due,
+                'pending',
+                :preferred_payment_method,
+                NULL,
+                NULL,
+                NULL,
+                :generated_by_user_id
+            )
+        SQL);
+
+        foreach ($this->findContributionMembersByCompetence($normalizedCompetence) as $member) {
+            $userId = (int) ($member['id'] ?? 0);
+            if ($userId <= 0) {
+                continue;
+            }
+
+            if (($member['charge_id'] ?? null) !== null) {
+                $skippedExisting++;
+                continue;
+            }
+
+            $amountDue = is_numeric((string) ($member['contribution_amount'] ?? null))
+                ? (float) ($member['contribution_amount'] ?? 0)
+                : 0.0;
+            $preferredDueDay = (int) ($member['preferred_due_day'] ?? 0);
+
+            if ($amountDue <= 0 || $preferredDueDay < 1 || $preferredDueDay > 28) {
+                $skippedIncompleteProfile++;
+                continue;
+            }
+
+            $dueDate = sprintf('%s-%02d', $normalizedCompetence, $preferredDueDay);
+
+            try {
+                $insertStatement->execute([
+                    'member_user_id' => $userId,
+                    'competence' => $normalizedCompetence,
+                    'due_date' => $dueDate,
+                    'amount_due' => number_format($amountDue, 2, '.', ''),
+                    'preferred_payment_method' => $this->resolveContributionPaymentMethod(
+                        (string) ($member['preferred_payment_method'] ?? '')
+                    ),
+                    'generated_by_user_id' => $generatedByUserId,
+                ]);
+
+                $chargeId = (int) $this->pdo->lastInsertId();
+                if ($chargeId > 0) {
+                    $this->appendContributionEvent(
+                        $chargeId,
+                        $userId,
+                        'generated',
+                        'Cobrança mensal gerada automaticamente.',
+                        $generatedByUserId
+                    );
+                }
+
+                $created++;
+            } catch (\Throwable $exception) {
+                if ($this->findContributionChargeForMemberAndCompetence($userId, $normalizedCompetence) !== null) {
+                    $skippedExisting++;
+                    continue;
+                }
+
+                $this->loggerSafeWarning('Falha ao gerar cobrança mensal de associado.', $exception, [
+                    'member_user_id' => $userId,
+                    'competence' => $normalizedCompetence,
+                ]);
+            }
+        }
+
+        return [
+            'created' => $created,
+            'skipped_existing' => $skippedExisting,
+            'skipped_incomplete_profile' => $skippedIncompleteProfile,
+        ];
+    }
+
+    public function findContributionChargeById(int $chargeId): ?array
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        try {
+            $statement = $this->pdo->prepare(<<<SQL
+                SELECT
+                    c.*,
+                    u.full_name AS member_full_name,
+                    u.email AS member_email,
+                    u.cpf AS member_cpf
+                FROM member_contribution_charges c
+                INNER JOIN member_users u ON u.id = c.member_user_id
+                WHERE c.id = :id
+                LIMIT 1
+            SQL);
+            $statement->execute(['id' => $chargeId]);
+            $row = $statement->fetch();
+
+            return is_array($row) ? $this->normalizeContributionChargeRow($row) : null;
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao localizar cobrança mensal.', $exception, [
+                'charge_id' => $chargeId,
+            ]);
+
+            return null;
+        }
+    }
+
+    public function markContributionChargeAsPaid(
+        int $chargeId,
+        string $paymentMethod,
+        ?int $actedByUserId = null
+    ): bool {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedPaymentMethod = $this->resolveContributionPaymentMethod($paymentMethod);
+
+        try {
+            $this->pdo->beginTransaction();
+
+            $charge = $this->findContributionChargeByIdForUpdate($chargeId);
+            if ($charge === null || (string) ($charge['status'] ?? '') !== 'pending') {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $statement = $this->pdo->prepare(<<<SQL
+                UPDATE member_contribution_charges
+                SET
+                    status = 'paid',
+                    payment_recorded_method = :payment_recorded_method,
+                    paid_at = NOW(),
+                    exemption_reason = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+                LIMIT 1
+            SQL);
+            $statement->execute([
+                'id' => $chargeId,
+                'payment_recorded_method' => $normalizedPaymentMethod,
+            ]);
+
+            if ($statement->rowCount() !== 1) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $this->appendContributionEvent(
+                $chargeId,
+                (int) ($charge['member_user_id'] ?? 0),
+                'paid',
+                'Cobrança baixada manualmente como paga.',
+                $actedByUserId,
+                ['payment_method' => $normalizedPaymentMethod]
+            );
+
+            $this->pdo->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            $this->loggerSafeWarning('Falha ao baixar cobrança mensal como paga.', $exception, [
+                'charge_id' => $chargeId,
+            ]);
+
+            return false;
+        }
+    }
+
+    public function markContributionChargeAsExempt(
+        int $chargeId,
+        ?string $reason = null,
+        ?int $actedByUserId = null
+    ): bool {
+        $this->bootMemberSchemaCompatibility();
+
+        try {
+            $this->pdo->beginTransaction();
+
+            $charge = $this->findContributionChargeByIdForUpdate($chargeId);
+            if ($charge === null || (string) ($charge['status'] ?? '') !== 'pending') {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $normalizedReason = $this->nullableText($reason) ?? 'Isenção registrada manualmente.';
+
+            $statement = $this->pdo->prepare(<<<SQL
+                UPDATE member_contribution_charges
+                SET
+                    status = 'exempt',
+                    payment_recorded_method = NULL,
+                    paid_at = NULL,
+                    exemption_reason = :exemption_reason,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = :id
+                LIMIT 1
+            SQL);
+            $statement->execute([
+                'id' => $chargeId,
+                'exemption_reason' => $normalizedReason,
+            ]);
+
+            if ($statement->rowCount() !== 1) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $this->appendContributionEvent(
+                $chargeId,
+                (int) ($charge['member_user_id'] ?? 0),
+                'exempt',
+                'Cobrança marcada como isenta.',
+                $actedByUserId,
+                ['reason' => $normalizedReason]
+            );
+
+            $this->pdo->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            $this->loggerSafeWarning('Falha ao isentar cobrança mensal.', $exception, [
+                'charge_id' => $chargeId,
+            ]);
+
+            return false;
+        }
+    }
+
+    public function registerContributionReminderEvent(
+        int $chargeId,
+        string $channel,
+        ?int $actedByUserId = null,
+        array $payload = []
+    ): bool {
+        $this->bootMemberSchemaCompatibility();
+
+        try {
+            $charge = $this->findContributionChargeById($chargeId);
+            if ($charge === null) {
+                return false;
+            }
+
+            $normalizedChannel = strtolower(trim($channel));
+            $eventType = match ($normalizedChannel) {
+                'email' => 'reminder_email_sent',
+                'whatsapp' => 'reminder_whatsapp_opened',
+                default => 'reminder_manual',
+            };
+            $eventDescription = match ($normalizedChannel) {
+                'email' => 'Lembrete de cobrança enviado por e-mail.',
+                'whatsapp' => 'Lembrete de cobrança aberto no WhatsApp.',
+                default => 'Lembrete de cobrança registrado manualmente.',
+            };
+
+            $this->appendContributionEvent(
+                $chargeId,
+                (int) ($charge['member_user_id'] ?? 0),
+                $eventType,
+                $eventDescription,
+                $actedByUserId,
+                $payload
+            );
+
+            return true;
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao registrar evento de lembrete de contribuição.', $exception, [
+                'charge_id' => $chargeId,
+                'channel' => $channel,
+            ]);
+
+            return false;
+        }
+    }
+
+    public function updateContributionGatewayData(int $chargeId, array $data): bool
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $charge = $this->findContributionChargeById($chargeId);
+        if ($charge === null) {
+            return false;
+        }
+
+        $sql = <<<SQL
+            UPDATE member_contribution_charges
+            SET
+                gateway_provider = :gateway_provider,
+                gateway_customer_id = :gateway_customer_id,
+                gateway_payment_id = :gateway_payment_id,
+                gateway_billing_type = :gateway_billing_type,
+                gateway_status = :gateway_status,
+                gateway_invoice_url = :gateway_invoice_url,
+                gateway_bank_slip_url = :gateway_bank_slip_url,
+                gateway_transaction_receipt_url = :gateway_transaction_receipt_url,
+                gateway_pix_payload = :gateway_pix_payload,
+                gateway_pix_encoded_image = :gateway_pix_encoded_image,
+                gateway_pix_expiration_date = :gateway_pix_expiration_date,
+                gateway_last_synced_at = :gateway_last_synced_at,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = :id
+            LIMIT 1
+        SQL;
+
+        $statement = $this->pdo->prepare($sql);
+
+        return $statement->execute([
+            'id' => $chargeId,
+            'gateway_provider' => $this->nullableText($data['gateway_provider'] ?? ($charge['gateway_provider'] ?? null)),
+            'gateway_customer_id' => $this->nullableText($data['gateway_customer_id'] ?? ($charge['gateway_customer_id'] ?? null)),
+            'gateway_payment_id' => $this->nullableText($data['gateway_payment_id'] ?? ($charge['gateway_payment_id'] ?? null)),
+            'gateway_billing_type' => $this->nullableText($data['gateway_billing_type'] ?? ($charge['gateway_billing_type'] ?? null)),
+            'gateway_status' => $this->nullableText($data['gateway_status'] ?? ($charge['gateway_status'] ?? null)),
+            'gateway_invoice_url' => $this->nullableText($data['gateway_invoice_url'] ?? ($charge['gateway_invoice_url'] ?? null)),
+            'gateway_bank_slip_url' => $this->nullableText($data['gateway_bank_slip_url'] ?? ($charge['gateway_bank_slip_url'] ?? null)),
+            'gateway_transaction_receipt_url' => $this->nullableText($data['gateway_transaction_receipt_url'] ?? ($charge['gateway_transaction_receipt_url'] ?? null)),
+            'gateway_pix_payload' => $this->nullableText($data['gateway_pix_payload'] ?? ($charge['gateway_pix_payload'] ?? null)),
+            'gateway_pix_encoded_image' => $this->nullableText($data['gateway_pix_encoded_image'] ?? ($charge['gateway_pix_encoded_image'] ?? null)),
+            'gateway_pix_expiration_date' => $this->nullableText($data['gateway_pix_expiration_date'] ?? ($charge['gateway_pix_expiration_date'] ?? null)),
+            'gateway_last_synced_at' => $this->nullableText($data['gateway_last_synced_at'] ?? ($charge['gateway_last_synced_at'] ?? null)),
+        ]);
+    }
+
+    public function findContributionChargeByGatewayPaymentId(string $gatewayPaymentId): ?array
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedPaymentId = trim($gatewayPaymentId);
+        if ($normalizedPaymentId === '') {
+            return null;
+        }
+
+        try {
+            $statement = $this->pdo->prepare(<<<SQL
+                SELECT
+                    c.*,
+                    u.full_name AS member_full_name,
+                    u.email AS member_email,
+                    u.cpf AS member_cpf
+                FROM member_contribution_charges c
+                INNER JOIN member_users u ON u.id = c.member_user_id
+                WHERE c.gateway_payment_id = :gateway_payment_id
+                LIMIT 1
+            SQL);
+            $statement->execute([
+                'gateway_payment_id' => $normalizedPaymentId,
+            ]);
+            $row = $statement->fetch();
+
+            return is_array($row) ? $this->normalizeContributionChargeRow($row) : null;
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao localizar cobrança por payment_id do gateway.', $exception, [
+                'gateway_payment_id' => $normalizedPaymentId,
+            ]);
+
+            return null;
         }
     }
 
@@ -920,6 +1590,22 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['phone_landline'] = $row['phone_landline'] ?? null;
         $row['birth_date'] = $row['birth_date'] ?? null;
         $row['birth_place'] = $row['birth_place'] ?? null;
+        $row['cpf'] = $row['cpf'] ?? null;
+        $row['postal_code'] = $row['postal_code'] ?? null;
+        $row['street_address'] = $row['street_address'] ?? null;
+        $row['address_number'] = $row['address_number'] ?? null;
+        $row['address_complement'] = $row['address_complement'] ?? null;
+        $row['neighborhood'] = $row['neighborhood'] ?? null;
+        $row['address_city'] = $row['address_city'] ?? null;
+        $row['address_state'] = $row['address_state'] ?? null;
+        $row['preferred_due_day'] = array_key_exists('preferred_due_day', $row) && $row['preferred_due_day'] !== null
+            ? (int) $row['preferred_due_day']
+            : null;
+        $row['contribution_amount'] = $row['contribution_amount'] ?? null;
+        $row['contribution_plan_label'] = $row['contribution_plan_label'] ?? null;
+        $row['preferred_payment_method'] = $row['preferred_payment_method'] ?? null;
+        $row['billing_email_opt_in'] = (int) ($row['billing_email_opt_in'] ?? 0);
+        $row['billing_whatsapp_opt_in'] = (int) ($row['billing_whatsapp_opt_in'] ?? 0);
         $row['institutional_role'] = $row['institutional_role'] ?? null;
         $row['member_type'] = $row['member_type'] ?? null;
         $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
@@ -951,6 +1637,76 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         };
     }
 
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function normalizeContributionMemberRow(array $row, string $defaultCompetence): array
+    {
+        $row = $this->normalizeMemberRowWithDefaults($row);
+        $row['charge_id'] = array_key_exists('charge_id', $row) && $row['charge_id'] !== null
+            ? (int) $row['charge_id']
+            : null;
+        $row['charge_competence'] = $row['charge_competence'] ?? $defaultCompetence;
+        $row['charge_due_date'] = $row['charge_due_date'] ?? null;
+        $row['charge_amount_due'] = $row['charge_amount_due'] ?? null;
+        $row['charge_status'] = $row['charge_status'] ?? null;
+        $row['charge_preferred_payment_method'] = $row['charge_preferred_payment_method'] ?? null;
+        $row['charge_payment_recorded_method'] = $row['charge_payment_recorded_method'] ?? null;
+        $row['charge_paid_at'] = $row['charge_paid_at'] ?? null;
+        $row['charge_exemption_reason'] = $row['charge_exemption_reason'] ?? null;
+        $row['charge_gateway_provider'] = $row['charge_gateway_provider'] ?? null;
+        $row['charge_gateway_customer_id'] = $row['charge_gateway_customer_id'] ?? null;
+        $row['charge_gateway_payment_id'] = $row['charge_gateway_payment_id'] ?? null;
+        $row['charge_gateway_billing_type'] = $row['charge_gateway_billing_type'] ?? null;
+        $row['charge_gateway_status'] = $row['charge_gateway_status'] ?? null;
+        $row['charge_gateway_invoice_url'] = $row['charge_gateway_invoice_url'] ?? null;
+        $row['charge_gateway_bank_slip_url'] = $row['charge_gateway_bank_slip_url'] ?? null;
+        $row['charge_gateway_transaction_receipt_url'] = $row['charge_gateway_transaction_receipt_url'] ?? null;
+        $row['charge_gateway_pix_payload'] = $row['charge_gateway_pix_payload'] ?? null;
+        $row['charge_gateway_pix_encoded_image'] = $row['charge_gateway_pix_encoded_image'] ?? null;
+        $row['charge_gateway_pix_expiration_date'] = $row['charge_gateway_pix_expiration_date'] ?? null;
+        $row['charge_gateway_last_synced_at'] = $row['charge_gateway_last_synced_at'] ?? null;
+        $row['overdue_charge_count'] = (int) ($row['overdue_charge_count'] ?? 0);
+        $row['oldest_overdue_due_date'] = $row['oldest_overdue_due_date'] ?? null;
+        $row['last_paid_at'] = $row['last_paid_at'] ?? null;
+
+        return $row;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function normalizeContributionChargeRow(array $row): array
+    {
+        $row['id'] = (int) ($row['id'] ?? 0);
+        $row['member_user_id'] = (int) ($row['member_user_id'] ?? 0);
+        $row['amount_due'] = $row['amount_due'] ?? null;
+        $row['status'] = $row['status'] ?? null;
+        $row['preferred_payment_method'] = $row['preferred_payment_method'] ?? null;
+        $row['payment_recorded_method'] = $row['payment_recorded_method'] ?? null;
+        $row['paid_at'] = $row['paid_at'] ?? null;
+        $row['exemption_reason'] = $row['exemption_reason'] ?? null;
+        $row['gateway_provider'] = $row['gateway_provider'] ?? null;
+        $row['gateway_customer_id'] = $row['gateway_customer_id'] ?? null;
+        $row['gateway_payment_id'] = $row['gateway_payment_id'] ?? null;
+        $row['gateway_billing_type'] = $row['gateway_billing_type'] ?? null;
+        $row['gateway_status'] = $row['gateway_status'] ?? null;
+        $row['gateway_invoice_url'] = $row['gateway_invoice_url'] ?? null;
+        $row['gateway_bank_slip_url'] = $row['gateway_bank_slip_url'] ?? null;
+        $row['gateway_transaction_receipt_url'] = $row['gateway_transaction_receipt_url'] ?? null;
+        $row['gateway_pix_payload'] = $row['gateway_pix_payload'] ?? null;
+        $row['gateway_pix_encoded_image'] = $row['gateway_pix_encoded_image'] ?? null;
+        $row['gateway_pix_expiration_date'] = $row['gateway_pix_expiration_date'] ?? null;
+        $row['gateway_last_synced_at'] = $row['gateway_last_synced_at'] ?? null;
+        $row['member_full_name'] = $row['member_full_name'] ?? '';
+        $row['member_email'] = $row['member_email'] ?? '';
+        $row['member_cpf'] = $row['member_cpf'] ?? null;
+
+        return $row;
+    }
+
     private function ensureMemberSchemaCompatibility(): void
     {
         $this->pdo->exec(<<<SQL
@@ -976,6 +1732,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 phone_landline VARCHAR(30) NULL,
                 birth_date DATE NULL,
                 birth_place VARCHAR(140) NULL,
+                cpf VARCHAR(14) NULL,
+                postal_code VARCHAR(9) NULL,
+                street_address VARCHAR(160) NULL,
+                address_number VARCHAR(20) NULL,
+                address_complement VARCHAR(120) NULL,
+                neighborhood VARCHAR(120) NULL,
+                address_city VARCHAR(120) NULL,
+                address_state CHAR(2) NULL,
+                preferred_due_day TINYINT UNSIGNED NULL,
+                contribution_amount DECIMAL(10,2) NULL,
+                contribution_plan_label VARCHAR(120) NULL,
+                preferred_payment_method VARCHAR(30) NULL,
+                billing_email_opt_in TINYINT(1) NOT NULL DEFAULT 0,
+                billing_whatsapp_opt_in TINYINT(1) NOT NULL DEFAULT 0,
                 institutional_role VARCHAR(120) NULL,
                 member_type VARCHAR(20) NULL,
                 profile_photo_path VARCHAR(255) NULL,
@@ -1038,6 +1808,64 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         SQL);
 
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS member_contribution_charges (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                competence CHAR(7) NOT NULL,
+                due_date DATE NOT NULL,
+                amount_due DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                preferred_payment_method VARCHAR(30) NULL,
+                payment_recorded_method VARCHAR(30) NULL,
+                paid_at DATETIME NULL,
+                exemption_reason VARCHAR(255) NULL,
+                gateway_provider VARCHAR(30) NULL,
+                gateway_customer_id VARCHAR(64) NULL,
+                gateway_payment_id VARCHAR(64) NULL,
+                gateway_billing_type VARCHAR(20) NULL,
+                gateway_status VARCHAR(40) NULL,
+                gateway_invoice_url VARCHAR(255) NULL,
+                gateway_bank_slip_url VARCHAR(255) NULL,
+                gateway_transaction_receipt_url VARCHAR(255) NULL,
+                gateway_pix_payload LONGTEXT NULL,
+                gateway_pix_encoded_image LONGTEXT NULL,
+                gateway_pix_expiration_date DATETIME NULL,
+                gateway_last_synced_at DATETIME NULL,
+                generated_by_user_id BIGINT UNSIGNED NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uq_member_contribution_charge_member_competence (member_user_id, competence),
+                KEY idx_member_contribution_charge_status_due (status, due_date),
+                KEY idx_member_contribution_charge_member (member_user_id),
+                KEY idx_member_contribution_charge_gateway_payment (gateway_payment_id),
+                CONSTRAINT fk_member_contribution_charge_member
+                    FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS member_contribution_events (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                charge_id BIGINT UNSIGNED NOT NULL,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                event_type VARCHAR(40) NOT NULL,
+                event_description VARCHAR(255) NOT NULL,
+                acted_by_user_id BIGINT UNSIGNED NULL,
+                payload_json LONGTEXT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                KEY idx_member_contribution_events_charge (charge_id),
+                KEY idx_member_contribution_events_member (member_user_id),
+                CONSTRAINT fk_member_contribution_events_charge
+                    FOREIGN KEY (charge_id) REFERENCES member_contribution_charges(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE,
+                CONSTRAINT fk_member_contribution_events_member
+                    FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
         $this->ensureColumn(
             'member_users',
             'full_name',
@@ -1082,6 +1910,76 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_users',
             'birth_place',
             'ALTER TABLE member_users ADD COLUMN birth_place VARCHAR(140) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'cpf',
+            'ALTER TABLE member_users ADD COLUMN cpf VARCHAR(14) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'postal_code',
+            'ALTER TABLE member_users ADD COLUMN postal_code VARCHAR(9) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'street_address',
+            'ALTER TABLE member_users ADD COLUMN street_address VARCHAR(160) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'address_number',
+            'ALTER TABLE member_users ADD COLUMN address_number VARCHAR(20) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'address_complement',
+            'ALTER TABLE member_users ADD COLUMN address_complement VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'neighborhood',
+            'ALTER TABLE member_users ADD COLUMN neighborhood VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'address_city',
+            'ALTER TABLE member_users ADD COLUMN address_city VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'address_state',
+            'ALTER TABLE member_users ADD COLUMN address_state CHAR(2) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'preferred_due_day',
+            'ALTER TABLE member_users ADD COLUMN preferred_due_day TINYINT UNSIGNED NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'contribution_amount',
+            'ALTER TABLE member_users ADD COLUMN contribution_amount DECIMAL(10,2) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'contribution_plan_label',
+            'ALTER TABLE member_users ADD COLUMN contribution_plan_label VARCHAR(120) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'preferred_payment_method',
+            'ALTER TABLE member_users ADD COLUMN preferred_payment_method VARCHAR(30) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'billing_email_opt_in',
+            'ALTER TABLE member_users ADD COLUMN billing_email_opt_in TINYINT(1) NOT NULL DEFAULT 0'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'billing_whatsapp_opt_in',
+            'ALTER TABLE member_users ADD COLUMN billing_whatsapp_opt_in TINYINT(1) NOT NULL DEFAULT 0'
         );
         $this->ensureColumn(
             'member_users',
@@ -1158,6 +2056,162 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_password_resets',
             'created_at',
             'ALTER TABLE member_password_resets ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'member_user_id',
+            'ALTER TABLE member_contribution_charges ADD COLUMN member_user_id BIGINT UNSIGNED NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'competence',
+            'ALTER TABLE member_contribution_charges ADD COLUMN competence CHAR(7) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'due_date',
+            'ALTER TABLE member_contribution_charges ADD COLUMN due_date DATE NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'amount_due',
+            'ALTER TABLE member_contribution_charges ADD COLUMN amount_due DECIMAL(10,2) NOT NULL DEFAULT 0.00'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'status',
+            "ALTER TABLE member_contribution_charges ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending'"
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'preferred_payment_method',
+            'ALTER TABLE member_contribution_charges ADD COLUMN preferred_payment_method VARCHAR(30) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'payment_recorded_method',
+            'ALTER TABLE member_contribution_charges ADD COLUMN payment_recorded_method VARCHAR(30) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'paid_at',
+            'ALTER TABLE member_contribution_charges ADD COLUMN paid_at DATETIME NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'exemption_reason',
+            'ALTER TABLE member_contribution_charges ADD COLUMN exemption_reason VARCHAR(255) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_provider',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_provider VARCHAR(30) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_customer_id',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_customer_id VARCHAR(64) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_payment_id',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_payment_id VARCHAR(64) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_billing_type',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_billing_type VARCHAR(20) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_status',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_status VARCHAR(40) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_invoice_url',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_invoice_url VARCHAR(255) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_bank_slip_url',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_bank_slip_url VARCHAR(255) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_transaction_receipt_url',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_transaction_receipt_url VARCHAR(255) NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_pix_payload',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_pix_payload LONGTEXT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_pix_encoded_image',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_pix_encoded_image LONGTEXT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_pix_expiration_date',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_pix_expiration_date DATETIME NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'gateway_last_synced_at',
+            'ALTER TABLE member_contribution_charges ADD COLUMN gateway_last_synced_at DATETIME NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'generated_by_user_id',
+            'ALTER TABLE member_contribution_charges ADD COLUMN generated_by_user_id BIGINT UNSIGNED NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'created_at',
+            'ALTER TABLE member_contribution_charges ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
+        );
+        $this->ensureColumn(
+            'member_contribution_charges',
+            'updated_at',
+            'ALTER TABLE member_contribution_charges ADD COLUMN updated_at TIMESTAMP NOT NULL '
+            . 'DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'charge_id',
+            'ALTER TABLE member_contribution_events ADD COLUMN charge_id BIGINT UNSIGNED NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'member_user_id',
+            'ALTER TABLE member_contribution_events ADD COLUMN member_user_id BIGINT UNSIGNED NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'event_type',
+            'ALTER TABLE member_contribution_events ADD COLUMN event_type VARCHAR(40) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'event_description',
+            'ALTER TABLE member_contribution_events ADD COLUMN event_description VARCHAR(255) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'acted_by_user_id',
+            'ALTER TABLE member_contribution_events ADD COLUMN acted_by_user_id BIGINT UNSIGNED NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'payload_json',
+            'ALTER TABLE member_contribution_events ADD COLUMN payload_json LONGTEXT NULL'
+        );
+        $this->ensureColumn(
+            'member_contribution_events',
+            'created_at',
+            'ALTER TABLE member_contribution_events ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
         );
 
         $this->ensureDefaultRoles();
@@ -1293,6 +2347,110 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         ]);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function findContributionChargeForMemberAndCompetence(int $userId, string $competence): ?array
+    {
+        $statement = $this->pdo->prepare(<<<SQL
+            SELECT *
+            FROM member_contribution_charges
+            WHERE member_user_id = :member_user_id
+              AND competence = :competence
+            LIMIT 1
+        SQL);
+        $statement->execute([
+            'member_user_id' => $userId,
+            'competence' => $competence,
+        ]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $this->normalizeContributionChargeRow($row) : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function findContributionChargeByIdForUpdate(int $chargeId): ?array
+    {
+        $statement = $this->pdo->prepare(<<<SQL
+            SELECT *
+            FROM member_contribution_charges
+            WHERE id = :id
+            LIMIT 1
+            FOR UPDATE
+        SQL);
+        $statement->execute(['id' => $chargeId]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $this->normalizeContributionChargeRow($row) : null;
+    }
+
+    private function normalizeCompetence(string $competence): string
+    {
+        $normalized = trim($competence);
+
+        if (preg_match('/^\d{4}-\d{2}$/', $normalized) === 1) {
+            return $normalized;
+        }
+
+        return date('Y-m');
+    }
+
+    private function resolveContributionPaymentMethod(string $value): string
+    {
+        $normalized = strtolower(trim($value));
+
+        return in_array($normalized, ['boleto', 'pix', 'pix_automatico', 'manual'], true)
+            ? $normalized
+            : 'manual';
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function appendContributionEvent(
+        int $chargeId,
+        int $memberUserId,
+        string $eventType,
+        string $eventDescription,
+        ?int $actedByUserId = null,
+        array $payload = []
+    ): void {
+        $statement = $this->pdo->prepare(<<<SQL
+            INSERT INTO member_contribution_events (
+                charge_id,
+                member_user_id,
+                event_type,
+                event_description,
+                acted_by_user_id,
+                payload_json
+            ) VALUES (
+                :charge_id,
+                :member_user_id,
+                :event_type,
+                :event_description,
+                :acted_by_user_id,
+                :payload_json
+            )
+        SQL);
+
+        $payloadJson = null;
+        if ($payload !== []) {
+            $encodedPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $payloadJson = $encodedPayload !== false ? $encodedPayload : null;
+        }
+
+        $statement->execute([
+            'charge_id' => $chargeId,
+            'member_user_id' => $memberUserId,
+            'event_type' => $eventType,
+            'event_description' => $eventDescription,
+            'acted_by_user_id' => $actedByUserId,
+            'payload_json' => $payloadJson,
+        ]);
+    }
+
     private function ensureColumn(string $tableName, string $columnName, string $alterSql): void
     {
         $statement = $this->pdo->prepare(
@@ -1328,5 +2486,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 name = VALUES(name),
                 description = VALUES(description)
         SQL);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function loggerSafeWarning(string $message, \Throwable $exception, array $context = []): void
+    {
+        $context['error'] = $exception->getMessage();
+
+        $encodedContext = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($encodedContext === false) {
+            $encodedContext = '{}';
+        }
+
+        @error_log($message . ' ' . $encodedContext);
     }
 }

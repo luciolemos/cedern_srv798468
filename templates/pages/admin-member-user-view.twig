@@ -73,8 +73,52 @@
             <dd>{{ view_user.birth_place|default('-') ?: '-' }}</dd>
           </div>
           <div>
+            <dt>CPF</dt>
+            <dd>{{ view_user.cpf_display|default('-') }}</dd>
+          </div>
+          <div>
             <dt>Perfil completo</dt>
             <dd>{{ view_user.profile_completed_label|default('Não') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="82">
+        <h3>Endereço e contribuição</h3>
+        <p class="nc-member-subtitle">Dados de cobrança e preferências financeiras vinculadas ao associado.</p>
+
+        <dl class="nc-member-grid">
+          <div>
+            <dt>CEP</dt>
+            <dd>{{ view_user.postal_code_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Vencimento preferido</dt>
+            <dd>{{ view_user.preferred_due_day_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Endereço</dt>
+            <dd>{{ view_user.address_display|default('-')|nl2br }}</dd>
+          </div>
+          <div>
+            <dt>Valor da contribuição</dt>
+            <dd>{{ view_user.contribution_amount_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Plano definido</dt>
+            <dd>{{ view_user.contribution_plan_label_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Forma preferida</dt>
+            <dd>{{ view_user.preferred_payment_method_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Cobrança por e-mail</dt>
+            <dd>{{ view_user.billing_email_opt_in_label|default('Não autorizado') }}</dd>
+          </div>
+          <div>
+            <dt>Lembretes por WhatsApp</dt>
+            <dd>{{ view_user.billing_whatsapp_opt_in_label|default('Não autorizado') }}</dd>
           </div>
         </dl>
       </article>

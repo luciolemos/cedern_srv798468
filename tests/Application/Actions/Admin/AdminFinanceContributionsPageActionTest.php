@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Application\Actions\Admin;
 
-use App\Application\Actions\Admin\AdminMemberUserViewPageAction;
+use App\Application\Actions\Admin\AdminFinanceContributionsPageAction;
 use App\Infrastructure\Persistence\Member\FallbackMemberAuthRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -12,7 +12,7 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
-final class AdminMemberUserViewPageActionTest extends TestCase
+final class AdminFinanceContributionsPageActionTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -31,40 +31,42 @@ final class AdminMemberUserViewPageActionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testRendersReadOnlyMemberRegistrationView(): void
+    public function testRendersContributionDashboardWithGeneratedAndPendingProfiles(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
-        $userId = $memberAuthRepository->createPendingUser([
+
+        $paidCandidateId = $memberAuthRepository->createPendingUser([
             'full_name' => 'Marina Silva',
             'email' => 'marina@example.com',
             'password_hash' => 'hash',
         ]);
-
-        $memberAuthRepository->updateProfile($userId, [
+        $memberAuthRepository->updateProfile($paidCandidateId, [
             'full_name' => 'Marina Silva',
-            'phone_mobile' => '84999998888',
-            'phone_landline' => '8433221100',
-            'birth_date' => '1990-08-12',
-            'birth_place' => 'Natal/RN',
             'cpf' => '52998224725',
-            'postal_code' => '59000000',
-            'street_address' => 'Rua das Flores',
-            'address_number' => '123',
-            'address_complement' => 'Apto 12',
-            'neighborhood' => 'Centro',
-            'address_city' => 'Parnamirim',
-            'address_state' => 'RN',
+            'phone_mobile' => '84999998888',
             'preferred_due_day' => 10,
             'contribution_amount' => '65.50',
-            'contribution_plan_label' => 'Plano associado efetivo',
+            'contribution_plan_label' => 'Contribuição associativa',
             'preferred_payment_method' => 'pix',
             'billing_email_opt_in' => 1,
             'billing_whatsapp_opt_in' => 1,
-            'privacy_notice_version' => 'v2026.1',
-            'privacy_notice_accepted_at' => '2026-06-18 14:30:00',
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 4, 'Coordenador', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($paidCandidateId, 1, 'Atendimento fraterno', 'efetivo');
+
+        $pendingProfileId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Carlos Pereira',
+            'email' => 'carlos@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->updateProfile($pendingProfileId, [
+            'full_name' => 'Carlos Pereira',
+            'cpf' => '12345678909',
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole($pendingProfileId, 1, 'Mediunidade', 'fundador');
+
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -78,7 +80,7 @@ final class AdminMemberUserViewPageActionTest extends TestCase
             $logger,
             $twig,
             $memberAuthRepository
-        ) extends AdminMemberUserViewPageAction {
+        ) extends AdminFinanceContributionsPageAction {
             public string $capturedTemplate = '';
 
             /** @var array<string, mixed> */
@@ -96,49 +98,47 @@ final class AdminMemberUserViewPageActionTest extends TestCase
             }
         };
 
-        $request = $this->createRequest('GET', '/painel/usuarios/' . $userId)
-            ->withAttribute('id', $userId);
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes?competence=2026-07')
+            ->withQueryParams([
+                'competence' => '2026-07',
+            ]);
 
         $response = $action($request, new Response());
 
         $html = $twig->fetch($action->capturedTemplate, array_merge($action->capturedData, [
             'base_url' => '',
-            'current_path' => '/painel/usuarios/' . $userId,
+            'current_path' => '/painel/financas/contribuicoes',
             'csrf_token' => 'test-token',
             'csrf_field_name' => '_csrf',
-            'dashboard_user' => 'Administrador de Teste',
+            'dashboard_user' => 'Financeiro de Teste',
             'dashboard_user_photo_path' => '',
             'dashboard_is_authenticated' => true,
-            'dashboard_is_admin_session' => true,
+            'dashboard_is_admin_session' => false,
             'dashboard_env_label' => 'Homologação',
             'dashboard_env_tone' => 'test',
             'dashboard_admin_notifications' => [],
             'dashboard_admin_pending_users' => [],
             'dashboard_admin_notification_count' => 0,
             'member_is_authenticated' => true,
-            'member_name' => 'Administrador de Teste',
-            'member_role_key' => 'admin',
-            'member_role_name' => 'Administrador',
+            'member_name' => 'Financeiro de Teste',
+            'member_role_key' => 'finance_operator',
+            'member_role_name' => 'Operador Financeiro',
             'member_profile_photo_path' => '',
         ]));
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('pages/admin-member-user-view.twig', $action->capturedTemplate);
+        $this->assertSame('pages/admin-finance-contributions.twig', $action->capturedTemplate);
+        $this->assertStringContainsString('Julho de 2026', $html);
         $this->assertStringContainsString('Marina Silva', $html);
-        $this->assertStringContainsString('Administrador', $html);
-        $this->assertStringContainsString('(84) 99999-8888', $html);
-        $this->assertStringContainsString('(84) 3322-1100', $html);
-        $this->assertStringContainsString('12/08/1990', $html);
         $this->assertStringContainsString('529.982.247-25', $html);
-        $this->assertStringContainsString('59000-000', $html);
-        $this->assertStringContainsString('Rua das Flores, 123 - Apto 12', $html);
-        $this->assertStringContainsString('Centro - Parnamirim/RN - CEP 59000-000', $html);
-        $this->assertStringContainsString('Dia 10', $html);
         $this->assertStringContainsString('R$ 65,50', $html);
-        $this->assertStringContainsString('Plano associado efetivo', $html);
-        $this->assertStringContainsString('Pix', $html);
-        $this->assertStringContainsString('Autorizado', $html);
-        $this->assertStringContainsString('18/06/2026 14:30', $html);
-        $this->assertStringContainsString('/painel/usuarios/' . $userId . '/resumo', $html);
+        $this->assertStringContainsString('Em aberto', $html);
+        $this->assertStringContainsString('Cobrança por e-mail autorizada', $html);
+        $this->assertStringContainsString('Enviar e-mail', $html);
+        $this->assertStringContainsString('WhatsApp', $html);
+        $this->assertStringContainsString('Carlos Pereira', $html);
+        $this->assertStringContainsString('Cadastro pendente', $html);
+        $this->assertStringContainsString('Gerar cobranças da competência', $html);
+        $this->assertStringContainsString('/painel/financas/contribuicoes/' , $html);
     }
 }
