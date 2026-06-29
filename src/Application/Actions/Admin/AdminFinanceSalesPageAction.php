@@ -153,6 +153,19 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
         }
 
         $summary = $this->buildSummary($sales);
+        $filterSummary = $this->buildFilterSummary(
+            $summary,
+            $searchTerm,
+            $statusFilter,
+            $paymentFilter,
+            $sellerFilter,
+            $periodField,
+            $dateFrom,
+            $dateTo,
+            $amountMin,
+            $amountMax,
+            $paymentOptions
+        );
 
         $sortBy = (string) ($queryParams['sort'] ?? 'sold_at');
         if (!in_array($sortBy, self::SORT_FIELDS, true)) {
@@ -264,6 +277,7 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
         return $this->renderPage($response, 'pages/admin-finance-sales.twig', [
             'finance_sales' => $sales,
             'finance_sales_summary' => $summary,
+            'finance_sales_filter_summary' => $filterSummary,
             'finance_sales_sort_links' => $sortLinks,
             'finance_sales_search' => $searchTerm,
             'finance_sales_filters' => [
@@ -427,6 +441,73 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
         ];
     }
 
+    /**
+     * @param array<string, mixed> $summary
+     * @param array<string, string> $paymentOptions
+     * @return array<string, mixed>|null
+     */
+    private function buildFilterSummary(
+        array $summary,
+        string $searchTerm,
+        string $statusFilter,
+        string $paymentFilter,
+        string $sellerFilter,
+        string $periodField,
+        ?string $dateFrom,
+        ?string $dateTo,
+        ?float $amountMin,
+        ?float $amountMax,
+        array $paymentOptions
+    ): ?array {
+        $contextLabels = [];
+
+        if ($searchTerm !== '') {
+            $contextLabels[] = 'Busca: ' . $searchTerm;
+        }
+
+        if ($statusFilter === 'completed') {
+            $contextLabels[] = 'Status: somente concluídas';
+        } elseif ($statusFilter === 'cancelled') {
+            $contextLabels[] = 'Status: somente canceladas';
+        }
+
+        if ($paymentFilter !== 'all' && isset($paymentOptions[$paymentFilter])) {
+            $contextLabels[] = 'Pagamento: ' . $paymentOptions[$paymentFilter];
+        }
+
+        if ($sellerFilter !== 'all') {
+            $contextLabels[] = 'Vendedor: ' . $sellerFilter;
+        }
+
+        if ($dateFrom !== null || $dateTo !== null) {
+            $periodLabel = $periodField === 'cancelled_at' ? 'Período do cancelamento' : 'Período da venda';
+            $contextLabels[] = $periodLabel . ': ' . $this->formatPeriodRangeLabel($dateFrom, $dateTo);
+        }
+
+        $amountRangeLabel = $this->formatAmountRangeLabel($amountMin, $amountMax);
+        if ($amountRangeLabel !== null) {
+            $contextLabels[] = $amountRangeLabel;
+        }
+
+        if ($contextLabels === []) {
+            return null;
+        }
+
+        $completedCount = (int) ($summary['completed_count'] ?? 0);
+
+        return [
+            'context_labels' => $contextLabels,
+            'completed_count' => $completedCount,
+            'completed_count_label' => sprintf(
+                '%d venda%s concluída%s',
+                $completedCount,
+                $completedCount === 1 ? '' : 's',
+                $completedCount === 1 ? '' : 's'
+            ),
+            'recognized_total_label' => (string) ($summary['recognized_total_label'] ?? 'R$ 0,00'),
+        ];
+    }
+
     private function normalizeDateInput(mixed $value): ?string
     {
         $normalizedValue = trim((string) $value);
@@ -458,5 +539,48 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
     private function formatMoney(float $value): string
     {
         return 'R$ ' . number_format($value, 2, ',', '.');
+    }
+
+    private function formatAmountRangeLabel(?float $amountMin, ?float $amountMax): ?string
+    {
+        if ($amountMin !== null && $amountMax !== null) {
+            return 'Valor: ' . $this->formatMoney($amountMin) . ' a ' . $this->formatMoney($amountMax);
+        }
+
+        if ($amountMin !== null) {
+            return 'Valor: a partir de ' . $this->formatMoney($amountMin);
+        }
+
+        if ($amountMax !== null) {
+            return 'Valor: até ' . $this->formatMoney($amountMax);
+        }
+
+        return null;
+    }
+
+    private function formatPeriodRangeLabel(?string $dateFrom, ?string $dateTo): string
+    {
+        if ($dateFrom !== null && $dateTo !== null) {
+            return $this->formatDateLabel($dateFrom) . ' a ' . $this->formatDateLabel($dateTo);
+        }
+
+        if ($dateFrom !== null) {
+            return 'A partir de ' . $this->formatDateLabel($dateFrom);
+        }
+
+        if ($dateTo !== null) {
+            return 'Até ' . $this->formatDateLabel($dateTo);
+        }
+
+        return '';
+    }
+
+    private function formatDateLabel(string $value): string
+    {
+        try {
+            return (new DateTimeImmutable($value))->format('d/m/Y');
+        } catch (\Throwable) {
+            return $value;
+        }
     }
 }

@@ -91,9 +91,9 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
                 'summary_roles' => $roles,
                 'summary_member_type_options' => $memberTypeOptions,
                 'summary_institutional_role_options' => self::INSTITUTIONAL_ROLE_OPTIONS,
-                'page_title' => 'Resumo do Usuário | Dashboard Agenda',
+                'page_title' => 'Editar Acesso do Usuário | Dashboard Agenda',
                 'page_url' => 'https://cedern.org/painel/usuarios/' . max(0, $userId) . '/resumo',
-                'page_description' => 'Resumo de dados do usuário no painel administrativo.',
+                'page_description' => 'Edição administrativa de acesso do usuário no painel.',
             ]);
 
             return $summaryResponse->withStatus(404);
@@ -148,10 +148,10 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
             'summary_roles' => $roles,
             'summary_member_type_options' => $memberTypeOptions,
             'summary_institutional_role_options' => $institutionalRoleOptions,
-            'dashboard_page_title' => 'Resumo de ' . $displayName,
-            'page_title' => 'Resumo de Usuário | Dashboard Agenda',
+            'dashboard_page_title' => 'Editar acesso de ' . $displayName,
+            'page_title' => 'Editar Acesso do Usuário | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/usuarios/' . (int) ($user['id'] ?? 0) . '/resumo',
-            'page_description' => 'Resumo de dados do usuário no painel administrativo.',
+            'page_description' => 'Edição administrativa de acesso do usuário no painel.',
         ]);
     }
 

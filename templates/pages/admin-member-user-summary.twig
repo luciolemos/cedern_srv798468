@@ -1,8 +1,8 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = dashboard_page_title|default('Resumo do usuário') %}
-{% set dashboard_page_lead = 'Visualização rápida dos principais dados cadastrais.' %}
+{% set dashboard_page_title = dashboard_page_title|default('Editar acesso do usuário') %}
+{% set dashboard_page_lead = 'Gerencie papel, tipo de sócio e função institucional desta conta.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Resumo do usuário">
@@ -37,7 +37,10 @@
 
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Gestão de pessoal</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Associados CEDE</a>
+      {% if summary_user is not empty %}
+        <a class="nc-btn nc-btn-secondary" href="/painel/usuarios/{{ summary_user.id }}">Visualizar cadastro</a>
+      {% endif %}
     </div>
 
     {% if summary_user is empty %}

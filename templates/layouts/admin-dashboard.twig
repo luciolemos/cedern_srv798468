@@ -287,9 +287,12 @@
               </details>
             {% endif %}
             {% if panel_can_finance %}
+              {% set finance_livraria_active = current_path == '/painel/financas' or current_path starts with '/painel/financas/vendas/' %}
+              {% set finance_cantina_active = current_path starts with '/painel/financas/cantina' %}
+              {% set finance_bazar_active = current_path starts with '/painel/financas/bazar' %}
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/financas' %}open{% endif %}>
                 <summary class="nc-dashboard-user-menu-group-title">FINANÇAS</summary>
-                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/financas">
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink{{ finance_livraria_active ? ' is-active' : '' }}" href="/painel/financas">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
@@ -298,7 +301,29 @@
                       <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
                     </svg>
                   </span>
-                  <span>Vendas e cancelamentos</span>
+                  <span>Livraria</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink{{ finance_cantina_active ? ' is-active' : '' }}" href="/painel/financas/cantina">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Cantina</span>
+                </a>
+                <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink{{ finance_bazar_active ? ' is-active' : '' }}" href="/painel/financas/bazar">
+                  <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <span>Bazar</span>
                 </a>
               </details>
             {% endif %}
@@ -365,7 +390,7 @@
                       <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                   </span>
-                  <span>Gestão de Pessoal</span>
+                  <span>Associados CEDE</span>
                 </a>
 
                 {% if panel_can_cede_management %}
@@ -378,7 +403,7 @@
                         <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                       </svg>
                     </span>
-                    <span>Gestão CEDE</span>
+                    <span>Diretoria CEDE</span>
                   </a>
                 {% endif %}
               </details>
@@ -405,7 +430,7 @@
                     <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span>Gestão CEDE</span>
+                <span>Diretoria CEDE</span>
               </a>
             {% endif %}
             {% if panel_can_patrimony %}
@@ -636,9 +661,12 @@
           {% endif %}
 
           {% if panel_can_finance %}
+            {% set finance_livraria_active = current_path == '/painel/financas' or current_path starts with '/painel/financas/vendas/' %}
+            {% set finance_cantina_active = current_path starts with '/painel/financas/cantina' %}
+            {% set finance_bazar_active = current_path starts with '/painel/financas/bazar' %}
             <details class="nc-admin-nav-group" aria-label="Seção finanças" {% if current_path starts with '/painel/financas' %}open{% endif %}>
-              <summary class="nc-admin-nav-group-title">FINANÇAS</summary>
-              <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/financas' ? ' is-active' : '' }}" href="/painel/financas">
+              <summary class="nc-admin-nav-group-title">GESTÃO FINANCEIRA</summary>
+              <a class="nc-link nc-admin-submenu-link{{ finance_livraria_active ? ' is-active' : '' }}" href="/painel/financas">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
@@ -647,7 +675,29 @@
                     <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Vendas e cancelamentos</span>
+                <span class="nc-admin-link-label">Livraria</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ finance_cantina_active ? ' is-active' : '' }}" href="/painel/financas/cantina">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Cantina</span>
+              </a>
+              <a class="nc-link nc-admin-submenu-link{{ finance_bazar_active ? ' is-active' : '' }}" href="/painel/financas/bazar">
+                <span class="nc-admin-link-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M8 10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M8 14H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <circle cx="17" cy="14" r="1.2" fill="currentColor"/>
+                  </svg>
+                </span>
+                <span class="nc-admin-link-label">Bazar</span>
               </a>
             </details>
           {% endif %}
@@ -664,7 +714,7 @@
                     <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Gestão de Pessoal</span>
+                <span class="nc-admin-link-label">Associados CEDE</span>
               </a>
               {% if panel_can_cede_management %}
                 <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">
@@ -676,7 +726,7 @@
                       <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                   </span>
-                  <span class="nc-admin-link-label">Gestão CEDE</span>
+                  <span class="nc-admin-link-label">Diretoria CEDE</span>
                 </a>
               {% endif %}
             </details>
@@ -690,7 +740,7 @@
                   <path d="M17 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 </svg>
               </span>
-              <span class="nc-admin-link-label">Gestão CEDE</span>
+              <span class="nc-admin-link-label">Diretoria CEDE</span>
             </a>
           {% endif %}
 

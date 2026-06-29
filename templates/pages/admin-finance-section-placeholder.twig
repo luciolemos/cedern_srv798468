@@ -1,0 +1,22 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Finanças' %}
+{% set dashboard_page_title = finance_section_label|default('Setor financeiro') %}
+{% set dashboard_page_lead = 'Esta área ainda está em construção e será liberada em uma próxima etapa do painel.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Área financeira em construção" data-aos="fade-up" data-aos-delay="0">
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/financas">Voltar para Livraria</a>
+    </div>
+
+    <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="120">
+      <h3>Módulo em construção</h3>
+      <p>A visão financeira da {{ finance_section_label|default('área selecionada')|lower }} ainda não está disponível.</p>
+      <p>Enquanto isso, a consulta financeira já ativa continua em <strong>Livraria</strong>.</p>
+      <div class="nc-actions nc-admin-toolbar">
+        <a class="nc-btn nc-btn-primary" href="/painel/financas">Abrir gestão financeira da Livraria</a>
+      </div>
+    </article>
+  </section>
+{% endblock %}

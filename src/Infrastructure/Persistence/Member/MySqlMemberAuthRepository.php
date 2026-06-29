@@ -11,6 +11,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
     private const DEFAULT_MANAGEMENT_NAME = 'Gestão Atual';
 
     private \PDO $pdo;
+    private bool $memberSchemaCompatibilityBooted = false;
 
     public function __construct(\PDO $pdo)
     {
@@ -353,6 +354,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
     public function findAllRoles(): array
     {
+        $this->bootMemberSchemaCompatibility();
+
         try {
             $statement = $this->pdo->query('SELECT id, role_key, name, description FROM roles ORDER BY id ASC');
 
@@ -401,6 +404,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
     public function findRoleByKey(string $roleKey): ?array
     {
+        $this->bootMemberSchemaCompatibility();
+
         try {
             $statement = $this->pdo->prepare('SELECT id, role_key, name FROM roles WHERE role_key = :role_key LIMIT 1');
             $statement->execute(['role_key' => $roleKey]);
@@ -1158,6 +1163,20 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $this->ensureDefaultRoles();
         $currentManagementId = $this->ensureCurrentManagementId();
         $this->migrateLegacyInstitutionalRolesToCurrentManagement($currentManagementId);
+    }
+
+    private function bootMemberSchemaCompatibility(): void
+    {
+        if ($this->memberSchemaCompatibilityBooted) {
+            return;
+        }
+
+        try {
+            $this->ensureMemberSchemaCompatibility();
+        } catch (\Throwable $exception) {
+        }
+
+        $this->memberSchemaCompatibilityBooted = true;
     }
 
     private function ensureCurrentManagementId(): int

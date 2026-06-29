@@ -64,6 +64,51 @@ class AdminFinanceSalesPageActionTest extends TestCase
         $this->assertSame('allan', $action->capturedData['finance_sales_search']);
         $this->assertSame(1, $action->capturedData['finance_sales_summary']['completed_count']);
         $this->assertSame('R$ 45,00', $action->capturedData['finance_sales_summary']['completed_total_label']);
+        $this->assertSame(
+            [
+                'context_labels' => [
+                    'Busca: allan',
+                    'Status: somente concluídas',
+                    'Pagamento: PIX',
+                    'Vendedor: Maria',
+                    'Período da venda: 01/06/2026 a 30/06/2026',
+                    'Valor: R$ 40,00 a R$ 60,00',
+                ],
+                'completed_count' => 1,
+                'completed_count_label' => '1 venda concluída',
+                'recognized_total_label' => 'R$ 45,00',
+            ],
+            $action->capturedData['finance_sales_filter_summary']
+        );
+    }
+
+    public function testExposesFilterSummaryWithoutDateRange(): void
+    {
+        $sales = [
+            $this->buildSale(1, 'VD-001', '2026-06-10 13:00:00', 'A', 'cash', 'Maria', 'completed', 20.0, 'Livro A'),
+            $this->buildSale(2, 'VD-002', '2026-06-11 13:00:00', 'B', 'pix', 'Maria', 'completed', 90.0, 'Livro B'),
+            $this->buildSale(3, 'VD-003', '2026-06-12 13:00:00', 'C', 'pix', 'João', 'cancelled', 50.0, 'Livro C'),
+        ];
+
+        $action = $this->createAction($sales);
+        $request = $this->createRequest('GET', '/painel/financas')->withQueryParams([
+            'payment_filter' => 'pix',
+        ]);
+
+        $response = $action($request, new Response());
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(
+            [
+                'context_labels' => [
+                    'Pagamento: PIX',
+                ],
+                'completed_count' => 1,
+                'completed_count_label' => '1 venda concluída',
+                'recognized_total_label' => 'R$ 90,00',
+            ],
+            $action->capturedData['finance_sales_filter_summary']
+        );
     }
 
     public function testSortsByTotalAmountAndPaginatesSecondPage(): void
@@ -98,6 +143,7 @@ class AdminFinanceSalesPageActionTest extends TestCase
         $this->assertSame(6, $pagination['start_item']);
         $this->assertSame(6, $pagination['end_item']);
         $this->assertSame('5', $pagination['page_size']);
+        $this->assertNull($action->capturedData['finance_sales_filter_summary']);
     }
 
     public function testConsumesFlashAndSupportsAllPageSize(): void

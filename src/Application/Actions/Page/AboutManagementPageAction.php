@@ -93,10 +93,10 @@ class AboutManagementPageAction extends AbstractPageAction
 
         return $this->renderPage($response, 'pages/about-management.twig', [
             'public_cede_management' => $managementMembers,
-            'page_title' => 'Gestão CEDE | Quem Somos | CEDE',
+            'page_title' => 'Diretoria CEDE | Quem Somos | CEDE',
             'page_url' => 'https://cedern.org/quem-somos/gestao-cede',
             'page_description' =>
-                'Conheça a composição da gestão atual do CEDE '
+                'Conheça a composição da diretoria atual do CEDE '
                 . 'e as atribuições institucionais de cada função.',
         ]);
     }

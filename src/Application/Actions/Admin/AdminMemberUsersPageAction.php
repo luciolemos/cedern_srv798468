@@ -413,9 +413,9 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Usuários | Dashboard Agenda',
+            'page_title' => 'Associados CEDE | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/usuarios',
-            'page_description' => 'Validação de cadastro e atribuição de perfis de usuário.',
+            'page_description' => 'Validação de cadastro e atribuição de perfis de associados.',
         ]);
     }
 

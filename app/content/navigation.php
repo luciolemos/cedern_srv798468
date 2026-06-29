@@ -12,7 +12,7 @@ return [
         'fundador' => 'Fundador',
         'estatuto' => 'Estatuto',
         'nossa-marca' => 'Nossa Marca',
-        'gestao-cede' => 'Gestão CEDE',
+        'gestao-cede' => 'Diretoria CEDE',
         'estudos' => 'Estudos',
         'esde' => 'ESDE',
         'eade' => 'EADE',

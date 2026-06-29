@@ -44,17 +44,14 @@
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="customer_name">Cliente</label>
-            <input class="nc-admin-form-input" id="customer_name" name="customer_name" type="text" placeholder="Opcional" value="{{ bookshop_sale_form.customer_name|default('') }}">
+            <label class="nc-admin-form-label" for="customer_name">Cliente <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="customer_name" name="customer_name" type="text" placeholder="Nome completo" value="{{ bookshop_sale_form.customer_name|default('') }}" autocapitalize="characters" required aria-required="true">
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="customer_phone">Telefone</label>
-            <input class="nc-admin-form-input" id="customer_phone" name="customer_phone" type="text" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(84) 99999-9999" value="{{ bookshop_sale_form.customer_phone|default('') }}">
+            <label class="nc-admin-form-label" for="customer_cpf">CPF <span class="nc-admin-form-required-indicator" aria-hidden="true">*</span></label>
+            <input class="nc-admin-form-input" id="customer_cpf" name="customer_cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" value="{{ bookshop_sale_form.customer_cpf|default('') }}" required aria-required="true">
           </div>
-        </div>
-
-        <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer-extra">
         </div>
 
         <div class="nc-admin-form-grid nc-admin-form-grid-bookshop-sale-customer-extra">
@@ -64,8 +61,8 @@
           </div>
 
           <div class="nc-admin-form-field">
-            <label class="nc-admin-form-label" for="customer_cpf">CPF</label>
-            <input class="nc-admin-form-input" id="customer_cpf" name="customer_cpf" type="text" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" value="{{ bookshop_sale_form.customer_cpf|default('') }}">
+            <label class="nc-admin-form-label" for="customer_phone">Telefone</label>
+            <input class="nc-admin-form-input" id="customer_phone" name="customer_phone" type="text" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(84) 99999-9999" value="{{ bookshop_sale_form.customer_phone|default('') }}">
           </div>
         </div>
 
@@ -236,6 +233,7 @@
       var template = form.querySelector('[data-bookshop-line-template]');
       var quickSearchInput = form.querySelector('[data-bookshop-quick-search]');
       var quickResults = form.querySelector('[data-bookshop-quick-results]');
+      var customerNameInput = form.querySelector('#customer_name');
       var customerPhoneInput = form.querySelector('#customer_phone');
       var customerEmailInput = form.querySelector('#customer_email');
       var customerCpfInput = form.querySelector('#customer_cpf');
@@ -317,6 +315,10 @@
         }
 
         return parseMoney(raw).toFixed(2).replace('.', ',');
+      }
+
+      function formatUppercaseTextValue(value) {
+        return String(value || '').toLocaleUpperCase('pt-BR');
       }
 
       function formatPhoneInputValue(value) {
@@ -969,6 +971,13 @@
           syncCashFields();
           recalculateSummary();
           syncReceivedAmountValidity(false);
+        });
+      }
+
+      if (customerNameInput) {
+        customerNameInput.value = formatUppercaseTextValue(customerNameInput.value);
+        customerNameInput.addEventListener('input', function () {
+          customerNameInput.value = formatUppercaseTextValue(customerNameInput.value);
         });
       }
 

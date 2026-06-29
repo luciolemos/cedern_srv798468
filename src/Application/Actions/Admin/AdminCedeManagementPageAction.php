@@ -50,9 +50,9 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             $users = $this->memberAuthRepository->findAllUsersForAdmin();
         } catch (Throwable $exception) {
             $status = $status !== '' ? $status : 'load-error';
-            $loadError = 'Não foi possível carregar a Gestão CEDE no momento.';
+            $loadError = 'Não foi possível carregar a Diretoria CEDE no momento.';
 
-            $this->logger->error('Falha ao carregar lista de Gestão CEDE.', [
+            $this->logger->error('Falha ao carregar lista da Diretoria CEDE.', [
                 'exception' => $exception,
             ]);
         }
@@ -267,9 +267,9 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 'page_size_options' => $pageSizeOptions,
             ],
             'dashboard_page_kicker' => 'Dashboard',
-            'dashboard_page_title' => 'Gestão CEDE',
+            'dashboard_page_title' => 'Diretoria CEDE',
             'dashboard_page_lead' => 'Usuários com função institucional ativa no CEDE.',
-            'page_title' => 'Gestão CEDE | Dashboard Agenda',
+            'page_title' => 'Diretoria CEDE | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/gestao-cede',
             'page_description' => 'Lista administrativa de funções institucionais do CEDE.',
         ]);

@@ -29,6 +29,7 @@ use App\Application\Actions\Admin\AdminBookshopCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryListPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminBookshopDashboardPageAction;
+use App\Application\Actions\Admin\AdminFinanceSectionPlaceholderPageAction;
 use App\Application\Actions\Admin\AdminFinanceSalesPageAction;
 use App\Application\Actions\Admin\AdminFinanceSaleViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreFormPageAction;
@@ -54,6 +55,7 @@ use App\Application\Actions\Admin\AdminLibraryCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryListPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
+use App\Application\Actions\Admin\AdminMemberUserViewPageAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
 use App\Application\Actions\Admin\AdminPatrimonyAssetAttachmentDeleteAction;
@@ -423,9 +425,12 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->get('/financas', AdminFinanceSalesPageAction::class)
             ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/{section:cantina|bazar}', AdminFinanceSectionPlaceholderPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
         $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)
             ->add($panelFinanceAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/usuarios/{id}', AdminMemberUserViewPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/patrimonio', AdminPatrimonyAssetListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->map(['GET', 'POST'], '/patrimonio/novo', AdminPatrimonyAssetFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
@@ -617,6 +622,10 @@ return function (App $app) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/usuarios/' . $id . '/resumo')->withStatus(302);
     });
+    $app->get('/admin/usuarios/{id}', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        return $response->withHeader('Location', '/painel/usuarios/' . $id)->withStatus(302);
+    });
     $app->post('/admin/usuarios/{id}/atribuir-papel', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/usuarios/' . $id . '/atribuir-papel')->withStatus(307);
@@ -753,6 +762,13 @@ return function (App $app) {
                     ],
                 ],
                 [
+                    'template' => 'pages/admin-finance-section-placeholder.twig',
+                    'context' => [
+                        'finance_section_key' => 'cantina',
+                        'finance_section_label' => 'Cantina',
+                    ],
+                ],
+                [
                     'template' => 'pages/admin-bookshop-sale-form.twig',
                     'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
                 ],
@@ -841,6 +857,55 @@ return function (App $app) {
             return $response->withHeader('Content-Type', 'application/json');
         });
 
+        $app->get('/health/preview/admin-finance-sales', function (Request $request, Response $response) use ($app) {
+            $twig = $app->getContainer()->get(Twig::class);
+
+            return $twig->render($response, 'pages/admin-finance-sales.twig', [
+                'dashboard_is_authenticated' => true,
+                'dashboard_user' => 'Equipe Financeira',
+                'member_role_key' => 'finance_operator',
+                'member_role_name' => 'Operador Financeiro',
+                'current_path' => '/painel/financas',
+                'finance_sales' => [],
+                'finance_sales_summary' => [
+                    'completed_count' => 18,
+                    'completed_total_label' => 'R$ 3.420,00',
+                    'recognized_total_label' => 'R$ 3.420,00',
+                    'cancelled_count' => 2,
+                    'cancelled_total_label' => 'R$ 180,00',
+                    'average_ticket_label' => 'R$ 190,00',
+                ],
+                'finance_sales_search' => 'allan',
+                'finance_sales_filters' => [
+                    'status_filter' => 'completed',
+                    'payment_filter' => 'pix',
+                    'seller_filter' => 'Maria Silva',
+                    'period_field' => 'sold_at',
+                    'date_from' => '2026-06-01',
+                    'date_to' => '2026-06-30',
+                    'amount_min' => '40.00',
+                    'amount_max' => '250.00',
+                ],
+                'finance_sales_filter_options' => [
+                    'payment_methods' => [
+                        'all' => 'Todos os meios',
+                        'pix' => 'PIX',
+                        'cash' => 'Dinheiro',
+                        'credit' => 'Cartão de crédito',
+                    ],
+                    'sellers' => [
+                        'all' => 'Todos os vendedores',
+                        'Maria Silva' => 'Maria Silva',
+                        'João Souza' => 'João Souza',
+                    ],
+                ],
+                'admin_status' => '',
+                'page_title' => 'Prévia Financeira | Dashboard',
+                'page_url' => 'https://cedern.org/painel/financas',
+                'page_description' => 'Prévia diagnóstica da tela financeira da livraria do CEDE.',
+            ]);
+        });
+
         $app->get('/health/db', function (Request $request, Response $response) use ($app) {
             try {
                 /** @var \PDO $pdo */
@@ -885,6 +950,7 @@ return function (App $app) {
 
         $app->get('/users', $disabledDiagnosticRoute);
         $app->get('/health/render', $disabledDiagnosticRoute);
+        $app->get('/health/preview/admin-finance-sales', $disabledDiagnosticRoute);
         $app->get('/health/db', $disabledDiagnosticRoute);
         $app->group('/api/users', function (Group $group) use ($disabledDiagnosticRoute) {
             $group->get('', $disabledDiagnosticRoute);

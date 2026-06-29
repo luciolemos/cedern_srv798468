@@ -198,7 +198,7 @@ class AdminDashboardPageAction extends AbstractPageAction
             'esde' => 'ESDE',
             'estatuto' => 'Estatuto',
             'estudos' => 'Estudos',
-            'gestao-cede' => 'Gestão CEDE',
+            'gestao-cede' => 'Diretoria CEDE',
             'historia' => 'História',
             'missao' => 'Missão',
             'nossa-marca' => 'Nossa Marca',
