@@ -6,6 +6,7 @@ namespace App\Application\Actions\Page;
 
 use App\Application\Security\RecaptchaVerifier;
 use App\Application\Support\InstitutionalEmailTemplate;
+use App\Application\Support\SmtpSettings;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -288,7 +289,7 @@ class ContactPageAction extends AbstractPageAction
         $mailer->Username = $smtpUser;
         $mailer->Password = $smtpPass;
         $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = $this->resolveSmtpEncryption($smtpPort);
+        $mailer->SMTPSecure = SmtpSettings::resolveConfiguredEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
         $mailer->Timeout = max(3, (int) ($_ENV['MAIL_TIMEOUT'] ?? 15));
@@ -324,22 +325,6 @@ class ContactPageAction extends AbstractPageAction
         }
 
         return $mailer;
-    }
-
-    private function resolveSmtpEncryption(int $smtpPort): string
-    {
-        $explicitEncryption = strtolower(trim((string) ($_ENV['MAIL_ENCRYPTION'] ?? '')));
-        if ($explicitEncryption === 'ssl' || $explicitEncryption === 'smtps') {
-            return PHPMailer::ENCRYPTION_SMTPS;
-        }
-
-        if ($explicitEncryption === 'tls' || $explicitEncryption === 'starttls') {
-            return PHPMailer::ENCRYPTION_STARTTLS;
-        }
-
-        return $smtpPort === 465
-            ? PHPMailer::ENCRYPTION_SMTPS
-            : PHPMailer::ENCRYPTION_STARTTLS;
     }
 
     private function resolvePublicLogoUrl(): ?string

@@ -33,12 +33,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     email,
                     password_hash,
                     status,
+                    association_status,
+                    is_contributor,
                     profile_completed
                 ) VALUES (
                     :full_name,
                     :email,
                     :password_hash,
                     'pending',
+                    'applicant',
+                    0,
                     0
                 )
             SQL;
@@ -55,12 +59,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         email,
                         password_hash,
                         status,
+                        association_status,
+                        is_contributor,
                         profile_completed
                     ) VALUES (
                         :full_name,
                         :email,
                         :password_hash,
                         'pending',
+                        'applicant',
+                        0,
                         0
                     )
                 SQL;
@@ -85,7 +93,39 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             }
         }
 
-        return (int) $this->pdo->lastInsertId();
+        $userId = (int) $this->pdo->lastInsertId();
+
+        if ($userId > 0) {
+            try {
+                $this->bootMemberSchemaCompatibility();
+                $this->appendUserAdministrationEvent(
+                    $userId,
+                    'signup_created',
+                    'Cadastro criado como solicitante com acesso pendente.',
+                    null,
+                    [
+                        'previous' => null,
+                        'current' => $this->buildAdministrativeSnapshot([
+                            'role_id' => null,
+                            'role_key' => null,
+                            'role_name' => null,
+                            'institutional_role' => null,
+                            'member_type' => null,
+                            'association_status' => 'applicant',
+                            'is_contributor' => 0,
+                            'status' => 'pending',
+                        ]),
+                        'rules_applied' => ['new_signup_defaults'],
+                    ]
+                );
+            } catch (\Throwable $exception) {
+                $this->loggerSafeWarning('Falha ao registrar histórico administrativo do novo cadastro.', $exception, [
+                    'member_user_id' => $userId,
+                ]);
+            }
+        }
+
+        return $userId;
     }
 
     public function createPasswordResetToken(
@@ -139,6 +179,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
+                    u.association_status,
+                    u.is_contributor,
                     u.profile_photo_path,
                     u.privacy_notice_version,
                     u.privacy_notice_accepted_at,
@@ -166,7 +208,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             $statement->execute(['email' => $normalizedEmail]);
             $row = $statement->fetch();
 
-            return $row ?: null;
+            return is_array($row) ? $this->normalizeMemberRowWithDefaults($row) : null;
         } catch (\Throwable $exception) {
             try {
                 $sql = <<<SQL
@@ -196,6 +238,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         u.profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -240,6 +284,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         NULL AS profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -295,6 +341,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
+                    u.association_status,
+                    u.is_contributor,
                     u.profile_photo_path,
                     u.privacy_notice_version,
                     u.privacy_notice_accepted_at,
@@ -322,7 +370,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             $statement->execute(['id' => $id]);
             $row = $statement->fetch();
 
-            return $row ?: null;
+            return is_array($row) ? $this->normalizeMemberRowWithDefaults($row) : null;
         } catch (\Throwable $exception) {
             try {
                 $sql = <<<SQL
@@ -352,6 +400,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         u.profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -396,6 +446,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         NULL AS profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -572,15 +624,29 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         try {
             $statement = $this->pdo->prepare($sql);
+            $updated = $statement->execute($params);
+            if ($updated) {
+                $this->syncPendingContributionChargePaymentMethod(
+                    $id,
+                    $this->nullableText($data['preferred_payment_method'] ?? null)
+                );
+            }
 
-            return $statement->execute($params);
+            return $updated;
         } catch (\Throwable $exception) {
             $this->ensureMemberSchemaCompatibility();
 
             try {
                 $statement = $this->pdo->prepare($sql);
+                $updated = $statement->execute($params);
+                if ($updated) {
+                    $this->syncPendingContributionChargePaymentMethod(
+                        $id,
+                        $this->nullableText($data['preferred_payment_method'] ?? null)
+                    );
+                }
 
-                return $statement->execute($params);
+                return $updated;
             } catch (\Throwable $innerException) {
                 $fallbackSql = <<<SQL
                     UPDATE member_users
@@ -606,6 +672,36 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
+    private function syncPendingContributionChargePaymentMethod(int $memberUserId, ?string $preferredPaymentMethod): void
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedPaymentMethod = $this->resolveContributionPaymentMethod((string) $preferredPaymentMethod);
+
+        try {
+            $statement = $this->pdo->prepare(<<<SQL
+                UPDATE member_contribution_charges
+                SET
+                    preferred_payment_method = :preferred_payment_method,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE member_user_id = :member_user_id
+                  AND status = 'pending'
+                  AND payment_recorded_method IS NULL
+                  AND (gateway_payment_id IS NULL OR gateway_payment_id = '')
+            SQL);
+
+            $statement->execute([
+                'member_user_id' => $memberUserId,
+                'preferred_payment_method' => $normalizedPaymentMethod,
+            ]);
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao sincronizar forma de pagamento das cobranças pendentes.', $exception, [
+                'member_user_id' => $memberUserId,
+                'preferred_payment_method' => $normalizedPaymentMethod,
+            ]);
+        }
+    }
+
     public function consumePasswordResetToken(int $resetId, int $userId, string $passwordHash): bool
     {
         try {
@@ -625,61 +721,29 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         int $id,
         int $roleId,
         ?string $institutionalRole = null,
-        ?string $memberType = null
+        ?string $memberType = null,
+        ?string $associationStatus = null,
+        ?bool $isContributor = null,
+        ?string $accountStatus = null,
+        ?int $actedByUserId = null
     ): bool {
-        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
-        $normalizedMemberType = $this->nullableText($memberType);
-
-        $sql = <<<SQL
-            UPDATE member_users
-            SET
-                role_id = :role_id,
-                institutional_role = :institutional_role,
-                member_type = :member_type,
-                status = 'active',
-                approved_at = NOW()
-            WHERE id = :id
-            LIMIT 1
-        SQL;
+        [$normalizedState, $rulesApplied] = $this->normalizeAdministrativeState(
+            $memberType,
+            $institutionalRole,
+            $associationStatus,
+            $isContributor,
+            $accountStatus
+        );
 
         try {
-            $statement = $this->pdo->prepare($sql);
-
-            return $statement->execute([
-                'id' => $id,
-                'role_id' => $roleId,
-                'institutional_role' => $normalizedInstitutionalRole,
-                'member_type' => $normalizedMemberType,
-            ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+            return $this->approveAndAssignRoleInternal($id, $roleId, $normalizedState, $rulesApplied, $actedByUserId);
         } catch (\Throwable $exception) {
             $this->ensureMemberSchemaCompatibility();
 
             try {
-                $statement = $this->pdo->prepare($sql);
-
-                return $statement->execute([
-                    'id' => $id,
-                    'role_id' => $roleId,
-                    'institutional_role' => $normalizedInstitutionalRole,
-                    'member_type' => $normalizedMemberType,
-                ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+                return $this->approveAndAssignRoleInternal($id, $roleId, $normalizedState, $rulesApplied, $actedByUserId);
             } catch (\Throwable $innerException) {
-                $fallbackSql = <<<SQL
-                    UPDATE member_users
-                    SET
-                        role_id = :role_id,
-                        status = 'active',
-                        approved_at = NOW()
-                    WHERE id = :id
-                    LIMIT 1
-                SQL;
-
-                $fallbackStatement = $this->pdo->prepare($fallbackSql);
-
-                return $fallbackStatement->execute([
-                    'id' => $id,
-                    'role_id' => $roleId,
-                ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedInstitutionalRole);
+                return $this->approveAndAssignRoleFallback($id, $roleId, $normalizedState, $innerException);
             }
         }
     }
@@ -791,6 +855,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
+                    u.association_status,
+                    u.is_contributor,
                     u.profile_photo_path,
                     u.profile_completed,
                     u.created_at,
@@ -815,7 +881,9 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
             $statement = $this->pdo->query($sql);
 
-            return $statement->fetchAll() ?: [];
+            $rows = $statement->fetchAll() ?: [];
+
+            return array_map(fn (array $row): array => $this->normalizeMemberRowWithDefaults($row), $rows);
         } catch (\Throwable $exception) {
             try {
                 $sql = <<<SQL
@@ -844,6 +912,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.created_at,
@@ -885,6 +955,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         0 AS billing_whatsapp_opt_in,
                         NULL AS institutional_role,
                         NULL AS member_type,
+                        NULL AS association_status,
+                        0 AS is_contributor,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS created_at,
@@ -901,6 +973,47 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             }
 
             return array_map(fn (array $row): array => $this->normalizeMemberRowWithDefaults($row), $rows);
+        }
+    }
+
+    public function findUserAdministrationHistory(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $this->bootMemberSchemaCompatibility();
+
+        try {
+            $statement = $this->pdo->prepare(<<<SQL
+                SELECT
+                    e.id,
+                    e.member_user_id,
+                    e.acted_by_user_id,
+                    e.event_type,
+                    e.event_description,
+                    e.payload_json,
+                    e.created_at,
+                    actor.full_name AS acted_by_user_full_name,
+                    actor.email AS acted_by_user_email
+                FROM member_user_administration_events e
+                LEFT JOIN member_users actor ON actor.id = e.acted_by_user_id
+                WHERE e.member_user_id = :member_user_id
+                ORDER BY e.created_at DESC, e.id DESC
+            SQL);
+            $statement->execute([
+                'member_user_id' => $userId,
+            ]);
+
+            $rows = $statement->fetchAll() ?: [];
+
+            return array_map(fn (array $row): array => $this->normalizeUserAdministrationEvent($row), $rows);
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao carregar histórico administrativo do usuário.', $exception, [
+                'member_user_id' => $userId,
+            ]);
+
+            return [];
         }
     }
 
@@ -939,6 +1052,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     u.billing_whatsapp_opt_in,
                     COALESCE(mmr.role_name, u.institutional_role) AS institutional_role,
                     u.member_type,
+                    u.association_status,
+                    u.is_contributor,
                     u.profile_photo_path,
                     u.privacy_notice_version,
                     u.privacy_notice_accepted_at,
@@ -988,24 +1103,25 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 LEFT JOIN (
                     SELECT
                         member_user_id,
-                        SUM(CASE WHEN status = 'pending' AND due_date < :today THEN 1 ELSE 0 END)
+                        SUM(CASE WHEN status = 'pending' AND due_date < :today_for_count THEN 1 ELSE 0 END)
                             AS overdue_charge_count,
-                        MIN(CASE WHEN status = 'pending' AND due_date < :today THEN due_date ELSE NULL END)
+                        MIN(CASE WHEN status = 'pending' AND due_date < :today_for_oldest THEN due_date ELSE NULL END)
                             AS oldest_overdue_due_date,
                         MAX(CASE WHEN status = 'paid' THEN paid_at ELSE NULL END) AS last_paid_at
                     FROM member_contribution_charges
                     GROUP BY member_user_id
                 ) stats ON stats.member_user_id = u.id
                 WHERE u.status = 'active'
-                  AND u.member_type IS NOT NULL
-                  AND TRIM(u.member_type) <> ''
+                  AND u.association_status = 'member'
+                  AND u.is_contributor = 1
                 ORDER BY u.full_name ASC, u.id ASC
             SQL;
 
             $statement = $this->pdo->prepare($sql);
             $statement->execute([
                 'competence' => $normalizedCompetence,
-                'today' => $today,
+                'today_for_count' => $today,
+                'today_for_oldest' => $today,
             ]);
 
             $rows = $statement->fetchAll() ?: [];
@@ -1151,6 +1267,49 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             ]);
 
             return null;
+        }
+    }
+
+    public function findContributionChargesByMember(int $memberUserId, int $limit = 12): array
+    {
+        $this->bootMemberSchemaCompatibility();
+
+        $normalizedMemberId = max(0, $memberUserId);
+        $normalizedLimit = max(1, min(240, $limit));
+
+        if ($normalizedMemberId <= 0) {
+            return [];
+        }
+
+        try {
+            $statement = $this->pdo->prepare(sprintf(<<<SQL
+                SELECT
+                    c.*,
+                    u.full_name AS member_full_name,
+                    u.email AS member_email,
+                    u.cpf AS member_cpf
+                FROM member_contribution_charges c
+                INNER JOIN member_users u ON u.id = c.member_user_id
+                WHERE c.member_user_id = :member_user_id
+                ORDER BY c.competence DESC, c.id DESC
+                LIMIT %d
+            SQL, $normalizedLimit));
+            $statement->execute([
+                'member_user_id' => $normalizedMemberId,
+            ]);
+            $rows = $statement->fetchAll() ?: [];
+
+            return array_map(
+                fn (array $row): array => $this->normalizeContributionChargeRow($row),
+                $rows
+            );
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao carregar histórico de contribuições do membro.', $exception, [
+                'member_user_id' => $normalizedMemberId,
+                'limit' => $normalizedLimit,
+            ]);
+
+            return [];
         }
     }
 
@@ -1365,19 +1524,32 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         return $statement->execute([
             'id' => $chargeId,
-            'gateway_provider' => $this->nullableText($data['gateway_provider'] ?? ($charge['gateway_provider'] ?? null)),
-            'gateway_customer_id' => $this->nullableText($data['gateway_customer_id'] ?? ($charge['gateway_customer_id'] ?? null)),
-            'gateway_payment_id' => $this->nullableText($data['gateway_payment_id'] ?? ($charge['gateway_payment_id'] ?? null)),
-            'gateway_billing_type' => $this->nullableText($data['gateway_billing_type'] ?? ($charge['gateway_billing_type'] ?? null)),
-            'gateway_status' => $this->nullableText($data['gateway_status'] ?? ($charge['gateway_status'] ?? null)),
-            'gateway_invoice_url' => $this->nullableText($data['gateway_invoice_url'] ?? ($charge['gateway_invoice_url'] ?? null)),
-            'gateway_bank_slip_url' => $this->nullableText($data['gateway_bank_slip_url'] ?? ($charge['gateway_bank_slip_url'] ?? null)),
-            'gateway_transaction_receipt_url' => $this->nullableText($data['gateway_transaction_receipt_url'] ?? ($charge['gateway_transaction_receipt_url'] ?? null)),
-            'gateway_pix_payload' => $this->nullableText($data['gateway_pix_payload'] ?? ($charge['gateway_pix_payload'] ?? null)),
-            'gateway_pix_encoded_image' => $this->nullableText($data['gateway_pix_encoded_image'] ?? ($charge['gateway_pix_encoded_image'] ?? null)),
-            'gateway_pix_expiration_date' => $this->nullableText($data['gateway_pix_expiration_date'] ?? ($charge['gateway_pix_expiration_date'] ?? null)),
-            'gateway_last_synced_at' => $this->nullableText($data['gateway_last_synced_at'] ?? ($charge['gateway_last_synced_at'] ?? null)),
+            'gateway_provider' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_provider'),
+            'gateway_customer_id' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_customer_id'),
+            'gateway_payment_id' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_payment_id'),
+            'gateway_billing_type' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_billing_type'),
+            'gateway_status' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_status'),
+            'gateway_invoice_url' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_invoice_url'),
+            'gateway_bank_slip_url' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_bank_slip_url'),
+            'gateway_transaction_receipt_url' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_transaction_receipt_url'),
+            'gateway_pix_payload' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_pix_payload'),
+            'gateway_pix_encoded_image' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_pix_encoded_image'),
+            'gateway_pix_expiration_date' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_pix_expiration_date'),
+            'gateway_last_synced_at' => $this->resolveGatewayUpdateField($data, $charge, 'gateway_last_synced_at'),
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $charge
+     */
+    private function resolveGatewayUpdateField(array $data, array $charge, string $field): ?string
+    {
+        if (array_key_exists($field, $data)) {
+            return $this->nullableText($data[$field]);
+        }
+
+        return $this->nullableText($charge[$field] ?? null);
     }
 
     public function findContributionChargeByGatewayPaymentId(string $gatewayPaymentId): ?array
@@ -1581,11 +1753,23 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $fallbackRoleKey = (string) ($roleKeyById[$roleId] ?? 'member');
         $fallbackRoleName = (string) ($roleNameById[$roleId] ?? 'Membro');
 
+        $status = strtolower(trim((string) ($row['status'] ?? '')));
+        $associationStatus = $this->resolveAssociationStatusValue(
+            $row['association_status'] ?? null,
+            $row,
+            $status === 'pending' ? 'applicant' : 'member'
+        );
         $roleKey = trim((string) ($row['role_key'] ?? ''));
         $roleName = trim((string) ($row['role_name'] ?? ''));
+        $shouldFallbackRole = $associationStatus === 'member';
 
-        $row['role_key'] = $roleKey !== '' ? $roleKey : $fallbackRoleKey;
-        $row['role_name'] = $roleName !== '' ? $roleName : $fallbackRoleName;
+        $row['role_id'] = $shouldFallbackRole && $roleId > 0 ? $roleId : null;
+        $row['role_key'] = $shouldFallbackRole
+            ? ($roleKey !== '' ? $roleKey : $fallbackRoleKey)
+            : '';
+        $row['role_name'] = $shouldFallbackRole
+            ? ($roleName !== '' ? $roleName : $fallbackRoleName)
+            : '';
         $row['phone_mobile'] = $row['phone_mobile'] ?? null;
         $row['phone_landline'] = $row['phone_landline'] ?? null;
         $row['birth_date'] = $row['birth_date'] ?? null;
@@ -1609,6 +1793,10 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['institutional_role'] = $row['institutional_role'] ?? null;
         $row['member_type'] = $row['member_type'] ?? null;
         $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
+        $row['association_status'] = $associationStatus;
+        $row['association_status_label'] = $this->resolveAssociationStatusLabel((string) ($row['association_status'] ?? ''));
+        $row['is_contributor'] = (int) ($row['is_contributor'] ?? 0);
+        $row['contributor_label'] = (int) ($row['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não';
         $row['profile_photo_path'] = $row['profile_photo_path'] ?? null;
         $row['privacy_notice_version'] = $row['privacy_notice_version'] ?? null;
         $row['privacy_notice_accepted_at'] = $row['privacy_notice_accepted_at'] ?? null;
@@ -1634,6 +1822,33 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'fundador' => 'Fundador',
             'efetivo' => 'Efetivo',
             default => 'Não definido',
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function resolveAssociationStatusValue(?string $value, array $row, string $fallback): string
+    {
+        $normalized = strtolower(trim((string) $value));
+        if (in_array($normalized, ['applicant', 'member', 'former'], true)) {
+            return $normalized;
+        }
+
+        $status = strtolower(trim((string) ($row['status'] ?? '')));
+        if ($status === 'pending') {
+            return 'applicant';
+        }
+
+        return in_array($fallback, ['applicant', 'member', 'former'], true) ? $fallback : 'member';
+    }
+
+    private function resolveAssociationStatusLabel(string $associationStatus): string
+    {
+        return match (strtolower(trim($associationStatus))) {
+            'member' => 'Associado',
+            'former' => 'Desligado',
+            default => 'Solicitante',
         };
     }
 
@@ -1748,6 +1963,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 billing_whatsapp_opt_in TINYINT(1) NOT NULL DEFAULT 0,
                 institutional_role VARCHAR(120) NULL,
                 member_type VARCHAR(20) NULL,
+                association_status VARCHAR(20) NOT NULL DEFAULT 'applicant',
+                is_contributor TINYINT(1) NOT NULL DEFAULT 0,
                 profile_photo_path VARCHAR(255) NULL,
                 privacy_notice_version VARCHAR(40) NULL,
                 privacy_notice_accepted_at DATETIME NULL,
@@ -1861,6 +2078,23 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     FOREIGN KEY (charge_id) REFERENCES member_contribution_charges(id)
                     ON UPDATE CASCADE ON DELETE CASCADE,
                 CONSTRAINT fk_member_contribution_events_member
+                    FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+                    ON UPDATE CASCADE ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            CREATE TABLE IF NOT EXISTS member_user_administration_events (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                member_user_id BIGINT UNSIGNED NOT NULL,
+                acted_by_user_id BIGINT UNSIGNED NULL,
+                event_type VARCHAR(40) NOT NULL,
+                event_description VARCHAR(255) NOT NULL,
+                payload_json LONGTEXT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                KEY idx_member_user_administration_events_member (member_user_id),
+                KEY idx_member_user_administration_events_actor (acted_by_user_id),
+                CONSTRAINT fk_member_user_administration_events_member
                     FOREIGN KEY (member_user_id) REFERENCES member_users(id)
                     ON UPDATE CASCADE ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -1990,6 +2224,16 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_users',
             'member_type',
             'ALTER TABLE member_users ADD COLUMN member_type VARCHAR(20) NULL'
+        );
+        $this->ensureColumn(
+            'member_users',
+            'association_status',
+            "ALTER TABLE member_users ADD COLUMN association_status VARCHAR(20) NOT NULL DEFAULT 'applicant'"
+        );
+        $this->ensureColumn(
+            'member_users',
+            'is_contributor',
+            'ALTER TABLE member_users ADD COLUMN is_contributor TINYINT(1) NOT NULL DEFAULT 0'
         );
         $this->ensureColumn(
             'member_users',
@@ -2213,8 +2457,39 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'created_at',
             'ALTER TABLE member_contribution_events ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
         );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'member_user_id',
+            'ALTER TABLE member_user_administration_events ADD COLUMN member_user_id BIGINT UNSIGNED NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'acted_by_user_id',
+            'ALTER TABLE member_user_administration_events ADD COLUMN acted_by_user_id BIGINT UNSIGNED NULL'
+        );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'event_type',
+            'ALTER TABLE member_user_administration_events ADD COLUMN event_type VARCHAR(40) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'event_description',
+            'ALTER TABLE member_user_administration_events ADD COLUMN event_description VARCHAR(255) NOT NULL'
+        );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'payload_json',
+            'ALTER TABLE member_user_administration_events ADD COLUMN payload_json LONGTEXT NULL'
+        );
+        $this->ensureColumn(
+            'member_user_administration_events',
+            'created_at',
+            'ALTER TABLE member_user_administration_events ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
+        );
 
         $this->ensureDefaultRoles();
+        $this->backfillAssociationFields();
         $currentManagementId = $this->ensureCurrentManagementId();
         $this->migrateLegacyInstitutionalRolesToCurrentManagement($currentManagementId);
     }
@@ -2451,6 +2726,384 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         ]);
     }
 
+    /**
+     * @param array{
+     *     member_type: ?string,
+     *     institutional_role: ?string,
+     *     association_status: string,
+     *     is_contributor: int,
+     *     status: string
+     * } $normalizedState
+     * @param array<int, string> $rulesApplied
+     */
+    private function approveAndAssignRoleInternal(
+        int $id,
+        int $roleId,
+        array $normalizedState,
+        array $rulesApplied,
+        ?int $actedByUserId = null
+    ): bool {
+        if ($id <= 0) {
+            return false;
+        }
+
+        if ($normalizedState['association_status'] === 'member' && $roleId <= 0) {
+            return false;
+        }
+
+        $currentUser = $this->findById($id);
+        if ($currentUser === null) {
+            return false;
+        }
+
+        $previousSnapshot = $this->buildAdministrativeSnapshot($currentUser);
+        $roleIdForUpdate = $normalizedState['association_status'] === 'member' ? $roleId : null;
+
+        $sql = <<<SQL
+            UPDATE member_users
+            SET
+                role_id = :role_id,
+                institutional_role = :institutional_role,
+                member_type = :member_type,
+                association_status = :association_status,
+                is_contributor = :is_contributor,
+                status = :account_status,
+                approved_at = CASE
+                    WHEN :account_status_for_approval = 'active' AND approved_at IS NULL THEN NOW()
+                    ELSE approved_at
+                END
+            WHERE id = :id
+            LIMIT 1
+        SQL;
+
+        $this->pdo->beginTransaction();
+
+        try {
+            $statement = $this->pdo->prepare($sql);
+            $statement->execute([
+                'id' => $id,
+                'role_id' => $roleIdForUpdate,
+                'institutional_role' => $normalizedState['institutional_role'],
+                'member_type' => $normalizedState['member_type'],
+                'association_status' => $normalizedState['association_status'],
+                'is_contributor' => $normalizedState['is_contributor'],
+                'account_status' => $normalizedState['status'],
+                'account_status_for_approval' => $normalizedState['status'],
+            ]);
+
+            if (!$this->syncInstitutionalRoleForCurrentManagement($id, $normalizedState['institutional_role'])) {
+                $this->pdo->rollBack();
+
+                return false;
+            }
+
+            $updatedUser = $this->findById($id);
+            if ($updatedUser !== null) {
+                $currentSnapshot = $this->buildAdministrativeSnapshot($updatedUser);
+
+                if ($currentSnapshot !== $previousSnapshot) {
+                    try {
+                        $this->appendUserAdministrationEvent(
+                            $id,
+                            'admin_state_changed',
+                            $this->buildAdministrativeEventDescription($currentSnapshot),
+                            $actedByUserId,
+                            [
+                                'previous' => $previousSnapshot,
+                                'current' => $currentSnapshot,
+                                'rules_applied' => $rulesApplied,
+                            ]
+                        );
+                    } catch (\Throwable $eventException) {
+                        $this->loggerSafeWarning('Falha ao registrar histórico administrativo do usuário.', $eventException, [
+                            'member_user_id' => $id,
+                            'acted_by_user_id' => $actedByUserId,
+                        ]);
+                    }
+                }
+            }
+
+            $this->pdo->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param array{
+     *     member_type: ?string,
+     *     institutional_role: ?string,
+     *     association_status: string,
+     *     is_contributor: int,
+     *     status: string
+     * } $normalizedState
+     */
+    private function approveAndAssignRoleFallback(
+        int $id,
+        int $roleId,
+        array $normalizedState,
+        \Throwable $previousException
+    ): bool {
+        try {
+            $roleIdForUpdate = $normalizedState['association_status'] === 'member' ? $roleId : null;
+            $fallbackStatement = $this->pdo->prepare(<<<SQL
+                UPDATE member_users
+                SET
+                    role_id = :role_id,
+                    status = :account_status,
+                    approved_at = CASE
+                        WHEN :account_status_for_approval = 'active' AND approved_at IS NULL THEN NOW()
+                        ELSE approved_at
+                    END
+                WHERE id = :id
+                LIMIT 1
+            SQL);
+
+            return $fallbackStatement->execute([
+                'id' => $id,
+                'role_id' => $roleIdForUpdate,
+                'account_status' => $normalizedState['status'],
+                'account_status_for_approval' => $normalizedState['status'],
+            ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedState['institutional_role']);
+        } catch (\Throwable $fallbackException) {
+            $this->loggerSafeWarning('Falha ao atualizar situação administrativa do usuário.', $fallbackException, [
+                'member_user_id' => $id,
+                'role_id' => $roleId,
+                'association_status' => $normalizedState['association_status'],
+                'status' => $normalizedState['status'],
+                'previous_error' => $previousException->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * @return array{
+     *     0: array{
+     *         member_type: ?string,
+     *         institutional_role: ?string,
+     *         association_status: string,
+     *         is_contributor: int,
+     *         status: string
+     *     },
+     *     1: array<int, string>
+     * }
+     */
+    private function normalizeAdministrativeState(
+        ?string $memberType,
+        ?string $institutionalRole,
+        ?string $associationStatus,
+        ?bool $isContributor,
+        ?string $accountStatus
+    ): array {
+        $rulesApplied = [];
+        $normalizedMemberType = $this->nullableText($memberType);
+        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedAssociationStatus = strtolower(trim((string) $associationStatus));
+        if (!in_array($normalizedAssociationStatus, ['applicant', 'member', 'former'], true)) {
+            $normalizedAssociationStatus = 'member';
+        }
+
+        $normalizedAccountStatus = strtolower(trim((string) $accountStatus));
+        if (!in_array($normalizedAccountStatus, ['pending', 'active', 'blocked'], true)) {
+            $normalizedAccountStatus = 'active';
+        }
+
+        $normalizedContributor = $isContributor;
+        if ($normalizedContributor === null) {
+            $normalizedContributor = $normalizedMemberType !== null;
+            $rulesApplied[] = 'contributor_defaulted_from_member_type';
+        }
+
+        if ($normalizedAssociationStatus === 'applicant') {
+            $rulesApplied[] = 'applicant_pending_access';
+            $rulesApplied[] = 'applicant_without_member_metadata';
+
+            return [[
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'applicant',
+                'is_contributor' => 0,
+                'status' => 'pending',
+            ], $rulesApplied];
+        }
+
+        if ($normalizedAssociationStatus === 'former') {
+            $rulesApplied[] = 'former_blocked_access';
+            $rulesApplied[] = 'former_without_member_metadata';
+
+            return [[
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'former',
+                'is_contributor' => 0,
+                'status' => 'blocked',
+            ], $rulesApplied];
+        }
+
+        if (!in_array($normalizedAccountStatus, ['active', 'blocked'], true)) {
+            $normalizedAccountStatus = 'active';
+            $rulesApplied[] = 'member_access_normalized_to_active';
+        }
+
+        if ($normalizedAccountStatus !== 'active') {
+            $normalizedInstitutionalRole = null;
+            $rulesApplied[] = 'inactive_member_without_institutional_role';
+        }
+
+        return [[
+            'member_type' => $normalizedMemberType,
+            'institutional_role' => $normalizedInstitutionalRole,
+            'association_status' => 'member',
+            'is_contributor' => $normalizedContributor ? 1 : 0,
+            'status' => $normalizedAccountStatus,
+        ], $rulesApplied];
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @return array<string, mixed>
+     */
+    private function buildAdministrativeSnapshot(array $user): array
+    {
+        $associationStatus = $this->resolveAssociationStatusValue(
+            $user['association_status'] ?? null,
+            $user,
+            strtolower(trim((string) ($user['status'] ?? ''))) === 'pending' ? 'applicant' : 'member'
+        );
+        $status = strtolower(trim((string) ($user['status'] ?? 'pending')));
+        if (!in_array($status, ['pending', 'active', 'blocked'], true)) {
+            $status = 'pending';
+        }
+
+        return [
+            'role_id' => (int) ($user['role_id'] ?? 0),
+            'role_key' => (string) ($user['role_key'] ?? ''),
+            'role_name' => (string) ($user['role_name'] ?? ''),
+            'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
+            'member_type' => $this->nullableText($user['member_type'] ?? null),
+            'association_status' => $associationStatus,
+            'is_contributor' => (int) ($user['is_contributor'] ?? 0) === 1 ? 1 : 0,
+            'status' => $status,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $snapshot
+     */
+    private function buildAdministrativeEventDescription(array $snapshot): string
+    {
+        return sprintf(
+            'Situação administrativa atualizada: acesso %s, vínculo %s, contribuinte %s.',
+            strtolower($this->resolveAccountStatusLabel((string) ($snapshot['status'] ?? 'pending'))),
+            strtolower($this->resolveAssociationStatusLabel((string) ($snapshot['association_status'] ?? 'applicant'))),
+            ((int) ($snapshot['is_contributor'] ?? 0) === 1) ? 'sim' : 'não'
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function appendUserAdministrationEvent(
+        int $memberUserId,
+        string $eventType,
+        string $eventDescription,
+        ?int $actedByUserId = null,
+        array $payload = []
+    ): void {
+        $statement = $this->pdo->prepare(<<<SQL
+            INSERT INTO member_user_administration_events (
+                member_user_id,
+                acted_by_user_id,
+                event_type,
+                event_description,
+                payload_json
+            ) VALUES (
+                :member_user_id,
+                :acted_by_user_id,
+                :event_type,
+                :event_description,
+                :payload_json
+            )
+        SQL);
+
+        $payloadJson = null;
+        if ($payload !== []) {
+            $encodedPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $payloadJson = $encodedPayload !== false ? $encodedPayload : null;
+        }
+
+        $statement->execute([
+            'member_user_id' => $memberUserId,
+            'acted_by_user_id' => $actedByUserId,
+            'event_type' => $eventType,
+            'event_description' => $eventDescription,
+            'payload_json' => $payloadJson,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $event
+     * @return array<string, mixed>
+     */
+    private function normalizeUserAdministrationEvent(array $event): array
+    {
+        $payload = [];
+        $payloadJson = trim((string) ($event['payload_json'] ?? ''));
+        if ($payloadJson !== '') {
+            $decoded = json_decode($payloadJson, true);
+            if (is_array($decoded)) {
+                $payload = $decoded;
+            }
+        }
+
+        $actedByUserId = (int) ($event['acted_by_user_id'] ?? 0);
+
+        return array_merge($event, [
+            'payload' => $payload,
+            'acted_by_user_display' => $this->resolveUserDisplayName(
+                $event['acted_by_user_full_name'] ?? null,
+                $event['acted_by_user_email'] ?? null,
+                $actedByUserId > 0 ? $actedByUserId : null
+            ),
+        ]);
+    }
+
+    private function resolveUserDisplayName(mixed $fullName, mixed $email, ?int $userId = null): string
+    {
+        $normalizedFullName = trim((string) $fullName);
+        if ($normalizedFullName !== '') {
+            return $normalizedFullName;
+        }
+
+        $normalizedEmail = trim((string) $email);
+        if ($normalizedEmail !== '') {
+            return $normalizedEmail;
+        }
+
+        if ($userId !== null && $userId > 0) {
+            return 'Usuário #' . $userId;
+        }
+
+        return 'Sistema';
+    }
+
+    private function resolveAccountStatusLabel(string $value): string
+    {
+        return match (strtolower(trim($value))) {
+            'active' => 'Ativo',
+            'blocked' => 'Bloqueado',
+            default => 'Pendente',
+        };
+    }
+
     private function ensureColumn(string $tableName, string $columnName, string $alterSql): void
     {
         $statement = $this->pdo->prepare(
@@ -2485,6 +3138,65 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 description = VALUES(description)
+        SQL);
+    }
+
+    private function backfillAssociationFields(): void
+    {
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET association_status = CASE
+                WHEN status = 'pending' THEN 'applicant'
+                WHEN association_status IS NULL OR TRIM(association_status) = '' THEN 'member'
+                ELSE association_status
+            END
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET is_contributor = CASE
+                WHEN association_status <> 'member' THEN 0
+                WHEN is_contributor = 1 THEN 1
+                WHEN member_type IS NOT NULL AND TRIM(member_type) <> '' THEN 1
+                WHEN contribution_amount IS NOT NULL AND contribution_amount > 0 THEN 1
+                ELSE 0
+            END
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET
+                status = 'pending',
+                role_id = NULL,
+                member_type = NULL,
+                institutional_role = NULL,
+                is_contributor = 0
+            WHERE association_status = 'applicant'
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET
+                status = 'blocked',
+                role_id = NULL,
+                member_type = NULL,
+                institutional_role = NULL,
+                is_contributor = 0
+            WHERE association_status = 'former'
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET status = 'active'
+            WHERE association_status = 'member'
+              AND status NOT IN ('active', 'blocked')
+        SQL);
+
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET institutional_role = NULL
+            WHERE association_status = 'member'
+              AND status <> 'active'
         SQL);
     }
 

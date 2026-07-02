@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Application\Actions\Admin;
 
-use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
+use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Infrastructure\Persistence\Member\FallbackMemberAuthRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -12,7 +12,7 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
-final class AdminMemberUserSummaryPageActionTest extends TestCase
+final class AdminMemberUsersPageActionTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -31,23 +31,20 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testRendersFinanceOperatorInSystemProfileSelect(): void
+    public function testRendersApplicantWithoutReleasedSystemProfile(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
-        $userId = $memberAuthRepository->createPendingUser([
-            'full_name' => 'Alice Financeira',
-            'email' => 'alice.financeira@example.com',
+        $memberAuthRepository->createPendingUser([
+            'full_name' => 'Rafaela Nunes',
+            'email' => 'rafaela@example.com',
             'password_hash' => 'hash',
         ]);
-
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Coordenador', 'efetivo');
-        $memberAuthRepository->updateProfile($userId, [
-            'full_name' => 'Alice Financeira',
-            'birth_date' => '1990-08-12',
-            'preferred_due_day' => 10,
-            'contribution_amount' => '65.50',
-            'preferred_payment_method' => 'pix',
+        $formerUserId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Carlos Mendes',
+            'email' => 'carlos.mendes@example.com',
+            'password_hash' => 'hash',
         ]);
+        $memberAuthRepository->approveAndAssignRole($formerUserId, 4, 'Coordenador', 'efetivo', 'former', false, 'blocked');
 
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -61,7 +58,7 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
             $logger,
             $twig,
             $memberAuthRepository
-        ) extends AdminMemberUserSummaryPageAction {
+        ) extends AdminMemberUsersPageAction {
             public string $capturedTemplate = '';
 
             /** @var array<string, mixed> */
@@ -79,14 +76,12 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
             }
         };
 
-        $request = $this->createRequest('GET', '/painel/usuarios/' . $userId . '/resumo')
-            ->withAttribute('id', $userId);
-
+        $request = $this->createRequest('GET', '/painel/usuarios');
         $response = $action($request, new Response());
 
         $html = $twig->fetch($action->capturedTemplate, array_merge($action->capturedData, [
             'base_url' => '',
-            'current_path' => '/painel/usuarios/' . $userId . '/resumo',
+            'current_path' => '/painel/usuarios',
             'csrf_token' => 'test-token',
             'csrf_field_name' => '_csrf',
             'dashboard_user' => 'Administrador de Teste',
@@ -106,19 +101,12 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         ]));
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('pages/admin-member-user-summary.twig', $action->capturedTemplate);
-        $this->assertStringContainsString('Perfil no sistema', $html);
-        $this->assertStringContainsString('Operador Financeiro', $html);
-        $this->assertMatchesRegularExpression('/<option value="6"[^>]*>Operador Financeiro<\/option>/', $html);
-        $this->assertStringContainsString('Solicitante sempre fica pendente.', $html);
-        $this->assertStringContainsString('Toda alteração fica registrada no histórico administrativo do cadastro.', $html);
-        $this->assertStringContainsString('Configuração financeira', $html);
-        $this->assertStringContainsString('12/08/1990', $html);
-        $this->assertStringContainsString('Dia do vencimento da cobrança', $html);
-        $this->assertStringContainsString('Dia 10', $html);
-        $this->assertStringContainsString('Forma definida de pagamento', $html);
-        $this->assertStringContainsString('Pix', $html);
-        $this->assertStringContainsString('Valor da contribuição', $html);
-        $this->assertStringContainsString('R$ 65,50', $html);
+        $this->assertSame('pages/admin-member-users.twig', $action->capturedTemplate);
+        $this->assertStringContainsString('Rafaela Nunes', $html);
+        $this->assertStringContainsString('Solicitante', $html);
+        $this->assertStringContainsString('Sem perfil liberado', $html);
+        $this->assertStringContainsString('Carlos Mendes', $html);
+        $this->assertStringContainsString('Desligado', $html);
+        $this->assertStringContainsString('Sem perfil ativo', $html);
     }
 }

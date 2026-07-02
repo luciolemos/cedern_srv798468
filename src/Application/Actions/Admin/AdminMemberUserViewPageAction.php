@@ -14,9 +14,17 @@ use Throwable;
 
 class AdminMemberUserViewPageAction extends AbstractPageAction
 {
+    private const MEMBER_ROLE_DISPLAY_LABEL = 'Usuário SISCEDE';
+
     private const MEMBER_TYPE_OPTIONS = [
         'fundador' => 'Fundador',
         'efetivo' => 'Efetivo',
+    ];
+
+    private const ASSOCIATION_STATUS_OPTIONS = [
+        'applicant' => 'Solicitante',
+        'member' => 'Associado',
+        'former' => 'Desligado',
     ];
 
     private const STATUS_LABELS = [
@@ -43,7 +51,9 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
     {
         $userId = (int) ($request->getAttribute('id') ?? 0);
         $user = null;
+        $history = [];
         $loadError = '';
+        $historyError = '';
 
         if ($userId > 0) {
             try {
@@ -71,6 +81,19 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         }
 
         $user = $this->normalizeUser($user);
+        try {
+            $history = $this->normalizeHistory(
+                $this->memberAuthRepository->findUserAdministrationHistory($userId)
+            );
+        } catch (Throwable $exception) {
+            $historyError = 'Não foi possível carregar o histórico administrativo desta conta.';
+
+            $this->logger->error('Falha ao carregar histórico administrativo do usuário no painel.', [
+                'user_id' => $userId,
+                'exception' => $exception,
+            ]);
+        }
+
         $displayName = trim((string) ($user['full_name'] ?? ''));
         if ($displayName === '') {
             $displayName = (string) ($user['email'] ?? 'Usuário');
@@ -78,6 +101,8 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
 
         return $this->renderPage($response, 'pages/admin-member-user-view.twig', [
             'view_user' => $user,
+            'view_user_history' => $history,
+            'view_user_history_error' => $historyError,
             'view_error_message' => '',
             'dashboard_page_title' => 'Cadastro de ' . $displayName,
             'page_title' => 'Cadastro do Usuário | Dashboard Agenda',
@@ -96,12 +121,19 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $statusKey = strtolower(trim((string) ($user['status'] ?? '')));
         $institutionalRole = trim((string) ($user['institutional_role'] ?? ''));
         $roleName = trim((string) ($user['role_name'] ?? ''));
+        $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
 
         $user['member_type'] = array_key_exists($memberType, self::MEMBER_TYPE_OPTIONS) ? $memberType : '';
         $user['member_type_label'] = self::MEMBER_TYPE_OPTIONS[$user['member_type']] ?? 'Não definido';
         $user['status_key'] = $statusKey;
         $user['status_label'] = self::STATUS_LABELS[$statusKey] ?? ucfirst($statusKey ?: 'pendente');
-        $user['role_name_display'] = $roleName !== '' ? $roleName : 'Membro';
+        $user['association_status'] = array_key_exists($associationStatus, self::ASSOCIATION_STATUS_OPTIONS)
+            ? $associationStatus
+            : ($statusKey === 'pending' ? 'applicant' : 'member');
+        $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']] ?? 'Solicitante';
+        $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
+        $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $user['role_name_display'] = $this->resolveRoleNameDisplay($user, $roleName);
         $user['institutional_role_display'] = $institutionalRole !== '' ? $institutionalRole : 'Sem função definida';
         $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
         $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
@@ -125,6 +157,120 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $user['profile_completed_label'] = (int) ($user['profile_completed'] ?? 0) === 1 ? 'Sim' : 'Não';
 
         return $user;
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function resolveRoleNameDisplay(array $user, string $roleName): string
+    {
+        $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+        $roleKey = strtolower(trim((string) ($user['role_key'] ?? '')));
+
+        if ($associationStatus === 'applicant') {
+            return 'Sem perfil liberado';
+        }
+
+        if ($associationStatus === 'former') {
+            return 'Sem perfil ativo';
+        }
+
+        return $this->resolveRoleOptionLabel($roleKey, $roleName);
+    }
+
+    private function resolveRoleOptionLabel(string $roleKey, string $roleName): string
+    {
+        if ($roleKey === 'member') {
+            return self::MEMBER_ROLE_DISPLAY_LABEL;
+        }
+
+        return $roleName !== '' ? $roleName : 'Membro';
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $history
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeHistory(array $history): array
+    {
+        return array_map(function (array $event): array {
+            $payload = is_array($event['payload'] ?? null) ? $event['payload'] : [];
+            $event['created_at_display'] = $this->formatDateTime((string) ($event['created_at'] ?? ''));
+            $event['acted_by_user_display'] = trim((string) ($event['acted_by_user_display'] ?? '')) !== ''
+                ? (string) $event['acted_by_user_display']
+                : 'Sistema';
+            $event['event_description'] = trim((string) ($event['event_description'] ?? '')) !== ''
+                ? (string) $event['event_description']
+                : 'Atualização administrativa registrada.';
+            $event['current_state_summary'] = $this->formatAdministrativeSnapshotSummary(
+                is_array($payload['current'] ?? null) ? $payload['current'] : []
+            );
+            $event['rules_applied_display'] = $this->formatAdministrativeRules(
+                is_array($payload['rules_applied'] ?? null) ? $payload['rules_applied'] : []
+            );
+
+            return $event;
+        }, $history);
+    }
+
+    /**
+     * @param array<string, mixed> $snapshot
+     */
+    private function formatAdministrativeSnapshotSummary(array $snapshot): string
+    {
+        if ($snapshot === []) {
+            return '';
+        }
+
+        $status = strtolower(trim((string) ($snapshot['status'] ?? 'pending')));
+        $associationStatus = strtolower(trim((string) ($snapshot['association_status'] ?? 'applicant')));
+        $memberType = strtolower(trim((string) ($snapshot['member_type'] ?? '')));
+        $institutionalRole = trim((string) ($snapshot['institutional_role'] ?? ''));
+
+        $parts = [
+            'Acesso ' . (self::STATUS_LABELS[$status] ?? 'Pendente'),
+            'vínculo ' . (self::ASSOCIATION_STATUS_OPTIONS[$associationStatus] ?? 'Solicitante'),
+            'contribuinte ' . ((int) ($snapshot['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não'),
+        ];
+
+        if (array_key_exists($memberType, self::MEMBER_TYPE_OPTIONS)) {
+            $parts[] = 'tipo de sócio ' . self::MEMBER_TYPE_OPTIONS[$memberType];
+        }
+
+        if ($institutionalRole !== '') {
+            $parts[] = 'função ' . $institutionalRole;
+        }
+
+        return implode(' | ', $parts);
+    }
+
+    /**
+     * @param array<int, mixed> $rules
+     */
+    private function formatAdministrativeRules(array $rules): string
+    {
+        $labels = [];
+
+        foreach ($rules as $rule) {
+            $normalizedRule = strtolower(trim((string) $rule));
+            if ($normalizedRule === '') {
+                continue;
+            }
+
+            $labels[] = match ($normalizedRule) {
+                'new_signup_defaults' => 'Novo cadastro iniciado como solicitante pendente',
+                'contributor_defaulted_from_member_type' => 'Contribuição herdada do tipo de sócio',
+                'applicant_pending_access' => 'Solicitante permanece com acesso pendente',
+                'applicant_without_member_metadata' => 'Solicitante não mantém dados de sócio ou diretoria',
+                'former_blocked_access' => 'Desligado permanece com acesso bloqueado',
+                'former_without_member_metadata' => 'Desligado não mantém dados de sócio ou diretoria',
+                'member_access_normalized_to_active' => 'Associado foi normalizado para acesso ativo',
+                'inactive_member_without_institutional_role' => 'Função institucional foi removida fora do status ativo',
+                default => ucfirst(str_replace('_', ' ', $normalizedRule)),
+            };
+        }
+
+        return implode('; ', $labels);
     }
 
     private function formatMobilePhone(string $value): string

@@ -17,7 +17,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         'critical' => 'Críticas',
         'exempt' => 'Isentas',
         'not_generated' => 'Aguardando geração',
-        'config_pending' => 'Cadastro financeiro pendente',
+        'config_pending' => 'Configuração financeira pendente',
     ];
 
     public function __invoke(Request $request, Response $response): Response
@@ -116,7 +116,14 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $gatewayPaymentId = trim((string) ($row['charge_gateway_payment_id'] ?? ''));
         $gatewayStatus = strtoupper(trim((string) ($row['charge_gateway_status'] ?? '')));
         $gatewayBillingType = strtoupper(trim((string) ($row['charge_gateway_billing_type'] ?? '')));
-        $statusKey = $this->resolveStatusKey($row, $chargeStatus, $overdueChargeCount, $configuredAmount, $preferredDueDay);
+        $effectiveChargeStatus = $this->resolveEffectiveChargeStatus($chargeStatus, $gatewayStatus);
+        $statusKey = $this->resolveStatusKey(
+            $row,
+            $effectiveChargeStatus,
+            $overdueChargeCount,
+            $configuredAmount,
+            $preferredDueDay
+        );
         $statusLabel = $this->resolveStatusLabel($statusKey);
         $statusTone = $this->resolveStatusTone($statusKey);
         $paymentMethodKey = strtolower(trim((string) (
@@ -152,6 +159,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $row['status_label'] = $statusLabel;
         $row['status_tone'] = $statusTone;
         $row['status_notes'] = $statusNotes;
+        $row['effective_charge_status'] = $effectiveChargeStatus;
         $row['payment_method_key'] = array_key_exists($paymentMethodKey, self::PAYMENT_METHOD_LABELS) ? $paymentMethodKey : 'manual';
         $row['payment_method_display'] = self::PAYMENT_METHOD_LABELS[$row['payment_method_key']] ?? 'Pagamento manual';
         $row['member_type_label'] = trim((string) ($row['member_type_label'] ?? '')) !== ''
@@ -167,14 +175,14 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $row['gateway_status_tone'] = $this->resolveGatewayStatusTone($gatewayStatus);
         $row['gateway_payment_id'] = $gatewayPaymentId;
         $row['gateway_billing_type_label'] = $gatewayBillingType === 'PIX' ? 'Pix' : ($gatewayBillingType === 'BOLETO' ? 'Boleto' : 'Cobrança');
-        $row['can_mark_paid'] = $hasCurrentCharge && $chargeStatus === 'pending';
-        $row['can_mark_exempt'] = $hasCurrentCharge && $chargeStatus === 'pending';
+        $row['can_mark_paid'] = $hasCurrentCharge && $effectiveChargeStatus === 'pending';
+        $row['can_mark_exempt'] = $hasCurrentCharge && $effectiveChargeStatus === 'pending';
         $row['can_send_email_reminder'] = $hasCurrentCharge
-            && $chargeStatus === 'pending'
+            && $effectiveChargeStatus === 'pending'
             && (int) ($row['billing_email_opt_in'] ?? 0) === 1
             && filter_var(strtolower(trim((string) ($row['email'] ?? ''))), FILTER_VALIDATE_EMAIL) !== false;
         $row['can_open_whatsapp_reminder'] = $hasCurrentCharge
-            && $chargeStatus === 'pending'
+            && $effectiveChargeStatus === 'pending'
             && (int) ($row['billing_whatsapp_opt_in'] ?? 0) === 1
             && $this->hasWhatsappMobileNumber((string) ($row['phone_mobile'] ?? ''));
         $row['has_current_charge'] = $hasCurrentCharge;
@@ -192,14 +200,6 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         float $configuredAmount,
         int $preferredDueDay
     ): string {
-        if ($overdueChargeCount >= 6) {
-            return 'critical';
-        }
-
-        if ($overdueChargeCount > 0) {
-            return 'overdue';
-        }
-
         if ($chargeStatus === 'paid') {
             return 'paid';
         }
@@ -209,7 +209,21 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         }
 
         if ($chargeStatus === 'pending') {
+            $chargeDueDate = trim((string) ($row['charge_due_date'] ?? ''));
+
+            if ($chargeDueDate !== '' && $chargeDueDate < date('Y-m-d')) {
+                return $overdueChargeCount >= 6 ? 'critical' : 'overdue';
+            }
+
             return 'open';
+        }
+
+        if ($overdueChargeCount >= 6) {
+            return 'critical';
+        }
+
+        if ($overdueChargeCount > 0) {
+            return 'overdue';
         }
 
         if ($configuredAmount <= 0 || $preferredDueDay < 1 || $preferredDueDay > 28) {
@@ -228,7 +242,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             'critical' => 'Crítica',
             'exempt' => 'Isenta',
             'not_generated' => 'Aguardando geração',
-            'config_pending' => 'Cadastro pendente',
+            'config_pending' => 'Configuração pendente',
             default => 'Não definido',
         };
     }
@@ -255,6 +269,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $oldestOverdueDueDate = trim((string) ($row['oldest_overdue_due_date'] ?? ''));
         $paidAt = trim((string) ($row['charge_paid_at'] ?? ''));
         $exemptionReason = trim((string) ($row['charge_exemption_reason'] ?? ''));
+        $gatewayStatus = strtoupper(trim((string) ($row['charge_gateway_status'] ?? '')));
 
         if (in_array($statusKey, ['overdue', 'critical'], true)) {
             $notes[] = sprintf(
@@ -275,8 +290,12 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             return $notes;
         }
 
-        if ($statusKey === 'paid' && $paidAt !== '') {
-            $notes[] = 'Baixada em ' . $this->formatDateTime($paidAt) . '.';
+        if ($statusKey === 'paid') {
+            if ($paidAt !== '') {
+                $notes[] = 'Baixada em ' . $this->formatDateTime($paidAt) . '.';
+            } elseif (in_array($gatewayStatus, ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'], true)) {
+                $notes[] = 'Recebimento confirmado no gateway.';
+            }
         }
 
         if ($statusKey === 'exempt') {
@@ -306,7 +325,32 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             $notes[] = 'Completar: ' . implode(' e ', $missingItems) . '.';
         }
 
+        if ($overdueChargeCount > 0) {
+            $notes[] = sprintf(
+                'Há %d mensalidade%s anterior%s em atraso.',
+                $overdueChargeCount,
+                $overdueChargeCount === 1 ? '' : 's',
+                $overdueChargeCount === 1 ? '' : 'es'
+            );
+
+            if ($oldestOverdueDueDate !== '') {
+                $notes[] = 'Mais antiga em ' . $this->formatDate($oldestOverdueDueDate) . '.';
+            }
+        }
+
         return $notes;
+    }
+
+    private function resolveEffectiveChargeStatus(string $chargeStatus, string $gatewayStatus): string
+    {
+        if (
+            $chargeStatus === 'pending'
+            && in_array($gatewayStatus, ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'], true)
+        ) {
+            return 'paid';
+        }
+
+        return $chargeStatus;
     }
 
     /**
@@ -361,7 +405,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             'competence' => $competence,
             'competence_label' => $this->formatCompetenceLabel($competence),
             'tracked_count' => $trackedCount,
-            'tracked_count_label' => $trackedCount . ' associado' . ($trackedCount === 1 ? '' : 's'),
+            'tracked_count_label' => $trackedCount . ' contribuinte' . ($trackedCount === 1 ? '' : 's'),
             'generated_total_label' => $this->formatCurrency($generatedTotal),
             'received_total_label' => $this->formatCurrency($receivedTotal),
             'open_total_label' => $this->formatCurrency($openTotal),

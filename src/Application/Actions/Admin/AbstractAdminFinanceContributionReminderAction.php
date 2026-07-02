@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Admin;
 
 use App\Application\Support\InstitutionalEmailTemplate;
+use App\Application\Support\SmtpSettings;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 
@@ -102,7 +103,7 @@ abstract class AbstractAdminFinanceContributionReminderAction extends AbstractAd
         $mailer->Username = $smtpUser;
         $mailer->Password = $smtpPass;
         $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mailer->SMTPSecure = SmtpSettings::resolveConfiguredEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 

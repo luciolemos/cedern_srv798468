@@ -76,6 +76,14 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
         $privacyNoticeAcceptedAt = trim((string) ($member['privacy_notice_accepted_at'] ?? ''));
         $privacyNoticeVersion = trim((string) ($member['privacy_notice_version'] ?? ''));
         $privacyNoticeAlreadyAccepted = $privacyNoticeAcceptedAt !== '';
+        $associationStatus = strtolower(trim((string) ($member['association_status'] ?? '')));
+        if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+            $associationStatus = strtolower(trim((string) ($member['status'] ?? ''))) === 'pending'
+                ? 'applicant'
+                : 'member';
+        }
+        $isContributor = (int) ($member['is_contributor'] ?? 0) === 1;
+        $requiresContributionConfiguration = $associationStatus === 'member' && $isContributor;
 
         $existingBirthPlace = trim((string) ($member['birth_place'] ?? ''));
         $existingBirthState = '';
@@ -284,11 +292,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $errors[] = 'UF do endereço inválida.';
             }
 
-            $preferredDueDay = (int) $form['preferred_due_day'];
-            if ($preferredDueDay < 1 || $preferredDueDay > 28) {
-                $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28.';
-            }
-
+            $preferredDueDayRaw = trim($form['preferred_due_day']);
+            $preferredDueDay = $preferredDueDayRaw === '' ? null : (int) $preferredDueDayRaw;
             $normalizedContributionAmount = $this->normalizeCurrencyInput($form['contribution_amount']);
             if ($form['contribution_amount'] !== '' && $normalizedContributionAmount === null) {
                 $errors[] = 'Informe um valor de contribuição válido.';
@@ -298,11 +303,28 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $errors[] = 'O vínculo com plano deve ter no máximo 120 caracteres.';
             }
 
-            if ($normalizedContributionAmount === null && $form['contribution_plan_label'] === '') {
-                $errors[] = 'Informe o valor da contribuição ou o plano definido pela diretoria.';
+            if ($requiresContributionConfiguration) {
+                if ($preferredDueDay === null || $preferredDueDay < 1 || $preferredDueDay > 28) {
+                    $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28.';
+                }
+
+                if ($normalizedContributionAmount === null && $form['contribution_plan_label'] === '') {
+                    $errors[] = 'Informe o valor da contribuição ou o plano definido pela diretoria.';
+                }
+            } elseif ($preferredDueDay !== null && ($preferredDueDay < 1 || $preferredDueDay > 28)) {
+                $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28 ou deixe em branco.';
             }
 
-            if (!array_key_exists($form['preferred_payment_method'], self::PAYMENT_METHOD_OPTIONS)) {
+            $preferredPaymentMethod = trim($form['preferred_payment_method']) !== ''
+                ? $form['preferred_payment_method']
+                : null;
+
+            if (
+                $preferredPaymentMethod !== null
+                && !array_key_exists($preferredPaymentMethod, self::PAYMENT_METHOD_OPTIONS)
+            ) {
+                $errors[] = 'Selecione uma forma preferida de pagamento válida.';
+            } elseif ($requiresContributionConfiguration && $preferredPaymentMethod === null) {
                 $errors[] = 'Selecione a forma preferida de pagamento.';
             }
 
@@ -361,7 +383,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'preferred_due_day' => $preferredDueDay,
                         'contribution_amount' => $normalizedContributionAmount,
                         'contribution_plan_label' => $form['contribution_plan_label'],
-                        'preferred_payment_method' => $form['preferred_payment_method'],
+                        'preferred_payment_method' => $preferredPaymentMethod,
                         'billing_email_opt_in' => $form['billing_email_opt_in'] === '1' ? 1 : 0,
                         'billing_whatsapp_opt_in' => $form['billing_whatsapp_opt_in'] === '1' ? 1 : 0,
                         'privacy_notice_version' => $acceptedNoticeVersion,
@@ -445,13 +467,26 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'member_profile_redirect_to' => $redirectTo,
             'member_profile_state_options' => self::BRAZIL_STATE_OPTIONS,
             'member_profile_payment_method_options' => self::PAYMENT_METHOD_OPTIONS,
+            'member_profile_association_status' => $associationStatus,
+            'member_profile_association_status_label' => $this->resolveAssociationStatusLabel($associationStatus),
+            'member_profile_is_contributor' => $isContributor,
+            'member_profile_requires_contribution' => $requiresContributionConfiguration,
             'member_profile_privacy_notice_required' => !$privacyNoticeAlreadyAccepted,
             'member_profile_privacy_notice_version' => self::PRIVACY_NOTICE_VERSION,
             'member_profile_privacy_notice_acknowledged_at' => $privacyNoticeAcceptedAt,
             'page_title' => 'Completar Perfil | CEDE',
             'page_url' => 'https://cedern.org/membro/perfil/completar',
-            'page_description' => 'Complete seus dados cadastrais e financeiros para liberar a área de membro.',
+            'page_description' => 'Complete seus dados cadastrais e, quando aplicável, financeiros para liberar a área de membro.',
         ]);
+    }
+
+    private function resolveAssociationStatusLabel(string $associationStatus): string
+    {
+        return match ($associationStatus) {
+            'member' => 'Associado',
+            'former' => 'Desligado',
+            default => 'Solicitante',
+        };
     }
 
     private function sanitizeRedirectTarget(string $redirectTo): string

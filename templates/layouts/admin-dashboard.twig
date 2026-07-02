@@ -390,7 +390,7 @@
               </details>
 
               <details class="nc-dashboard-user-menu-group" {% if current_path starts with '/painel/usuarios' or current_path starts with '/painel/gestao-cede' %}open{% endif %}>
-                <summary class="nc-dashboard-user-menu-group-title">PESSOAL</summary>
+                <summary class="nc-dashboard-user-menu-group-title">GESTÃO DE PESSOAL</summary>
                 <a class="nc-link nc-dashboard-user-menu-link nc-dashboard-user-menu-sublink" href="/painel/usuarios">
                   <span class="nc-dashboard-user-menu-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -400,7 +400,7 @@
                       <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     </svg>
                   </span>
-                  <span>Associados CEDE</span>
+                  <span>Pessoal CEDE</span>
                 </a>
 
                 {% if panel_can_cede_management %}
@@ -506,9 +506,10 @@
 
     <div class="nc-dashboard-layout">
       <aside id="nc-dashboard-sidebar" class="nc-admin-sidebar" aria-label="Menu do dashboard">
-        <a class="nc-dashboard-brand nc-dashboard-sidebar-brand" href="/painel" aria-label="Painel CEDE">
+        <a class="nc-dashboard-brand nc-dashboard-sidebar-brand" href="/painel" aria-label="SISCEDE - Sistema de Controle do CEDE">
           <img src="{{ base_url ?? '' }}/assets/img/brands/cede4_logo.png" alt="CEDE" class="nc-dashboard-brand-logo">
-          <span class="nc-dashboard-sidebar-brand-note">CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA</span>
+          <span class="nc-dashboard-brand-name">SISCEDE</span>
+          <span class="nc-dashboard-sidebar-brand-note">SISTEMA DE CONTROLE DO CEDE</span>
         </a>
         <nav class="nc-admin-nav">
           <a class="nc-link{{ current_path == '/painel' ? ' is-active' : '' }}" href="/painel">
@@ -724,7 +725,7 @@
 
           {% if panel_can_users %}
             <details class="nc-admin-nav-group" aria-label="Seção pessoal" {% if current_path starts with '/painel/usuarios' or current_path starts with '/painel/gestao-cede' %}open{% endif %}>
-              <summary class="nc-admin-nav-group-title">PESSOAL</summary>
+              <summary class="nc-admin-nav-group-title">GESTÃO DE PESSOAL</summary>
               <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/usuarios' ? ' is-active' : '' }}" href="/painel/usuarios">
                 <span class="nc-admin-link-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -734,7 +735,7 @@
                     <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
                 </span>
-                <span class="nc-admin-link-label">Associados CEDE</span>
+                <span class="nc-admin-link-label">Pessoal CEDE</span>
               </a>
               {% if panel_can_cede_management %}
                 <a class="nc-link nc-admin-submenu-link{{ current_path starts with '/painel/gestao-cede' ? ' is-active' : '' }}" href="/painel/gestao-cede">

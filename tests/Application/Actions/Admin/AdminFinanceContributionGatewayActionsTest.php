@@ -216,7 +216,115 @@ final class AdminFinanceContributionGatewayActionsTest extends TestCase
         $this->assertStringContainsString('Copia e cola Pix', $html);
         $this->assertStringContainsString('000201010212', $html);
         $this->assertStringContainsString('10/07/2026 23:59', $html);
-        $this->assertStringContainsString('Webhook desta instalação', $html);
+        $this->assertStringNotContainsString('Webhook desta instalação', $html);
+    }
+
+    public function testHidesEmptyPixBlockAndShowsReceivedPaymentContext(): void
+    {
+        $memberAuthRepository = $this->buildRepositoryWithPendingContribution();
+        $memberAuthRepository->updateContributionGatewayData(1, [
+            'gateway_provider' => 'asaas',
+            'gateway_customer_id' => 'cus_123',
+            'gateway_payment_id' => 'pay_123',
+            'gateway_billing_type' => 'PIX',
+            'gateway_status' => 'RECEIVED',
+            'gateway_invoice_url' => 'https://asaas.test/invoice/pay_123',
+            'gateway_bank_slip_url' => 'https://asaas.test/boleto/pay_123',
+            'gateway_transaction_receipt_url' => 'https://asaas.test/receipt/pay_123',
+            'gateway_pix_payload' => '',
+            'gateway_pix_encoded_image' => '',
+            'gateway_pix_expiration_date' => '',
+            'gateway_last_synced_at' => '2026-07-01 12:30:00',
+        ]);
+        $memberAuthRepository->markContributionChargeAsPaid(1, 'pix', 17);
+
+        $gateway = new class () implements ContributionBillingGateway {
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function providerKey(): string
+            {
+                return 'asaas';
+            }
+
+            public function createCharge(array $member, array $charge, string $billingType): array
+            {
+                return [];
+            }
+
+            public function refreshCharge(array $charge): array
+            {
+                return [];
+            }
+        };
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new class (
+            $logger,
+            $twig,
+            $memberAuthRepository,
+            $gateway
+        ) extends AdminFinanceContributionGatewayViewPageAction {
+            public string $capturedTemplate = '';
+
+            /** @var array<string, mixed> */
+            public array $capturedData = [];
+
+            protected function renderPage(
+                ResponseInterface $response,
+                string $template,
+                array $data = []
+            ): ResponseInterface {
+                $this->capturedTemplate = $template;
+                $this->capturedData = $data;
+
+                return $response;
+            }
+        };
+
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes/1/cobranca')
+            ->withAttribute('id', 1);
+
+        $response = $action($request, new Response());
+
+        $html = $twig->fetch($action->capturedTemplate, array_merge($action->capturedData, [
+            'base_url' => '',
+            'current_path' => '/painel/financas/contribuicoes/1/cobranca',
+            'csrf_token' => 'test-token',
+            'csrf_field_name' => '_csrf',
+            'dashboard_user' => 'Financeiro de Teste',
+            'dashboard_user_photo_path' => '',
+            'dashboard_is_authenticated' => true,
+            'dashboard_is_admin_session' => false,
+            'dashboard_env_label' => 'Homologação',
+            'dashboard_env_tone' => 'test',
+            'dashboard_admin_notifications' => [],
+            'dashboard_admin_pending_users' => [],
+            'dashboard_admin_notification_count' => 0,
+            'member_is_authenticated' => true,
+            'member_name' => 'Financeiro de Teste',
+            'member_role_key' => 'finance_operator',
+            'member_role_name' => 'Operador Financeiro',
+            'member_profile_photo_path' => '',
+        ]));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Forma recebida', $html);
+        $this->assertStringContainsString('Pix', $html);
+        $this->assertStringContainsString('Recebida em', $html);
+        $this->assertStringContainsString('Abrir boleto', $html);
+        $this->assertStringContainsString('Comprovante', $html);
+        $this->assertStringNotContainsString('Copia e cola Pix', $html);
+        $this->assertStringNotContainsString('Webhook desta instalação', $html);
     }
 
     private function buildRepositoryWithPendingContribution(): FallbackMemberAuthRepository

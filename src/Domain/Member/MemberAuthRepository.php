@@ -54,7 +54,11 @@ interface MemberAuthRepository
         int $id,
         int $roleId,
         ?string $institutionalRole = null,
-        ?string $memberType = null
+        ?string $memberType = null,
+        ?string $associationStatus = null,
+        ?bool $isContributor = null,
+        ?string $accountStatus = null,
+        ?int $actedByUserId = null
     ): bool;
 
     public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool;
@@ -63,6 +67,11 @@ interface MemberAuthRepository
      * @return array<int, array<string, mixed>>
      */
     public function findAllUsersForAdmin(): array;
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function findUserAdministrationHistory(int $userId): array;
 
     /**
      * @return array<int, array<string, mixed>>
@@ -78,6 +87,11 @@ interface MemberAuthRepository
      * @return array<string, mixed>|null
      */
     public function findContributionChargeById(int $chargeId): ?array;
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function findContributionChargesByMember(int $memberUserId, int $limit = 12): array;
 
     public function markContributionChargeAsPaid(
         int $chargeId,

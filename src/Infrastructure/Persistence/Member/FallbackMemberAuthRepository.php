@@ -50,6 +50,11 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
      */
     private array $contributionEvents = [];
 
+    /**
+     * @var array<int, array<string, mixed>>
+     */
+    private array $userAdministrationEvents = [];
+
     private int $nextId = 1;
 
     private int $nextPasswordResetId = 1;
@@ -57,6 +62,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     private int $nextContributionChargeId = 1;
 
     private int $nextContributionEventId = 1;
+
+    private int $nextUserAdministrationEventId = 1;
 
     public function createPendingUser(array $data): int
     {
@@ -89,6 +96,10 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'institutional_role' => null,
             'member_type' => null,
             'member_type_label' => 'Não definido',
+            'association_status' => 'applicant',
+            'association_status_label' => 'Solicitante',
+            'is_contributor' => 0,
+            'contributor_label' => 'Não',
             'profile_photo_path' => null,
             'privacy_notice_version' => null,
             'privacy_notice_accepted_at' => null,
@@ -99,6 +110,18 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
+
+        $this->appendUserAdministrationEvent(
+            $id,
+            'signup_created',
+            'Cadastro criado como solicitante com acesso pendente.',
+            null,
+            [
+                'previous' => null,
+                'current' => $this->buildAdministrativeSnapshot($this->users[$id]),
+                'rules_applied' => ['new_signup_defaults'],
+            ]
+        );
 
         return $id;
     }
@@ -251,8 +274,36 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['privacy_notice_accepted_at'] = $this->nullableText($data['privacy_notice_accepted_at'] ?? null);
         $this->users[$id]['profile_completed'] = (int) ($data['profile_completed'] ?? 0);
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
+        $this->syncPendingContributionChargePaymentMethod($id, $data['preferred_payment_method'] ?? null);
 
         return true;
+    }
+
+    private function syncPendingContributionChargePaymentMethod(int $memberUserId, mixed $preferredPaymentMethod): void
+    {
+        $normalizedPaymentMethod = $this->resolveContributionPaymentMethod((string) $preferredPaymentMethod);
+        $now = date('Y-m-d H:i:s');
+
+        foreach ($this->contributionCharges as $chargeId => $charge) {
+            if ((int) ($charge['member_user_id'] ?? 0) !== $memberUserId) {
+                continue;
+            }
+
+            if ((string) ($charge['status'] ?? '') !== 'pending') {
+                continue;
+            }
+
+            if (($charge['payment_recorded_method'] ?? null) !== null) {
+                continue;
+            }
+
+            if (trim((string) ($charge['gateway_payment_id'] ?? '')) !== '') {
+                continue;
+            }
+
+            $this->contributionCharges[$chargeId]['preferred_payment_method'] = $normalizedPaymentMethod;
+            $this->contributionCharges[$chargeId]['updated_at'] = $now;
+        }
     }
 
     public function consumePasswordResetToken(int $resetId, int $userId, string $passwordHash): bool
@@ -302,33 +353,66 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         int $id,
         int $roleId,
         ?string $institutionalRole = null,
-        ?string $memberType = null
+        ?string $memberType = null,
+        ?string $associationStatus = null,
+        ?bool $isContributor = null,
+        ?string $accountStatus = null,
+        ?int $actedByUserId = null
     ): bool {
         if (!isset($this->users[$id])) {
             return false;
         }
 
-        $role = null;
+        $previousSnapshot = $this->buildAdministrativeSnapshot($this->users[$id]);
+        [$normalizedState, $rulesApplied] = $this->normalizeAdministrativeState(
+            $memberType,
+            $institutionalRole,
+            $associationStatus,
+            $isContributor,
+            $accountStatus
+        );
 
-        foreach ($this->roles as $item) {
-            if ((int) ($item['id'] ?? 0) === $roleId) {
-                $role = $item;
-                break;
+        $role = null;
+        if ($normalizedState['association_status'] === 'member') {
+            foreach ($this->roles as $item) {
+                if ((int) ($item['id'] ?? 0) === $roleId) {
+                    $role = $item;
+                    break;
+                }
+            }
+
+            if ($role === null) {
+                return false;
             }
         }
 
-        if ($role === null) {
-            return false;
-        }
-
-        $this->users[$id]['role_id'] = $roleId;
-        $this->users[$id]['role_key'] = (string) ($role['role_key'] ?? 'member');
-        $this->users[$id]['role_name'] = (string) ($role['name'] ?? 'Membro');
-        $this->users[$id]['institutional_role'] = $this->nullableText($institutionalRole);
-        $this->users[$id]['member_type'] = $this->nullableText($memberType);
+        $this->users[$id]['role_id'] = $role !== null ? $roleId : null;
+        $this->users[$id]['role_key'] = $role !== null ? (string) ($role['role_key'] ?? 'member') : null;
+        $this->users[$id]['role_name'] = $role !== null ? (string) ($role['name'] ?? 'Membro') : null;
+        $this->users[$id]['institutional_role'] = $normalizedState['institutional_role'];
+        $this->users[$id]['member_type'] = $normalizedState['member_type'];
         $this->users[$id]['member_type_label'] = $this->resolveMemberTypeLabel((string) ($this->users[$id]['member_type'] ?? ''));
-        $this->users[$id]['status'] = 'active';
+        $this->users[$id]['association_status'] = $normalizedState['association_status'];
+        $this->users[$id]['association_status_label'] = $this->resolveAssociationStatusLabel($normalizedState['association_status']);
+        $this->users[$id]['is_contributor'] = $normalizedState['is_contributor'];
+        $this->users[$id]['contributor_label'] = $normalizedState['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $this->users[$id]['status'] = $normalizedState['status'];
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
+
+        $currentSnapshot = $this->buildAdministrativeSnapshot($this->users[$id]);
+        if ($currentSnapshot !== $previousSnapshot) {
+            $this->appendUserAdministrationEvent(
+                $id,
+                'admin_state_changed',
+                $this->buildAdministrativeEventDescription($currentSnapshot),
+                $actedByUserId,
+                [
+                    'previous' => $previousSnapshot,
+                    'current' => $currentSnapshot,
+                    'rules_applied' => $rulesApplied,
+                ]
+            );
+        }
 
         return true;
     }
@@ -366,6 +450,31 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         ));
     }
 
+    public function findUserAdministrationHistory(int $userId): array
+    {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $events = array_values(array_filter(
+            $this->userAdministrationEvents,
+            static fn (array $event): bool => (int) ($event['member_user_id'] ?? 0) === $userId
+        ));
+
+        usort($events, static function (array $first, array $second): int {
+            $firstCreatedAt = (string) ($first['created_at'] ?? '');
+            $secondCreatedAt = (string) ($second['created_at'] ?? '');
+
+            if ($firstCreatedAt === $secondCreatedAt) {
+                return ((int) ($second['id'] ?? 0)) <=> ((int) ($first['id'] ?? 0));
+            }
+
+            return strcmp($secondCreatedAt, $firstCreatedAt);
+        });
+
+        return array_map(fn (array $event): array => $this->normalizeUserAdministrationEvent($event), $events);
+    }
+
     public function findContributionMembersByCompetence(string $competence): array
     {
         $normalizedCompetence = $this->normalizeCompetence($competence);
@@ -377,7 +486,11 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 continue;
             }
 
-            if (trim((string) ($user['member_type'] ?? '')) === '') {
+            if ((string) ($user['association_status'] ?? '') !== 'member') {
+                continue;
+            }
+
+            if ((int) ($user['is_contributor'] ?? 0) !== 1) {
                 continue;
             }
 
@@ -459,7 +572,11 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 continue;
             }
 
-            if (trim((string) ($user['member_type'] ?? '')) === '') {
+            if ((string) ($user['association_status'] ?? '') !== 'member') {
+                continue;
+            }
+
+            if ((int) ($user['is_contributor'] ?? 0) !== 1) {
                 continue;
             }
 
@@ -551,6 +668,39 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'member_full_name' => (string) ($user['full_name'] ?? ''),
             'member_email' => (string) ($user['email'] ?? ''),
         ]);
+    }
+
+    public function findContributionChargesByMember(int $memberUserId, int $limit = 12): array
+    {
+        if ($memberUserId <= 0 || $limit < 1) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach ($this->contributionCharges as $charge) {
+            if ((int) ($charge['member_user_id'] ?? 0) !== $memberUserId) {
+                continue;
+            }
+
+            $chargeId = (int) ($charge['id'] ?? 0);
+            $rows[] = $chargeId > 0 ? ($this->findContributionChargeById($chargeId) ?? $charge) : $charge;
+        }
+
+        usort($rows, static function (array $first, array $second): int {
+            $competenceComparison = strcmp(
+                (string) ($second['competence'] ?? ''),
+                (string) ($first['competence'] ?? '')
+            );
+
+            if ($competenceComparison !== 0) {
+                return $competenceComparison;
+            }
+
+            return ((int) ($second['id'] ?? 0)) <=> ((int) ($first['id'] ?? 0));
+        });
+
+        return array_slice($rows, 0, $limit);
     }
 
     public function markContributionChargeAsPaid(
@@ -728,6 +878,19 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     {
         $user['member_type'] = $user['member_type'] ?? null;
         $user['member_type_label'] = $this->resolveMemberTypeLabel((string) ($user['member_type'] ?? ''));
+        $user['association_status'] = $this->resolveAssociationStatusValue(
+            $user['association_status'] ?? null,
+            $user,
+            (string) ($user['status'] ?? '') === 'pending' ? 'applicant' : 'member'
+        );
+        if ((string) ($user['association_status'] ?? '') !== 'member') {
+            $user['role_id'] = null;
+            $user['role_key'] = '';
+            $user['role_name'] = '';
+        }
+        $user['association_status_label'] = $this->resolveAssociationStatusLabel((string) ($user['association_status'] ?? ''));
+        $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
+        $user['contributor_label'] = (int) ($user['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não';
         $user['privacy_notice_version'] = $user['privacy_notice_version'] ?? null;
         $user['privacy_notice_accepted_at'] = $user['privacy_notice_accepted_at'] ?? null;
 
@@ -797,12 +960,238 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         ];
     }
 
+    /**
+     * @return array{
+     *     0: array{
+     *         member_type: ?string,
+     *         institutional_role: ?string,
+     *         association_status: string,
+     *         is_contributor: int,
+     *         status: string
+     *     },
+     *     1: array<int, string>
+     * }
+     */
+    private function normalizeAdministrativeState(
+        ?string $memberType,
+        ?string $institutionalRole,
+        ?string $associationStatus,
+        ?bool $isContributor,
+        ?string $accountStatus
+    ): array {
+        $rulesApplied = [];
+        $normalizedMemberType = $this->nullableText($memberType);
+        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedAssociationStatus = strtolower(trim((string) $associationStatus));
+        if (!in_array($normalizedAssociationStatus, ['applicant', 'member', 'former'], true)) {
+            $normalizedAssociationStatus = 'member';
+        }
+
+        $normalizedAccountStatus = strtolower(trim((string) $accountStatus));
+        if (!in_array($normalizedAccountStatus, ['pending', 'active', 'blocked'], true)) {
+            $normalizedAccountStatus = 'active';
+        }
+
+        $normalizedContributor = $isContributor;
+        if ($normalizedContributor === null) {
+            $normalizedContributor = $normalizedMemberType !== null;
+            $rulesApplied[] = 'contributor_defaulted_from_member_type';
+        }
+
+        if ($normalizedAssociationStatus === 'applicant') {
+            $rulesApplied[] = 'applicant_pending_access';
+            $rulesApplied[] = 'applicant_without_member_metadata';
+
+            return [[
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'applicant',
+                'is_contributor' => 0,
+                'status' => 'pending',
+            ], $rulesApplied];
+        }
+
+        if ($normalizedAssociationStatus === 'former') {
+            $rulesApplied[] = 'former_blocked_access';
+            $rulesApplied[] = 'former_without_member_metadata';
+
+            return [[
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'former',
+                'is_contributor' => 0,
+                'status' => 'blocked',
+            ], $rulesApplied];
+        }
+
+        if (!in_array($normalizedAccountStatus, ['active', 'blocked'], true)) {
+            $normalizedAccountStatus = 'active';
+            $rulesApplied[] = 'member_access_normalized_to_active';
+        }
+
+        if ($normalizedAccountStatus !== 'active') {
+            $normalizedInstitutionalRole = null;
+            $rulesApplied[] = 'inactive_member_without_institutional_role';
+        }
+
+        return [[
+            'member_type' => $normalizedMemberType,
+            'institutional_role' => $normalizedInstitutionalRole,
+            'association_status' => 'member',
+            'is_contributor' => $normalizedContributor ? 1 : 0,
+            'status' => $normalizedAccountStatus,
+        ], $rulesApplied];
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @return array<string, mixed>
+     */
+    private function buildAdministrativeSnapshot(array $user): array
+    {
+        $associationStatus = $this->resolveAssociationStatusValue(
+            $user['association_status'] ?? null,
+            $user,
+            (string) ($user['status'] ?? '') === 'pending' ? 'applicant' : 'member'
+        );
+        $status = strtolower(trim((string) ($user['status'] ?? 'pending')));
+        if (!in_array($status, ['pending', 'active', 'blocked'], true)) {
+            $status = 'pending';
+        }
+
+        return [
+            'role_id' => (int) ($user['role_id'] ?? 0),
+            'role_key' => (string) ($user['role_key'] ?? ''),
+            'role_name' => (string) ($user['role_name'] ?? ''),
+            'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
+            'member_type' => $this->nullableText($user['member_type'] ?? null),
+            'association_status' => $associationStatus,
+            'is_contributor' => (int) ($user['is_contributor'] ?? 0) === 1 ? 1 : 0,
+            'status' => $status,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $snapshot
+     */
+    private function buildAdministrativeEventDescription(array $snapshot): string
+    {
+        return sprintf(
+            'Situação administrativa atualizada: acesso %s, vínculo %s, contribuinte %s.',
+            strtolower($this->resolveAccountStatusLabel((string) ($snapshot['status'] ?? 'pending'))),
+            strtolower($this->resolveAssociationStatusLabel((string) ($snapshot['association_status'] ?? 'applicant'))),
+            ((int) ($snapshot['is_contributor'] ?? 0) === 1) ? 'sim' : 'não'
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function appendUserAdministrationEvent(
+        int $memberUserId,
+        string $eventType,
+        string $eventDescription,
+        ?int $actedByUserId = null,
+        array $payload = []
+    ): void {
+        $eventId = $this->nextUserAdministrationEventId++;
+        $this->userAdministrationEvents[$eventId] = [
+            'id' => $eventId,
+            'member_user_id' => $memberUserId,
+            'acted_by_user_id' => $actedByUserId,
+            'event_type' => $eventType,
+            'event_description' => $eventDescription,
+            'payload_json' => $payload !== [] ? json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $event
+     * @return array<string, mixed>
+     */
+    private function normalizeUserAdministrationEvent(array $event): array
+    {
+        $payload = [];
+        $payloadJson = trim((string) ($event['payload_json'] ?? ''));
+        if ($payloadJson !== '') {
+            $decoded = json_decode($payloadJson, true);
+            if (is_array($decoded)) {
+                $payload = $decoded;
+            }
+        }
+
+        $actedByUserId = (int) ($event['acted_by_user_id'] ?? 0);
+        $actedByUser = $actedByUserId > 0 && isset($this->users[$actedByUserId])
+            ? $this->withMemberTypeLabel($this->users[$actedByUserId])
+            : null;
+        $actedByUserDisplay = $actedByUser !== null
+            ? $this->resolveUserDisplayName($actedByUser)
+            : 'Sistema';
+
+        return array_merge($event, [
+            'payload' => $payload,
+            'acted_by_user_display' => $actedByUserDisplay,
+        ]);
+    }
+
+    private function resolveUserDisplayName(array $user): string
+    {
+        $fullName = trim((string) ($user['full_name'] ?? ''));
+        if ($fullName !== '') {
+            return $fullName;
+        }
+
+        $email = trim((string) ($user['email'] ?? ''));
+        if ($email !== '') {
+            return $email;
+        }
+
+        return 'Usuário';
+    }
+
     private function resolveMemberTypeLabel(string $memberType): string
     {
         return match (strtolower(trim($memberType))) {
             'fundador' => 'Fundador',
             'efetivo' => 'Efetivo',
             default => 'Não definido',
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function resolveAssociationStatusValue(?string $value, array $user, string $fallback): string
+    {
+        $normalized = strtolower(trim((string) $value));
+        if (in_array($normalized, ['applicant', 'member', 'former'], true)) {
+            return $normalized;
+        }
+
+        $existing = strtolower(trim((string) ($user['association_status'] ?? '')));
+        if (in_array($existing, ['applicant', 'member', 'former'], true)) {
+            return $existing;
+        }
+
+        return in_array($fallback, ['applicant', 'member', 'former'], true) ? $fallback : 'applicant';
+    }
+
+    private function resolveAssociationStatusLabel(string $value): string
+    {
+        return match (strtolower(trim($value))) {
+            'member' => 'Associado',
+            'former' => 'Desligado',
+            default => 'Solicitante',
+        };
+    }
+
+    private function resolveAccountStatusLabel(string $value): string
+    {
+        return match (strtolower(trim($value))) {
+            'active' => 'Ativo',
+            'blocked' => 'Bloqueado',
+            default => 'Pendente',
         };
     }
 }

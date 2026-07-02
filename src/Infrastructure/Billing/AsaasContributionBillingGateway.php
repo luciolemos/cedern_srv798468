@@ -50,7 +50,7 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
             'customer' => $customerId,
             'billingType' => $normalizedBillingType,
             'value' => round((float) ($charge['amount_due'] ?? 0), 2),
-            'dueDate' => (string) ($charge['due_date'] ?? ''),
+            'dueDate' => $this->resolveGatewayDueDate((string) ($charge['due_date'] ?? '')),
             'description' => $this->buildChargeDescription($member, $charge),
             'externalReference' => $this->buildExternalReference($charge),
         ]);
@@ -230,6 +230,23 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
     private function digitsOnly(string $value): string
     {
         return preg_replace('/\D+/', '', $value) ?? '';
+    }
+
+    private function resolveGatewayDueDate(string $dueDate): string
+    {
+        $normalizedDueDate = trim($dueDate);
+        $today = date('Y-m-d');
+
+        if ($normalizedDueDate === '') {
+            return $today;
+        }
+
+        $parsedDueDate = \DateTimeImmutable::createFromFormat('Y-m-d', $normalizedDueDate);
+        if (!$parsedDueDate instanceof \DateTimeImmutable || $parsedDueDate->format('Y-m-d') !== $normalizedDueDate) {
+            return $today;
+        }
+
+        return $normalizedDueDate < $today ? $today : $normalizedDueDate;
     }
 
     /**

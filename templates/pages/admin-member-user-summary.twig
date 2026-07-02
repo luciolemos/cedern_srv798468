@@ -1,8 +1,8 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = dashboard_page_title|default('Editar acesso do usuário') %}
-{% set dashboard_page_lead = 'Gerencie papel, tipo de sócio e função institucional desta conta.' %}
+{% set dashboard_page_title = dashboard_page_title|default('Editar situação da pessoa') %}
+{% set dashboard_page_lead = 'Gerencie acesso, vínculo associativo, contribuição, tipo de sócio e função institucional desta conta.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Resumo do usuário">
@@ -22,6 +22,18 @@
     {% elseif summary_status == 'invalid-member-type' %}
       {% set toast_message = 'Selecione um tipo de sócio válido para continuar.' %}
       {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-association-status' %}
+      {% set toast_message = 'Selecione um vínculo associativo válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-account-status' %}
+      {% set toast_message = 'Selecione um status de acesso válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-contributor-choice' %}
+      {% set toast_message = 'Selecione uma situação de contribuição válida para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-contributor-state' %}
+      {% set toast_message = 'Somente associados podem ficar marcados como contribuintes.' %}
+      {% set toast_tone = 'error' %}
     {% elseif summary_status == 'assign-error' %}
       {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
       {% set toast_tone = 'error' %}
@@ -37,7 +49,7 @@
 
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Associados CEDE</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Pessoas CEDE</a>
       {% if summary_user is not empty %}
         <a class="nc-btn nc-btn-secondary" href="/painel/usuarios/{{ summary_user.id }}">Visualizar cadastro</a>
       {% endif %}
@@ -48,6 +60,8 @@
     {% else %}
       {% set summary_roles = summary_roles|default([]) %}
       {% set summary_member_type_options = summary_member_type_options|default([]) %}
+      {% set summary_association_status_options = summary_association_status_options|default([]) %}
+      {% set summary_account_status_options = summary_account_status_options|default([]) %}
       {% set summary_institutional_role_options = summary_institutional_role_options|default([]) %}
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="70">
         <div class="nc-member-header">
@@ -67,8 +81,20 @@
 
         <dl class="nc-member-grid">
           <div>
-            <dt>Perfil</dt>
-            <dd>{{ summary_user.role_name|default('Membro') }}</dd>
+            <dt>Status de acesso</dt>
+            <dd>{{ summary_user.status_label|default('Pendente') }}</dd>
+          </div>
+          <div>
+            <dt>Vínculo associativo</dt>
+            <dd>{{ summary_user.association_status_label|default('Solicitante') }}</dd>
+          </div>
+          <div>
+            <dt>Contribuinte</dt>
+            <dd>{{ summary_user.contributor_label|default('Não') }}</dd>
+          </div>
+          <div>
+            <dt>Perfil no sistema</dt>
+            <dd>{{ summary_user.role_name_display|default(summary_user.role_name|default('Membro')) }}</dd>
           </div>
           <div>
             <dt>Tipo de Sócio</dt>
@@ -88,7 +114,7 @@
           </div>
           <div>
             <dt>Data de nascimento</dt>
-            <dd>{{ summary_user.birth_date|default('-') }}</dd>
+            <dd>{{ summary_user.birth_date_display|default('-') }}</dd>
           </div>
           <div>
             <dt>Naturalidade</dt>
@@ -102,8 +128,32 @@
       </article>
 
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="95">
-        <h3>Editar perfil de acesso</h3>
-        <p class="nc-member-subtitle">Apenas os campos administrativos podem ser alterados pelo painel.</p>
+        <div class="nc-member-header">
+          <div class="nc-member-header-text">
+            <h3>Configuração financeira</h3>
+            <p>Resumo da cobrança mensal configurada para este cadastro.</p>
+          </div>
+        </div>
+
+        <dl class="nc-member-grid nc-member-grid-finance-summary">
+          <div>
+            <dt>Dia do vencimento da cobrança</dt>
+            <dd>{{ summary_user.preferred_due_day_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Forma definida de pagamento</dt>
+            <dd>{{ summary_user.preferred_payment_method_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Valor da contribuição</dt>
+            <dd>{{ summary_user.contribution_amount_display|default('Não definido') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="110">
+        <h3>Editar situação administrativa</h3>
+        <p class="nc-member-subtitle">A aprovação do cadastro, o vínculo social e a participação financeira passam a ser controlados separadamente.</p>
 
         <form class="nc-admin-login-form" method="post" action="/painel/usuarios/{{ summary_user.id }}/atribuir-papel">
           {% include 'components/csrf-field.twig' %}
@@ -114,8 +164,35 @@
             <select class="nc-admin-login-input" id="nc-summary-role-id" name="role_id">
               <option value="">Selecionar perfil</option>
               {% for role in summary_roles %}
-                <option value="{{ role.id }}"{% if summary_user.role_key|default('') == role.role_key %} selected{% endif %}>{{ role.name }}</option>
+                <option value="{{ role.id }}"{% if summary_user.role_key|default('') == role.role_key %} selected{% endif %}>{{ role.display_name|default(role.name) }}</option>
               {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-account-status">Status de acesso</label>
+            <select class="nc-admin-login-input" id="nc-summary-account-status" name="account_status">
+              {% for account_status_option in summary_account_status_options %}
+                <option value="{{ account_status_option.value }}"{% if summary_user.status|default('pending') == account_status_option.value %} selected{% endif %}>{{ account_status_option.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-association-status">Vínculo associativo</label>
+            <select class="nc-admin-login-input" id="nc-summary-association-status" name="association_status">
+              {% for association_status_option in summary_association_status_options %}
+                <option value="{{ association_status_option.value }}"{% if summary_user.association_status|default('applicant') == association_status_option.value %} selected{% endif %}>{{ association_status_option.label }}</option>
+              {% endfor %}
+            </select>
+            <small class="nc-member-profile-help">Solicitante sempre fica pendente. Desligado sempre fica bloqueado. Só associado pode manter tipo de sócio, contribuição ou função no CEDE.</small>
+          </div>
+
+          <div class="nc-admin-login-field">
+            <label class="nc-admin-login-label" for="nc-summary-is-contributor">Contribuição mensal</label>
+            <select class="nc-admin-login-input" id="nc-summary-is-contributor" name="is_contributor">
+              <option value="0"{% if summary_user.is_contributor|default(0) != 1 %} selected{% endif %}>Não participa</option>
+              <option value="1"{% if summary_user.is_contributor|default(0) == 1 %} selected{% endif %}>Participa</option>
             </select>
           </div>
 
@@ -137,10 +214,11 @@
                 <option value="{{ institutional_role_option }}"{% if summary_user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
               {% endfor %}
             </select>
+            <small class="nc-member-profile-help">Ao sair do status ativo, a função na diretoria é removida automaticamente. Toda alteração fica registrada no histórico administrativo do cadastro.</small>
           </div>
 
           <div class="nc-actions nc-admin-login-actions">
-            <button class="nc-btn nc-btn-secondary nc-admin-login-submit" type="submit">Salvar perfil de acesso</button>
+            <button class="nc-btn nc-btn-secondary nc-admin-login-submit" type="submit">Salvar situação da pessoa</button>
           </div>
         </form>
       </article>

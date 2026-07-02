@@ -21,7 +21,7 @@ class AdminFinanceContributionsGenerateAction extends AbstractAdminFinanceContri
             );
 
             $message = sprintf(
-                'Competência %s: %d cobrança%s criada%s, %d já existente%s e %d perfil%s com cadastro financeiro pendente.',
+                'Competência %s: %d cobrança%s criada%s, %d já existente%s e %d perfil%s com configuração financeira pendente.',
                 $this->formatCompetenceLabel($competence),
                 (int) ($result['created'] ?? 0),
                 (int) ($result['created'] ?? 0) === 1 ? '' : 's',

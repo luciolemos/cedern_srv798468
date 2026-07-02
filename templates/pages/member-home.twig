@@ -4,11 +4,27 @@
   <main class="nc-main nc-home-flow">
     <section class="nc-section" aria-label="Área do membro" data-aos="fade-up" data-aos-delay="0">
       <div class="nc-container">
-        {% include 'components/section-header.twig' with {
-          kicker: 'Área do Membro',
-          title: 'Bem-vindo, ' ~ (member_data.full_name|default(member_name|default('Membro'))),
-          lead: 'Sua área pessoal está ativa. Perfil: ' ~ (member_data.role_name|default(member_role_name|default('Membro'))) ~ ' • Tipo de Sócio: ' ~ (member_data.member_type_label|default(member_data.member_type|default('Não definido'))) ~ ' • Função no CEDE: ' ~ (member_data.institutional_role|default('Sem função definida')) ~ '.'
-        } %}
+        {% set member_role_summary = member_role_display_name|default(member_data.role_name|default(member_role_name|default('Membro'))) %}
+        {% set member_association_summary = member_data.association_status_label|default('Associado') %}
+        {% set member_type_summary = member_data.member_type_label|default(member_data.member_type|default('Não definido')) %}
+        {% set member_contribution_summary = member_data.contributor_label|default('Não') %}
+        {% set member_contribution_summary_normalized = member_contribution_summary|lower|replace({'ã': 'a'}) %}
+        {% set member_contribution_display = member_contribution_summary_normalized == 'sim' ? 'Ativa' : (member_contribution_summary_normalized == 'nao' ? 'Não ativa' : member_contribution_summary) %}
+        {% set member_institutional_role_summary = member_data.institutional_role|default('Sem função definida') %}
+        {% set member_due_day_summary = member_data.preferred_due_day_display|default('Não definido') %}
+        {% set member_contribution_amount_summary = member_data.contribution_amount_display|default('Não definido') %}
+        {% set member_payment_method_summary = member_data.preferred_payment_method_display|default('Não definido') %}
+        {% set member_contribution_status_note = member_contribution_summary_normalized == 'sim'
+          ? 'Sua contribuição já está configurada no cadastro e pode ser acompanhada por aqui.'
+          : 'No momento, não existe uma contribuição ativa vinculada ao seu cadastro.' %}
+
+        <div class="nc-member-home-header">
+          {% include 'components/section-header.twig' with {
+            kicker: 'Área do Membro',
+            title: 'Bem-vindo, ' ~ (member_data.full_name|default(member_name|default('Membro'))),
+            lead: 'Sua área pessoal está ativa. Veja abaixo um resumo rápido do seu cadastro e os próximos passos na área do membro.'
+          } %}
+        </div>
 
         {% if member_home_status == 'forbidden' %}
           <p class="nc-admin-login-error" role="alert">Seu perfil não possui permissão para acessar a área solicitada.</p>
@@ -23,6 +39,220 @@
         {% elseif member_home_status == 'interest-error' %}
           <p class="nc-admin-login-error" role="alert">Não foi possível atualizar seu calendário agora. Tente novamente.</p>
         {% endif %}
+
+        <article class="nc-card nc-member-panel nc-member-account-card" aria-label="Minha conta" data-aos="fade-up" data-aos-delay="100">
+          <div class="nc-member-account-top">
+            {% set member_data_photo_path = member_data.profile_photo_path|default('')|trim %}
+            <div class="nc-member-account-intro">
+              <div class="nc-member-header">
+                <div class="nc-member-avatar-wrap" aria-hidden="true">
+                  {% if member_data_photo_path %}
+                    <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (member_data_photo_path|trim('/')) }}" alt="">
+                  {% else %}
+                    <div class="nc-member-avatar-placeholder">{{ (member_data.full_name|default('M')|slice(0, 1)|upper) }}</div>
+                  {% endif %}
+                </div>
+                <div class="nc-member-header-text">
+                  <p class="nc-member-overview-kicker">Minha conta</p>
+                  <h3>{{ member_data.full_name|default(member_name|default('Membro')) }}</h3>
+                  <p>Seu status de acesso, sua contribuição e seus dados essenciais ficam centralizados aqui.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nc-actions nc-admin-login-actions nc-member-actions nc-member-account-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
+              <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Editar dados do perfil</a>
+              <a class="nc-btn nc-btn-secondary" href="/">Voltar ao site</a>
+              <form method="post" action="/membro/sair" onsubmit="return confirm('Deseja realmente encerrar sua sessão?');">
+                {% include 'components/csrf-field.twig' %}
+                <button class="nc-btn nc-admin-action-delete" type="submit">Encerrar sessão</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="nc-member-profile-sections nc-member-account-sections">
+            <section class="nc-member-profile-group" aria-label="Situação atual da conta">
+              <div class="nc-member-profile-group-header">
+                <h3>Situação da conta</h3>
+                <p class="nc-member-subtitle">Os dados institucionais que definem como seu acesso está configurado hoje no CEDE.</p>
+              </div>
+
+              <dl class="nc-member-grid nc-member-account-status-grid">
+                <div>
+                  <dt>Perfil de acesso</dt>
+                  <dd>{{ member_role_summary }}</dd>
+                </div>
+                <div>
+                  <dt>Vínculo atual</dt>
+                  <dd>{{ member_association_summary }}</dd>
+                </div>
+                <div>
+                  <dt>Categoria de sócio</dt>
+                  <dd>{{ member_type_summary }}</dd>
+                </div>
+                <div class="{{ member_institutional_role_summary == 'Sem função definida' ? 'is-muted' : '' }}">
+                  <dt>Função no CEDE</dt>
+                  <dd>{{ member_institutional_role_summary }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="nc-member-profile-group" aria-label="Contribuição e cobrança">
+              <div class="nc-member-profile-group-header">
+                <h3>Contribuição e cobrança</h3>
+                <p class="nc-member-subtitle">O mesmo conjunto que você encontra em completar perfil: situação da contribuição, vencimento, valor e forma preferida.</p>
+              </div>
+
+              <div class="nc-member-account-contribution-state {{ member_contribution_summary_normalized == 'sim' ? 'is-active' : 'is-muted' }}">
+                <span class="nc-member-account-contribution-label">Contribuição</span>
+                <strong>{{ member_contribution_display }}</strong>
+                <p>{{ member_contribution_status_note }}</p>
+              </div>
+
+              <dl class="nc-member-grid nc-member-grid-finance-summary">
+                <div class="{{ member_due_day_summary == 'Não definido' ? 'is-muted' : '' }}">
+                  <dt>Vencimento</dt>
+                  <dd>{{ member_due_day_summary }}</dd>
+                </div>
+                <div class="{{ member_contribution_amount_summary == 'Não definido' ? 'is-muted' : '' }}">
+                  <dt>Valor da contribuição</dt>
+                  <dd>{{ member_contribution_amount_summary }}</dd>
+                </div>
+                <div class="{{ member_payment_method_summary == 'Não definido' ? 'is-muted' : '' }}">
+                  <dt>Forma de pagamento</dt>
+                  <dd>{{ member_payment_method_summary }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="nc-member-profile-group" aria-label="Histórico das contribuições">
+              <div class="nc-member-profile-group-header">
+                <h3>Histórico das contribuições</h3>
+                <p class="nc-member-subtitle">As últimas mensalidades registradas no seu cadastro, com competência, vencimento, pagamento, valor e forma utilizada.</p>
+              </div>
+
+              {% set history_filters = member_contribution_history_filters|default({}) %}
+              {% if history_filters.total_count|default(0) > 0 %}
+                <form class="nc-member-contribution-history-filters" method="get" action="/membro">
+                  <div class="nc-member-contribution-history-filter-grid">
+                    <div>
+                      <label class="nc-admin-login-label" for="member-history-year">Ano</label>
+                      <select class="nc-admin-login-input" id="member-history-year" name="history_year">
+                        <option value="">Todos os anos</option>
+                        {% for option in history_filters.year_options|default([]) %}
+                          <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="nc-admin-login-label" for="member-history-competence">Competência</label>
+                      <select class="nc-admin-login-input" id="member-history-competence" name="history_competence">
+                        <option value="">Todas as competências</option>
+                        {% for option in history_filters.competence_options|default([]) %}
+                          <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="nc-admin-login-label" for="member-history-sort">Ordenação</label>
+                      <select class="nc-admin-login-input" id="member-history-sort" name="history_sort">
+                        {% for option in history_filters.sort_options|default([]) %}
+                          <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <div class="nc-member-contribution-history-filter-actions">
+                      <button class="nc-btn nc-btn-primary" type="submit">Aplicar</button>
+                      {% if history_filters.has_active|default(false) %}
+                        <a class="nc-btn nc-btn-secondary" href="/membro">Limpar</a>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <p class="nc-member-contribution-history-results">
+                    {% set history_result_count = history_filters.result_count|default(0) %}
+                    {% set history_total_count = history_filters.total_count|default(0) %}
+                    {% if history_result_count == 1 %}
+                      Exibindo 1 contribuição{% if history_total_count > 1 %} de {{ history_total_count }} registradas{% endif %}
+                    {% else %}
+                      Exibindo {{ history_result_count }} contribuições{% if history_total_count > history_result_count %} de {{ history_total_count }} registradas{% endif %}
+                    {% endif %}
+                    {% if history_filters.has_active|default(false) %} com filtro ou ordenação aplicada{% endif %}.
+                  </p>
+                </form>
+              {% endif %}
+
+              {% if member_contribution_history|default([])|length > 0 %}
+                <div class="nc-admin-table-wrap nc-member-contribution-history-table-wrap">
+                  <table class="nc-admin-table nc-member-contribution-history-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Competência</th>
+                        <th scope="col">Observação</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col">Vencimento</th>
+                        <th scope="col">Pagamento</th>
+                        <th scope="col">Valor</th>
+                        <th scope="col">Forma</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for contribution in member_contribution_history %}
+                        <tr class="is-{{ contribution.status_key|default('pending') }}">
+                          <td data-label="Competência" class="nc-member-contribution-history-cell-competence">
+                            <strong>{{ contribution.competence_label|default('-') }}</strong>
+                          </td>
+                          <td data-label="Observação" class="nc-member-contribution-history-cell-summary">
+                            {{ contribution.status_summary|default('Sem detalhes adicionais.') }}
+                          </td>
+                          <td data-label="Situação" class="nc-member-contribution-history-cell-status">
+                            <span class="nc-member-contribution-history-badge {{ contribution.status_tone|default('is-info') }}">{{ contribution.status_label|default('Não definido') }}</span>
+                          </td>
+                          <td data-label="Vencimento">
+                            {{ contribution.due_date_label|default('-') }}
+                          </td>
+                          <td data-label="Pagamento">
+                            {{ contribution.paid_at_label|default('-') }}
+                          </td>
+                          <td data-label="Valor">
+                            {{ contribution.amount_due_label|default('Não definido') }}
+                          </td>
+                          <td data-label="{{ contribution.payment_method_context_label|default('Forma') }}">
+                            {{ contribution.payment_method_label|default('Não definido') }}
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <p class="nc-member-empty">
+                  {{ history_filters.total_count|default(0) > 0
+                    ? 'Nenhuma contribuição encontrada para os filtros selecionados.'
+                    : 'Ainda não existem contribuições registradas no seu histórico.' }}
+                </p>
+              {% endif %}
+            </section>
+
+            <section class="nc-member-profile-group" aria-label="Dados essenciais do cadastro">
+              <div class="nc-member-profile-group-header">
+                <h3>Dados essenciais</h3>
+                <p class="nc-member-subtitle">As informações principais associadas ao seu cadastro de membro.</p>
+              </div>
+
+              <dl class="nc-member-grid nc-member-overview-details">
+                <div><dt>E-mail</dt><dd>{{ member_data.email|default('-') }}</dd></div>
+                <div><dt>Celular</dt><dd>{{ member_data.phone_mobile|default('-') }}</dd></div>
+                <div><dt>Telefone</dt><dd>{{ member_data.phone_landline|default('-') }}</dd></div>
+                <div><dt>Data de nascimento</dt><dd>{{ member_data.birth_date_display|default('-') }}</dd></div>
+                <div><dt>Naturalidade</dt><dd>{{ member_data.birth_place|default('-') }}</dd></div>
+              </dl>
+            </section>
+          </div>
+        </article>
 
         <section class="nc-member-dashboard" aria-label="Resumo do perfil">
           <article class="nc-card nc-member-panel nc-member-primary-action">
@@ -221,43 +451,6 @@
             {% else %}
               <p class="nc-member-empty">Nenhuma movimentação recente registrada nesta sessão.</p>
             {% endif %}
-          </article>
-
-          <article class="nc-card nc-member-panel">
-            <div class="nc-member-header">
-              <div class="nc-member-avatar-wrap" aria-hidden="true">
-                {% set member_data_photo_path = member_data.profile_photo_path|default('')|trim %}
-                {% if member_data_photo_path %}
-                  <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (member_data_photo_path|trim('/')) }}" alt="">
-                {% else %}
-                  <div class="nc-member-avatar-placeholder">{{ (member_data.full_name|default('M')|slice(0, 1)|upper) }}</div>
-                {% endif %}
-              </div>
-              <div class="nc-member-header-text">
-                <h3>Dados do cadastro</h3>
-                <p>Essas informações ficam associadas à sua conta de membro.</p>
-              </div>
-            </div>
-
-            <dl class="nc-member-grid">
-              <div><dt>Perfil</dt><dd>{{ member_data.role_name|default('Membro') }}</dd></div>
-              <div><dt>Tipo de Sócio</dt><dd>{{ member_data.member_type_label|default(member_data.member_type|default('Não definido')) }}</dd></div>
-              <div><dt>E-mail</dt><dd>{{ member_data.email|default('-') }}</dd></div>
-              <div><dt>Celular</dt><dd>{{ member_data.phone_mobile|default('-') }}</dd></div>
-              <div><dt>Telefone</dt><dd>{{ member_data.phone_landline|default('-') }}</dd></div>
-              <div><dt>Data de nascimento</dt><dd>{{ member_data.birth_date|default('-') }}</dd></div>
-              <div><dt>Naturalidade</dt><dd>{{ member_data.birth_place|default('-') }}</dd></div>
-              <div><dt>Função no CEDE</dt><dd>{{ member_data.institutional_role|default('Sem função definida') }}</dd></div>
-            </dl>
-
-            <div class="nc-actions nc-admin-login-actions nc-member-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
-              <a class="nc-btn nc-btn-secondary" href="/membro/perfil/completar">Editar dados do perfil</a>
-              <a class="nc-btn nc-btn-secondary" href="/">Voltar ao site</a>
-              <form method="post" action="/membro/sair" onsubmit="return confirm('Deseja realmente encerrar sua sessão?');">
-                {% include 'components/csrf-field.twig' %}
-                <button class="nc-btn nc-admin-action-delete" type="submit">Encerrar sessão</button>
-              </form>
-            </div>
           </article>
 
           <article class="nc-card nc-member-panel">

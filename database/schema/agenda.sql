@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS member_users (
     billing_whatsapp_opt_in TINYINT(1) NOT NULL DEFAULT 0,
     institutional_role VARCHAR(120) NULL,
     member_type VARCHAR(20) NULL,
+    association_status VARCHAR(20) NOT NULL DEFAULT 'applicant',
+    is_contributor TINYINT(1) NOT NULL DEFAULT 0,
     profile_photo_path VARCHAR(255) NULL,
     privacy_notice_version VARCHAR(40) NULL,
     privacy_notice_accepted_at DATETIME NULL,
@@ -170,6 +172,21 @@ CREATE TABLE IF NOT EXISTS member_contribution_events (
         FOREIGN KEY (charge_id) REFERENCES member_contribution_charges(id)
         ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_member_contribution_events_member
+        FOREIGN KEY (member_user_id) REFERENCES member_users(id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS member_user_administration_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    member_user_id BIGINT UNSIGNED NOT NULL,
+    acted_by_user_id BIGINT UNSIGNED NULL,
+    event_type VARCHAR(40) NOT NULL,
+    event_description VARCHAR(255) NOT NULL,
+    payload_json LONGTEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_member_user_administration_events_member (member_user_id),
+    KEY idx_member_user_administration_events_actor (acted_by_user_id),
+    CONSTRAINT fk_member_user_administration_events_member
         FOREIGN KEY (member_user_id) REFERENCES member_users(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

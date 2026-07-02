@@ -26,7 +26,7 @@
           <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
-        Associados CEDE
+        Pessoas CEDE
       </a>
     </div>
 
@@ -65,7 +65,7 @@
     </form>
 
     {% if cede_management_users|length == 0 %}
-      <p>{{ search_term ? 'Nenhum usuário com função no CEDE encontrado para a busca informada.' : 'Nenhum usuário com função institucional ativa no CEDE.' }}</p>
+      <p>{{ search_term ? 'Nenhum associado com função no CEDE encontrado para a busca informada.' : 'Nenhum associado com função institucional ativa no CEDE.' }}</p>
     {% else %}
       <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="110">
         <p class="nc-admin-table-counter">

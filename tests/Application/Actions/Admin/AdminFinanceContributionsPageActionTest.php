@@ -137,8 +137,129 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
         $this->assertStringContainsString('Enviar e-mail', $html);
         $this->assertStringContainsString('WhatsApp', $html);
         $this->assertStringContainsString('Carlos Pereira', $html);
-        $this->assertStringContainsString('Cadastro pendente', $html);
+        $this->assertStringContainsString('Configuração pendente', $html);
         $this->assertStringContainsString('Gerar cobranças da competência', $html);
         $this->assertStringContainsString('/painel/financas/contribuicoes/' , $html);
+    }
+
+    public function testKeepsCurrentCompetenceAsPaidWhenThereIsOlderOverdueCharge(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Lúcio de Teste',
+            'email' => 'lucio@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Lúcio de Teste',
+            'cpf' => '52998224725',
+            'phone_mobile' => '84999998888',
+            'preferred_due_day' => 5,
+            'contribution_amount' => '50.00',
+            'preferred_payment_method' => 'boleto',
+            'billing_email_opt_in' => 1,
+            'billing_whatsapp_opt_in' => 1,
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->generateContributionCharges('2026-06', 7);
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
+
+        $julyRows = $memberAuthRepository->findContributionMembersByCompetence('2026-07');
+        $julyChargeId = (int) ($julyRows[0]['charge_id'] ?? 0);
+        $memberAuthRepository->markContributionChargeAsPaid($julyChargeId, 'pix', 7);
+
+        $data = $this->renderActionData($memberAuthRepository, '2026-07');
+        $row = $data['finance_contributions'][0] ?? null;
+
+        $this->assertIsArray($row);
+        $this->assertSame('paid', $row['status_key'] ?? null);
+        $this->assertSame('Recebida', $row['status_label'] ?? null);
+        $this->assertContains('Há 1 mensalidade anterior em atraso.', $row['status_notes'] ?? []);
+    }
+
+    public function testTreatsGatewayReceivedChargeAsPaidInCurrentCompetenceDisplay(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Marina Gateway',
+            'email' => 'marina-gateway@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Marina Gateway',
+            'cpf' => '52998224725',
+            'phone_mobile' => '84999998888',
+            'preferred_due_day' => 5,
+            'contribution_amount' => '50.00',
+            'preferred_payment_method' => 'boleto',
+            'billing_email_opt_in' => 1,
+            'billing_whatsapp_opt_in' => 1,
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->generateContributionCharges('2026-06', 7);
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
+
+        $julyRows = $memberAuthRepository->findContributionMembersByCompetence('2026-07');
+        $julyChargeId = (int) ($julyRows[0]['charge_id'] ?? 0);
+        $memberAuthRepository->updateContributionGatewayData($julyChargeId, [
+            'gateway_provider' => 'asaas',
+            'gateway_payment_id' => 'pay_test_123',
+            'gateway_billing_type' => 'PIX',
+            'gateway_status' => 'RECEIVED',
+            'gateway_last_synced_at' => '2026-07-01 12:32:26',
+        ]);
+
+        $data = $this->renderActionData($memberAuthRepository, '2026-07');
+        $row = $data['finance_contributions'][0] ?? null;
+
+        $this->assertIsArray($row);
+        $this->assertSame('paid', $row['status_key'] ?? null);
+        $this->assertSame('Recebida', $row['status_label'] ?? null);
+        $this->assertFalse((bool) ($row['can_mark_paid'] ?? true));
+        $this->assertContains('Recebimento confirmado no gateway.', $row['status_notes'] ?? []);
+        $this->assertContains('Há 1 mensalidade anterior em atraso.', $row['status_notes'] ?? []);
+    }
+
+    private function renderActionData(FallbackMemberAuthRepository $memberAuthRepository, string $competence): array
+    {
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new class (
+            $logger,
+            $twig,
+            $memberAuthRepository
+        ) extends AdminFinanceContributionsPageAction {
+            /** @var array<string, mixed> */
+            public array $capturedData = [];
+
+            protected function renderPage(
+                ResponseInterface $response,
+                string $template,
+                array $data = []
+            ): ResponseInterface {
+                $this->capturedData = $data;
+
+                return $response;
+            }
+        };
+
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes?competence=' . $competence)
+            ->withQueryParams([
+                'competence' => $competence,
+            ]);
+
+        $action($request, new Response());
+
+        return $action->capturedData;
     }
 }

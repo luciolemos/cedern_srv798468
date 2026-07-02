@@ -255,7 +255,7 @@ return function (App $app) {
                     $dashboardAdminNotifications[] = [
                         'title' => 'Contas pendentes',
                         'description' => $dashboardNotificationCount . ' cadastro(s) para aprovar.',
-                        'href' => '/painel/usuarios?sort=created_at&dir=desc&q=pending',
+                        'href' => '/painel/usuarios?sort=created_at&dir=desc&status_filter=pending',
                         'cta' => 'Aprovar contas',
                     ];
                 }
@@ -267,6 +267,12 @@ return function (App $app) {
 
         $currentPath = $stripBasePath($request->getUri()->getPath());
         $csrfToken = CsrfToken::get();
+        $memberRoleKey = trim((string) ($_SESSION['member_role_key'] ?? ''));
+        $memberRoleName = trim((string) ($_SESSION['member_role_name'] ?? 'Membro'));
+        $memberRoleDisplayName = $memberRoleKey === 'member'
+            ? 'Usuário SISCEDE'
+            : ($memberRoleName !== '' ? $memberRoleName : ucfirst($memberRoleKey));
+
         $twigEnvironment->addGlobal('base_url', $appBasePath);
         $twigEnvironment->addGlobal('current_path', $currentPath);
         $twigEnvironment->addGlobal('csrf_token', $csrfToken);
@@ -277,8 +283,9 @@ return function (App $app) {
         $twigEnvironment->addGlobal('dashboard_is_admin_session', $dashboardIsAdminSession);
         $twigEnvironment->addGlobal('member_is_authenticated', !empty($_SESSION['member_authenticated']));
         $twigEnvironment->addGlobal('member_name', (string) ($_SESSION['member_name'] ?? ''));
-        $twigEnvironment->addGlobal('member_role_key', (string) ($_SESSION['member_role_key'] ?? ''));
-        $twigEnvironment->addGlobal('member_role_name', (string) ($_SESSION['member_role_name'] ?? 'Membro'));
+        $twigEnvironment->addGlobal('member_role_key', $memberRoleKey);
+        $twigEnvironment->addGlobal('member_role_name', $memberRoleName);
+        $twigEnvironment->addGlobal('member_role_display_name', $memberRoleDisplayName);
         $twigEnvironment->addGlobal(
             'member_profile_photo_path',
             (string) ($_SESSION['member_profile_photo_path'] ?? '')

@@ -35,6 +35,13 @@ class AdminFinanceContributionGatewayViewPageAction extends AbstractAdminFinance
         $charge = $context['charge'];
         $member = $context['member'];
         $competence = $context['competence'];
+        $preferredPaymentMethod = strtolower(trim((string) ($charge['preferred_payment_method'] ?? '')));
+        $paymentRecordedMethod = strtolower(trim((string) ($charge['payment_recorded_method'] ?? '')));
+        $gatewayPixPayload = trim((string) ($charge['gateway_pix_payload'] ?? ''));
+        $gatewayPixEncodedImage = trim((string) ($charge['gateway_pix_encoded_image'] ?? ''));
+        $gatewayInvoiceUrl = trim((string) ($charge['gateway_invoice_url'] ?? ''));
+        $gatewayBankSlipUrl = trim((string) ($charge['gateway_bank_slip_url'] ?? ''));
+        $gatewayReceiptUrl = trim((string) ($charge['gateway_transaction_receipt_url'] ?? ''));
 
         $viewData = [
             'id' => (int) ($charge['id'] ?? 0),
@@ -46,6 +53,9 @@ class AdminFinanceContributionGatewayViewPageAction extends AbstractAdminFinance
             'amount_due_label' => $this->formatCurrency($charge['amount_due'] ?? 0),
             'due_date_label' => $this->formatDate((string) ($charge['due_date'] ?? '')),
             'local_status_label' => $this->normalizeLocalChargeStatusLabel((string) ($charge['status'] ?? 'pending')),
+            'preferred_payment_method_label' => self::PAYMENT_METHOD_LABELS[$preferredPaymentMethod] ?? 'Não definido',
+            'payment_recorded_method_label' => self::PAYMENT_METHOD_LABELS[$paymentRecordedMethod] ?? '',
+            'paid_at_label' => $this->formatDateTime((string) ($charge['paid_at'] ?? '')),
             'gateway_configured' => $this->gatewayConfigured(),
             'gateway_provider' => trim((string) ($charge['gateway_provider'] ?? '')) !== ''
                 ? strtoupper(trim((string) ($charge['gateway_provider'] ?? '')))
@@ -56,15 +66,19 @@ class AdminFinanceContributionGatewayViewPageAction extends AbstractAdminFinance
             'gateway_status' => strtoupper(trim((string) ($charge['gateway_status'] ?? ''))),
             'gateway_status_label' => $this->normalizeGatewayStatusLabel((string) ($charge['gateway_status'] ?? '')),
             'gateway_status_tone' => $this->normalizeGatewayStatusTone((string) ($charge['gateway_status'] ?? '')),
-            'gateway_invoice_url' => trim((string) ($charge['gateway_invoice_url'] ?? '')),
-            'gateway_bank_slip_url' => trim((string) ($charge['gateway_bank_slip_url'] ?? '')),
-            'gateway_transaction_receipt_url' => trim((string) ($charge['gateway_transaction_receipt_url'] ?? '')),
-            'gateway_pix_payload' => trim((string) ($charge['gateway_pix_payload'] ?? '')),
-            'gateway_pix_encoded_image' => trim((string) ($charge['gateway_pix_encoded_image'] ?? '')),
+            'gateway_invoice_url' => $gatewayInvoiceUrl,
+            'gateway_bank_slip_url' => $gatewayBankSlipUrl,
+            'gateway_transaction_receipt_url' => $gatewayReceiptUrl,
+            'gateway_pix_payload' => $gatewayPixPayload,
+            'gateway_pix_encoded_image' => $gatewayPixEncodedImage,
             'gateway_pix_expiration_date_label' => $this->formatDateTime((string) ($charge['gateway_pix_expiration_date'] ?? '')),
             'gateway_last_synced_at_label' => $this->formatDateTime((string) ($charge['gateway_last_synced_at'] ?? '')),
             'gateway_webhook_url' => $this->buildAbsoluteAppUrl($request, '/webhooks/asaas/contribuicoes'),
             'has_gateway_charge' => trim((string) ($charge['gateway_payment_id'] ?? '')) !== '',
+            'has_gateway_invoice_url' => $gatewayInvoiceUrl !== '',
+            'has_gateway_bank_slip_url' => $gatewayBankSlipUrl !== '',
+            'has_gateway_receipt_url' => $gatewayReceiptUrl !== '',
+            'has_gateway_pix_assets' => $gatewayPixPayload !== '' || $gatewayPixEncodedImage !== '',
         ];
 
         return $this->renderPage($response, 'pages/admin-finance-contribution-charge.twig', [

@@ -1,8 +1,8 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Finanças' %}
-{% set dashboard_page_title = 'Contribuições dos associados' %}
-{% set dashboard_page_lead = 'Gere cobranças mensais, acompanhe adimplência e registre baixas manuais sem sair do painel.' %}
+{% set dashboard_page_title = 'Contribuições dos associados contribuintes' %}
+{% set dashboard_page_lead = 'Gere cobranças mensais, acompanhe adimplência e registre baixas manuais apenas para os associados marcados como contribuintes.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Controle financeiro das contribuições mensais" data-aos="fade-up" data-aos-delay="0">
@@ -31,9 +31,9 @@
 
     {% set contribution_kpi_cards = [
       {
-        label: 'Associados acompanhados',
+        label: 'Contribuintes acompanhados',
         value: summary.tracked_count|default(0),
-        description: summary.not_generated_count|default(0) ~ ' aguardando geração e ' ~ summary.config_pending_count|default(0) ~ ' com cadastro financeiro pendente.',
+        description: summary.not_generated_count|default(0) ~ ' aguardando geração e ' ~ summary.config_pending_count|default(0) ~ ' com configuração financeira pendente.',
         icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M18 10.5C19.1046 10.5 20 9.60457 20 8.5C20 7.39543 19.1046 6.5 18 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 10.5C2.89543 10.5 2 9.60457 2 8.5C2 7.39543 2.89543 6.5 4 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
       },
       {
@@ -97,19 +97,20 @@
       <span>{{ summary.competence_label|default('Competência atual') }}</span>
       <span>Recebido {{ summary.received_total_label|default('R$ 0,00') }}</span>
       <span>Em aberto {{ summary.open_total_label|default('R$ 0,00') }}</span>
-      <span>{{ summary.tracked_count_label|default('0 associados') }}</span>
+      <span>{{ summary.tracked_count_label|default('0 contribuintes') }}</span>
     </article>
 
     {% if finance_contributions|length == 0 %}
       <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="160">
-        <p>{{ has_active_filters ? 'Nenhum associado encontrado para os filtros informados.' : 'Nenhuma cobrança mensal gerada ainda para a competência selecionada.' }}</p>
+        <p>{{ has_active_filters ? 'Nenhum contribuinte encontrado para os filtros informados.' : 'Nenhuma cobrança mensal gerada ainda para a competência selecionada.' }}</p>
       </article>
     {% else %}
       <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="160">
-        <table class="nc-admin-table nc-admin-table-bookshop">
+        <table class="nc-admin-table nc-admin-table-bookshop nc-finance-contributions-table">
           <thead>
             <tr>
-              <th>Associado</th>
+              <th>Foto</th>
+              <th>Contribuinte</th>
               <th>Tipo</th>
               <th>Competência e vencimento</th>
               <th>Valor</th>
@@ -121,8 +122,18 @@
           <tbody>
             {% for contribution in finance_contributions %}
               <tr>
-                <td class="nc-agenda-activity-cell" data-label="Associado">
-                  <strong>{{ contribution.full_name|default(contribution.email|default('Associado')) }}</strong>
+                <td class="nc-admin-user-photo-cell nc-contribution-photo-cell" data-label="Foto">
+                  <span class="nc-admin-user-photo nc-contribution-photo" aria-hidden="true">
+                    {% set contribution_photo_path = contribution.profile_photo_path|default('')|trim %}
+                    {% if contribution_photo_path %}
+                      <img src="{{ (base_url ?? '') ~ '/' ~ (contribution_photo_path|trim('/')) }}" alt="">
+                    {% else %}
+                      <span>{{ (contribution.full_name|default(contribution.email|default('U'))|slice(0, 1)|upper) }}</span>
+                    {% endif %}
+                  </span>
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="Contribuinte">
+                  <strong>{{ contribution.full_name|default(contribution.email|default('Contribuinte')) }}</strong>
                   {% if contribution.cpf_display|default('') and contribution.cpf_display != '-' %}
                     <small>{{ contribution.cpf_display }}</small>
                   {% endif %}
@@ -138,9 +149,9 @@
                     {% if contribution.has_current_charge %}
                       Vencimento {{ contribution.due_date_display|default('-') }}
                     {% elseif contribution.preferred_due_day|default(0) > 0 %}
-                      Dia preferido {{ '%02d'|format(contribution.preferred_due_day|default(0)) }}
+                      Vencimento dia {{ '%02d'|format(contribution.preferred_due_day|default(0)) }}
                     {% else %}
-                      Dia de vencimento ainda não definido
+                      Vencimento ainda não definido
                     {% endif %}
                   </small>
                 </td>
@@ -170,7 +181,7 @@
                 <td class="nc-admin-table-actions nc-contribution-actions" data-label="Ações">
                   {% if contribution.can_mark_paid %}
                     {% if contribution.has_gateway_charge %}
-                      <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Visualizar cobrança</a>
+                      <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
                       <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/sincronizar">
                         {% include 'components/csrf-field.twig' %}
                         <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar</button>
@@ -218,7 +229,7 @@
                       <span class="nc-contribution-action-note">Sem autorização ou contato válido para lembretes.</span>
                     {% endif %}
                   {% elseif contribution.has_current_charge and contribution.has_gateway_charge %}
-                    <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Visualizar cobrança</a>
+                    <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
                   {% elseif contribution.has_current_charge %}
                     <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">Sem ação manual</span>
                   {% elseif contribution.status_key|default('') == 'config_pending' %}

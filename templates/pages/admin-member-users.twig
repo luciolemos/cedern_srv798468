@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Associados CEDE' %}
-{% set dashboard_page_lead = 'Valide cadastros pendentes e atribua perfis de acesso aos associados.' %}
+{% set dashboard_page_title = 'Pessoas CEDE' %}
+{% set dashboard_page_lead = 'Separe solicitantes, associados e desligados; controle acesso, contribuição e perfis internos no mesmo painel.' %}
 
 {% block admin_content %}
-  <section class="nc-section" aria-label="Associados CEDE" data-aos="fade-up" data-aos-delay="0">
+  <section class="nc-section" aria-label="Pessoas CEDE" data-aos="fade-up" data-aos-delay="0">
     {% set toast_message = '' %}
     {% set toast_tone = 'success' %}
     {% if admin_status == 'approved' %}
@@ -21,6 +21,18 @@
       {% set toast_tone = 'error' %}
     {% elseif admin_status == 'invalid-member-type' %}
       {% set toast_message = 'Selecione um tipo de sócio válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-association-status' %}
+      {% set toast_message = 'Selecione um vínculo associativo válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-account-status' %}
+      {% set toast_message = 'Selecione um status de acesso válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-contributor-choice' %}
+      {% set toast_message = 'Selecione uma situação de contribuição válida para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif admin_status == 'invalid-contributor-state' %}
+      {% set toast_message = 'Somente associados podem ser marcados como contribuintes.' %}
       {% set toast_tone = 'error' %}
     {% elseif admin_status == 'assign-error' %}
       {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
@@ -55,28 +67,44 @@
     {% set member_type_options = member_member_type_options|default([]) %}
     {% set role_filter_options = member_users_role_filter_options|default([]) %}
     {% set status_filter_options = member_users_status_filter_options|default({}) %}
+    {% set association_status_filter_options = member_users_association_status_filter_options|default({}) %}
+    {% set contributor_filter_options = member_users_contributor_filter_options|default({}) %}
     {% set institutional_role_filter_options = member_users_institutional_role_filter_options|default(institutional_role_options) %}
     {% set selected_role_filter = member_users_role_filter|default('') %}
     {% set selected_member_type_filter = member_users_member_type_filter|default('') %}
     {% set selected_status_filter = member_users_status_filter|default('') %}
+    {% set selected_association_status_filter = member_users_association_status_filter|default('') %}
+    {% set selected_contributor_filter = member_users_contributor_filter|default('') %}
     {% set selected_institutional_role_filter = member_users_institutional_role_filter|default('') %}
-    {% set has_active_filters = search_term != '' or selected_role_filter != '' or selected_member_type_filter != '' or selected_status_filter != '' or selected_institutional_role_filter != '' %}
+    {% set has_active_filters = search_term != '' or selected_role_filter != '' or selected_member_type_filter != '' or selected_status_filter != '' or selected_association_status_filter != '' or selected_contributor_filter != '' or selected_institutional_role_filter != '' %}
 
     {% if member_users|length == 0 %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
-        <label for="nc-users-search">Buscar associados</label>
+        <label for="nc-users-search">Buscar pessoas</label>
         <div class="nc-admin-table-search-controls">
-          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil, função...">
+          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, vínculo, perfil, função...">
           <select name="role_filter" aria-label="Filtrar por perfil">
             <option value="">Todos os perfis</option>
             {% for role_option in role_filter_options %}
               <option value="{{ role_option.value }}"{% if selected_role_filter == role_option.value %} selected{% endif %}>{{ role_option.label }}</option>
             {% endfor %}
           </select>
+          <select name="association_status_filter" aria-label="Filtrar por vínculo">
+            <option value="">Todos os vínculos</option>
+            {% for association_status_value, association_status_label in association_status_filter_options %}
+              <option value="{{ association_status_value }}"{% if selected_association_status_filter == association_status_value %} selected{% endif %}>{{ association_status_label }}</option>
+            {% endfor %}
+          </select>
           <select name="member_type_filter" aria-label="Filtrar por tipo de sócio">
             <option value="">Todos os tipos de sócio</option>
             {% for member_type_option in member_type_options %}
               <option value="{{ member_type_option.value }}"{% if selected_member_type_filter == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="contributor_filter" aria-label="Filtrar por contribuição">
+            <option value="">Contribui ou não</option>
+            {% for contributor_value, contributor_label in contributor_filter_options %}
+              <option value="{{ contributor_value }}"{% if selected_contributor_filter == contributor_value %} selected{% endif %}>{{ contributor_label }}</option>
             {% endfor %}
           </select>
           <select name="status_filter" aria-label="Filtrar por status">
@@ -100,22 +128,34 @@
           {% endif %}
         </div>
       </form>
-      <p>{{ has_active_filters ? 'Nenhum associado encontrado para os filtros informados.' : 'Nenhum associado cadastrado até o momento.' }}</p>
+      <p>{{ has_active_filters ? 'Nenhuma pessoa encontrada para os filtros informados.' : 'Nenhum cadastro encontrado até o momento.' }}</p>
     {% else %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
-        <label for="nc-users-search">Buscar associados</label>
+        <label for="nc-users-search">Buscar pessoas</label>
         <div class="nc-admin-table-search-controls">
-          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, status, perfil, função...">
+          <input id="nc-users-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, vínculo, perfil, função...">
           <select name="role_filter" aria-label="Filtrar por perfil">
             <option value="">Todos os perfis</option>
             {% for role_option in role_filter_options %}
               <option value="{{ role_option.value }}"{% if selected_role_filter == role_option.value %} selected{% endif %}>{{ role_option.label }}</option>
             {% endfor %}
           </select>
+          <select name="association_status_filter" aria-label="Filtrar por vínculo">
+            <option value="">Todos os vínculos</option>
+            {% for association_status_value, association_status_label in association_status_filter_options %}
+              <option value="{{ association_status_value }}"{% if selected_association_status_filter == association_status_value %} selected{% endif %}>{{ association_status_label }}</option>
+            {% endfor %}
+          </select>
           <select name="member_type_filter" aria-label="Filtrar por tipo de sócio">
             <option value="">Todos os tipos de sócio</option>
             {% for member_type_option in member_type_options %}
               <option value="{{ member_type_option.value }}"{% if selected_member_type_filter == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+            {% endfor %}
+          </select>
+          <select name="contributor_filter" aria-label="Filtrar por contribuição">
+            <option value="">Contribui ou não</option>
+            {% for contributor_value, contributor_label in contributor_filter_options %}
+              <option value="{{ contributor_value }}"{% if selected_contributor_filter == contributor_value %} selected{% endif %}>{{ contributor_label }}</option>
             {% endfor %}
           </select>
           <select name="status_filter" aria-label="Filtrar por status">
@@ -156,7 +196,9 @@
           <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
           <input type="hidden" name="q" value="{{ search_term }}">
           <input type="hidden" name="role_filter" value="{{ selected_role_filter }}">
+          <input type="hidden" name="association_status_filter" value="{{ selected_association_status_filter }}">
           <input type="hidden" name="member_type_filter" value="{{ selected_member_type_filter }}">
+          <input type="hidden" name="contributor_filter" value="{{ selected_contributor_filter }}">
           <input type="hidden" name="status_filter" value="{{ selected_status_filter }}">
           <input type="hidden" name="institutional_role_filter" value="{{ selected_institutional_role_filter }}">
           <noscript>
@@ -178,14 +220,15 @@
                 <a class="nc-admin-sort-link{% if sort_links.email.active %} is-active{% endif %}" href="{{ sort_links.email.url }}">E-mail <span aria-hidden="true">{{ sort_links.email.indicator }}</span></a>
               </th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.member_type_label.active %} is-active{% endif %}" href="{{ sort_links.member_type_label.url }}">Tipo de Sócio <span aria-hidden="true">{{ sort_links.member_type_label.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.member_type_label.active %} is-active{% endif %}" href="{{ sort_links.member_type_label.url }}">Vínculo / Sócio <span aria-hidden="true">{{ sort_links.member_type_label.indicator }}</span></a>
               </th>
+              <th>Contribui?</th>
               <th>Função CEDE</th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil SISCEDE <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
               </th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Acesso <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
               </th>
               <th>Ações</th>
             </tr>
@@ -249,10 +292,14 @@
                   {% endif %}
                 </td>
                 <td class="nc-admin-col-email" data-label="E-mail">{{ user.email|default('-') }}</td>
-                <td data-label="Tipo de Sócio">{{ user.member_type_label|default('Não definido') }}</td>
+                <td data-label="Vínculo / Sócio">
+                  <strong>{{ user.association_status_label|default('Solicitante') }}</strong>
+                  <small class="nc-admin-user-email-inline nc-admin-email-inline">{{ user.member_type_label|default('Não definido') }}</small>
+                </td>
+                <td data-label="Contribui?">{{ user.contributor_label|default('Não') }}</td>
                 <td data-label="Função CEDE">{{ user.institutional_role|default('Sem função definida') }}</td>
-                <td data-label="Perfil">{{ user.role_name|default('-') }}</td>
-                <td data-label="Status">
+                <td data-label="Perfil SISCEDE">{{ user.role_name_display|default(user.role_name|default('-')) }}</td>
+                <td data-label="Acesso">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
                 <td class="nc-admin-table-actions" data-label="Ações">

@@ -348,6 +348,12 @@ return function (App $app) {
     $app->map(['GET', 'POST'], '/redefinir-senha', MemberResetPasswordPageAction::class);
     $app->map(['GET', 'POST'], '/membro/sair', MemberLogoutAction::class);
     $app->get('/membro', MemberHomePageAction::class);
+    $app->get('/membro/perfil', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/membro/perfil/completar' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
     $app->map(['GET', 'POST'], '/membro/perfil/completar', MemberCompleteProfilePageAction::class);
     $app->post('/membro/eventos/{id}/participacao', MemberEventInterestToggleAction::class);
     $app->get('/membro/operacao', MemberOperatorAreaPageAction::class);

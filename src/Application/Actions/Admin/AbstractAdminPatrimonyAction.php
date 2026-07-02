@@ -571,28 +571,6 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         return dirname(__DIR__, 4);
     }
 
-    private function resolveAppBasePath(Request $request): string
-    {
-        $appBaseEnv = getenv('APP_BASE');
-        $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
-        $configuredAppBasePath = $this->normalizeBasePath($appBaseRaw);
-        $requestUriPath = trim($request->getUri()->getPath());
-
-        if ($requestUriPath === '') {
-            $requestUriPath = '/';
-        }
-
-        if (
-            $configuredAppBasePath === ''
-            || $requestUriPath === $configuredAppBasePath
-            || str_starts_with($requestUriPath, $configuredAppBasePath . '/')
-        ) {
-            return $configuredAppBasePath;
-        }
-
-        return '';
-    }
-
     /**
      * @return array<int, array{directory: string, public_prefix: string}>
      */
@@ -774,14 +752,4 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
 
-    private function normalizeBasePath(string $rawBasePath): string
-    {
-        $trimmed = trim($rawBasePath);
-
-        if ($trimmed === '' || $trimmed === '/') {
-            return '';
-        }
-
-        return '/' . trim($trimmed, '/');
-    }
 }

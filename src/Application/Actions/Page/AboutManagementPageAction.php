@@ -66,9 +66,18 @@ class AboutManagementPageAction extends AbstractPageAction
 
             $managementMembers = array_values(array_filter(
                 $users,
-                static fn (array $user): bool =>
-                    (string) ($user['status'] ?? '') === 'active'
-                    && trim((string) ($user['institutional_role'] ?? '')) !== ''
+                static function (array $user): bool {
+                    $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+                    if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+                        $associationStatus = strtolower(trim((string) ($user['status'] ?? ''))) === 'pending'
+                            ? 'applicant'
+                            : 'member';
+                    }
+
+                    return (string) ($user['status'] ?? '') === 'active'
+                        && $associationStatus === 'member'
+                        && trim((string) ($user['institutional_role'] ?? '')) !== '';
+                }
             ));
 
             usort($managementMembers, static function (array $first, array $second): int {

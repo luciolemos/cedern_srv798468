@@ -34,6 +34,13 @@ final class AdminMemberUserViewPageActionTest extends TestCase
     public function testRendersReadOnlyMemberRegistrationView(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
+        $adminId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Gestor CEDE',
+            'email' => 'gestor@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->approveAndAssignRole($adminId, 4, null, null, 'member', false, 'active');
+
         $userId = $memberAuthRepository->createPendingUser([
             'full_name' => 'Marina Silva',
             'email' => 'marina@example.com',
@@ -64,7 +71,8 @@ final class AdminMemberUserViewPageActionTest extends TestCase
             'privacy_notice_accepted_at' => '2026-06-18 14:30:00',
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 4, 'Coordenador', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 4, 'Coordenador', 'efetivo', 'member', true, 'active', $adminId);
+        $memberAuthRepository->approveAndAssignRole($userId, 4, null, null, 'former', false, 'blocked', $adminId);
 
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -140,5 +148,11 @@ final class AdminMemberUserViewPageActionTest extends TestCase
         $this->assertStringContainsString('Autorizado', $html);
         $this->assertStringContainsString('18/06/2026 14:30', $html);
         $this->assertStringContainsString('/painel/usuarios/' . $userId . '/resumo', $html);
+        $this->assertStringContainsString('Sem perfil ativo', $html);
+        $this->assertStringContainsString('Histórico administrativo', $html);
+        $this->assertStringContainsString('Cadastro criado como solicitante com acesso pendente.', $html);
+        $this->assertStringContainsString('Situação administrativa atualizada: acesso bloqueado, vínculo desligado, contribuinte não.', $html);
+        $this->assertStringContainsString('Gestor CEDE', $html);
+        $this->assertStringContainsString('Sistema', $html);
     }
 }

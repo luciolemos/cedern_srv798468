@@ -63,13 +63,19 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 ? $memberType
                 : '';
             $user['member_type_label'] = self::MEMBER_TYPE_OPTIONS[$user['member_type']] ?? 'Não definido';
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            $user['association_status'] = in_array($associationStatus, ['applicant', 'member', 'former'], true)
+                ? $associationStatus
+                : (strtolower(trim((string) ($user['status'] ?? ''))) === 'pending' ? 'applicant' : 'member');
 
             return $user;
         }, $users);
 
         $users = array_values(array_filter(
             $users,
-            static fn (array $user): bool => trim((string) ($user['institutional_role'] ?? '')) !== ''
+            static fn (array $user): bool =>
+                trim((string) ($user['institutional_role'] ?? '')) !== ''
+                && strtolower(trim((string) ($user['association_status'] ?? 'member'))) === 'member'
         ));
 
         $institutionalRoleOptions = array_values(array_unique(array_map(
@@ -97,14 +103,14 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         }
 
         $statusOptions = ['active', 'pending', 'blocked'];
-        if ($selectedStatus !== '' && in_array($selectedStatus, $statusOptions, true)) {
-            $users = array_values(array_filter(
-                $users,
-                static fn (array $user): bool => (string) ($user['status'] ?? '') === $selectedStatus
-            ));
-        } else {
-            $selectedStatus = '';
+        if (!in_array($selectedStatus, $statusOptions, true)) {
+            $selectedStatus = 'active';
         }
+
+        $users = array_values(array_filter(
+            $users,
+            static fn (array $user): bool => (string) ($user['status'] ?? '') === $selectedStatus
+        ));
 
         if ($searchTerm !== '') {
             $normalizedSearch = strtolower($searchTerm);
@@ -117,6 +123,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['email'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
+                        (string) ($user['association_status'] ?? ''),
                         (string) ($user['role_name'] ?? ''),
                         (string) ($user['status'] ?? ''),
                     ]);
@@ -268,10 +275,10 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             ],
             'dashboard_page_kicker' => 'Dashboard',
             'dashboard_page_title' => 'Diretoria CEDE',
-            'dashboard_page_lead' => 'Usuários com função institucional ativa no CEDE.',
+            'dashboard_page_lead' => 'Associados com função institucional ativa no CEDE.',
             'page_title' => 'Diretoria CEDE | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/gestao-cede',
-            'page_description' => 'Lista administrativa de funções institucionais do CEDE.',
+            'page_description' => 'Lista administrativa dos associados com funções institucionais ativas no CEDE.',
         ]);
     }
 

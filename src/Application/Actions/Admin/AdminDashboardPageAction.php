@@ -129,6 +129,10 @@ class AdminDashboardPageAction extends AbstractPageAction
         foreach ($users as $user) {
             $status = strtolower(trim((string) ($user['status'] ?? '')));
             $memberType = strtolower(trim((string) ($user['member_type'] ?? '')));
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+                $associationStatus = $status === 'pending' ? 'applicant' : 'member';
+            }
 
             if ($status === 'pending') {
                 $metrics['total_pending_accounts']++;
@@ -141,6 +145,10 @@ class AdminDashboardPageAction extends AbstractPageAction
             }
 
             if ($status !== 'active') {
+                continue;
+            }
+
+            if ($associationStatus !== 'member') {
                 continue;
             }
 

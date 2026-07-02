@@ -5,17 +5,22 @@
     return;
   }
 
-  const stateSelect = form.querySelector('[data-member-birth-state]');
-  const citySelect = form.querySelector('[data-member-birth-city]');
+  const birthStateSelect = form.querySelector('[data-member-birth-state]');
+  const birthCitySelect = form.querySelector('[data-member-birth-city]');
   const photoInput = form.querySelector('#profile_photo');
   const phoneMobileInput = form.querySelector('#phone_mobile');
   const phoneLandlineInput = form.querySelector('#phone_landline');
   const cpfInput = form.querySelector('#cpf');
   const postalCodeInput = form.querySelector('#postal_code');
+  const streetAddressInput = form.querySelector('#street_address');
+  const neighborhoodInput = form.querySelector('#neighborhood');
+  const addressStateSelect = form.querySelector('[data-member-address-state]');
+  const addressCitySelect = form.querySelector('[data-member-address-city]');
 
   const cityCache = new Map();
   const requestTimeoutMs = 5000;
   const maxRetries = 2;
+  const postalCodeLookupMinLength = 8;
 
   const localCityFallbackByUf = {
     AC: ['Rio Branco'],
@@ -47,7 +52,10 @@
     TO: ['Palmas'],
   };
 
-  let cityStatusEl = null;
+  const cityStatusEls = new WeakMap();
+  let postalCodeStatusEl = null;
+  let postalCodeLookupController = null;
+  let lastPostalCodeLookup = '';
 
   const sanitizeDigits = (value) => (value || '').replace(/\D+/g, '');
 
@@ -124,41 +132,43 @@
     onInput();
   };
 
-  const clearCities = (placeholder = 'Selecione a cidade') => {
-    if (!citySelect) {
+  const clearCities = (cityField, placeholder = 'Selecione a cidade') => {
+    if (!cityField) {
       return;
     }
 
-    citySelect.innerHTML = '';
+    cityField.innerHTML = '';
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = placeholder;
-    citySelect.appendChild(defaultOption);
+    cityField.appendChild(defaultOption);
   };
 
-  const ensureCityStatus = () => {
-    if (!citySelect) {
+  const ensureCityStatus = (cityField) => {
+    if (!cityField) {
       return null;
     }
 
-    if (cityStatusEl instanceof HTMLElement) {
-      return cityStatusEl;
+    const existingStatus = cityStatusEls.get(cityField);
+    if (existingStatus instanceof HTMLElement) {
+      return existingStatus;
     }
 
-    cityStatusEl = document.createElement('small');
+    const cityStatusEl = document.createElement('small');
     cityStatusEl.className = 'nc-member-profile-help';
     cityStatusEl.setAttribute('data-member-city-status', 'true');
 
-    const parent = citySelect.parentElement;
+    const parent = cityField.parentElement;
     if (parent) {
       parent.appendChild(cityStatusEl);
     }
 
+    cityStatusEls.set(cityField, cityStatusEl);
     return cityStatusEl;
   };
 
-  const setCityStatus = (message = '') => {
-    const status = ensureCityStatus();
+  const setCityStatus = (cityField, message = '') => {
+    const status = ensureCityStatus(cityField);
     if (!status) {
       return;
     }
@@ -166,24 +176,65 @@
     status.textContent = message;
   };
 
-  const populateCities = (cities, selectedCity = '') => {
-    if (!citySelect) {
+  const ensurePostalCodeStatus = () => {
+    if (!postalCodeInput) {
+      return null;
+    }
+
+    if (postalCodeStatusEl instanceof HTMLElement) {
+      return postalCodeStatusEl;
+    }
+
+    postalCodeStatusEl = document.createElement('small');
+    postalCodeStatusEl.className = 'nc-member-profile-help';
+    postalCodeStatusEl.setAttribute('data-member-postal-code-status', 'true');
+
+    const parent = postalCodeInput.parentElement;
+    if (parent) {
+      parent.appendChild(postalCodeStatusEl);
+    }
+
+    return postalCodeStatusEl;
+  };
+
+  const setPostalCodeStatus = (message = '') => {
+    const status = ensurePostalCodeStatus();
+    if (!status) {
       return;
     }
 
-    clearCities();
+    status.textContent = message;
+  };
+
+  const populateCities = (cityField, cities, selectedCity = '') => {
+    if (!cityField) {
+      return;
+    }
+
+    clearCities(cityField);
+    const normalizedSelectedCity = selectedCity.trim().toLowerCase();
+    let hasSelectedCity = false;
 
     cities.forEach((city) => {
       const option = document.createElement('option');
       option.value = city;
       option.textContent = city;
-      if (selectedCity && city.toLowerCase() === selectedCity.toLowerCase()) {
+      if (normalizedSelectedCity && city.toLowerCase() === normalizedSelectedCity) {
         option.selected = true;
+        hasSelectedCity = true;
       }
-      citySelect.appendChild(option);
+      cityField.appendChild(option);
     });
 
-    citySelect.disabled = false;
+    if (selectedCity && !hasSelectedCity) {
+      const fallbackOption = document.createElement('option');
+      fallbackOption.value = selectedCity;
+      fallbackOption.textContent = selectedCity;
+      fallbackOption.selected = true;
+      cityField.appendChild(fallbackOption);
+    }
+
+    cityField.disabled = false;
   };
 
   const fetchWithTimeout = async (url, timeoutMs) => {
@@ -199,6 +250,43 @@
       });
     } finally {
       window.clearTimeout(timeoutId);
+    }
+  };
+
+  const fetchJsonWithTimeout = async (url, timeoutMs, signal = null) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+
+    const abortHandler = () => {
+      controller.abort();
+    };
+
+    if (signal) {
+      if (signal.aborted) {
+        controller.abort();
+      } else {
+        signal.addEventListener('abort', abortHandler, { once: true });
+      }
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Resposta inválida da API.');
+      }
+
+      return await response.json();
+    } finally {
+      window.clearTimeout(timeoutId);
+      if (signal) {
+        signal.removeEventListener('abort', abortHandler);
+      }
     }
   };
 
@@ -244,56 +332,59 @@
     throw lastError || new Error('Não foi possível carregar cidades.');
   };
 
-  const loadCities = async (uf, selectedCity = '') => {
-    if (!citySelect) {
+  const loadCities = async (stateField, cityField, selectedCity = '') => {
+    if (!stateField || !cityField) {
       return;
     }
 
+    const uf = (stateField.value || '').trim();
     if (!uf) {
-      citySelect.disabled = true;
-      clearCities();
+      cityField.disabled = true;
+      clearCities(cityField);
+      setCityStatus(cityField, '');
       return;
     }
 
-    citySelect.disabled = true;
-    clearCities('Carregando cidades...');
-    setCityStatus('');
+    cityField.disabled = true;
+    clearCities(cityField, 'Carregando cidades...');
+    setCityStatus(cityField, '');
 
     try {
       const cities = await fetchCitiesByState(uf);
-      populateCities(cities, selectedCity);
-      setCityStatus('');
+      populateCities(cityField, cities, selectedCity);
+      setCityStatus(cityField, '');
     } catch (error) {
       const fallbackCities = localCityFallbackByUf[(uf || '').toUpperCase()] || [];
 
       if (fallbackCities.length > 0) {
-        populateCities(fallbackCities, selectedCity);
-        setCityStatus('API indisponível no momento. Exibindo lista local temporária.');
+        populateCities(cityField, fallbackCities, selectedCity);
+        setCityStatus(cityField, 'API indisponível no momento. Exibindo lista local temporária.');
       } else {
-        citySelect.disabled = true;
-        clearCities('Não foi possível carregar as cidades');
-        setCityStatus('Falha ao consultar a API de cidades. Tente novamente.');
+        cityField.disabled = true;
+        clearCities(cityField, 'Não foi possível carregar as cidades');
+        setCityStatus(cityField, 'Falha ao consultar a API de cidades. Tente novamente.');
       }
     }
   };
 
-  const initCityCascade = () => {
-    if (!stateSelect || !citySelect) {
+  const initCityCascade = (stateField, cityField) => {
+    if (!stateField || !cityField) {
       return;
     }
 
-    const selectedCityFromServer = citySelect.getAttribute('data-selected-city') || '';
-    const initialUf = (stateSelect.value || '').trim();
+    const selectedCityFromServer = cityField.getAttribute('data-selected-city') || cityField.value || '';
+    const initialUf = (stateField.value || '').trim();
 
-    citySelect.disabled = true;
-    clearCities();
+    cityField.disabled = true;
+    clearCities(cityField);
 
     if (initialUf) {
-      loadCities(initialUf, selectedCityFromServer);
+      loadCities(stateField, cityField, selectedCityFromServer);
     }
 
-    stateSelect.addEventListener('change', () => {
-      loadCities(stateSelect.value, '');
+    stateField.addEventListener('change', () => {
+      cityField.setAttribute('data-selected-city', '');
+      loadCities(stateField, cityField, '');
     });
   };
 
@@ -331,10 +422,194 @@
     });
   };
 
+  const fillAddressFromPostalCode = async (address) => {
+    if (streetAddressInput && address.street) {
+      streetAddressInput.value = address.street;
+    }
+
+    if (neighborhoodInput && address.neighborhood) {
+      neighborhoodInput.value = address.neighborhood;
+    }
+
+    if (addressStateSelect && address.state) {
+      const normalizedState = address.state.toUpperCase();
+      const optionExists = Array.from(addressStateSelect.options || []).some(
+        (option) => option.value === normalizedState,
+      );
+
+      if (optionExists) {
+        addressStateSelect.value = normalizedState;
+      }
+    }
+
+    if (addressCitySelect && address.city) {
+      addressCitySelect.setAttribute('data-selected-city', address.city);
+
+      if (addressStateSelect && addressStateSelect.value) {
+        await loadCities(addressStateSelect, addressCitySelect, address.city);
+      } else {
+        populateCities(addressCitySelect, [address.city], address.city);
+      }
+    }
+  };
+
+  const fetchPostalCodeAddress = async (postalCodeDigits, signal) => {
+    const providers = [
+      {
+        url: `https://viacep.com.br/ws/${postalCodeDigits}/json/`,
+        map: (data) => {
+          if (!data || data.erro) {
+            return null;
+          }
+
+          return {
+            street: typeof data.logradouro === 'string' ? data.logradouro.trim() : '',
+            neighborhood: typeof data.bairro === 'string' ? data.bairro.trim() : '',
+            city: typeof data.localidade === 'string' ? data.localidade.trim() : '',
+            state: typeof data.uf === 'string' ? data.uf.trim() : '',
+          };
+        },
+      },
+      {
+        url: `https://brasilapi.com.br/api/cep/v2/${postalCodeDigits}`,
+        map: (data) => {
+          if (!data || data.errors) {
+            return null;
+          }
+
+          return {
+            street: typeof data.street === 'string' ? data.street.trim() : '',
+            neighborhood: typeof data.neighborhood === 'string' ? data.neighborhood.trim() : '',
+            city: typeof data.city === 'string' ? data.city.trim() : '',
+            state: typeof data.state === 'string' ? data.state.trim() : '',
+          };
+        },
+      },
+    ];
+
+    let lastError = null;
+
+    for (const provider of providers) {
+      try {
+        const data = await fetchJsonWithTimeout(provider.url, requestTimeoutMs, signal);
+        const address = provider.map(data);
+
+        if (address) {
+          return address;
+        }
+      } catch (error) {
+        lastError = error;
+
+        if (signal && signal.aborted) {
+          throw error;
+        }
+      }
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
+
+    return null;
+  };
+
+  const lookupPostalCode = async (force = false) => {
+    if (!postalCodeInput) {
+      return;
+    }
+
+    const postalCodeDigits = sanitizeDigits(postalCodeInput.value);
+    if (postalCodeDigits.length !== postalCodeLookupMinLength) {
+      if (force && postalCodeDigits.length > 0) {
+        setPostalCodeStatus('Informe um CEP completo com 8 dígitos.');
+      } else if (postalCodeDigits.length === 0) {
+        setPostalCodeStatus('');
+      }
+      return;
+    }
+
+    const addressAlreadyFilled = Boolean(
+      (streetAddressInput && streetAddressInput.value.trim())
+      || (neighborhoodInput && neighborhoodInput.value.trim())
+      || (addressCitySelect && addressCitySelect.value.trim())
+      || (addressStateSelect && addressStateSelect.value.trim()),
+    );
+
+    if (!force && postalCodeDigits === lastPostalCodeLookup && addressAlreadyFilled) {
+      return;
+    }
+
+    if (postalCodeLookupController) {
+      postalCodeLookupController.abort();
+    }
+
+    postalCodeLookupController = new AbortController();
+    const lookupController = postalCodeLookupController;
+    setPostalCodeStatus('Consultando CEP...');
+
+    try {
+      const address = await fetchPostalCodeAddress(postalCodeDigits, lookupController.signal);
+
+      if (!address) {
+        setPostalCodeStatus('CEP não encontrado. Preencha o endereço manualmente.');
+        return;
+      }
+
+      await fillAddressFromPostalCode(address);
+      lastPostalCodeLookup = postalCodeDigits;
+      setPostalCodeStatus('Endereço preenchido automaticamente a partir do CEP.');
+    } catch (error) {
+      if (lookupController.signal.aborted) {
+        return;
+      }
+
+      setPostalCodeStatus('Não foi possível consultar o CEP agora. Você pode preencher manualmente.');
+    } finally {
+      if (postalCodeLookupController === lookupController) {
+        postalCodeLookupController = null;
+      }
+    }
+  };
+
+  const initPostalCodeLookup = () => {
+    if (!postalCodeInput) {
+      return;
+    }
+
+    postalCodeInput.addEventListener('blur', () => {
+      lookupPostalCode(true);
+    });
+
+    postalCodeInput.addEventListener('change', () => {
+      lookupPostalCode(true);
+    });
+
+    postalCodeInput.addEventListener('input', () => {
+      if (sanitizeDigits(postalCodeInput.value).length < postalCodeLookupMinLength) {
+        lastPostalCodeLookup = '';
+        setPostalCodeStatus('');
+      }
+    });
+
+    const postalCodeDigits = sanitizeDigits(postalCodeInput.value);
+    const addressMissing = !(
+      (streetAddressInput && streetAddressInput.value.trim())
+      && (neighborhoodInput && neighborhoodInput.value.trim())
+      && (addressCitySelect && addressCitySelect.value.trim())
+      && (addressStateSelect && addressStateSelect.value.trim())
+    );
+
+    if (postalCodeDigits.length === postalCodeLookupMinLength && addressMissing) {
+      lookupPostalCode(false);
+    }
+  };
+
   applyPhoneMask(phoneMobileInput, formatMobilePhone);
   applyPhoneMask(phoneLandlineInput, formatLandlinePhone);
   applyPhoneMask(cpfInput, formatCpf);
   applyPhoneMask(postalCodeInput, formatPostalCode);
-  initCityCascade();
+  initCityCascade(birthStateSelect, birthCitySelect);
+  initCityCascade(addressStateSelect, addressCitySelect);
   initPhotoPreview();
+  initPostalCodeLookup();
 })();

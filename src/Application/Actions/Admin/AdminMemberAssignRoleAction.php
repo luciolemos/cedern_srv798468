@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Application\Support\InstitutionalEmailTemplate;
+use App\Application\Support\SmtpSettings;
 use App\Domain\Member\MemberAuthRepository;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -48,6 +49,18 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         'efetivo',
     ];
 
+    private const ASSOCIATION_STATUS_OPTIONS = [
+        'applicant',
+        'member',
+        'former',
+    ];
+
+    private const ACCOUNT_STATUS_OPTIONS = [
+        'pending',
+        'active',
+        'blocked',
+    ];
+
     private MemberAuthRepository $memberAuthRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
@@ -72,6 +85,23 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $memberType = in_array($memberTypeInput, self::MEMBER_TYPE_OPTIONS, true)
             ? $memberTypeInput
             : null;
+        $associationStatusInput = strtolower(trim((string) ($body['association_status'] ?? '')));
+        $hasAssociationStatusInput = $associationStatusInput !== '';
+        $associationStatus = in_array($associationStatusInput, self::ASSOCIATION_STATUS_OPTIONS, true)
+            ? $associationStatusInput
+            : null;
+        $accountStatusInput = strtolower(trim((string) ($body['account_status'] ?? '')));
+        $hasAccountStatusInput = $accountStatusInput !== '';
+        $accountStatus = in_array($accountStatusInput, self::ACCOUNT_STATUS_OPTIONS, true)
+            ? $accountStatusInput
+            : null;
+        $isContributorInput = trim((string) ($body['is_contributor'] ?? ''));
+        $hasContributorInput = $isContributorInput !== '';
+        $isContributor = match ($isContributorInput) {
+            '1' => true,
+            '0' => false,
+            default => null,
+        };
 
         if ($id <= 0) {
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-role');
@@ -83,6 +113,18 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
 
         if ($hasMemberTypeInput && $memberType === null) {
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-member-type');
+        }
+
+        if ($hasAssociationStatusInput && $associationStatus === null) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-association-status');
+        }
+
+        if ($hasAccountStatusInput && $accountStatus === null) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-account-status');
+        }
+
+        if ($hasContributorInput && $isContributor === null) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-contributor-choice');
         }
 
         try {
@@ -100,13 +142,56 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             return $this->redirectWithStatus($response, $redirectTarget, 'assign-error');
         }
 
-        $shouldSendApprovalEmail = strtolower(trim((string) ($currentUser['status'] ?? ''))) === 'pending';
+        if ($associationStatus === null) {
+            $associationStatus = strtolower(trim((string) ($currentUser['association_status'] ?? '')));
+            if (!in_array($associationStatus, self::ASSOCIATION_STATUS_OPTIONS, true)) {
+                $associationStatus = strtolower(trim((string) ($currentUser['status'] ?? ''))) === 'pending'
+                    ? 'applicant'
+                    : 'member';
+            }
+        }
 
-        if ($roleId <= 0) {
+        if ($accountStatus === null) {
+            $accountStatus = strtolower(trim((string) ($currentUser['status'] ?? '')));
+            if (!in_array($accountStatus, self::ACCOUNT_STATUS_OPTIONS, true)) {
+                $accountStatus = 'active';
+            }
+        }
+
+        if ($isContributor === null) {
+            $isContributor = (int) ($currentUser['is_contributor'] ?? 0) === 1;
+        }
+
+        if ($memberType === null) {
+            $memberType = $this->nullableText($currentUser['member_type'] ?? null);
+        }
+
+        $normalizedState = $this->normalizeAdministrativeState(
+            $memberType,
+            $institutionalRole,
+            $associationStatus,
+            $isContributor,
+            $accountStatus
+        );
+        $memberType = $normalizedState['member_type'];
+        $institutionalRole = $normalizedState['institutional_role'];
+        $associationStatus = $normalizedState['association_status'];
+        $isContributor = $normalizedState['is_contributor'];
+        $accountStatus = $normalizedState['status'];
+
+        $shouldSendApprovalEmail = strtolower(trim((string) ($currentUser['status'] ?? ''))) === 'pending'
+            && $associationStatus === 'member'
+            && $accountStatus === 'active';
+
+        if ($associationStatus === 'member' && $roleId <= 0) {
             $roleId = (int) ($currentUser['role_id'] ?? 0);
         }
 
-        if ($roleId <= 0) {
+        if ($associationStatus !== 'member') {
+            $roleId = 0;
+        }
+
+        if ($associationStatus === 'member' && $roleId <= 0) {
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-role');
         }
 
@@ -131,13 +216,25 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         }
 
         try {
-            $this->memberAuthRepository->approveAndAssignRole($id, $roleId, $institutionalRole, $memberType);
+            $this->memberAuthRepository->approveAndAssignRole(
+                $id,
+                $roleId,
+                $institutionalRole,
+                $memberType,
+                $associationStatus,
+                $isContributor,
+                $accountStatus,
+                $this->resolveActorUserId()
+            );
         } catch (Throwable $exception) {
             $this->logger->error('Falha ao aprovar/atribuir papel de usuário.', [
                 'user_id' => $id,
                 'role_id' => $roleId,
                 'institutional_role' => $institutionalRole,
                 'member_type' => $memberType,
+                'association_status' => $associationStatus,
+                'is_contributor' => $isContributor,
+                'account_status' => $accountStatus,
                 'exception' => $exception,
             ]);
 
@@ -151,7 +248,8 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
                     (string) ($currentUser['email'] ?? ''),
                     $this->resolveRoleName($roleId, $currentUser),
                     $institutionalRole ?: $this->nullableText($currentUser['institutional_role'] ?? null),
-                    $memberType ?: $this->nullableText($currentUser['member_type'] ?? null)
+                    $memberType ?: $this->nullableText($currentUser['member_type'] ?? null),
+                    $isContributor
                 );
             } catch (Throwable $exception) {
                 $this->logger->warning('Usuário aprovado, mas falhou o envio do e-mail de liberação de acesso.', [
@@ -173,7 +271,8 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         string $email,
         ?string $roleName,
         ?string $institutionalRole,
-        ?string $memberType
+        ?string $memberType,
+        bool $isContributor
     ): void {
         $smtpHost = trim((string) ($_ENV['MAIL_HOST'] ?? 'smtp.hostinger.com'));
         $smtpPort = (int) ($_ENV['MAIL_PORT'] ?? 465);
@@ -216,6 +315,9 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             $detailLines[] = '<p style="margin:0 0 8px;"><strong>Tipo de sócio:</strong> '
                 . htmlspecialchars($memberTypeLabel, ENT_QUOTES, 'UTF-8') . '</p>';
         }
+
+        $detailLines[] = '<p style="margin:0 0 8px;"><strong>Contribuição mensal:</strong> '
+            . htmlspecialchars($isContributor ? 'Participa da rotina financeira' : 'Sem contribuição vinculada', ENT_QUOTES, 'UTF-8') . '</p>';
 
         $detailLines[] = '<p style="margin:0;"><strong>Função CEDE:</strong> '
             . htmlspecialchars($normalizedInstitutionalRole ?? 'Não definida', ENT_QUOTES, 'UTF-8') . '</p>';
@@ -275,6 +377,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             . "E-mail de acesso: {$normalizedEmail}\n"
             . "Perfil liberado: {$resolvedRoleName}\n"
             . ($memberTypeLabel !== null ? "Tipo de sócio: {$memberTypeLabel}\n" : '')
+            . 'Contribuição mensal: ' . ($isContributor ? 'Participa da rotina financeira' : 'Sem contribuição vinculada') . "\n"
             . "Função CEDE: " . ($normalizedInstitutionalRole ?? 'Não definida') . "\n\n"
             . "Entre usando o mesmo e-mail e a senha cadastrados.\n"
             . "Área do membro: {$memberLoginUrl}\n"
@@ -307,7 +410,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $mailer->Username = $smtpUser;
         $mailer->Password = $smtpPass;
         $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mailer->SMTPSecure = SmtpSettings::resolveConfiguredEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 
@@ -376,6 +479,85 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @return array{
+     *     member_type: ?string,
+     *     institutional_role: ?string,
+     *     association_status: string,
+     *     is_contributor: bool,
+     *     status: string
+     * }
+     */
+    private function normalizeAdministrativeState(
+        ?string $memberType,
+        ?string $institutionalRole,
+        ?string $associationStatus,
+        ?bool $isContributor,
+        ?string $accountStatus
+    ): array {
+        $normalizedMemberType = $this->nullableText($memberType);
+        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedAssociationStatus = strtolower(trim((string) $associationStatus));
+        if (!in_array($normalizedAssociationStatus, self::ASSOCIATION_STATUS_OPTIONS, true)) {
+            $normalizedAssociationStatus = 'member';
+        }
+
+        $normalizedAccountStatus = strtolower(trim((string) $accountStatus));
+        if (!in_array($normalizedAccountStatus, self::ACCOUNT_STATUS_OPTIONS, true)) {
+            $normalizedAccountStatus = 'active';
+        }
+
+        $normalizedContributor = $isContributor;
+        if ($normalizedContributor === null) {
+            $normalizedContributor = $normalizedMemberType !== null;
+        }
+
+        if ($normalizedAssociationStatus === 'applicant') {
+            return [
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'applicant',
+                'is_contributor' => false,
+                'status' => 'pending',
+            ];
+        }
+
+        if ($normalizedAssociationStatus === 'former') {
+            return [
+                'member_type' => null,
+                'institutional_role' => null,
+                'association_status' => 'former',
+                'is_contributor' => false,
+                'status' => 'blocked',
+            ];
+        }
+
+        if (!in_array($normalizedAccountStatus, ['active', 'blocked'], true)) {
+            $normalizedAccountStatus = 'active';
+        }
+
+        if ($normalizedAccountStatus !== 'active') {
+            $normalizedInstitutionalRole = null;
+        }
+
+        return [
+            'member_type' => $normalizedMemberType,
+            'institutional_role' => $normalizedInstitutionalRole,
+            'association_status' => 'member',
+            'is_contributor' => $normalizedContributor,
+            'status' => $normalizedAccountStatus,
+        ];
+    }
+
+    private function resolveActorUserId(): ?int
+    {
+        $this->ensureSessionStarted();
+
+        $memberUserId = (int) ($_SESSION['member_user_id'] ?? 0);
+
+        return $memberUserId > 0 ? $memberUserId : null;
     }
 
     private function resolveEmbeddedLogoSrc(): ?string

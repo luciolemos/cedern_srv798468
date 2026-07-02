@@ -8,7 +8,7 @@
   <section class="nc-section" aria-label="Cadastro do usuário">
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Associados CEDE</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Pessoas CEDE</a>
       {% if view_user is not empty %}
         <a class="nc-btn nc-btn-secondary" href="/painel/usuarios/{{ view_user.id }}/resumo">Editar acesso</a>
       {% endif %}
@@ -29,16 +29,24 @@
           </div>
           <div class="nc-member-header-text">
             <h3>{{ view_user.full_name|default(view_user.email|default('Usuário')) }}</h3>
-            <p>Dados principais do cadastro e identificação administrativa do membro.</p>
+            <p>Dados principais do cadastro e identificação administrativa desta pessoa.</p>
           </div>
         </div>
 
         <dl class="nc-member-grid">
           <div>
-            <dt>Status</dt>
+            <dt>Status de acesso</dt>
             <dd>
               <span class="nc-admin-featured-flag{{ view_user.status_key|default('pending') == 'active' ? ' is-on' : ' is-off' }}">{{ view_user.status_label|default('Pendente') }}</span>
             </dd>
+          </div>
+          <div>
+            <dt>Vínculo associativo</dt>
+            <dd>{{ view_user.association_status_label|default('Solicitante') }}</dd>
+          </div>
+          <div>
+            <dt>Contribuinte</dt>
+            <dd>{{ view_user.contributor_label|default('Não') }}</dd>
           </div>
           <div>
             <dt>Perfil no sistema</dt>
@@ -93,7 +101,7 @@
             <dd>{{ view_user.postal_code_display|default('-') }}</dd>
           </div>
           <div>
-            <dt>Vencimento preferido</dt>
+            <dt>Vencimento</dt>
             <dd>{{ view_user.preferred_due_day_display|default('Não definido') }}</dd>
           </div>
           <div>
@@ -125,7 +133,7 @@
 
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="95">
         <h3>Conta e conformidade</h3>
-        <p class="nc-member-subtitle">Indicadores administrativos vinculados ao cadastro do membro.</p>
+        <p class="nc-member-subtitle">Indicadores administrativos vinculados ao cadastro desta pessoa.</p>
 
         <dl class="nc-member-grid">
           <div>
@@ -145,6 +153,31 @@
             <dd>{{ view_user.profile_photo_path|default('') ? 'Cadastrada' : 'Não cadastrada' }}</dd>
           </div>
         </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="108">
+        <h3>Histórico administrativo</h3>
+        <p class="nc-member-subtitle">Registro das mudanças de aprovação, vínculo, contribuição e bloqueio desta conta.</p>
+
+        {% set view_user_history = view_user_history|default([]) %}
+        {% if view_user_history|length == 0 %}
+          <p>{{ view_user_history_error|default('Nenhum evento administrativo registrado até o momento.') }}</p>
+        {% else %}
+          <div class="nc-member-history-list">
+            {% for history_event in view_user_history %}
+              <article class="nc-member-history-item">
+                <p><strong>{{ history_event.created_at_display|default('Não registrado') }}</strong> · {{ history_event.acted_by_user_display|default('Sistema') }}</p>
+                <p>{{ history_event.event_description|default('Atualização administrativa registrada.') }}</p>
+                {% if history_event.current_state_summary|default('') %}
+                  <p><strong>Estado resultante:</strong> {{ history_event.current_state_summary }}</p>
+                {% endif %}
+                {% if history_event.rules_applied_display|default('') %}
+                  <p><strong>Regras aplicadas:</strong> {{ history_event.rules_applied_display }}</p>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% endif %}
       </article>
     {% endif %}
   </section>
