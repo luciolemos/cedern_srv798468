@@ -12,6 +12,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminPatrimonyAssetViewPageAction extends AdminPatrimonyAssetViewPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminPatrimonyAssetViewPageActionTest extends TestCase
 {
     public function testRendersAssetSummaryWithHistoryCollections(): void
@@ -67,7 +86,7 @@ class AdminPatrimonyAssetViewPageActionTest extends TestCase
         array $maintenances,
         array $disposals,
         array $attachments
-    ): AdminPatrimonyAssetViewPageAction {
+    ): TestableAdminPatrimonyAssetViewPageAction {
         $repositoryProphecy = $this->prophesize(PatrimonyRepository::class);
         $repositoryProphecy
             ->findAssetByIdForAdmin(7)
@@ -103,26 +122,10 @@ class AdminPatrimonyAssetViewPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class (
+        return new TestableAdminPatrimonyAssetViewPageAction(
             $logger,
             $twig,
             $repositoryProphecy->reveal()
-        ) extends AdminPatrimonyAssetViewPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        );
     }
 }

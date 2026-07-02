@@ -12,6 +12,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminBookshopBookListPageAction extends AdminBookshopBookListPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminBookshopBookListPageActionTest extends TestCase
 {
     public function testAppliesShelfAndLevelFilters(): void
@@ -119,7 +138,11 @@ class AdminBookshopBookListPageActionTest extends TestCase
      * @param array<int, array<string, mixed>> $categories
      * @param array<int, array<string, mixed>> $genres
      */
-    private function createAction(array $books, array $categories, array $genres): AdminBookshopBookListPageAction
+    private function createAction(
+        array $books,
+        array $categories,
+        array $genres
+    ): TestableAdminBookshopBookListPageAction
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -143,27 +166,11 @@ class AdminBookshopBookListPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class (
+        return new TestableAdminBookshopBookListPageAction(
             $logger,
             $twig,
             $bookshopRepositoryProphecy->reveal()
-        ) extends AdminBookshopBookListPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        );
     }
 
     private function buildBook(

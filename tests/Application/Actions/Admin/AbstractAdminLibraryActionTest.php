@@ -12,6 +12,54 @@ use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAbstractAdminLibraryAction extends AbstractAdminLibraryAction
+{
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        return $response;
+    }
+
+    public function exposedResolveLibraryUploadDirectory(): string
+    {
+        return $this->resolveLibraryUploadDirectory();
+    }
+
+    public function exposedResolveLibraryUploadPublicPrefix(): string
+    {
+        return $this->resolveLibraryUploadPublicPrefix();
+    }
+
+    public function exposedBuildManagedLibraryPdfRelativePath(string $fileName): string
+    {
+        return $this->buildManagedLibraryPdfRelativePath($fileName);
+    }
+
+    public function exposedResolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedLibraryPdfAbsolutePath($relativePath);
+    }
+
+    public function exposedResolveLibraryCoverUploadDirectory(): string
+    {
+        return $this->resolveLibraryCoverUploadDirectory();
+    }
+
+    public function exposedResolveLibraryCoverUploadPublicPrefix(): string
+    {
+        return $this->resolveLibraryCoverUploadPublicPrefix();
+    }
+
+    public function exposedBuildManagedLibraryCoverRelativePath(string $fileName): string
+    {
+        return $this->buildManagedLibraryCoverRelativePath($fileName);
+    }
+
+    public function exposedResolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedLibraryCoverAbsolutePath($relativePath);
+    }
+}
+
 class AbstractAdminLibraryActionTest extends TestCase
 {
     /** @var array<string, string|null> */
@@ -145,7 +193,7 @@ class AbstractAdminLibraryActionTest extends TestCase
         ];
     }
 
-    private function createAction(): AbstractAdminLibraryAction
+    private function createAction(): TestableAbstractAdminLibraryAction
     {
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -157,51 +205,6 @@ class AbstractAdminLibraryActionTest extends TestCase
 
         $libraryRepository = $this->prophesize(LibraryRepository::class)->reveal();
 
-        return new class ($logger, $twig, $libraryRepository) extends AbstractAdminLibraryAction {
-            public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-            {
-                return $response;
-            }
-
-            public function exposedResolveLibraryUploadDirectory(): string
-            {
-                return $this->resolveLibraryUploadDirectory();
-            }
-
-            public function exposedResolveLibraryUploadPublicPrefix(): string
-            {
-                return $this->resolveLibraryUploadPublicPrefix();
-            }
-
-            public function exposedBuildManagedLibraryPdfRelativePath(string $fileName): string
-            {
-                return $this->buildManagedLibraryPdfRelativePath($fileName);
-            }
-
-            public function exposedResolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
-            {
-                return $this->resolveManagedLibraryPdfAbsolutePath($relativePath);
-            }
-
-            public function exposedResolveLibraryCoverUploadDirectory(): string
-            {
-                return $this->resolveLibraryCoverUploadDirectory();
-            }
-
-            public function exposedResolveLibraryCoverUploadPublicPrefix(): string
-            {
-                return $this->resolveLibraryCoverUploadPublicPrefix();
-            }
-
-            public function exposedBuildManagedLibraryCoverRelativePath(string $fileName): string
-            {
-                return $this->buildManagedLibraryCoverRelativePath($fileName);
-            }
-
-            public function exposedResolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
-            {
-                return $this->resolveManagedLibraryCoverAbsolutePath($relativePath);
-            }
-        };
+        return new TestableAbstractAdminLibraryAction($logger, $twig, $libraryRepository);
     }
 }

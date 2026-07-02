@@ -12,6 +12,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminFinanceSalesPageAction extends AdminFinanceSalesPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminFinanceSalesPageActionTest extends TestCase
 {
     protected function setUp(): void
@@ -173,7 +192,7 @@ class AdminFinanceSalesPageActionTest extends TestCase
     /**
      * @param array<int, array<string, mixed>> $sales
      */
-    private function createAction(array $sales): AdminFinanceSalesPageAction
+    private function createAction(array $sales): TestableAdminFinanceSalesPageAction
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -189,27 +208,11 @@ class AdminFinanceSalesPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class (
+        return new TestableAdminFinanceSalesPageAction(
             $logger,
             $twig,
             $bookshopRepositoryProphecy->reveal()
-        ) extends AdminFinanceSalesPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        );
     }
 
     private function buildSale(

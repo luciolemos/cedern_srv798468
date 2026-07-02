@@ -12,6 +12,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminFinanceSaleViewPageAction extends AdminFinanceSaleViewPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminFinanceSaleViewPageActionTest extends TestCase
 {
     public function testRendersSaleUsingFinanceContext(): void
@@ -52,7 +71,7 @@ class AdminFinanceSaleViewPageActionTest extends TestCase
     /**
      * @param array<string, mixed>|null $sale
      */
-    private function createAction(?array $sale): AdminFinanceSaleViewPageAction
+    private function createAction(?array $sale): TestableAdminFinanceSaleViewPageAction
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -70,26 +89,10 @@ class AdminFinanceSaleViewPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class (
+        return new TestableAdminFinanceSaleViewPageAction(
             $logger,
             $twig,
             $bookshopRepositoryProphecy->reveal()
-        ) extends AdminFinanceSaleViewPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        );
     }
 }

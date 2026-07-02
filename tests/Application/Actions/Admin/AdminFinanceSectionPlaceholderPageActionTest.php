@@ -11,6 +11,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminFinanceSectionPlaceholderPageAction extends AdminFinanceSectionPlaceholderPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminFinanceSectionPlaceholderPageActionTest extends TestCase
 {
     public function testRendersPlaceholderForCantina(): void
@@ -41,7 +60,7 @@ class AdminFinanceSectionPlaceholderPageActionTest extends TestCase
         $this->assertSame('/painel/financas', $response->getHeaderLine('Location'));
     }
 
-    private function createAction(): AdminFinanceSectionPlaceholderPageAction
+    private function createAction(): TestableAdminFinanceSectionPlaceholderPageAction
     {
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -51,22 +70,6 @@ class AdminFinanceSectionPlaceholderPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class ($logger, $twig) extends AdminFinanceSectionPlaceholderPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        return new TestableAdminFinanceSectionPlaceholderPageAction($logger, $twig);
     }
 }

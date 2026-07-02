@@ -12,6 +12,25 @@ use Slim\Psr7\Response;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAdminBookshopStockMovementListPageAction extends AdminBookshopStockMovementListPageAction
+{
+    public string $capturedTemplate = '';
+
+    /** @var array<string, mixed> */
+    public array $capturedData = [];
+
+    protected function renderPage(
+        ResponseInterface $response,
+        string $template,
+        array $data = []
+    ): ResponseInterface {
+        $this->capturedTemplate = $template;
+        $this->capturedData = $data;
+
+        return $response;
+    }
+}
+
 class AdminBookshopStockMovementListPageActionTest extends TestCase
 {
     protected function setUp(): void
@@ -130,7 +149,7 @@ class AdminBookshopStockMovementListPageActionTest extends TestCase
     /**
      * @param array<int, array<string, mixed>> $movements
      */
-    private function createAction(array $movements): AdminBookshopStockMovementListPageAction
+    private function createAction(array $movements): TestableAdminBookshopStockMovementListPageAction
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -146,27 +165,11 @@ class AdminBookshopStockMovementListPageActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        return new class (
+        return new TestableAdminBookshopStockMovementListPageAction(
             $logger,
             $twig,
             $bookshopRepositoryProphecy->reveal()
-        ) extends AdminBookshopStockMovementListPageAction {
-            public string $capturedTemplate = '';
-
-            /** @var array<string, mixed> */
-            public array $capturedData = [];
-
-            protected function renderPage(
-                ResponseInterface $response,
-                string $template,
-                array $data = []
-            ): ResponseInterface {
-                $this->capturedTemplate = $template;
-                $this->capturedData = $data;
-
-                return $response;
-            }
-        };
+        );
     }
 
     private function buildMovement(
