@@ -160,11 +160,11 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
         $user['association_status'] = array_key_exists($associationStatus, self::ASSOCIATION_STATUS_OPTIONS)
             ? $associationStatus
             : (strtolower(trim((string) ($user['status'] ?? ''))) === 'pending' ? 'applicant' : 'member');
-        $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']] ?? 'Solicitante';
+        $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']];
         $user['status'] = array_key_exists(strtolower(trim((string) ($user['status'] ?? ''))), self::ACCOUNT_STATUS_OPTIONS)
             ? strtolower(trim((string) ($user['status'] ?? '')))
             : 'pending';
-        $user['status_label'] = self::ACCOUNT_STATUS_OPTIONS[$user['status']] ?? 'Pendente';
+        $user['status_label'] = self::ACCOUNT_STATUS_OPTIONS[$user['status']];
         $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
         $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
         $user['birth_date_display'] = $this->formatDate((string) ($user['birth_date'] ?? ''));

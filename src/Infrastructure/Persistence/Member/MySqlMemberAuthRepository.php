@@ -607,10 +607,10 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'address_city' => $this->nullableText($data['address_city'] ?? null),
             'address_state' => $this->nullableText($data['address_state'] ?? null),
             'preferred_due_day' => ($data['preferred_due_day'] ?? null) !== null
-                ? (int) ($data['preferred_due_day'] ?? 0)
+                ? (int) $data['preferred_due_day']
                 : null,
             'contribution_amount' => ($data['contribution_amount'] ?? null) !== null
-                ? (string) ($data['contribution_amount'] ?? '')
+                ? (string) $data['contribution_amount']
                 : null,
             'contribution_plan_label' => $this->nullableText($data['contribution_plan_label'] ?? null),
             'preferred_payment_method' => $this->nullableText($data['preferred_payment_method'] ?? null),

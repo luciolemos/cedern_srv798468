@@ -130,7 +130,7 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $user['association_status'] = array_key_exists($associationStatus, self::ASSOCIATION_STATUS_OPTIONS)
             ? $associationStatus
             : ($statusKey === 'pending' ? 'applicant' : 'member');
-        $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']] ?? 'Solicitante';
+        $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']];
         $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
         $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
         $user['role_name_display'] = $this->resolveRoleNameDisplay($user, $roleName);

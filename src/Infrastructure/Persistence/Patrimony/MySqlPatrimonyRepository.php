@@ -1326,7 +1326,7 @@ class MySqlPatrimonyRepository implements PatrimonyRepository
 
     private function formatQuantity(float $value): string
     {
-        if ((int) $value === $value) {
+        if (abs($value - (float) (int) $value) < 0.00001) {
             return (string) (int) $value;
         }
 

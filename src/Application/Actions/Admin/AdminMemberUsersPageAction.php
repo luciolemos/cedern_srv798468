@@ -229,7 +229,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    strtolower(trim((string) ($user['association_status'] ?? ''))) === $selectedAssociationStatusFilter
+                    strtolower(trim((string) $user['association_status'])) === $selectedAssociationStatusFilter
             ));
         }
 
@@ -237,7 +237,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    ((int) ($user['is_contributor'] ?? 0) === 1) === ($selectedContributorFilter === 'yes')
+                    ((int) $user['is_contributor'] === 1) === ($selectedContributorFilter === 'yes')
             ));
         }
 
@@ -266,11 +266,11 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
                         (string) ($user['status'] ?? ''),
-                        (string) ($user['role_name_display'] ?? $user['role_name'] ?? ''),
+                        (string) $user['role_name_display'],
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
-                        (string) ($user['association_status_label'] ?? ''),
-                        (string) ($user['contributor_label'] ?? ''),
+                        (string) $user['association_status_label'],
+                        (string) $user['contributor_label'],
                     ]);
 
                     return stripos(strtolower($haystack), $normalizedSearch) !== false;

@@ -75,7 +75,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             $users,
             static fn (array $user): bool =>
                 trim((string) ($user['institutional_role'] ?? '')) !== ''
-                && strtolower(trim((string) ($user['association_status'] ?? 'member'))) === 'member'
+                && strtolower(trim((string) $user['association_status'])) === 'member'
         ));
 
         $institutionalRoleOptions = array_values(array_unique(array_map(
@@ -123,7 +123,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['email'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
-                        (string) ($user['association_status'] ?? ''),
+                        (string) $user['association_status'],
                         (string) ($user['role_name'] ?? ''),
                         (string) ($user['status'] ?? ''),
                     ]);

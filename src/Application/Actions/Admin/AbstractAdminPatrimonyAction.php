@@ -440,27 +440,11 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         }
     }
 
-    private function resolvePatrimonyDocumentUploadDirectory(): string
-    {
-        return $this->resolveConfiguredUploadDirectory(
-            'PATRIMONY_DOCUMENT_UPLOAD_DIR',
-            self::DEFAULT_PATRIMONY_DOC_UPLOAD_DIR
-        );
-    }
-
     private function resolvePatrimonyDocumentUploadPublicPrefix(): string
     {
         return $this->resolveConfiguredUploadPublicPrefix(
             'PATRIMONY_DOCUMENT_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_PATRIMONY_DOC_UPLOAD_PUBLIC_PREFIX
-        );
-    }
-
-    private function resolvePatrimonyImageUploadDirectory(): string
-    {
-        return $this->resolveConfiguredUploadDirectory(
-            'PATRIMONY_IMAGE_UPLOAD_DIR',
-            self::DEFAULT_PATRIMONY_IMAGE_UPLOAD_DIR
         );
     }
 
@@ -662,17 +646,6 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         return is_writable($directory);
     }
 
-    private function resolveConfiguredUploadDirectory(string $envKey, string $defaultDirectory): string
-    {
-        $configuredDirectory = $this->resolveOptionalConfiguredUploadDirectory($envKey);
-
-        if ($configuredDirectory !== null) {
-            return $configuredDirectory;
-        }
-
-        return $this->resolveDirectoryPath($defaultDirectory);
-    }
-
     private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
     {
         $configuredPrefix = $this->resolveOptionalConfiguredUploadPublicPrefix($envKey);
@@ -751,5 +724,4 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         return str_starts_with($path, '/')
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
-
 }

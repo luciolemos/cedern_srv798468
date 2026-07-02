@@ -161,7 +161,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $row['status_notes'] = $statusNotes;
         $row['effective_charge_status'] = $effectiveChargeStatus;
         $row['payment_method_key'] = array_key_exists($paymentMethodKey, self::PAYMENT_METHOD_LABELS) ? $paymentMethodKey : 'manual';
-        $row['payment_method_display'] = self::PAYMENT_METHOD_LABELS[$row['payment_method_key']] ?? 'Pagamento manual';
+        $row['payment_method_display'] = self::PAYMENT_METHOD_LABELS[$row['payment_method_key']];
         $row['member_type_label'] = trim((string) ($row['member_type_label'] ?? '')) !== ''
             ? (string) $row['member_type_label']
             : 'Não definido';

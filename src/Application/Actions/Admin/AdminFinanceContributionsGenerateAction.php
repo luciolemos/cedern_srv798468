@@ -19,17 +19,20 @@ class AdminFinanceContributionsGenerateAction extends AbstractAdminFinanceContri
                 $competence,
                 $this->resolveActorUserId()
             );
+            $created = $result['created'];
+            $skippedExisting = $result['skipped_existing'];
+            $skippedIncompleteProfile = $result['skipped_incomplete_profile'];
 
             $message = sprintf(
                 'Competência %s: %d cobrança%s criada%s, %d já existente%s e %d perfil%s com configuração financeira pendente.',
                 $this->formatCompetenceLabel($competence),
-                (int) ($result['created'] ?? 0),
-                (int) ($result['created'] ?? 0) === 1 ? '' : 's',
-                (int) ($result['created'] ?? 0) === 1 ? '' : 's',
-                (int) ($result['skipped_existing'] ?? 0),
-                (int) ($result['skipped_existing'] ?? 0) === 1 ? '' : 's',
-                (int) ($result['skipped_incomplete_profile'] ?? 0),
-                (int) ($result['skipped_incomplete_profile'] ?? 0) === 1 ? '' : 's'
+                $created,
+                $created === 1 ? '' : 's',
+                $created === 1 ? '' : 's',
+                $skippedExisting,
+                $skippedExisting === 1 ? '' : 's',
+                $skippedIncompleteProfile,
+                $skippedIncompleteProfile === 1 ? '' : 's'
             );
 
             $this->storeSessionFlash(self::FLASH_KEY, [

@@ -48,11 +48,6 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     /**
      * @var array<int, array<string, mixed>>
      */
-    private array $contributionEvents = [];
-
-    /**
-     * @var array<int, array<string, mixed>>
-     */
     private array $userAdministrationEvents = [];
 
     private int $nextId = 1;
@@ -60,8 +55,6 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     private int $nextPasswordResetId = 1;
 
     private int $nextContributionChargeId = 1;
-
-    private int $nextContributionEventId = 1;
 
     private int $nextUserAdministrationEventId = 1;
 
@@ -259,11 +252,13 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['neighborhood'] = $this->nullableText($data['neighborhood'] ?? null);
         $this->users[$id]['address_city'] = $this->nullableText($data['address_city'] ?? null);
         $this->users[$id]['address_state'] = $this->nullableText($data['address_state'] ?? null);
-        $this->users[$id]['preferred_due_day'] = ($data['preferred_due_day'] ?? null) !== null
-            ? (int) ($data['preferred_due_day'] ?? 0)
+        $preferredDueDay = $data['preferred_due_day'] ?? null;
+        $this->users[$id]['preferred_due_day'] = $preferredDueDay !== null
+            ? (int) $preferredDueDay
             : null;
-        $this->users[$id]['contribution_amount'] = ($data['contribution_amount'] ?? null) !== null
-            ? (string) ($data['contribution_amount'] ?? '')
+        $contributionAmount = $data['contribution_amount'] ?? null;
+        $this->users[$id]['contribution_amount'] = $contributionAmount !== null
+            ? (string) $contributionAmount
             : null;
         $this->users[$id]['contribution_plan_label'] = $this->nullableText($data['contribution_plan_label'] ?? null);
         $this->users[$id]['preferred_payment_method'] = $this->nullableText($data['preferred_payment_method'] ?? null);
@@ -883,14 +878,14 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             $user,
             (string) ($user['status'] ?? '') === 'pending' ? 'applicant' : 'member'
         );
-        if ((string) ($user['association_status'] ?? '') !== 'member') {
+        if ((string) $user['association_status'] !== 'member') {
             $user['role_id'] = null;
             $user['role_key'] = '';
             $user['role_name'] = '';
         }
-        $user['association_status_label'] = $this->resolveAssociationStatusLabel((string) ($user['association_status'] ?? ''));
+        $user['association_status_label'] = $this->resolveAssociationStatusLabel((string) $user['association_status']);
         $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
-        $user['contributor_label'] = (int) ($user['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não';
+        $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
         $user['privacy_notice_version'] = $user['privacy_notice_version'] ?? null;
         $user['privacy_notice_accepted_at'] = $user['privacy_notice_accepted_at'] ?? null;
 
@@ -947,17 +942,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         ?int $actedByUserId = null,
         array $payload = []
     ): void {
-        $eventId = $this->nextContributionEventId++;
-        $this->contributionEvents[$eventId] = [
-            'id' => $eventId,
-            'charge_id' => $chargeId,
-            'member_user_id' => $memberUserId,
-            'event_type' => $eventType,
-            'event_description' => $eventDescription,
-            'acted_by_user_id' => $actedByUserId,
-            'payload_json' => $payload !== [] ? json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
-            'created_at' => date('Y-m-d H:i:s'),
-        ];
+        unset($chargeId, $memberUserId, $eventType, $eventDescription, $actedByUserId, $payload);
     }
 
     /**
