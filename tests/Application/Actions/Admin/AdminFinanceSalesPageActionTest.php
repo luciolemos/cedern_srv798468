@@ -189,6 +189,69 @@ class AdminFinanceSalesPageActionTest extends TestCase
         $this->assertSame('all', $action->capturedData['finance_sales_pagination']['page_size']);
     }
 
+    public function testBuildsExportUrlWithCurrentFilters(): void
+    {
+        $sales = [
+            $this->buildSale(1, 'VD-001', '2026-06-15 13:00:00', 'Ana', 'pix', 'Maria', 'completed', 45.0, 'Allan Kardec x1'),
+        ];
+
+        $action = $this->createAction($sales);
+        $request = $this->createRequest('GET', '/painel/financas')->withQueryParams([
+            'q' => 'ana',
+            'status_filter' => 'completed',
+            'payment_filter' => 'pix',
+            'seller_filter' => 'Maria',
+            'period_field' => 'sold_at',
+            'date_from' => '2026-06-01',
+            'date_to' => '2026-06-30',
+            'amount_min' => '40',
+            'amount_max' => '60',
+            'sort' => 'total_amount',
+            'dir' => 'asc',
+        ]);
+
+        $action($request, new Response());
+
+        $this->assertStringContainsString('/painel/financas?', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('q=ana', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('status_filter=completed', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('payment_filter=pix', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('seller_filter=Maria', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('amount_min=40.00', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('amount_max=60.00', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('sort=total_amount', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('dir=asc', $action->capturedData['finance_sales_export_csv_url']);
+        $this->assertStringContainsString('export=csv', $action->capturedData['finance_sales_export_csv_url']);
+    }
+
+    public function testExportsFilteredSalesAsCsv(): void
+    {
+        $sales = [
+            $this->buildSale(1, 'VD-001', '2026-06-15 13:00:00', 'Ana', 'pix', 'Maria', 'completed', 45.0, 'Allan Kardec x1'),
+            $this->buildSale(2, 'VD-002', '2026-06-18 15:10:00', 'Bruno', 'cash', 'João', 'cancelled', 35.0, 'Livro C x1'),
+        ];
+
+        $action = $this->createAction($sales);
+        $request = $this->createRequest('GET', '/painel/financas')->withQueryParams([
+            'payment_filter' => 'pix',
+            'export' => 'csv',
+        ]);
+
+        $response = $action($request, new Response());
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('text/csv; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('attachment; filename="financeiro-livraria-', $response->getHeaderLine('Content-Disposition'));
+        $this->assertStringContainsString('data_venda;codigo_venda;cliente;cpf;telefone;email;itens;quantidade_itens;pagamento;valor_total;valor_recebido;troco;vendedor;status;cancelada_em;cancelada_por', mb_strtolower($body));
+        $this->assertStringContainsString('VD-001', $body);
+        $this->assertStringContainsString('Ana', $body);
+        $this->assertStringContainsString('Allan Kardec x1', $body);
+        $this->assertStringContainsString('PIX', $body);
+        $this->assertStringContainsString('R$ 45,00', $body);
+        $this->assertStringNotContainsString('VD-002', $body);
+    }
+
     /**
      * @param array<int, array<string, mixed>> $sales
      */

@@ -134,14 +134,178 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
         $this->assertStringContainsString('R$ 65,50', $html);
         $this->assertStringContainsString('Em aberto', $html);
         $this->assertStringContainsString('Cobrança por e-mail autorizada', $html);
-        $this->assertStringContainsString('Enviar e-mail', $html);
-        $this->assertStringContainsString('WhatsApp', $html);
         $this->assertStringContainsString('Carlos Pereira', $html);
         $this->assertStringContainsString('Configuração pendente', $html);
-        $this->assertStringContainsString('Gerar cobranças da competência', $html);
-        $this->assertStringContainsString('/painel/financas/contribuicoes/' , $html);
+        $this->assertStringContainsString('Exportar CSV', $html);
+        $this->assertStringContainsString('Pago em', $html);
+        $this->assertStringContainsString('Forma de pagamento', $html);
+        $this->assertStringNotContainsString('Gerar cobranças da competência', $html);
+        $this->assertStringNotContainsString('Ações', $html);
+        $this->assertStringNotContainsString('Enviar e-mail', $html);
+        $this->assertStringNotContainsString('/painel/financas/contribuicoes/1/whatsapp?', $html);
+        $this->assertStringNotContainsString('Registrar recebimento', $html);
         $this->assertStringContainsString('Mostrando 1-2 de 2 registros', $html);
         $this->assertStringContainsString('Registros por página', $html);
+    }
+
+    public function testKeepsManagementButtonsVisibleForAdmin(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Admin Financeiro',
+            'email' => 'admin.financeiro@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Admin Financeiro',
+            'cpf' => '52998224725',
+            'phone_mobile' => '84999998888',
+            'preferred_due_day' => 10,
+            'contribution_amount' => '65.50',
+            'preferred_payment_method' => 'pix',
+            'billing_email_opt_in' => 1,
+            'billing_whatsapp_opt_in' => 1,
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole($userId, 4, 'Diretor de Finanças', 'efetivo', 'member', true, 'active');
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+        $_SESSION['member_authenticated'] = true;
+        $_SESSION['member_user_id'] = $userId;
+        $_SESSION['member_role_key'] = 'admin';
+        $_SESSION['member_role_name'] = 'Administrador';
+        $_SESSION['admin_authenticated'] = true;
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new class (
+            $logger,
+            $twig,
+            $memberAuthRepository
+        ) extends AdminFinanceContributionsPageAction {
+            public string $capturedTemplate = '';
+
+            /** @var array<string, mixed> */
+            public array $capturedData = [];
+
+            protected function renderPage(
+                ResponseInterface $response,
+                string $template,
+                array $data = []
+            ): ResponseInterface {
+                $this->capturedTemplate = $template;
+                $this->capturedData = $data;
+
+                return $response;
+            }
+        };
+
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes?competence=2026-07')
+            ->withQueryParams([
+                'competence' => '2026-07',
+            ]);
+
+        $response = $action($request, new Response());
+
+        $html = $twig->fetch($action->capturedTemplate, array_merge($action->capturedData, [
+            'base_url' => '',
+            'current_path' => '/painel/financas/contribuicoes',
+            'csrf_token' => 'test-token',
+            'csrf_field_name' => '_csrf',
+            'dashboard_user' => 'Administrador Financeiro',
+            'dashboard_user_photo_path' => '',
+            'dashboard_is_authenticated' => true,
+            'dashboard_is_admin_session' => true,
+            'dashboard_env_label' => 'Homologação',
+            'dashboard_env_tone' => 'test',
+            'dashboard_admin_notifications' => [],
+            'dashboard_admin_pending_users' => [],
+            'dashboard_admin_notification_count' => 0,
+            'member_is_authenticated' => true,
+            'member_name' => 'Administrador Financeiro',
+            'member_role_key' => 'admin',
+            'member_role_name' => 'Administrador',
+            'member_profile_photo_path' => '',
+        ]));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Gerar cobranças da competência', $html);
+        $this->assertStringContainsString('Ações', $html);
+        $this->assertStringContainsString('Registrar recebimento', $html);
+        $this->assertStringContainsString('Enviar e-mail', $html);
+        $this->assertStringContainsString('WhatsApp', $html);
+    }
+
+    public function testExportsFilteredContributionsAsCsv(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Helena Exportacao',
+            'email' => 'helena.exportacao@example.com',
+            'password_hash' => 'hash',
+        ]);
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Helena Exportacao',
+            'cpf' => '52998224725',
+            'phone_mobile' => '84999998888',
+            'preferred_due_day' => 10,
+            'contribution_amount' => '65.50',
+            'preferred_payment_method' => 'pix',
+            'billing_email_opt_in' => 1,
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
+        $_SESSION['member_authenticated'] = true;
+        $_SESSION['member_user_id'] = 99;
+        $_SESSION['member_role_key'] = 'finance_operator';
+        $_SESSION['member_role_name'] = 'Operador Financeiro';
+
+        $action = new AdminFinanceContributionsPageAction(
+            $logger,
+            $twig,
+            $memberAuthRepository
+        );
+
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes')
+            ->withQueryParams([
+                'competence' => '2026-07',
+                'export' => 'csv',
+            ]);
+
+        $response = $action($request, new Response());
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('text/csv; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertStringContainsString('attachment; filename="contribuicoes-2026-07-', $response->getHeaderLine('Content-Disposition'));
+        $this->assertStringContainsString('contribuinte;cpf;email;competencia;vencimento;valor;situacao;pago_em;forma_pagamento;cobranca;tipo_socio;funcao_cede;observacoes', mb_strtolower($body));
+        $this->assertStringContainsString('Helena Exportacao', $body);
+        $this->assertStringContainsString('Julho de 2026', $body);
+        $this->assertStringContainsString('R$ 65,50', $body);
     }
 
     public function testKeepsCurrentCompetenceAsPaidWhenThereIsOlderOverdueCharge(): void

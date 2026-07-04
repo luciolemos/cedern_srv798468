@@ -33,6 +33,25 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
         'cancelled_at',
     ];
 
+    private const CSV_HEADERS = [
+        'data_venda',
+        'codigo_venda',
+        'cliente',
+        'cpf',
+        'telefone',
+        'email',
+        'itens',
+        'quantidade_itens',
+        'pagamento',
+        'valor_total',
+        'valor_recebido',
+        'troco',
+        'vendedor',
+        'status',
+        'cancelada_em',
+        'cancelada_por',
+    ];
+
     public function __invoke(Request $request, Response $response): Response
     {
         $sales = [];
@@ -57,6 +76,7 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
         $dateTo = $this->normalizeDateInput($queryParams['date_to'] ?? null);
         $amountMin = $this->normalizeAmountFilter($queryParams['amount_min'] ?? null);
         $amountMax = $this->normalizeAmountFilter($queryParams['amount_max'] ?? null);
+        $exportFormat = strtolower(trim((string) ($queryParams['export'] ?? '')));
 
         $paymentOptions = $this->buildPaymentOptions($sales);
         $sellerOptions = $this->buildSellerOptions($sales);
@@ -186,6 +206,10 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
             return strnatcasecmp((string) $firstValue, (string) $secondValue) * $sortMultiplier;
         });
 
+        if ($exportFormat === 'csv') {
+            return $this->renderCsvExport($response, $sales);
+        }
+
         $totalItems = count($sales);
         $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
         $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
@@ -294,6 +318,20 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
                 'payment_methods' => $paymentOptions,
                 'sellers' => $sellerOptions,
             ],
+            'finance_sales_export_csv_url' => $basePath . '?' . http_build_query([
+                'sort' => $sortBy,
+                'dir' => $sortDirection,
+                'q' => $searchTerm,
+                'status_filter' => $statusFilter,
+                'payment_filter' => $paymentFilter,
+                'seller_filter' => $sellerFilter,
+                'period_field' => $periodField,
+                'date_from' => $dateFrom ?? '',
+                'date_to' => $dateTo ?? '',
+                'amount_min' => $this->formatAmountFilterValue($amountMin),
+                'amount_max' => $this->formatAmountFilterValue($amountMax),
+                'export' => 'csv',
+            ]),
             'finance_sales_pagination' => [
                 'current_page' => $currentPage,
                 'total_pages' => $totalPages,
@@ -313,6 +351,57 @@ class AdminFinanceSalesPageAction extends AbstractAdminBookshopAction
             'page_url' => 'https://cedern.org/painel/financas',
             'page_description' => 'Consulta financeira de vendas e cancelamentos da livraria do CEDE.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $sales
+     */
+    private function renderCsvExport(Response $response, array $sales): Response
+    {
+        $handle = fopen('php://temp', 'w+');
+        if (!is_resource($handle)) {
+            $response->getBody()->write('Falha ao preparar exportacao.');
+
+            return $response->withStatus(500);
+        }
+
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, self::CSV_HEADERS, ';');
+
+        foreach ($sales as $sale) {
+            fputcsv($handle, [
+                (string) ($sale['sold_at_label'] ?? $sale['sold_at'] ?? ''),
+                (string) ($sale['sale_code'] ?? ''),
+                (string) ($sale['customer_name_display'] ?? $sale['customer_name'] ?? ''),
+                (string) ($sale['customer_cpf_display'] ?? ''),
+                (string) ($sale['customer_phone_display'] ?? ''),
+                (string) ($sale['customer_email'] ?? ''),
+                (string) ($sale['items_summary'] ?? ''),
+                (string) ($sale['item_count'] ?? ''),
+                (string) ($sale['payment_method_label'] ?? ''),
+                (string) ($sale['total_amount_label'] ?? ''),
+                (string) ($sale['received_amount_label'] ?? ''),
+                (string) ($sale['change_amount_label'] ?? ''),
+                (string) ($sale['created_by_name'] ?? ''),
+                (string) ($sale['status_label'] ?? ''),
+                (string) ($sale['cancelled_at_label'] ?? ''),
+                (string) ($sale['cancelled_by_name'] ?? ''),
+            ], ';');
+        }
+
+        rewind($handle);
+        $body = stream_get_contents($handle) ?: '';
+        fclose($handle);
+
+        $timestamp = (new DateTimeImmutable('now', new DateTimeZone('America/Fortaleza')))->format('Ymd-His');
+        $filename = 'financeiro-livraria-' . $timestamp . '.csv';
+
+        $response->getBody()->write($body);
+
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     /**

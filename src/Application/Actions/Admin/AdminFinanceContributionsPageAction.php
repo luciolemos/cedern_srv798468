@@ -26,6 +26,14 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         'config_pending' => 'Configuração financeira pendente',
     ];
 
+    private const PAYMENT_FILTER_OPTIONS = [
+        'all' => 'Todas as formas',
+        'boleto' => 'Boleto',
+        'pix' => 'Pix',
+        'pix_automatico' => 'Pix automático',
+        'manual' => 'Pagamento manual',
+    ];
+
     public function __invoke(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
@@ -33,9 +41,17 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $competence = $this->normalizeCompetence($queryParams['competence'] ?? null);
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
         $statusFilter = trim((string) ($queryParams['status_filter'] ?? 'all'));
+        $paymentFilter = trim((string) ($queryParams['payment_filter'] ?? 'all'));
+        $exportFormat = strtolower(trim((string) ($queryParams['export'] ?? '')));
+        $canManageFinance = $this->currentUserCanManageFinance();
+        $isReadOnlyFinanceOperator = !$canManageFinance && $this->currentUserRoleKey() === 'finance_operator';
 
         if (!array_key_exists($statusFilter, self::STATUS_OPTIONS)) {
             $statusFilter = 'all';
+        }
+
+        if (!array_key_exists($paymentFilter, self::PAYMENT_FILTER_OPTIONS)) {
+            $paymentFilter = 'all';
         }
 
         $rows = [];
@@ -80,7 +96,19 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             ));
         }
 
+        if ($paymentFilter !== 'all') {
+            $rows = array_values(array_filter(
+                $rows,
+                static fn (array $row): bool => (string) ($row['payment_method_key'] ?? 'manual') === $paymentFilter
+            ));
+        }
+
         $summary = $this->buildSummary($rows, $competence);
+
+        if ($exportFormat === 'csv') {
+            return $this->renderCsvExport($response, $rows, $competence);
+        }
+
         $totalItems = count($rows);
         $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
         $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
@@ -119,6 +147,7 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             'competence' => $competence,
             'q' => $searchTerm,
             'status_filter' => $statusFilter,
+            'payment_filter' => $paymentFilter,
             'per_page' => $pageSizeQueryValue,
         ];
 
@@ -159,8 +188,10 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
                 'competence_label' => $this->formatCompetenceLabel($competence),
                 'q' => $searchTerm,
                 'status_filter' => $statusFilter,
+                'payment_filter' => $paymentFilter,
             ],
             'finance_contributions_status_options' => self::STATUS_OPTIONS,
+            'finance_contributions_payment_filter_options' => self::PAYMENT_FILTER_OPTIONS,
             'finance_contributions_payment_methods' => self::PAYMENT_METHOD_LABELS,
             'finance_contributions_pagination' => [
                 'current_page' => $currentPage,
@@ -177,6 +208,15 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             'finance_contributions_summary' => $summary,
             'finance_contributions_toast_message' => $flashMessage,
             'finance_contributions_toast_tone' => $flashTone !== '' ? $flashTone : 'success',
+            'finance_contributions_can_manage' => $canManageFinance,
+            'finance_contributions_is_read_only_operator' => $isReadOnlyFinanceOperator,
+            'finance_contributions_export_csv_url' => $basePath . '?' . http_build_query([
+                'competence' => $competence,
+                'q' => $searchTerm,
+                'status_filter' => $statusFilter,
+                'payment_filter' => $paymentFilter,
+                'export' => 'csv',
+            ]),
             'page_title' => 'Contribuições | Painel Financeiro',
             'page_url' => $this->buildAbsoluteAppUrl($request, '/painel/financas/contribuicoes'),
             'page_description' => 'Controle administrativo das contribuições mensais dos associados.',
@@ -256,6 +296,10 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             : 'Sem função diretiva';
         $row['contact_notes'] = $contactNotes;
         $row['charge_competence_label'] = $this->formatCompetenceLabel((string) ($row['charge_competence'] ?? $competence));
+        $row['charge_paid_at_display'] = $this->resolvePaidAtDisplay(
+            trim((string) ($row['charge_paid_at'] ?? '')),
+            $gatewayStatus
+        );
         $row['has_gateway_charge'] = $gatewayPaymentId !== '';
         $row['gateway_status_label'] = $this->resolveGatewayStatusLabel($gatewayStatus);
         $row['gateway_status_tone'] = $this->resolveGatewayStatusTone($gatewayStatus);
@@ -274,6 +318,77 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         $row['has_current_charge'] = $hasCurrentCharge;
 
         return $row;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     */
+    private function renderCsvExport(Response $response, array $rows, string $competence): Response
+    {
+        $handle = fopen('php://temp', 'w+');
+        if (!is_resource($handle)) {
+            $response->getBody()->write('Falha ao preparar exportacao.');
+
+            return $response->withStatus(500);
+        }
+
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, [
+            'contribuinte',
+            'cpf',
+            'email',
+            'competencia',
+            'vencimento',
+            'valor',
+            'situacao',
+            'pago_em',
+            'forma_pagamento',
+            'cobranca',
+            'tipo_socio',
+            'funcao_cede',
+            'observacoes',
+        ], ';');
+
+        foreach ($rows as $row) {
+            $chargeLabel = 'Sem cobrança externa';
+            if (($row['has_gateway_charge'] ?? false) === true) {
+                $chargeLabel = trim((string) ($row['gateway_billing_type_label'] ?? 'Cobrança'))
+                    . ' · '
+                    . trim((string) ($row['gateway_status_label'] ?? 'Sem status'));
+            } elseif (($row['has_current_charge'] ?? false) !== true) {
+                $chargeLabel = 'Ainda não gerada';
+            }
+
+            fputcsv($handle, [
+                (string) ($row['full_name'] ?? ''),
+                (string) ($row['cpf_display'] ?? ''),
+                (string) ($row['email'] ?? ''),
+                (string) ($row['charge_competence_label'] ?? $this->formatCompetenceLabel($competence)),
+                (string) ($row['due_date_display'] ?? '-'),
+                (string) ($row['amount_due_display'] ?? 'R$ 0,00'),
+                (string) ($row['status_label'] ?? ''),
+                (string) ($row['charge_paid_at_display'] ?? '-'),
+                (string) ($row['payment_method_display'] ?? ''),
+                $chargeLabel,
+                (string) ($row['member_type_label'] ?? ''),
+                (string) ($row['institutional_role_display'] ?? ''),
+                implode(' ', (array) ($row['status_notes'] ?? [])),
+            ], ';');
+        }
+
+        rewind($handle);
+        $body = stream_get_contents($handle) ?: '';
+        fclose($handle);
+
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('America/Fortaleza')))->format('Ymd-His');
+        $filename = 'contribuicoes-' . $this->normalizeCompetence($competence) . '-' . $timestamp . '.csv';
+
+        $response->getBody()->write($body);
+
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     /**
@@ -550,6 +665,33 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         } catch (\Throwable $exception) {
             return $normalized;
         }
+    }
+
+    private function resolvePaidAtDisplay(string $paidAt, string $gatewayStatus): string
+    {
+        if ($paidAt !== '') {
+            return $this->formatDateTime($paidAt);
+        }
+
+        if (in_array($gatewayStatus, ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'], true)) {
+            return 'Confirmada no gateway';
+        }
+
+        return '-';
+    }
+
+    private function currentUserRoleKey(): string
+    {
+        $this->ensureSessionStarted();
+
+        return strtolower(trim((string) ($_SESSION['member_role_key'] ?? 'member')));
+    }
+
+    private function currentUserCanManageFinance(): bool
+    {
+        $this->ensureSessionStarted();
+
+        return !empty($_SESSION['admin_authenticated']) || $this->currentUserRoleKey() === 'admin';
     }
 
     private function hasWhatsappMobileNumber(string $value): bool

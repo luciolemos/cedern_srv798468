@@ -5363,10 +5363,12 @@ code {
   position: absolute;
   right: 0;
   top: calc(100% + var(--space-2));
-  min-width: 210px;
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
+  box-sizing: border-box;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-md);
   background: var(--surface-main);
@@ -5413,7 +5415,10 @@ code {
 }
 
 .nc-dashboard-user-menu-link {
-  display: inline-flex !important;
+  display: flex !important;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   align-items: center;
   gap: 0.5rem;
 }
@@ -5441,6 +5446,7 @@ code {
 
 .nc-dashboard-user-menu-group {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.18rem;
   margin: 0.04rem 0;
 }
@@ -5448,7 +5454,10 @@ code {
 .nc-dashboard-user-menu-group summary {
   list-style: none;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   align-items: center;
   justify-content: space-between;
   padding: 0.45rem 0.6rem;
@@ -5479,7 +5488,9 @@ code {
 }
 
 .nc-dashboard-user-menu-sublink {
-  margin-left: 0.3rem;
+  margin-left: 0;
+  padding-left: 0.9rem !important;
+  justify-content: flex-start;
 }
 
 .nc-dashboard-layout {

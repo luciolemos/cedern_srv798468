@@ -447,21 +447,21 @@ return function (App $app) {
         $group->get('/financas/contribuicoes', AdminFinanceContributionsPageAction::class)
             ->add($panelFinanceAccessMiddleware);
         $group->post('/financas/contribuicoes/gerar', AdminFinanceContributionsGenerateAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/financas/contribuicoes/{id}/receber', AdminFinanceContributionMarkPaidAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/financas/contribuicoes/{id}/isentar', AdminFinanceContributionMarkExemptAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/financas/contribuicoes/{id}/cobranca', AdminFinanceContributionGatewayViewPageAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/financas/contribuicoes/{id}/cobranca/criar', AdminFinanceContributionGatewayCreateAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/financas/contribuicoes/{id}/cobranca/sincronizar', AdminFinanceContributionGatewaySyncAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/financas/contribuicoes/{id}/enviar-email', AdminFinanceContributionSendEmailAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/financas/contribuicoes/{id}/whatsapp', AdminFinanceContributionOpenWhatsappAction::class)
-            ->add($panelFinanceAccessMiddleware);
+            ->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/financas/{section:cantina|bazar}', AdminFinanceSectionPlaceholderPageAction::class)
             ->add($panelFinanceAccessMiddleware);
         $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)

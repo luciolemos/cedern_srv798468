@@ -2,7 +2,11 @@
 
 {% set dashboard_page_kicker = 'Finanças' %}
 {% set dashboard_page_title = 'Contribuições dos associados contribuintes' %}
-{% set dashboard_page_lead = 'Gere cobranças mensais, acompanhe adimplência e registre baixas manuais apenas para os associados marcados como contribuintes.' %}
+{% set finance_role_key = member_role_key|default('member') %}
+{% set finance_is_read_only_operator = not dashboard_is_admin_session|default(false) and finance_role_key == 'finance_operator' %}
+{% set dashboard_page_lead = finance_is_read_only_operator
+  ? 'Acompanhe vencimentos, pagamentos e forma de recebimento dos associados contribuintes com filtros e exportação simples.'
+  : 'Gere cobranças mensais, acompanhe adimplência e registre baixas manuais apenas para os associados marcados como contribuintes.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Controle financeiro das contribuições mensais" data-aos="fade-up" data-aos-delay="0">
@@ -16,18 +20,25 @@
     {% set pagination = finance_contributions_pagination|default({}) %}
     {% set summary = finance_contributions_summary|default({}) %}
     {% set status_options = finance_contributions_status_options|default({}) %}
+    {% set payment_filter_options = finance_contributions_payment_filter_options|default({}) %}
     {% set payment_methods = finance_contributions_payment_methods|default({}) %}
+    {% set can_manage_finance = finance_contributions_can_manage|default(false) %}
+    {% set export_csv_url = finance_contributions_export_csv_url|default(finance_base_url ~ '/painel/financas/contribuicoes?export=csv') %}
     {% set has_active_filters = filters.q|default('') != ''
       or filters.status_filter|default('all') != 'all'
+      or filters.payment_filter|default('all') != 'all'
       or filters.competence|default('') != ('now'|date('Y-m')) %}
 
     <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ finance_base_url }}/painel">Voltar ao painel</a>
-      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/gerar">
-        {% include 'components/csrf-field.twig' %}
-        <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-        <button class="nc-btn nc-btn-secondary" type="submit">Gerar cobranças da competência</button>
-      </form>
+      <a class="nc-btn nc-btn-secondary" href="{{ export_csv_url }}">Exportar CSV</a>
+      {% if can_manage_finance %}
+        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/gerar">
+          {% include 'components/csrf-field.twig' %}
+          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+          <button class="nc-btn nc-btn-secondary" type="submit">Gerar cobranças da competência</button>
+        </form>
+      {% endif %}
     </div>
 
     {% set contribution_kpi_cards = [
@@ -84,7 +95,12 @@
         <select name="status_filter" aria-label="Filtrar por situação">
           {% for value, label in status_options %}
             <option value="{{ value }}"{% if filters.status_filter|default('all') == value %} selected{% endif %}>{{ label }}</option>
-        {% endfor %}
+          {% endfor %}
+        </select>
+        <select name="payment_filter" aria-label="Filtrar por forma de pagamento">
+          {% for value, label in payment_filter_options %}
+            <option value="{{ value }}"{% if filters.payment_filter|default('all') == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
         </select>
         <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
         <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
@@ -122,142 +138,218 @@
           <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
           <input type="hidden" name="q" value="{{ filters.q|default('') }}">
           <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('all') }}">
+          <input type="hidden" name="payment_filter" value="{{ filters.payment_filter|default('all') }}">
         </form>
       </div>
 
       <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="160">
         <table class="nc-admin-table nc-admin-table-bookshop nc-finance-contributions-table">
           <thead>
-            <tr>
-              <th>Foto</th>
-              <th>Contribuinte</th>
-              <th>Tipo</th>
-              <th>Competência e vencimento</th>
-              <th>Valor</th>
-              <th>Situação</th>
-              <th>Cobrança</th>
-              <th>Ações</th>
-            </tr>
+            {% if finance_is_read_only_operator %}
+              <tr>
+                <th>Contribuinte</th>
+                <th>Competência</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Situação</th>
+                <th>Pago em</th>
+                <th>Forma de pagamento</th>
+                <th>Cobrança</th>
+              </tr>
+            {% else %}
+              <tr>
+                <th>Foto</th>
+                <th>Contribuinte</th>
+                <th>Tipo</th>
+                <th>Competência e vencimento</th>
+                <th>Valor</th>
+                <th>Situação</th>
+                <th>Cobrança</th>
+                <th>Ações</th>
+              </tr>
+            {% endif %}
           </thead>
           <tbody>
             {% for contribution in finance_contributions %}
               <tr>
-                <td class="nc-admin-user-photo-cell nc-contribution-photo-cell" data-label="Foto">
-                  <span class="nc-admin-user-photo nc-contribution-photo" aria-hidden="true">
-                    {% set contribution_photo_path = contribution.profile_photo_path|default('')|trim %}
-                    {% if contribution_photo_path %}
-                      <img src="{{ (base_url ?? '') ~ '/' ~ (contribution_photo_path|trim('/')) }}" alt="">
-                    {% else %}
-                      <span>{{ (contribution.full_name|default(contribution.email|default('U'))|slice(0, 1)|upper) }}</span>
+                {% if finance_is_read_only_operator %}
+                  <td class="nc-agenda-activity-cell" data-label="Contribuinte">
+                    <strong>{{ contribution.full_name|default(contribution.email|default('Contribuinte')) }}</strong>
+                    {% if contribution.cpf_display|default('') and contribution.cpf_display != '-' %}
+                      <small>{{ contribution.cpf_display }}</small>
                     {% endif %}
-                  </span>
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Contribuinte">
-                  <strong>{{ contribution.full_name|default(contribution.email|default('Contribuinte')) }}</strong>
-                  {% if contribution.cpf_display|default('') and contribution.cpf_display != '-' %}
-                    <small>{{ contribution.cpf_display }}</small>
-                  {% endif %}
-                  <small>{{ contribution.email|default('-') }}</small>
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Tipo">
-                  <strong>{{ contribution.member_type_label|default('Não definido') }}</strong>
-                  <small>{{ contribution.institutional_role_display|default('Sem função diretiva') }}</small>
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Competência e vencimento">
-                  <strong>{{ contribution.charge_competence_label|default(filters.competence_label|default('-')) }}</strong>
-                  <small>
-                    {% if contribution.has_current_charge %}
-                      Vencimento {{ contribution.due_date_display|default('-') }}
-                    {% elseif contribution.preferred_due_day|default(0) > 0 %}
-                      Vencimento dia {{ '%02d'|format(contribution.preferred_due_day|default(0)) }}
-                    {% else %}
-                      Vencimento ainda não definido
-                    {% endif %}
-                  </small>
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Valor">
-                  <strong>{{ contribution.amount_due_display|default('Não definido') }}</strong>
-                  {% if contribution.contribution_plan_label|default('') %}
-                    <small>{{ contribution.contribution_plan_label }}</small>
-                  {% endif %}
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Situação">
-                  <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">{{ contribution.status_label|default('Não definido') }}</span>
-                  {% for note in contribution.status_notes|default([]) %}
-                    <small>{{ note }}</small>
-                  {% endfor %}
-                </td>
-                <td class="nc-agenda-activity-cell" data-label="Cobrança">
-                  <strong>{{ contribution.payment_method_display|default('Pagamento manual') }}</strong>
-                  {% if contribution.has_gateway_charge %}
+                    <small>{{ contribution.email|default('-') }}</small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Competência">
+                    <strong>{{ contribution.charge_competence_label|default(filters.competence_label|default('-')) }}</strong>
+                    <small>{{ contribution.member_type_label|default('Não definido') }}</small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Vencimento">
+                    <strong>{{ contribution.due_date_display|default('-') }}</strong>
                     <small>
-                      <span class="nc-admin-featured-flag {{ contribution.gateway_status_tone|default('is-info') }}">{{ contribution.gateway_billing_type_label|default('Cobrança') }} · {{ contribution.gateway_status_label|default('Sem status') }}</span>
+                      {% if contribution.has_current_charge %}
+                        Cobrança da competência
+                      {% elseif contribution.preferred_due_day|default(0) > 0 %}
+                        Preferência: dia {{ '%02d'|format(contribution.preferred_due_day|default(0)) }}
+                      {% else %}
+                        Vencimento ainda não definido
+                      {% endif %}
                     </small>
-                  {% endif %}
-                  {% for note in contribution.contact_notes|default([]) %}
-                    <small>{{ note }}</small>
-                  {% endfor %}
-                </td>
-                <td class="nc-admin-table-actions nc-contribution-actions" data-label="Ações">
-                  {% if contribution.can_mark_paid %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Valor">
+                    <strong>{{ contribution.amount_due_display|default('Não definido') }}</strong>
+                    {% if contribution.contribution_plan_label|default('') %}
+                      <small>{{ contribution.contribution_plan_label }}</small>
+                    {% endif %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Situação">
+                    <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">{{ contribution.status_label|default('Não definido') }}</span>
+                    {% for note in contribution.status_notes|default([]) %}
+                      <small>{{ note }}</small>
+                    {% endfor %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Pago em">
+                    <strong>{{ contribution.charge_paid_at_display|default('-') }}</strong>
+                    <small>{{ contribution.institutional_role_display|default('Sem função diretiva') }}</small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Forma de pagamento">
+                    <strong>{{ contribution.payment_method_display|default('Pagamento manual') }}</strong>
+                    {% for note in contribution.contact_notes|default([]) %}
+                      <small>{{ note }}</small>
+                    {% endfor %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Cobrança">
                     {% if contribution.has_gateway_charge %}
-                      <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/sincronizar">
-                        {% include 'components/csrf-field.twig' %}
-                        <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar</button>
-                      </form>
+                      <strong>{{ contribution.gateway_billing_type_label|default('Cobrança') }}</strong>
+                      <small>
+                        <span class="nc-admin-featured-flag {{ contribution.gateway_status_tone|default('is-info') }}">{{ contribution.gateway_status_label|default('Sem status') }}</span>
+                      </small>
+                    {% elseif contribution.has_current_charge %}
+                      <strong>Cobrança interna</strong>
+                      <small>Sem integração externa</small>
                     {% else %}
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                      <strong>Ainda não gerada</strong>
+                      <small>Aguardando emissão</small>
+                    {% endif %}
+                  </td>
+                {% else %}
+                  <td class="nc-admin-user-photo-cell nc-contribution-photo-cell" data-label="Foto">
+                    <span class="nc-admin-user-photo nc-contribution-photo" aria-hidden="true">
+                      {% set contribution_photo_path = contribution.profile_photo_path|default('')|trim %}
+                      {% if contribution_photo_path %}
+                        <img src="{{ (base_url ?? '') ~ '/' ~ (contribution_photo_path|trim('/')) }}" alt="">
+                      {% else %}
+                        <span>{{ (contribution.full_name|default(contribution.email|default('U'))|slice(0, 1)|upper) }}</span>
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Contribuinte">
+                    <strong>{{ contribution.full_name|default(contribution.email|default('Contribuinte')) }}</strong>
+                    {% if contribution.cpf_display|default('') and contribution.cpf_display != '-' %}
+                      <small>{{ contribution.cpf_display }}</small>
+                    {% endif %}
+                    <small>{{ contribution.email|default('-') }}</small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Tipo">
+                    <strong>{{ contribution.member_type_label|default('Não definido') }}</strong>
+                    <small>{{ contribution.institutional_role_display|default('Sem função diretiva') }}</small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Competência e vencimento">
+                    <strong>{{ contribution.charge_competence_label|default(filters.competence_label|default('-')) }}</strong>
+                    <small>
+                      {% if contribution.has_current_charge %}
+                        Vencimento {{ contribution.due_date_display|default('-') }}
+                      {% elseif contribution.preferred_due_day|default(0) > 0 %}
+                        Vencimento dia {{ '%02d'|format(contribution.preferred_due_day|default(0)) }}
+                      {% else %}
+                        Vencimento ainda não definido
+                      {% endif %}
+                    </small>
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Valor">
+                    <strong>{{ contribution.amount_due_display|default('Não definido') }}</strong>
+                    {% if contribution.contribution_plan_label|default('') %}
+                      <small>{{ contribution.contribution_plan_label }}</small>
+                    {% endif %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Situação">
+                    <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">{{ contribution.status_label|default('Não definido') }}</span>
+                    {% for note in contribution.status_notes|default([]) %}
+                      <small>{{ note }}</small>
+                    {% endfor %}
+                  </td>
+                  <td class="nc-agenda-activity-cell" data-label="Cobrança">
+                    <strong>{{ contribution.payment_method_display|default('Pagamento manual') }}</strong>
+                    {% if contribution.has_gateway_charge %}
+                      <small>
+                        <span class="nc-admin-featured-flag {{ contribution.gateway_status_tone|default('is-info') }}">{{ contribution.gateway_billing_type_label|default('Cobrança') }} · {{ contribution.gateway_status_label|default('Sem status') }}</span>
+                      </small>
+                    {% endif %}
+                    {% for note in contribution.contact_notes|default([]) %}
+                      <small>{{ note }}</small>
+                    {% endfor %}
+                  </td>
+                  <td class="nc-admin-table-actions nc-contribution-actions" data-label="Ações">
+                    {% if contribution.can_mark_paid %}
+                      {% if contribution.has_gateway_charge %}
+                        <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
+                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/sincronizar">
+                          {% include 'components/csrf-field.twig' %}
+                          <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar</button>
+                        </form>
+                      {% else %}
+                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                          {% include 'components/csrf-field.twig' %}
+                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                          <input type="hidden" name="billing_type" value="pix">
+                          <button class="nc-btn nc-btn-secondary" type="submit">Gerar Pix</button>
+                        </form>
+                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                          {% include 'components/csrf-field.twig' %}
+                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                          <input type="hidden" name="billing_type" value="boleto">
+                          <button class="nc-btn nc-btn-secondary" type="submit">Gerar boleto</button>
+                        </form>
+                      {% endif %}
+                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/receber">
                         {% include 'components/csrf-field.twig' %}
                         <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                        <input type="hidden" name="billing_type" value="pix">
-                        <button class="nc-btn nc-btn-secondary" type="submit">Gerar Pix</button>
+                        <select class="nc-admin-inline-select" name="payment_method" aria-label="Forma de baixa">
+                          {% for value, label in payment_methods %}
+                            <option value="{{ value }}"{% if contribution.payment_method_key|default('manual') == value %} selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <button class="nc-btn nc-btn-secondary" type="submit">Registrar recebimento</button>
                       </form>
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/isentar">
                         {% include 'components/csrf-field.twig' %}
                         <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                        <input type="hidden" name="billing_type" value="boleto">
-                        <button class="nc-btn nc-btn-secondary" type="submit">Gerar boleto</button>
+                        <button class="nc-btn nc-btn-secondary" type="submit">Isentar</button>
                       </form>
+                      {% if contribution.can_send_email_reminder %}
+                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/enviar-email">
+                          {% include 'components/csrf-field.twig' %}
+                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                          <button class="nc-btn nc-btn-secondary" type="submit">Enviar e-mail</button>
+                        </form>
+                      {% endif %}
+                      {% if contribution.can_open_whatsapp_reminder %}
+                        <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/whatsapp?competence={{ filters.competence|default('now'|date('Y-m'))|url_encode }}" target="_blank" rel="noopener">WhatsApp</a>
+                      {% endif %}
+                      {% if not contribution.can_send_email_reminder and not contribution.can_open_whatsapp_reminder %}
+                        <span class="nc-contribution-action-note">Sem autorização ou contato válido para lembretes.</span>
+                      {% endif %}
+                    {% elseif contribution.has_current_charge and contribution.has_gateway_charge %}
+                      <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
+                    {% elseif contribution.has_current_charge %}
+                      <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">Sem ação manual</span>
+                    {% elseif contribution.status_key|default('') == 'config_pending' %}
+                      <span class="nc-contribution-action-note">Completar cadastro financeiro antes de gerar a cobrança.</span>
+                    {% else %}
+                      <span class="nc-contribution-action-note">Use o botão acima para gerar a cobrança desta competência.</span>
                     {% endif %}
-                    <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/receber">
-                      {% include 'components/csrf-field.twig' %}
-                      <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                      <select class="nc-admin-inline-select" name="payment_method" aria-label="Forma de baixa">
-                        {% for value, label in payment_methods %}
-                          <option value="{{ value }}"{% if contribution.payment_method_key|default('manual') == value %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                      </select>
-                      <button class="nc-btn nc-btn-secondary" type="submit">Registrar recebimento</button>
-                    </form>
-                    <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/isentar">
-                      {% include 'components/csrf-field.twig' %}
-                      <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                      <button class="nc-btn nc-btn-secondary" type="submit">Isentar</button>
-                    </form>
-                    {% if contribution.can_send_email_reminder %}
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/enviar-email">
-                        {% include 'components/csrf-field.twig' %}
-                        <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                        <button class="nc-btn nc-btn-secondary" type="submit">Enviar e-mail</button>
-                      </form>
-                    {% endif %}
-                    {% if contribution.can_open_whatsapp_reminder %}
-                      <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/whatsapp?competence={{ filters.competence|default('now'|date('Y-m'))|url_encode }}" target="_blank" rel="noopener">WhatsApp</a>
-                    {% endif %}
-                    {% if not contribution.can_send_email_reminder and not contribution.can_open_whatsapp_reminder %}
-                      <span class="nc-contribution-action-note">Sem autorização ou contato válido para lembretes.</span>
-                    {% endif %}
-                  {% elseif contribution.has_current_charge and contribution.has_gateway_charge %}
-                    <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
-                  {% elseif contribution.has_current_charge %}
-                    <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">Sem ação manual</span>
-                  {% elseif contribution.status_key|default('') == 'config_pending' %}
-                    <span class="nc-contribution-action-note">Completar cadastro financeiro antes de gerar a cobrança.</span>
-                  {% else %}
-                    <span class="nc-contribution-action-note">Use o botão acima para gerar a cobrança desta competência.</span>
-                  {% endif %}
-                </td>
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
           </tbody>
