@@ -278,6 +278,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             ));
         }
 
+        $summary = $this->buildUsersSummary($users);
+
         $sortBy = (string) ($queryParams['sort'] ?? 'id');
         if (!in_array($sortBy, self::SORT_FIELDS, true)) {
             $sortBy = 'id';
@@ -470,6 +472,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             'member_users_association_status_filter_options' => self::ASSOCIATION_STATUS_FILTER_OPTIONS,
             'member_users_contributor_filter_options' => self::CONTRIBUTOR_FILTER_OPTIONS,
             'member_users_institutional_role_filter_options' => $institutionalRoleFilterOptions,
+            'member_users_summary' => $summary,
             'member_users_sort_links' => $sortLinks,
             'member_users_pagination' => [
                 'current_page' => $currentPage,
@@ -552,5 +555,60 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         }
 
         return $roleName !== '' ? $roleName : 'Membro';
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $users
+     * @return array<string, int>
+     */
+    private function buildUsersSummary(array $users): array
+    {
+        $summary = [
+            'total_count' => count($users),
+            'applicant_count' => 0,
+            'member_count' => 0,
+            'former_count' => 0,
+            'active_count' => 0,
+            'pending_count' => 0,
+            'blocked_count' => 0,
+            'contributor_count' => 0,
+            'non_contributor_count' => 0,
+            'institutional_role_count' => 0,
+            'without_institutional_role_count' => 0,
+        ];
+
+        foreach ($users as $user) {
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            if ($associationStatus === 'member') {
+                $summary['member_count']++;
+            } elseif ($associationStatus === 'former') {
+                $summary['former_count']++;
+            } else {
+                $summary['applicant_count']++;
+            }
+
+            $accessStatus = strtolower(trim((string) ($user['status'] ?? '')));
+            if ($accessStatus === 'active') {
+                $summary['active_count']++;
+            } elseif ($accessStatus === 'blocked') {
+                $summary['blocked_count']++;
+            } else {
+                $summary['pending_count']++;
+            }
+
+            if ((int) ($user['is_contributor'] ?? 0) === 1) {
+                $summary['contributor_count']++;
+            } else {
+                $summary['non_contributor_count']++;
+            }
+
+            if (trim((string) ($user['institutional_role'] ?? '')) !== '') {
+                $summary['institutional_role_count']++;
+            } else {
+                $summary['without_institutional_role_count']++;
+            }
+        }
+
+        return $summary;
     }
 }

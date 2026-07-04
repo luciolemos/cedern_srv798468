@@ -76,7 +76,55 @@
     {% set selected_association_status_filter = member_users_association_status_filter|default('') %}
     {% set selected_contributor_filter = member_users_contributor_filter|default('') %}
     {% set selected_institutional_role_filter = member_users_institutional_role_filter|default('') %}
+    {% set summary = member_users_summary|default({}) %}
     {% set has_active_filters = search_term != '' or selected_role_filter != '' or selected_member_type_filter != '' or selected_status_filter != '' or selected_association_status_filter != '' or selected_contributor_filter != '' or selected_institutional_role_filter != '' %}
+
+    {% set member_user_kpi_cards = [
+      {
+        label: 'Cadastros no recorte',
+        value: summary.total_count|default(0),
+        description: summary.member_count|default(0) ~ ' associados, ' ~ summary.applicant_count|default(0) ~ ' solicitantes e ' ~ summary.former_count|default(0) ~ ' desligados.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M6.5 19C6.5 16.5147 8.51472 14.5 11 14.5H13C15.4853 14.5 17.5 16.5147 17.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 10.5C4.83166 10.5 5.5 9.83166 5.5 9C5.5 8.16834 4.83166 7.5 4 7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M20 10.5C19.1683 10.5 18.5 9.83166 18.5 9C18.5 8.16834 19.1683 7.5 20 7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+      },
+      {
+        label: 'Acessos ativos',
+        value: summary.active_count|default(0),
+        description: summary.pending_count|default(0) ~ ' pendentes e ' ~ summary.blocked_count|default(0) ~ ' bloqueados.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.75 17.75L9 12.75L12 15.25L18.75 7.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.75 7.25H18.75V10.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      },
+      {
+        label: 'Contribuintes',
+        value: summary.contributor_count|default(0),
+        description: summary.non_contributor_count|default(0) ~ ' sem contribuição ativa no recorte.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+      },
+      {
+        label: 'Funções no CEDE',
+        value: summary.institutional_role_count|default(0),
+        description: summary.without_institutional_role_count|default(0) ~ ' sem função institucional definida.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="4.5" width="14" height="15" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 9H15.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8.5 13H15.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8.5 17H13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+      }
+    ] %}
+
+    <section class="nc-dashboard-visit-panel" aria-label="Indicadores de pessoas" data-aos="fade-up" data-aos-delay="90">
+      <div class="nc-dashboard-visit-panel-head">
+        <div>
+          <h3 class="nc-dashboard-visit-panel-title">Painel de pessoas</h3>
+          <p class="nc-dashboard-visit-panel-copy">Os indicadores abaixo respeitam a busca e os filtros aplicados na listagem.</p>
+        </div>
+      </div>
+
+      <div class="nc-dashboard-visit-grid">
+        {% for card in member_user_kpi_cards %}
+          {% include 'components/admin-kpi-card.twig' with {
+            kpi_label: card.label,
+            kpi_value: card.value,
+            kpi_description: card.description,
+            kpi_icon_svg: card.icon_svg
+          } only %}
+        {% endfor %}
+      </div>
+    </section>
 
     {% if member_users|length == 0 %}
       <form class="nc-admin-table-search" method="get" action="/painel/usuarios" data-aos="fade-up" data-aos-delay="95">
@@ -228,7 +276,7 @@
                 <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil SISCEDE <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
               </th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Acesso <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Acesso ao SISCEDE <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
               </th>
               <th>Ações</th>
             </tr>
@@ -299,7 +347,7 @@
                 <td data-label="Contribui?">{{ user.contributor_label|default('Não') }}</td>
                 <td data-label="Função CEDE">{{ user.institutional_role|default('Sem função definida') }}</td>
                 <td data-label="Perfil SISCEDE">{{ user.role_name_display|default(user.role_name|default('-')) }}</td>
-                <td data-label="Acesso">
+                <td data-label="Acesso ao SISCEDE">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
                 <td class="nc-admin-table-actions" data-label="Ações">
@@ -309,6 +357,15 @@
                       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
                     </svg>
                     <span class="nc-sr-only">Visualizar cadastro</span>
+                  </a>
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}/pdf" target="_blank" rel="noopener" aria-label="Abrir PDF cadastral de {{ user.full_name|default('usuário') }}" title="Abrir PDF cadastral">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M7 3.5H14.5L18.5 7.5V19.5C18.5 20.0523 18.0523 20.5 17.5 20.5H7C6.44772 20.5 6 20.0523 6 19.5V4.5C6 3.94772 6.44772 3.5 7 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M14 3.5V8H18.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                      <path d="M9 12H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      <path d="M9 15H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span class="nc-sr-only">Abrir PDF cadastral</span>
                   </a>
                   <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Editar acesso de {{ user.full_name|default('usuário') }}" title="Editar acesso">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

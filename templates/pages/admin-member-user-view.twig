@@ -35,7 +35,7 @@
 
         <dl class="nc-member-grid">
           <div>
-            <dt>Status de acesso</dt>
+            <dt>Acesso ao SISCEDE</dt>
             <dd>
               <span class="nc-admin-featured-flag{{ view_user.status_key|default('pending') == 'active' ? ' is-on' : ' is-off' }}">{{ view_user.status_label|default('Pendente') }}</span>
             </dd>
@@ -49,7 +49,7 @@
             <dd>{{ view_user.contributor_label|default('Não') }}</dd>
           </div>
           <div>
-            <dt>Perfil no sistema</dt>
+            <dt>Perfil no SISCEDE</dt>
             <dd>{{ view_user.role_name_display|default('Membro') }}</dd>
           </div>
           <div>

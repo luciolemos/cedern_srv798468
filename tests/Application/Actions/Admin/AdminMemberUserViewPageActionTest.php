@@ -132,6 +132,8 @@ final class AdminMemberUserViewPageActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('pages/admin-member-user-view.twig', $action->capturedTemplate);
+        $this->assertStringContainsString('Acesso ao SISCEDE', $html);
+        $this->assertStringContainsString('Perfil no SISCEDE', $html);
         $this->assertStringContainsString('Marina Silva', $html);
         $this->assertStringContainsString('Administrador', $html);
         $this->assertStringContainsString('(84) 99999-8888', $html);

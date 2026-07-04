@@ -249,6 +249,11 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 $errors[] = 'Informe um CPF válido.';
             } else {
                 $form['cpf'] = $this->formatCpf($cpfDigits);
+
+                $existingCpfOwner = $this->memberAuthRepository->findByCpf($cpfDigits, $memberId);
+                if ($existingCpfOwner !== null) {
+                    $errors[] = 'Este CPF já está vinculado a outro usuário SISCEDE.';
+                }
             }
 
             $postalCodeDigits = preg_replace('/\D+/', '', $form['postal_code']) ?? '';
@@ -395,7 +400,9 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'member_id' => $memberId,
                         'exception' => $exception,
                     ]);
-                    $errors[] = 'Não foi possível salvar o perfil no momento. Tente novamente em instantes.';
+                    $errors[] = str_contains($exception->getMessage(), 'CPF já vinculado')
+                        ? 'Este CPF já está vinculado a outro usuário SISCEDE.'
+                        : 'Não foi possível salvar o perfil no momento. Tente novamente em instantes.';
                 }
             }
 

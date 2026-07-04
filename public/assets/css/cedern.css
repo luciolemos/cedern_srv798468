@@ -5856,9 +5856,145 @@ code {
   gap: var(--space-3);
 }
 
+.nc-member-admin-groups {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.nc-member-admin-group {
+  display: grid;
+  gap: var(--space-3);
+  padding: clamp(1rem, 2vw, 1.25rem);
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 42%, var(--surface-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--theme-soft-1) 6%, var(--surface-main));
+}
+
+.nc-member-admin-group-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.nc-member-admin-group-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.nc-member-admin-group-description,
+.nc-member-admin-group-note {
+  margin: 0;
+}
+
+.nc-member-admin-group-description {
+  color: var(--text-muted);
+}
+
+.nc-member-admin-group-fields {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.nc-member-admin-group-field-full {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1180px) {
+  .nc-member-admin-group-fields-cede {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 0.95fr) minmax(0, 1.15fr);
+  }
+}
+
 .nc-admin-login-field {
   display: grid;
   gap: 0.4rem;
+}
+
+.nc-admin-login-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.nc-admin-help-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nc-admin-help-tooltip-trigger {
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 56%, var(--surface-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-soft-1) 18%, var(--surface-main));
+  color: var(--theme-soft-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  cursor: help;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast), box-shadow var(--motion-fast);
+}
+
+.nc-admin-help-tooltip-trigger:hover,
+.nc-admin-help-tooltip-trigger:focus-visible {
+  border-color: color-mix(in srgb, var(--theme-accent-1) 64%, var(--surface-border));
+  background: color-mix(in srgb, var(--theme-soft-1) 28%, var(--surface-main));
+  color: var(--text-main);
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, var(--theme-soft-2) 18%, transparent);
+  outline: none;
+}
+
+.nc-admin-help-tooltip-content {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 0;
+  z-index: 20;
+  width: min(22rem, calc(100vw - 4rem));
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-main) 92%, var(--theme-soft-1));
+  box-shadow: 0 1rem 2.4rem rgba(15, 23, 42, 0.16);
+  color: var(--text-main);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.2rem);
+  pointer-events: none;
+  transition: opacity var(--motion-fast), transform var(--motion-fast), visibility var(--motion-fast);
+}
+
+.nc-admin-help-tooltip-content::before {
+  content: '';
+  position: absolute;
+  top: -0.45rem;
+  left: 0.9rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  border-left: 1px solid color-mix(in srgb, var(--theme-soft-2) 44%, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-main) 92%, var(--theme-soft-1));
+  transform: rotate(45deg);
+}
+
+.nc-admin-help-tooltip-title {
+  font-weight: var(--font-weight-semibold);
+}
+
+.nc-admin-help-tooltip:hover .nc-admin-help-tooltip-content,
+.nc-admin-help-tooltip:focus-within .nc-admin-help-tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .nc-admin-login-label {

@@ -119,13 +119,13 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
         if ($externalReference !== '') {
             $existingCustomer = $this->findCustomerByExternalReference($externalReference);
             if ($existingCustomer !== null) {
-                return (string) ($existingCustomer['id'] ?? '');
+                return $this->syncExistingCustomer($existingCustomer, $member, $externalReference);
             }
         }
 
         $existingCustomer = $this->findCustomerByCpfCnpj($cpfCnpj);
         if ($existingCustomer !== null) {
-            return (string) ($existingCustomer['id'] ?? '');
+            return $this->syncExistingCustomer($existingCustomer, $member, $externalReference);
         }
 
         $fullName = trim((string) ($member['full_name'] ?? ''));
@@ -133,9 +133,31 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
             $fullName = 'Associado CEDE';
         }
 
+        $payload = $this->buildCustomerPayload($member, $externalReference);
+        $response = $this->requestJson('POST', '/customers', $payload);
+
+        $customerId = trim((string) ($response['id'] ?? ''));
+        if ($customerId === '') {
+            throw new \RuntimeException('O Asaas não retornou o identificador do cliente.');
+        }
+
+        return $customerId;
+    }
+
+    /**
+     * @param array<string, mixed> $member
+     * @return array<string, mixed>
+     */
+    private function buildCustomerPayload(array $member, string $externalReference): array
+    {
+        $fullName = trim((string) ($member['full_name'] ?? ''));
+        if ($fullName === '') {
+            $fullName = 'Associado CEDE';
+        }
+
         $payload = [
             'name' => $fullName,
-            'cpfCnpj' => $cpfCnpj,
+            'cpfCnpj' => $this->digitsOnly((string) ($member['cpf'] ?? '')),
             'email' => strtolower(trim((string) ($member['email'] ?? ''))),
             'phone' => $this->digitsOnly((string) ($member['phone_landline'] ?? '')),
             'mobilePhone' => $this->digitsOnly((string) ($member['phone_mobile'] ?? '')),
@@ -156,14 +178,7 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
             return trim((string) $value) !== '';
         });
 
-        $response = $this->requestJson('POST', '/customers', $payload);
-
-        $customerId = trim((string) ($response['id'] ?? ''));
-        if ($customerId === '') {
-            throw new \RuntimeException('O Asaas não retornou o identificador do cliente.');
-        }
-
-        return $customerId;
+        return $payload;
     }
 
     /**
@@ -179,6 +194,23 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
         $customers = $response['data'] ?? null;
 
         return is_array($customers) && isset($customers[0]) && is_array($customers[0]) ? $customers[0] : null;
+    }
+
+    /**
+     * @param array<string, mixed> $customer
+     * @param array<string, mixed> $member
+     */
+    private function syncExistingCustomer(array $customer, array $member, string $externalReference): string
+    {
+        $customerId = trim((string) ($customer['id'] ?? ''));
+        if ($customerId === '') {
+            throw new \RuntimeException('O Asaas não retornou o identificador do cliente existente.');
+        }
+
+        $payload = $this->buildCustomerPayload($member, $externalReference);
+        $this->requestJson('PUT', '/customers/' . rawurlencode($customerId), $payload);
+
+        return $customerId;
     }
 
     /**

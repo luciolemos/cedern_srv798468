@@ -140,6 +140,8 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
         $this->assertStringContainsString('Configuração pendente', $html);
         $this->assertStringContainsString('Gerar cobranças da competência', $html);
         $this->assertStringContainsString('/painel/financas/contribuicoes/' , $html);
+        $this->assertStringContainsString('Mostrando 1-2 de 2 registros', $html);
+        $this->assertStringContainsString('Registros por página', $html);
     }
 
     public function testKeepsCurrentCompetenceAsPaidWhenThereIsOlderOverdueCharge(): void
@@ -224,7 +226,58 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
         $this->assertContains('Há 1 mensalidade anterior em atraso.', $row['status_notes'] ?? []);
     }
 
-    private function renderActionData(FallbackMemberAuthRepository $memberAuthRepository, string $competence): array
+    public function testPaginatesContributionsAndPreservesRequestedPageSize(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+
+        for ($index = 1; $index <= 6; $index++) {
+            $fullName = sprintf('Contribuinte %02d', $index);
+            $email = sprintf('contribuinte%02d@example.com', $index);
+            $userId = $memberAuthRepository->createPendingUser([
+                'full_name' => $fullName,
+                'email' => $email,
+                'password_hash' => 'hash',
+            ]);
+            $memberAuthRepository->updateProfile($userId, [
+                'full_name' => $fullName,
+                'cpf' => sprintf('%011d', 10000000000 + $index),
+                'preferred_due_day' => 5,
+                'contribution_amount' => '45.00',
+                'preferred_payment_method' => 'pix',
+                'billing_email_opt_in' => 1,
+                'profile_completed' => 1,
+            ]);
+            $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        }
+
+        $memberAuthRepository->generateContributionCharges('2026-07', 7);
+
+        $data = $this->renderActionData($memberAuthRepository, '2026-07', [
+            'per_page' => '5',
+            'page' => '2',
+        ]);
+
+        $this->assertCount(1, $data['finance_contributions']);
+        $this->assertSame('Contribuinte 06', $data['finance_contributions'][0]['full_name'] ?? null);
+
+        $pagination = $data['finance_contributions_pagination'];
+        $this->assertSame(2, $pagination['current_page']);
+        $this->assertSame(2, $pagination['total_pages']);
+        $this->assertSame(6, $pagination['total_items']);
+        $this->assertSame(6, $pagination['start_item']);
+        $this->assertSame(6, $pagination['end_item']);
+        $this->assertSame('5', $pagination['page_size']);
+    }
+
+    /**
+     * @param array<string, string> $queryParams
+     * @return array<string, mixed>
+     */
+    private function renderActionData(
+        FallbackMemberAuthRepository $memberAuthRepository,
+        string $competence,
+        array $queryParams = []
+    ): array
     {
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -253,10 +306,10 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             }
         };
 
-        $request = $this->createRequest('GET', '/painel/financas/contribuicoes?competence=' . $competence)
-            ->withQueryParams([
+        $request = $this->createRequest('GET', '/painel/financas/contribuicoes')
+            ->withQueryParams(array_merge([
                 'competence' => $competence,
-            ]);
+            ], $queryParams));
 
         $action($request, new Response());
 

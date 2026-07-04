@@ -102,11 +102,21 @@ final class AdminMemberUsersPageActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('pages/admin-member-users.twig', $action->capturedTemplate);
+        $this->assertSame(2, $action->capturedData['member_users_summary']['total_count']);
+        $this->assertSame(1, $action->capturedData['member_users_summary']['applicant_count']);
+        $this->assertSame(1, $action->capturedData['member_users_summary']['former_count']);
+        $this->assertSame(1, $action->capturedData['member_users_summary']['blocked_count']);
+        $this->assertStringContainsString('Perfil SISCEDE', $html);
+        $this->assertStringContainsString('Acesso ao SISCEDE', $html);
         $this->assertStringContainsString('Rafaela Nunes', $html);
         $this->assertStringContainsString('Solicitante', $html);
         $this->assertStringContainsString('Sem perfil liberado', $html);
         $this->assertStringContainsString('Carlos Mendes', $html);
         $this->assertStringContainsString('Desligado', $html);
         $this->assertStringContainsString('Sem perfil ativo', $html);
+        $this->assertStringContainsString('Painel de pessoas', $html);
+        $this->assertStringContainsString('Cadastros no recorte', $html);
+        $this->assertStringContainsString('0 associados, 1 solicitantes e 1 desligados.', $html);
+        $this->assertStringContainsString('/painel/usuarios/1/pdf', $html);
     }
 }

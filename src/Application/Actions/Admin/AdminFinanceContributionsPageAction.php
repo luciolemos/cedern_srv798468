@@ -9,6 +9,12 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributionsAction
 {
+    private const DEFAULT_PAGE_SIZE = 10;
+
+    private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
+
+    private const ALL_PAGE_SIZE = 'all';
+
     private const STATUS_OPTIONS = [
         'all' => 'Todas as situações',
         'paid' => 'Recebidas',
@@ -75,6 +81,74 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         }
 
         $summary = $this->buildSummary($rows, $competence);
+        $totalItems = count($rows);
+        $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
+        $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
+        $pageSize = self::DEFAULT_PAGE_SIZE;
+
+        if (!$showAllItems) {
+            $requestedPageSizeNumber = (int) $requestedPageSize;
+            $pageSize = in_array($requestedPageSizeNumber, self::PAGE_SIZE_OPTIONS, true)
+                ? $requestedPageSizeNumber
+                : self::DEFAULT_PAGE_SIZE;
+        } else {
+            $pageSize = max($totalItems, 1);
+        }
+
+        $totalPages = max(1, (int) ceil($totalItems / $pageSize));
+        $currentPage = max(1, (int) ($queryParams['page'] ?? 1));
+        $currentPage = min($currentPage, $totalPages);
+
+        $offset = ($currentPage - 1) * $pageSize;
+        $rows = array_slice($rows, $offset, $pageSize);
+
+        $startItem = $totalItems > 0 ? $offset + 1 : 0;
+        $endItem = $totalItems > 0 ? min($offset + count($rows), $totalItems) : 0;
+
+        $basePath = urldecode($request->getUri()->getPath());
+        $querySeparatorPosition = strpos($basePath, '?');
+        if ($querySeparatorPosition !== false) {
+            $basePath = substr($basePath, 0, $querySeparatorPosition);
+        }
+        if ($basePath === '') {
+            $basePath = '/painel/financas/contribuicoes';
+        }
+
+        $pageSizeQueryValue = $showAllItems ? self::ALL_PAGE_SIZE : (string) $pageSize;
+        $baseQuery = [
+            'competence' => $competence,
+            'q' => $searchTerm,
+            'status_filter' => $statusFilter,
+            'per_page' => $pageSizeQueryValue,
+        ];
+
+        $paginationLinks = [];
+        for ($page = 1; $page <= $totalPages; $page++) {
+            $paginationLinks[] = [
+                'number' => $page,
+                'active' => $page === $currentPage,
+                'url' => $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $page])),
+            ];
+        }
+
+        $previousPageUrl = $currentPage > 1
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage - 1]))
+            : null;
+        $nextPageUrl = $currentPage < $totalPages
+            ? $basePath . '?' . http_build_query(array_merge($baseQuery, ['page' => $currentPage + 1]))
+            : null;
+
+        $pageSizeOptions = array_map(static fn (int $option): array => [
+            'value' => (string) $option,
+            'label' => (string) $option,
+            'selected' => !$showAllItems && $option === $pageSize,
+        ], self::PAGE_SIZE_OPTIONS);
+        $pageSizeOptions[] = [
+            'value' => self::ALL_PAGE_SIZE,
+            'label' => 'Todos',
+            'selected' => $showAllItems,
+        ];
+
         $flashMessage = trim((string) ($flash['message'] ?? ''));
         $flashTone = trim((string) ($flash['tone'] ?? 'success'));
 
@@ -88,6 +162,18 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             ],
             'finance_contributions_status_options' => self::STATUS_OPTIONS,
             'finance_contributions_payment_methods' => self::PAYMENT_METHOD_LABELS,
+            'finance_contributions_pagination' => [
+                'current_page' => $currentPage,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'start_item' => $startItem,
+                'end_item' => $endItem,
+                'page_size' => $pageSizeQueryValue,
+                'links' => $paginationLinks,
+                'previous_url' => $previousPageUrl,
+                'next_url' => $nextPageUrl,
+                'page_size_options' => $pageSizeOptions,
+            ],
             'finance_contributions_summary' => $summary,
             'finance_contributions_toast_message' => $flashMessage,
             'finance_contributions_toast_tone' => $flashTone !== '' ? $flashTone : 'success',

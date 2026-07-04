@@ -58,6 +58,7 @@
         }
     },
     "scripts": {
+        "billing:contributions:run": "php scripts/process_contribution_billing_cycle.php",
         "import:bookshop:csv": "php scripts/import_bookshop_csv.php",
         "migrate:bookshop:covers": "php scripts/migrate_bookshop_cover_paths.php",
         "renumber:bookshop:skus": "php scripts/renumber_bookshop_skus.php",

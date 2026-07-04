@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>CEDE | Formulário de Cadastro de Associado</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 16mm 15mm 18mm 15mm;
+      }
+
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        color: #1c2832;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        line-height: 1.42;
+        background: #fff;
+      }
+
+      .pdf-running-header {
+        position: fixed;
+        left: 0;
+        right: 0;
+        color: #4a5762;
+        font-size: 8pt;
+      }
+
+      .pdf-running-header {
+        top: -14mm;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 15mm 3mm;
+      }
+
+      .pdf-document {
+        display: grid;
+        gap: 6mm;
+      }
+
+      .pdf-section,
+      .pdf-declaration {
+        border: 0.35mm solid #d8dee5;
+        border-radius: 3mm;
+        background: #fff;
+      }
+
+      .pdf-sheet {
+        padding: 0;
+        display: grid;
+        gap: 5mm;
+      }
+
+      .pdf-document-header {
+        display: grid;
+        gap: 2.2mm;
+        justify-items: center;
+        padding-bottom: 5mm;
+      }
+
+      .pdf-document-brand-row {
+        width: 100%;
+        padding: 1.2mm 0 1.2mm;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 5mm;
+      }
+
+      .pdf-brand-block {
+        display: grid;
+        gap: 0.6mm;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .pdf-brand-logo {
+        display: block;
+        width: 18mm;
+        height: auto;
+      }
+
+      .pdf-brand-subtitle {
+        color: #384654;
+        font-size: 7.9pt;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .pdf-document-chip {
+        padding: 1.8mm 3.2mm;
+        border: 0.3mm solid #d8c295;
+        border-radius: 999px;
+        background: #fbf4e8;
+        color: #84560d;
+        font-size: 7.6pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pdf-document-title-block {
+        display: grid;
+        gap: 0.35mm;
+        justify-items: center;
+        text-align: center;
+        width: 100%;
+        padding: 0 0 1.2mm;
+      }
+
+      .pdf-document-title-block h1 {
+        margin: 0;
+        color: #16222c;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 15.6pt;
+        line-height: 1.12;
+        letter-spacing: 0.04em;
+      }
+
+      .pdf-document-title-block p {
+        margin: 0;
+        max-width: 118mm;
+      }
+
+      .pdf-document-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3.5mm;
+      }
+
+      .pdf-meta-card,
+      .pdf-summary-card,
+      .pdf-photo-card,
+      .pdf-field {
+        border: 0.3mm solid #dde4ea;
+        border-radius: 2.5mm;
+        background: #fbfcfd;
+      }
+
+      .pdf-meta-card {
+        padding: 3mm 3.2mm;
+      }
+
+      .pdf-meta-label,
+      .pdf-summary-label,
+      .pdf-field-label,
+      .pdf-panel-label {
+        color: #76828c;
+        font-size: 7.6pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pdf-meta-value {
+        margin-top: 0.15rem;
+        color: #17232d;
+        font-size: 9.6pt;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .pdf-record-layout {
+        display: grid;
+        gap: 4mm;
+      }
+
+      .pdf-identity-strip {
+        display: grid;
+        grid-template-columns: 42mm minmax(0, 1fr);
+        gap: 4mm;
+        align-items: stretch;
+      }
+
+      .pdf-photo-card,
+      .pdf-summary-panel {
+        padding: 3.6mm;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .pdf-photo-row {
+        display: grid;
+        gap: 2.4mm;
+        align-items: start;
+      }
+
+      .pdf-photo-copy {
+        display: grid;
+        gap: 0.25rem;
+      }
+
+      .pdf-photo-frame {
+        min-height: 40mm;
+        height: 40mm;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .pdf-photo-frame img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+      }
+
+      .pdf-photo-placeholder {
+        min-height: 40mm;
+        display: grid;
+        place-items: center;
+        padding: 2mm;
+        color: #76828c;
+        text-align: center;
+        font-size: 7pt;
+      }
+
+      .pdf-photo-caption {
+        color: #66727d;
+        font-size: 8pt;
+      }
+
+      .pdf-summary-panel {
+        gap: 3mm;
+      }
+
+      .pdf-summary-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3mm;
+      }
+
+      .pdf-summary-card {
+        padding: 2.6mm 2.8mm;
+      }
+
+      .pdf-summary-item {
+        padding: 0 0 2.2mm;
+        border: none;
+        border-bottom: 0.2mm solid #e3e8ed;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .pdf-summary-item:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .pdf-summary-value {
+        margin-top: 0.15rem;
+        color: #17232d;
+        font-size: 9.4pt;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .pdf-main-content {
+        display: grid;
+        gap: 4mm;
+      }
+
+      .pdf-section {
+        padding: 4.5mm;
+        display: grid;
+        gap: 3.8mm;
+        break-inside: avoid;
+      }
+
+      .pdf-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 4mm;
+        padding-bottom: 2.5mm;
+        border-bottom: 0.25mm solid #e3e8ed;
+      }
+
+      .pdf-section-head h2 {
+        margin: 0;
+        color: #16222c;
+        font-size: 11pt;
+        font-weight: 700;
+      }
+
+      .pdf-section-hint {
+        color: #75808a;
+        font-size: 8pt;
+      }
+
+      .pdf-field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3.2mm;
+      }
+
+      .pdf-field-grid.is-finance {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .pdf-field-grid.is-address {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .pdf-field {
+        padding: 2.6mm;
+        display: grid;
+        gap: 1.6mm;
+        min-width: 0;
+      }
+
+      .pdf-field.is-clean-shell {
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .pdf-field.is-wide {
+        grid-column: 1 / -1;
+      }
+
+      .pdf-field.is-span-1 {
+        grid-column: span 1;
+      }
+
+      .pdf-field.is-span-2 {
+        grid-column: span 2;
+      }
+
+      .pdf-field.is-span-3 {
+        grid-column: span 3;
+      }
+
+      .pdf-field-control {
+        min-height: 12mm;
+        padding: 3mm;
+        border: 0.3mm solid #c7d1d9;
+        border-radius: 1.8mm;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        box-shadow: inset 0 0 0 0.15mm #eef2f5;
+      }
+
+      .pdf-field-value {
+        width: 100%;
+        color: #17232d;
+        font-size: 10pt;
+        font-weight: 600;
+        word-break: break-word;
+      }
+
+      .pdf-declaration {
+        padding: 5mm;
+        display: grid;
+        gap: 5mm;
+      }
+
+      .pdf-declaration p {
+        margin: 0;
+      }
+
+      .pdf-signature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8mm;
+        margin-top: 6mm;
+      }
+
+      .pdf-signature-party {
+        display: grid;
+        gap: 1.2mm;
+        align-content: end;
+      }
+
+      .pdf-signature-name {
+        color: #16222c;
+        font-size: 10pt;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .pdf-signature-line {
+        border-top: 0.35mm solid #8f9aa4;
+        min-height: 4.5mm;
+      }
+
+      .pdf-signature-role {
+        color: #4d5b66;
+        font-size: 8.8pt;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="pdf-running-header">
+      <strong>Centro de Estudos da Doutrina Espírita</strong>
+      <span>Formulário de Cadastro de Associado</span>
+    </div>
+
+    <main class="pdf-document">
+      <section class="pdf-sheet">
+        <header class="pdf-document-header">
+          <div class="pdf-document-brand-row">
+            <div class="pdf-brand-block">
+              {% if pdf_brand_logo_data_uri %}
+                <img class="pdf-brand-logo" src="{{ pdf_brand_logo_data_uri }}" alt="Logo do CEDE">
+              {% endif %}
+              <div class="pdf-brand-subtitle">CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA</div>
+            </div>
+          </div>
+
+          <div class="pdf-document-title-block">
+            <h1>FORMULÁRIO DE CADASTRO DE ASSOCIADO</h1>
+            {% if pdf_notice %}
+              <p>{{ pdf_notice }}</p>
+            {% endif %}
+          </div>
+
+          <div class="pdf-document-meta-grid">
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Origem do cadastro</div>
+              <div class="pdf-meta-value">{{ pdf_document_url }}</div>
+            </div>
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Emitido em</div>
+              <div class="pdf-meta-value">{{ pdf_generated_at }}</div>
+            </div>
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Finalidade</div>
+              <div class="pdf-meta-value">Conferência documental do associado</div>
+            </div>
+          </div>
+        </header>
+
+        <div class="pdf-record-layout">
+          <section class="pdf-identity-strip">
+            <div class="pdf-photo-card">
+              <div class="pdf-photo-row">
+                <div class="pdf-photo-frame">
+                  {% if pdf_member_photo_data_uri %}
+                    <img src="{{ pdf_member_photo_data_uri }}" alt="Foto do associado">
+                  {% else %}
+                    <div class="pdf-photo-placeholder">Sem foto</div>
+                  {% endif %}
+                </div>
+                <div class="pdf-photo-copy">
+                  <div class="pdf-panel-label">Imagem do associado</div>
+                  <div class="pdf-photo-caption">Arquivo salvo no cadastro.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pdf-summary-panel pdf-summary-card">
+              <div class="pdf-panel-label">Quadro de identificação</div>
+              <div class="pdf-summary-panel-grid">
+                {% for item in pdf_summary %}
+                  <div class="pdf-summary-item">
+                    <div class="pdf-summary-label">{{ item.label }}</div>
+                    <div class="pdf-summary-value">{{ item.value }}</div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </section>
+
+          <div class="pdf-main-content">
+            {% for section in pdf_sections %}
+              {% if section.title == 'Dados pessoais' %}
+                <section class="pdf-section">
+                  <div class="pdf-section-head">
+                    <h2>{{ section.title }}</h2>
+                    <div class="pdf-section-hint">Campos para conferência cadastral</div>
+                  </div>
+                  <div class="pdf-field-grid">
+                    {% for row in section.rows %}
+                      <div class="pdf-field is-clean-shell{{ row.wide|default(false) ? ' is-wide' : '' }}">
+                        <div class="pdf-field-label">{{ row.label }}</div>
+                        <div class="pdf-field-control">
+                          <div class="pdf-field-value">{{ row.value }}</div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endif %}
+            {% endfor %}
+
+            {% for section in pdf_sections %}
+              {% if section.title != 'Dados pessoais' and section.title != 'Endereço' %}
+                <section class="pdf-section">
+                  <div class="pdf-section-head">
+                    <h2>{{ section.title }}</h2>
+                    <div class="pdf-section-hint">Campos para conferência cadastral</div>
+                  </div>
+                  <div class="pdf-field-grid is-finance">
+                    {% for row in section.rows %}
+                      <div class="pdf-field is-clean-shell{{ row.wide|default(false) ? ' is-wide' : '' }}">
+                        <div class="pdf-field-label">{{ row.label }}</div>
+                        <div class="pdf-field-control">
+                          <div class="pdf-field-value">{{ row.value }}</div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endif %}
+            {% endfor %}
+
+            {% for section in pdf_sections %}
+              {% if section.title == 'Endereço' %}
+                <section class="pdf-section">
+                  <div class="pdf-section-head">
+                    <h2>{{ section.title }}</h2>
+                    <div class="pdf-section-hint">Campos para conferência cadastral</div>
+                  </div>
+                  <div class="pdf-field-grid is-address">
+                    {% for row in section.rows %}
+                      <div class="pdf-field is-clean-shell{{ row.wide|default(false) ? ' is-wide' : '' }}{{ row.span|default(0) ? ' is-span-' ~ row.span : '' }}">
+                        <div class="pdf-field-label">{{ row.label }}</div>
+                        <div class="pdf-field-control">
+                          <div class="pdf-field-value">{{ row.value }}</div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </section>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="pdf-declaration">
+        <p>
+          Declaro que os dados acima correspondem ao meu cadastro atual junto ao CEDE, ficando sujeitos a conferência administrativa quando necessário.
+        </p>
+
+        <div class="pdf-signature-grid">
+          {% for signatory in pdf_signatories %}
+            <div class="pdf-signature-party">
+              <div class="pdf-signature-line" aria-hidden="true"></div>
+              <div class="pdf-signature-name">{{ signatory.name }}</div>
+              <div class="pdf-signature-role">{{ signatory.role }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -31,6 +31,11 @@ interface MemberAuthRepository
     /**
      * @return array<string, mixed>|null
      */
+    public function findByCpf(string $cpf, int $exceptUserId = 0): ?array;
+
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findActivePasswordResetByToken(string $tokenHash): ?array;
 
     /**

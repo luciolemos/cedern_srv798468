@@ -473,6 +473,26 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
     }
 
+    public function findByCpf(string $cpf, int $exceptUserId = 0): ?array
+    {
+        $normalizedCpf = $this->normalizeCpfValue($cpf);
+        if ($normalizedCpf === null) {
+            return null;
+        }
+
+        try {
+            return $this->findByCpfInternal($normalizedCpf, $exceptUserId);
+        } catch (\Throwable $exception) {
+            $this->ensureMemberSchemaCompatibility();
+
+            try {
+                return $this->findByCpfInternal($normalizedCpf, $exceptUserId);
+            } catch (\Throwable $innerException) {
+                return null;
+            }
+        }
+    }
+
     public function findActivePasswordResetByToken(string $tokenHash): ?array
     {
         try {
@@ -561,6 +581,12 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
     public function updateProfile(int $id, array $data): bool
     {
+        $normalizedCpf = $this->normalizeCpfValue($data['cpf'] ?? null);
+        $existingCpfOwner = $normalizedCpf !== null ? $this->findByCpf($normalizedCpf, $id) : null;
+        if ($existingCpfOwner !== null) {
+            throw new \RuntimeException('CPF já vinculado a outro usuário SISCEDE.');
+        }
+
         $sql = <<<SQL
             UPDATE member_users
             SET
@@ -598,7 +624,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'phone_landline' => $this->nullableText($data['phone_landline'] ?? null),
             'birth_date' => $this->nullableText($data['birth_date'] ?? null),
             'birth_place' => $this->nullableText($data['birth_place'] ?? null),
-            'cpf' => $this->nullableText($data['cpf'] ?? null),
+            'cpf' => $normalizedCpf,
             'postal_code' => $this->nullableText($data['postal_code'] ?? null),
             'street_address' => $this->nullableText($data['street_address'] ?? null),
             'address_number' => $this->nullableText($data['address_number'] ?? null),
@@ -2490,6 +2516,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         $this->ensureDefaultRoles();
         $this->backfillAssociationFields();
+        $this->normalizeStoredCpfValues();
+        $this->ensureUniqueCpfIndex();
         $currentManagementId = $this->ensureCurrentManagementId();
         $this->migrateLegacyInstitutionalRolesToCurrentManagement($currentManagementId);
     }
@@ -3095,6 +3123,37 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         return 'Sistema';
     }
 
+    private function findByCpfInternal(string $normalizedCpf, int $exceptUserId = 0): ?array
+    {
+        $sql = <<<SQL
+            SELECT id
+            FROM member_users
+            WHERE REPLACE(REPLACE(REPLACE(REPLACE(TRIM(COALESCE(cpf, '')), '.', ''), '-', ''), ' ', ''), '/', '') = :cpf
+        SQL;
+
+        $params = ['cpf' => $normalizedCpf];
+
+        if ($exceptUserId > 0) {
+            $sql .= ' AND id <> :except_user_id';
+            $params['except_user_id'] = $exceptUserId;
+        }
+
+        $sql .= ' ORDER BY id ASC LIMIT 1';
+
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute($params);
+        $userId = (int) $statement->fetchColumn();
+
+        return $userId > 0 ? $this->findById($userId) : null;
+    }
+
+    private function normalizeCpfValue(mixed $value): ?string
+    {
+        $normalized = preg_replace('/\D+/', '', trim((string) $value)) ?? '';
+
+        return $normalized === '' ? null : $normalized;
+    }
+
     private function resolveAccountStatusLabel(string $value): string
     {
         return match (strtolower(trim($value))) {
@@ -3115,6 +3174,26 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $statement->execute([
             'table_name' => $tableName,
             'column_name' => $columnName,
+        ]);
+
+        $exists = (int) $statement->fetchColumn() > 0;
+
+        if (!$exists) {
+            $this->pdo->exec($alterSql);
+        }
+    }
+
+    private function ensureIndex(string $tableName, string $indexName, string $alterSql): void
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS '
+            . 'WHERE TABLE_SCHEMA = DATABASE() '
+            . 'AND TABLE_NAME = :table_name '
+            . 'AND INDEX_NAME = :index_name'
+        );
+        $statement->execute([
+            'table_name' => $tableName,
+            'index_name' => $indexName,
         ]);
 
         $exists = (int) $statement->fetchColumn() > 0;
@@ -3198,6 +3277,64 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             WHERE association_status = 'member'
               AND status <> 'active'
         SQL);
+    }
+
+    private function normalizeStoredCpfValues(): void
+    {
+        $this->pdo->exec(<<<SQL
+            UPDATE member_users
+            SET cpf = NULLIF(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(
+                            REPLACE(TRIM(COALESCE(cpf, '')), '.', ''),
+                            '-',
+                            ''
+                        ),
+                        ' ',
+                        ''
+                    ),
+                    '/',
+                    ''
+                ),
+                ''
+            )
+            WHERE cpf IS NOT NULL
+        SQL);
+    }
+
+    private function ensureUniqueCpfIndex(): void
+    {
+        try {
+            $statement = $this->pdo->query(<<<SQL
+                SELECT cpf
+                FROM member_users
+                WHERE cpf IS NOT NULL
+                  AND TRIM(cpf) <> ''
+                GROUP BY cpf
+                HAVING COUNT(*) > 1
+                LIMIT 1
+            SQL);
+
+            $duplicatedCpf = $statement !== false ? trim((string) $statement->fetchColumn()) : '';
+
+            if ($duplicatedCpf !== '') {
+                @error_log(
+                    'Nao foi possivel criar indice unico de CPF em member_users; ha duplicidade legada para o CPF '
+                    . $duplicatedCpf
+                );
+
+                return;
+            }
+
+            $this->ensureIndex(
+                'member_users',
+                'uq_member_users_cpf',
+                'ALTER TABLE member_users ADD UNIQUE KEY uq_member_users_cpf (cpf)'
+            );
+        } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao consolidar indice unico de CPF.', $exception);
+        }
     }
 
     /**

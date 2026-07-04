@@ -178,6 +178,28 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         return $this->withMemberTypeLabel($this->users[$id]);
     }
 
+    public function findByCpf(string $cpf, int $exceptUserId = 0): ?array
+    {
+        $normalizedCpf = $this->digitsOnly($cpf);
+        if ($normalizedCpf === '') {
+            return null;
+        }
+
+        foreach ($this->users as $user) {
+            if ($exceptUserId > 0 && (int) ($user['id'] ?? 0) === $exceptUserId) {
+                continue;
+            }
+
+            if ($this->digitsOnly((string) ($user['cpf'] ?? '')) !== $normalizedCpf) {
+                continue;
+            }
+
+            return $this->withMemberTypeLabel($user);
+        }
+
+        return null;
+    }
+
     public function findActivePasswordResetByToken(string $tokenHash): ?array
     {
         $now = new \DateTimeImmutable('now');
@@ -239,12 +261,17 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             return false;
         }
 
+        $normalizedCpf = $this->normalizeCpfValue($data['cpf'] ?? null);
+        if ($normalizedCpf !== null && $this->findByCpf($normalizedCpf, $id) !== null) {
+            throw new \RuntimeException('CPF já vinculado a outro usuário SISCEDE.');
+        }
+
         $this->users[$id]['full_name'] = trim((string) ($data['full_name'] ?? ''));
         $this->users[$id]['phone_mobile'] = $this->nullableText($data['phone_mobile'] ?? null);
         $this->users[$id]['phone_landline'] = $this->nullableText($data['phone_landline'] ?? null);
         $this->users[$id]['birth_date'] = $this->nullableText($data['birth_date'] ?? null);
         $this->users[$id]['birth_place'] = $this->nullableText($data['birth_place'] ?? null);
-        $this->users[$id]['cpf'] = $this->nullableText($data['cpf'] ?? null);
+        $this->users[$id]['cpf'] = $normalizedCpf;
         $this->users[$id]['postal_code'] = $this->nullableText($data['postal_code'] ?? null);
         $this->users[$id]['street_address'] = $this->nullableText($data['street_address'] ?? null);
         $this->users[$id]['address_number'] = $this->nullableText($data['address_number'] ?? null);
@@ -299,6 +326,18 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             $this->contributionCharges[$chargeId]['preferred_payment_method'] = $normalizedPaymentMethod;
             $this->contributionCharges[$chargeId]['updated_at'] = $now;
         }
+    }
+
+    private function normalizeCpfValue(mixed $value): ?string
+    {
+        $normalized = $this->digitsOnly((string) $value);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function digitsOnly(string $value): string
+    {
+        return preg_replace('/\D+/', '', $value) ?? '';
     }
 
     public function consumePasswordResetToken(int $resetId, int $userId, string $passwordHash): bool

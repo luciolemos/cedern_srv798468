@@ -13,6 +13,7 @@
 
     {% set finance_base_url = base_url ?? '' %}
     {% set filters = finance_contributions_filters|default({}) %}
+    {% set pagination = finance_contributions_pagination|default({}) %}
     {% set summary = finance_contributions_summary|default({}) %}
     {% set status_options = finance_contributions_status_options|default({}) %}
     {% set payment_methods = finance_contributions_payment_methods|default({}) %}
@@ -85,6 +86,7 @@
             <option value="{{ value }}"{% if filters.status_filter|default('all') == value %} selected{% endif %}>{{ label }}</option>
         {% endfor %}
         </select>
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
         <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
         {% if has_active_filters %}
           <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes">Limpar</a>
@@ -105,6 +107,24 @@
         <p>{{ has_active_filters ? 'Nenhum contribuinte encontrado para os filtros informados.' : 'Nenhuma cobrança mensal gerada ainda para a competência selecionada.' }}</p>
       </article>
     {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="150">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item|default(0) }}-{{ pagination.end_item|default(0) }} de {{ pagination.total_items|default(0) }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="{{ finance_base_url }}/painel/financas/contribuicoes">
+          <label for="nc-finance-contributions-per-page">Registros por página</label>
+          <select id="nc-finance-contributions-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options|default([]) %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+          <input type="hidden" name="q" value="{{ filters.q|default('') }}">
+          <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('all') }}">
+        </form>
+      </div>
+
       <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="160">
         <table class="nc-admin-table nc-admin-table-bookshop nc-finance-contributions-table">
           <thead>
@@ -243,6 +263,28 @@
           </tbody>
         </table>
       </div>
+
+      {% if pagination.total_pages|default(1) > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação de contribuições" data-aos="fade-up" data-aos-delay="180">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span></span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links|default([]) %}
+              <a class="nc-link{{ link.active ? ' is-active' : '' }}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span></span>
+          {% endif %}
+        </nav>
+      {% endif %}
     {% endif %}
   </section>
 {% endblock %}

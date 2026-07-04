@@ -65,6 +65,7 @@ use App\Application\Actions\Admin\AdminLibraryCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryListPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
+use App\Application\Actions\Admin\AdminMemberUserPdfAction;
 use App\Application\Actions\Admin\AdminMemberUserViewPageAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
@@ -111,6 +112,7 @@ use App\Application\Actions\Page\StoreBookshopIiPageAction;
 use App\Application\Actions\Page\StoreBookshopPageAction;
 use App\Application\Actions\Page\StorePageAction;
 use App\Application\Actions\Page\MemberCompleteProfilePageAction;
+use App\Application\Actions\Page\MemberCompleteProfilePdfAction;
 use App\Application\Actions\Page\MemberEventInterestToggleAction;
 use App\Application\Actions\Page\MemberAdminAreaPageAction;
 use App\Application\Actions\Page\MemberForgotPasswordPageAction;
@@ -355,6 +357,7 @@ return function (App $app) {
         return $response->withHeader('Location', $target)->withStatus(302);
     });
     $app->map(['GET', 'POST'], '/membro/perfil/completar', MemberCompleteProfilePageAction::class);
+    $app->map(['GET', 'POST'], '/membro/perfil/completar/pdf', MemberCompleteProfilePdfAction::class);
     $app->post('/membro/eventos/{id}/participacao', MemberEventInterestToggleAction::class);
     $app->get('/membro/operacao', MemberOperatorAreaPageAction::class);
     $app->get('/membro/gestao', MemberManagerAreaPageAction::class);
@@ -464,6 +467,7 @@ return function (App $app) {
         $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)
             ->add($panelFinanceAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/usuarios/{id}/pdf', AdminMemberUserPdfAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/usuarios/{id}', AdminMemberUserViewPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/patrimonio', AdminPatrimonyAssetListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));

@@ -32,11 +32,15 @@
   <noscript><link rel="stylesheet" href="{{ google_fonts_href }}"></noscript>
   {# <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css"> #}
   {% set asset_version = app_asset_version|default('1') %}
+  {% set favicon_version = app_favicon_version|default(asset_version ~ '-cede-apple180') %}
   <link rel="stylesheet" href="/assets/css/cedern.css?v={{ asset_version }}">
   <link rel="stylesheet" href="/assets/css/cedern-bookshop-synopsis-content.css?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede4_favicon_32.png?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede4_favicon_192.png?v={{ asset_version }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/brands/cede4_apple_touch_180.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="180x180" href="{{ base_url ?? '' }}/assets/img/brands/cede4_apple_touch_180.png?v={{ favicon_version }}">
+  <link rel="shortcut icon" href="{{ base_url ?? '' }}/favicon.ico?v={{ favicon_version }}" type="image/x-icon">
+  <link rel="icon" type="image/x-icon" href="{{ base_url ?? '' }}/favicon.ico?v={{ favicon_version }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ base_url ?? '' }}/assets/img/brands/cede4_favicon_32.png?v={{ favicon_version }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ base_url ?? '' }}/assets/img/brands/cede4_favicon_192.png?v={{ favicon_version }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ base_url ?? '' }}/assets/img/brands/cede4_apple_touch_180.png?v={{ favicon_version }}">
   <script src="/assets/js/cedern-nav.js?v={{ asset_version }}" defer></script>
   <script src="/assets/js/cedern-buttons.js?v={{ asset_version }}" defer></script>
   <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>

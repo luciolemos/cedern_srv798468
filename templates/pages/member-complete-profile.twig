@@ -294,6 +294,15 @@
 
               <div class="nc-actions nc-admin-login-actions nc-member-profile-actions is-stacked-mobile" data-aos="fade-up" data-aos-delay="80">
                 <button class="nc-btn nc-btn-primary nc-admin-login-submit" type="submit">Salvar e continuar</button>
+                <button
+                  class="nc-btn nc-btn-secondary"
+                  type="submit"
+                  formaction="{{ base_url ?? '' }}/membro/perfil/completar/pdf"
+                  formtarget="_blank"
+                  formnovalidate
+                >
+                  Gerar PDF do cadastro
+                </button>
                 <a class="nc-btn nc-btn-secondary" href="{{ base_url ?? '' }}/membro/sair">Sair e continuar depois</a>
               </div>
             </div>
