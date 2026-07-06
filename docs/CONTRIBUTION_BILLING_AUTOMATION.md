@@ -26,6 +26,7 @@ Antes de automatizar por cron, confirme:
 
 - `ASAAS_API_KEY` configurada no ambiente correto;
 - `ASAAS_ENVIRONMENT` consistente com o ambiente;
+- `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=false` em desenvolvimento, homologação e testes;
 - `ASAAS_WEBHOOK_TOKEN` configurado quando o webhook for protegido;
 - `ASAAS_CUSTOMER_NOTIFICATION_DISABLED=false` se o Asaas for o canal oficial de aviso;
 - `APP_DEFAULT_PAGE_URL` apontando para o ambiente correto;
@@ -90,6 +91,20 @@ Opções disponíveis:
 - `1`: erro de configuração ou falha de execução
 - `2`: processamento concluído, mas houve falhas ao criar cobranças no Asaas
 - `3`: já existe outro processo em execução
+
+## Cerca de segurança entre dev e produção
+
+Por padrão, o gateway deve permanecer bloqueado quando:
+
+- `APP_ENV` não for de produção; e
+- `ASAAS_ENVIRONMENT=production`.
+
+Em outras palavras:
+
+- desenvolvimento em `https://srv798468.hstgr.cloud/cedern/` deve usar `ASAAS_ENVIRONMENT=sandbox`;
+- produção em `https://cedern.org/` pode usar `ASAAS_ENVIRONMENT=production`.
+
+Só use `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=true` para um teste deliberado, temporário e controlado.
 
 ## Cron recomendado
 

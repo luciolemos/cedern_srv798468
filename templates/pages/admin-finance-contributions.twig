@@ -291,62 +291,100 @@
                   </td>
                   <td class="nc-admin-table-actions nc-contribution-actions" data-label="Ações">
                     {% if contribution.can_mark_paid %}
-                      {% if contribution.has_gateway_charge %}
-                        <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
-                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/sincronizar">
-                          {% include 'components/csrf-field.twig' %}
-                          <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar</button>
-                        </form>
-                      {% else %}
-                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
-                          {% include 'components/csrf-field.twig' %}
-                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                          <input type="hidden" name="billing_type" value="pix">
-                          <button class="nc-btn nc-btn-secondary" type="submit">Gerar Pix</button>
-                        </form>
-                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
-                          {% include 'components/csrf-field.twig' %}
-                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                          <input type="hidden" name="billing_type" value="boleto">
-                          <button class="nc-btn nc-btn-secondary" type="submit">Gerar boleto</button>
-                        </form>
-                      {% endif %}
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/receber">
-                        {% include 'components/csrf-field.twig' %}
-                        <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                        <select class="nc-admin-inline-select" name="payment_method" aria-label="Forma de baixa">
-                          {% for value, label in payment_methods %}
-                            <option value="{{ value }}"{% if contribution.payment_method_key|default('manual') == value %} selected{% endif %}>{{ label }}</option>
-                          {% endfor %}
-                        </select>
-                        <button class="nc-btn nc-btn-secondary" type="submit">Registrar recebimento</button>
-                      </form>
-                      <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/isentar">
-                        {% include 'components/csrf-field.twig' %}
-                        <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                        <button class="nc-btn nc-btn-secondary" type="submit">Isentar</button>
-                      </form>
-                      {% if contribution.can_send_email_reminder %}
-                        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/enviar-email">
-                          {% include 'components/csrf-field.twig' %}
-                          <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
-                          <button class="nc-btn nc-btn-secondary" type="submit">Enviar e-mail</button>
-                        </form>
-                      {% endif %}
-                      {% if contribution.can_open_whatsapp_reminder %}
-                        <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/whatsapp?competence={{ filters.competence|default('now'|date('Y-m'))|url_encode }}" target="_blank" rel="noopener">WhatsApp</a>
-                      {% endif %}
-                      {% if not contribution.can_send_email_reminder and not contribution.can_open_whatsapp_reminder %}
-                        <span class="nc-contribution-action-note">Sem autorização ou contato válido para lembretes.</span>
-                      {% endif %}
+                      <div class="nc-contribution-action-strip">
+                        <details class="nc-contribution-action-menu {{ contribution.has_gateway_charge ? 'is-ready' : 'is-fallback' }}">
+                          <summary class="nc-btn nc-btn-secondary nc-contribution-action-menu-trigger">
+                            <span class="nc-contribution-action-menu-copy">
+                              <span class="nc-contribution-action-menu-label">Cobrança</span>
+                              <span class="nc-contribution-action-menu-meta">{{ contribution.has_gateway_charge ? 'Asaas emitida' : 'Contingência manual' }}</span>
+                            </span>
+                          </summary>
+                          <div class="nc-contribution-action-menu-panel">
+                            {% if contribution.has_gateway_charge %}
+                              <span class="nc-contribution-action-panel-note">A recorrência já vinculou uma cobrança externa. Confira os detalhes ou sincronize o status no Asaas.</span>
+                              <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
+                              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/sincronizar">
+                                {% include 'components/csrf-field.twig' %}
+                                <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar Asaas</button>
+                              </form>
+                            {% else %}
+                              <span class="nc-contribution-action-panel-note">A mensalidade local existe, mas a cobrança externa ainda não foi criada. Use a emissão manual apenas como contingência.</span>
+                              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                                {% include 'components/csrf-field.twig' %}
+                                <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                                <input type="hidden" name="billing_type" value="pix">
+                                <button class="nc-btn nc-btn-secondary" type="submit">Emitir Pix</button>
+                              </form>
+                              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca/criar">
+                                {% include 'components/csrf-field.twig' %}
+                                <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                                <input type="hidden" name="billing_type" value="boleto">
+                                <button class="nc-btn nc-btn-secondary" type="submit">Emitir boleto</button>
+                              </form>
+                            {% endif %}
+                          </div>
+                        </details>
+
+                        <details class="nc-contribution-action-menu is-follow-up">
+                          <summary class="nc-btn nc-btn-secondary nc-contribution-action-menu-trigger">
+                            <span class="nc-contribution-action-menu-copy">
+                              <span class="nc-contribution-action-menu-label">Acompanhar</span>
+                              <span class="nc-contribution-action-menu-meta">Lembretes e isenção</span>
+                            </span>
+                          </summary>
+                          <div class="nc-contribution-action-menu-panel">
+                            <span class="nc-contribution-action-panel-note">Registre isenção quando necessário e use os lembretes para acompanhar o retorno do associado.</span>
+                            <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/isentar">
+                              {% include 'components/csrf-field.twig' %}
+                              <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                              <button class="nc-btn nc-btn-secondary" type="submit">Registrar isenção</button>
+                            </form>
+                            {% if contribution.can_send_email_reminder %}
+                              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/enviar-email">
+                                {% include 'components/csrf-field.twig' %}
+                                <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                                <button class="nc-btn nc-btn-secondary" type="submit">Enviar lembrete</button>
+                              </form>
+                            {% endif %}
+                            {% if contribution.can_open_whatsapp_reminder %}
+                              <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/whatsapp?competence={{ filters.competence|default('now'|date('Y-m'))|url_encode }}" target="_blank" rel="noopener">Abrir WhatsApp</a>
+                            {% endif %}
+                            {% if not contribution.can_send_email_reminder and not contribution.can_open_whatsapp_reminder %}
+                              <span class="nc-contribution-action-note">Sem autorização ou contato válido para lembretes.</span>
+                            {% endif %}
+                          </div>
+                        </details>
+
+                        <details class="nc-contribution-action-menu nc-contribution-action-menu-wide is-internal">
+                          <summary class="nc-btn nc-btn-secondary nc-contribution-action-menu-trigger">
+                            <span class="nc-contribution-action-menu-copy">
+                              <span class="nc-contribution-action-menu-label">Baixa interna</span>
+                              <span class="nc-contribution-action-menu-meta">Uso excepcional</span>
+                            </span>
+                          </summary>
+                          <div class="nc-contribution-action-menu-panel">
+                            <span class="nc-contribution-action-panel-note">Confirme aqui apenas pagamentos recebidos fora do fluxo autom&aacute;tico do Asaas.</span>
+                            <form class="nc-admin-inline-form nc-contribution-manual-panel-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/receber">
+                              {% include 'components/csrf-field.twig' %}
+                              <input type="hidden" name="competence" value="{{ filters.competence|default('now'|date('Y-m')) }}">
+                              <select class="nc-admin-inline-select" name="payment_method" aria-label="Forma de baixa manual">
+                                {% for value, label in payment_methods %}
+                                  <option value="{{ value }}"{% if contribution.payment_method_key|default('manual') == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                              </select>
+                              <button class="nc-btn nc-btn-primary nc-contribution-manual-submit" type="submit">Confirmar recebimento</button>
+                            </form>
+                          </div>
+                        </details>
+                      </div>
                     {% elseif contribution.has_current_charge and contribution.has_gateway_charge %}
                       <a class="nc-btn nc-btn-secondary" href="{{ finance_base_url }}/painel/financas/contribuicoes/{{ contribution.charge_id }}/cobranca">Detalhes da cobrança</a>
                     {% elseif contribution.has_current_charge %}
                       <span class="nc-admin-featured-flag {{ contribution.status_tone|default('is-off') }}">Sem ação manual</span>
                     {% elseif contribution.status_key|default('') == 'config_pending' %}
-                      <span class="nc-contribution-action-note">Completar cadastro financeiro antes de gerar a cobrança.</span>
+                      <span class="nc-contribution-action-note">Completar cadastro financeiro para entrar na pr&oacute;xima recorr&ecirc;ncia.</span>
                     {% else %}
-                      <span class="nc-contribution-action-note">Use o botão acima para gerar a cobrança desta competência.</span>
+                      <span class="nc-contribution-action-note">Aguardando a recorr&ecirc;ncia autom&aacute;tica desta compet&ecirc;ncia.</span>
                     {% endif %}
                   </td>
                 {% endif %}

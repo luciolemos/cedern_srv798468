@@ -44,6 +44,9 @@ class AboutManagementPageAction extends AbstractPageAction
         'Coordenador' =>
             'Acompanha a operação de uma frente específica, organiza equipe '
             . 'e garante execução das atividades previstas.',
+        'Coordenador(a) do Curso de Mediunidade' =>
+            'Coordena o curso de mediunidade, acompanha turmas, equipe de apoio '
+            . 'e o andamento pedagógico das atividades formativas.',
         'Conselheiro' =>
             'Contribui com orientação e acompanhamento institucional, '
             . 'apoiando decisões e o fortalecimento da missão do CEDE.',

@@ -12,15 +12,19 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
     private const PRODUCTION_BASE_URL = 'https://api.asaas.com/v3';
 
     private string $apiKey;
+    private string $appEnv;
+    private string $environment;
     private string $baseUrl;
     private string $userAgent;
     private bool $customerNotificationsDisabled;
+    private bool $allowProductionInNonProduction;
 
     public function __construct()
     {
-        $environment = strtolower(trim((string) ($_ENV['ASAAS_ENVIRONMENT'] ?? 'sandbox')));
+        $this->appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
+        $this->environment = strtolower(trim((string) ($_ENV['ASAAS_ENVIRONMENT'] ?? 'sandbox')));
         $this->apiKey = trim((string) ($_ENV['ASAAS_API_KEY'] ?? ''));
-        $this->baseUrl = $environment === 'production'
+        $this->baseUrl = $this->environment === 'production'
             ? self::PRODUCTION_BASE_URL
             : self::SANDBOX_BASE_URL;
         $this->userAgent = trim((string) ($_ENV['ASAAS_USER_AGENT'] ?? 'cedern-finance/1.0'));
@@ -28,11 +32,15 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
             trim((string) ($_ENV['ASAAS_CUSTOMER_NOTIFICATION_DISABLED'] ?? 'true')),
             FILTER_VALIDATE_BOOLEAN
         );
+        $this->allowProductionInNonProduction = filter_var(
+            trim((string) ($_ENV['ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION'] ?? 'false')),
+            FILTER_VALIDATE_BOOLEAN
+        );
     }
 
     public function isConfigured(): bool
     {
-        return $this->apiKey !== '';
+        return $this->apiKey !== '' && !$this->isUnsafeProductionConfiguration();
     }
 
     public function providerKey(): string
@@ -94,13 +102,32 @@ final class AsaasContributionBillingGateway implements ContributionBillingGatewa
 
     private function assertConfigured(): void
     {
-        if (!$this->isConfigured()) {
+        if ($this->apiKey === '') {
             throw new \RuntimeException('Asaas não configurado. Defina ASAAS_API_KEY.');
+        }
+
+        if ($this->isUnsafeProductionConfiguration()) {
+            throw new \RuntimeException(
+                'Asaas em produção bloqueado neste ambiente. Use ASAAS_ENVIRONMENT=sandbox ou '
+                . 'libere explicitamente ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=true.'
+            );
         }
 
         if (!function_exists('curl_init')) {
             throw new \RuntimeException('A extensão cURL é obrigatória para integração com o Asaas.');
         }
+    }
+
+    private function isUnsafeProductionConfiguration(): bool
+    {
+        return $this->environment === 'production'
+            && $this->isNonProductionAppEnv()
+            && !$this->allowProductionInNonProduction;
+    }
+
+    private function isNonProductionAppEnv(): bool
+    {
+        return !in_array($this->appEnv, ['prod', 'production'], true);
     }
 
     /**

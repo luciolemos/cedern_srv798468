@@ -61,18 +61,22 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         $onboardingChecklist = [
             [
                 'label' => 'Nome completo preenchido',
+                'description' => 'Esse dado identifica você no painel, no menu do membro e nos fluxos internos do CEDE.',
                 'done' => trim((string) ($member['full_name'] ?? '')) !== '',
             ],
             [
                 'label' => 'Celular informado',
+                'description' => 'Seu celular facilita contato rápido, avisos institucionais e lembretes importantes.',
                 'done' => trim((string) ($member['phone_mobile'] ?? '')) !== '',
             ],
             [
                 'label' => 'Naturalidade informada',
+                'description' => 'A naturalidade mantém seu cadastro institucional mais completo e consistente.',
                 'done' => trim((string) ($member['birth_place'] ?? '')) !== '',
             ],
             [
                 'label' => 'Foto de perfil definida',
+                'description' => 'A foto melhora sua identificação visual nas áreas internas e na navegação da conta.',
                 'done' => trim((string) ($member['profile_photo_path'] ?? '')) !== '',
             ],
         ];
@@ -85,6 +89,73 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         }
         $onboardingTotal = count($onboardingChecklist);
         $onboardingPercent = (int) round(($onboardingCompleted / $onboardingTotal) * 100);
+        $onboardingPendingCount = max($onboardingTotal - $onboardingCompleted, 0);
+        $nextPendingOnboardingItem = null;
+        foreach ($onboardingChecklist as $item) {
+            if (empty($item['done'])) {
+                $nextPendingOnboardingItem = $item;
+                break;
+            }
+        }
+
+        $onboardingStatusTone = 'is-progress';
+        $onboardingStatusLabel = 'Em andamento';
+        $onboardingHeadline = 'Sua experiência na área do membro ainda pode evoluir.';
+        $onboardingDescription = 'Conclua as etapas pendentes para ativar um cadastro mais completo e deixar sua presença no painel mais consistente.';
+        $onboardingSecondaryAction = [
+            'label' => 'Ver agenda',
+            'href' => '/agenda',
+        ];
+        $onboardingBenefits = [
+            'Mais clareza de identificação no menu e nas áreas internas.',
+            'Contato institucional mais ágil quando a equipe precisar falar com você.',
+            'Cadastro mais completo para acompanhar sua jornada como associado.',
+        ];
+
+        if ($onboardingCompleted === 0) {
+            $onboardingStatusLabel = 'Começando agora';
+            $onboardingHeadline = 'Seu cadastro ainda não avançou nas etapas principais.';
+            $onboardingDescription = 'Vale começar pelo perfil para registrar seus dados essenciais e evitar lacunas logo no primeiro acesso.';
+        } elseif ($onboardingPendingCount === 1 && is_array($nextPendingOnboardingItem)) {
+            $onboardingStatusTone = 'is-almost-done';
+            $onboardingStatusLabel = 'Quase concluído';
+            $onboardingHeadline = 'Falta só um ajuste para fechar seu onboarding.';
+            $onboardingDescription = 'Concluir "' . (string) ($nextPendingOnboardingItem['label'] ?? 'a etapa pendente') . '" deixa sua conta muito mais completa.';
+        } elseif ($onboardingPendingCount === 0) {
+            $onboardingStatusTone = 'is-complete';
+            $onboardingStatusLabel = 'Concluído';
+            $onboardingHeadline = 'Seu onboarding está completo.';
+            $onboardingDescription = 'Seu cadastro essencial já está em dia. Agora você pode concentrar sua atenção nos próximos eventos e nas trilhas liberadas para seu perfil.';
+            $onboardingSecondaryAction = [
+                'label' => 'Atualizar painel',
+                'href' => '/membro',
+            ];
+            $onboardingBenefits = [
+                'Seu perfil já oferece identificação visual e dados básicos consistentes.',
+                'A equipe consegue localizar suas informações principais com rapidez.',
+                'Você pode focar a área do membro em agenda, contribuições e próximos passos.',
+            ];
+        }
+
+        $onboardingPrimaryAction = [
+            'label' => 'Completar perfil',
+            'href' => '/membro/perfil/completar',
+        ];
+        $onboardingRecommendedStepTitle = is_array($nextPendingOnboardingItem)
+            ? (string) ($nextPendingOnboardingItem['label'] ?? 'Revisar seu painel')
+            : 'Revisar seu painel';
+        $onboardingRecommendedStepDescription = is_array($nextPendingOnboardingItem)
+            ? (string) ($nextPendingOnboardingItem['description'] ?? 'Revise suas informações para manter o cadastro consistente.')
+            : 'Revise suas informações para manter o cadastro consistente.';
+
+        if ($onboardingPendingCount === 0) {
+            $onboardingPrimaryAction = [
+                'label' => 'Abrir agenda',
+                'href' => '/agenda',
+            ];
+            $onboardingRecommendedStepTitle = 'Aproveitar a área do membro';
+            $onboardingRecommendedStepDescription = 'Seu cadastro essencial já foi concluído. O próximo melhor uso do painel é acompanhar eventos, contribuições e trilhas liberadas.';
+        }
 
         $roleWeights = [
             'member' => 10,
@@ -403,6 +474,16 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'member_onboarding_completed' => $onboardingCompleted,
             'member_onboarding_total' => $onboardingTotal,
             'member_onboarding_percent' => $onboardingPercent,
+            'member_onboarding_pending_count' => $onboardingPendingCount,
+            'member_onboarding_status_tone' => $onboardingStatusTone,
+            'member_onboarding_status_label' => $onboardingStatusLabel,
+            'member_onboarding_headline' => $onboardingHeadline,
+            'member_onboarding_description' => $onboardingDescription,
+            'member_onboarding_primary_action' => $onboardingPrimaryAction,
+            'member_onboarding_secondary_action' => $onboardingSecondaryAction,
+            'member_onboarding_recommended_step_title' => $onboardingRecommendedStepTitle,
+            'member_onboarding_recommended_step_description' => $onboardingRecommendedStepDescription,
+            'member_onboarding_benefits' => $onboardingBenefits,
             'member_next_actions' => $nextActions,
             'member_upcoming_events' => $upcomingEvents,
             'member_my_upcoming_events' => $myUpcomingEvents,

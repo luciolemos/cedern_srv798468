@@ -22,6 +22,18 @@ async function openFinancePreview(page)
                 --font-body: "DejaVu Sans", Arial, sans-serif !important;
                 --font-mono: "DejaVu Sans Mono", Consolas, monospace !important;
             }
+
+            /* Keep the toolbar capture deterministic across viewports. */
+            [data-aos] {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+                animation: none !important;
+            }
+
+            .nc-utility-stack {
+                display: none !important;
+            }
         `,
     });
     await page.locator('.nc-admin-table-search').waitFor();
@@ -55,7 +67,7 @@ test.describe('Admin finance sales visual regression', () => {
         await page.locator('input[name="amount_max"]').fill('500');
         await expect(page.locator('input[name="amount_max"]')).toHaveValue('500');
 
-        await expect(page.locator('.nc-admin-table-search')).toHaveScreenshot('admin-finance-filters.png', {
+        await expect(page.locator('.nc-finance-filter-controls')).toHaveScreenshot('admin-finance-filters.png', {
             animations: 'disabled',
         });
 

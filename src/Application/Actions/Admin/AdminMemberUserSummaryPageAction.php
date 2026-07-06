@@ -28,6 +28,7 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
         'Diretor de Atendimento Fraterno',
         'Diretor de Comunicação',
         'Coordenador',
+        'Coordenador(a) do Curso de Mediunidade',
         'Conselheiro',
     ];
 

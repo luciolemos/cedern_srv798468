@@ -142,8 +142,7 @@ class AdminBookshopBookListPageActionTest extends TestCase
         array $books,
         array $categories,
         array $genres
-    ): TestableAdminBookshopBookListPageAction
-    {
+    ): TestableAdminBookshopBookListPageAction {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
             ->findAllBooksForAdmin()

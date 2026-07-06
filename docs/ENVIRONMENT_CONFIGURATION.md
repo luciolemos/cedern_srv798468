@@ -23,7 +23,8 @@ Organize o `.env` em blocos:
 6. Banco de dados
 7. Credenciais auxiliares do Admin Agenda
 8. E-mail transacional
-9. Uploads e armazenamento público
+9. Gateway de cobrança Asaas
+10. Uploads e armazenamento público
 
 ## Referência das variáveis
 
@@ -33,7 +34,7 @@ Organize o `.env` em blocos:
 - `APP_ENV_FILE`: opcional. Permite mandar o bootstrap carregar outro arquivo em vez do `.env` padrão.
 - `APP_LOG_PATH`: caminho absoluto do log da aplicação. Em Hostinger normalmente fica fora do projeto.
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
-- `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`.
+- `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
 - `APP_ASSET_VERSION`: versão manual dos assets. Troque o valor para quebrar cache de CSS, JS, ícones e templates que dependem de asset busting.
 
 ### 2. Aparência e seletor de tema
@@ -109,7 +110,22 @@ O código hoje usa o contrato `MAIL_*`.
 - `MAIL_SMTP_DEBUG`: habilita debug SMTP em log.
 - `MAIL_ALLOW_EXTERNAL_REPLYTO`: quando `true`, permite `Reply-To` externo informado pelo visitante.
 
-### 9. Uploads e armazenamento público
+### 9. Gateway de cobrança Asaas
+
+- `ASAAS_ENVIRONMENT`: ambiente da API. Use `sandbox` em desenvolvimento e `production` apenas no ambiente real.
+- `ASAAS_API_KEY`: chave da API do Asaas.
+- `ASAAS_WEBHOOK_TOKEN`: token opcional de validação do webhook.
+- `ASAAS_USER_AGENT`: identificador do integrador nas chamadas.
+- `ASAAS_CUSTOMER_NOTIFICATION_DISABLED`: controla se o Asaas envia as notificações próprias ao cliente.
+- `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION`: cerca de segurança. Mantenha `false` em desenvolvimento, homologação e testes.
+
+Regra prática:
+
+- `APP_ENV=development` ou equivalente deve andar com `ASAAS_ENVIRONMENT=sandbox`.
+- Se `APP_ENV` não for produção e `ASAAS_ENVIRONMENT=production`, o gateway fica bloqueado por padrão.
+- Só use `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=true` para um teste deliberado e temporário.
+
+### 10. Uploads e armazenamento público
 
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
@@ -129,16 +145,23 @@ O código hoje usa o contrato `MAIL_*`.
 - `APP_DEFAULT_MODE=light`
 - `APP_DEFAULT_DARK_INTENSITY=neutral`
 - `APP_BASE=""` se o app roda na raiz do domínio
+- `ASAAS_ENVIRONMENT=production`
+- `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=false`
 
 Observação:
-Se a produção estiver acessível na raiz `https://cedern.org/`, `APP_BASE="/cedern"` vira configuração herdada, não a ideal. O projeto tem fallback defensivo, então ele pode continuar funcionando, mas o valor correto para domínio raiz é vazio.
+Se a produção estiver acessível na raiz `https://cedern.org/`, `APP_BASE="/cedern"` vira configuração herdada, não a ideal. O projeto agora consegue autodetectar subdiretórios quando `APP_BASE` vier vazio, mas o valor correto para domínio raiz continua sendo vazio.
 
 ### Desenvolvimento em `https://srv798468.hstgr.cloud/cedern/`
 
-- `APP_ENV=production` pode ser mantido se a intenção for simular o comportamento real do público.
+- `APP_ENV=development`
 - `APP_BASE="/cedern"`
 - `APP_ENABLE_THEME_PALETTE=false` se quiser espelhar o site público.
 - `APP_ENABLE_DASHBOARD_THEME_PALETTE=true` para manter personalização no painel.
+- `ASAAS_ENVIRONMENT=sandbox`
+- `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=false`
+
+Observação:
+Não mantenha `APP_ENV=production` no ambiente de desenvolvimento só para simular produção. Para aparência e comportamento público, ajuste as flags específicas; para cobrança, a combinação segura continua sendo desenvolvimento com Asaas sandbox.
 
 ## Procedimento seguro ao editar o `.env`
 

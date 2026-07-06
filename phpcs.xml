@@ -8,7 +8,9 @@
     <arg name="colors"/>
 
     <!-- inherit rules from: -->
-    <rule ref="PSR12"/>
+    <rule ref="PSR12">
+        <exclude name="PSR1.Classes.ClassDeclaration.MultipleClasses"/>
+    </rule>
     <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
 
     <!-- Paths to check -->

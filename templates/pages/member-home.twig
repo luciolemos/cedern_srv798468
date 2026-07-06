@@ -362,27 +362,93 @@
             {% endif %}
           </article>
 
-          <article class="nc-card nc-member-panel">
+          <article class="nc-card nc-member-panel nc-member-onboarding-panel">
             <h3>Onboarding do membro</h3>
-            <p class="nc-member-subtitle">Acompanhe o progresso da sua conta e finalize os pontos pendentes.</p>
+            <p class="nc-member-subtitle">Acompanhe o progresso da sua conta, entenda o que ainda falta e avance com mais clareza.</p>
+
+            <div class="nc-member-onboarding-overview">
+              <div class="nc-member-onboarding-copy">
+                <span class="nc-member-onboarding-status {{ member_onboarding_status_tone|default('is-progress') }}">{{ member_onboarding_status_label|default('Em andamento') }}</span>
+                <strong class="nc-member-onboarding-headline">{{ member_onboarding_headline|default('Sua jornada na área do membro continua evoluindo.') }}</strong>
+                <p class="nc-member-onboarding-description">{{ member_onboarding_description|default('Conclua as etapas pendentes para ativar uma experiência mais completa.') }}</p>
+              </div>
+
+              <dl class="nc-member-onboarding-metrics" aria-label="Resumo do onboarding">
+                <div>
+                  <dt>Concluídas</dt>
+                  <dd>{{ member_onboarding_completed|default(0) }}</dd>
+                </div>
+                <div>
+                  <dt>Pendentes</dt>
+                  <dd>{{ member_onboarding_pending_count|default(0) }}</dd>
+                </div>
+                <div>
+                  <dt>Progresso</dt>
+                  <dd>{{ member_onboarding_percent|default(0) }}%</dd>
+                </div>
+              </dl>
+            </div>
+
             <div class="nc-member-onboarding-progress" role="status" aria-live="polite">
+              <div class="nc-member-onboarding-progress-copy">
+                <strong>{{ member_onboarding_completed|default(0) }}/{{ member_onboarding_total|default(0) }} etapas concluídas</strong>
+                <p>
+                  {% if member_onboarding_pending_count|default(0) > 0 %}
+                    Faltam {{ member_onboarding_pending_count|default(0) }} etapa{{ member_onboarding_pending_count|default(0) == 1 ? '' : 's' }} para fechar seu cadastro essencial.
+                  {% else %}
+                    Seu cadastro essencial já está completo e pronto para o uso cotidiano.
+                  {% endif %}
+                </p>
+              </div>
               <div class="nc-member-onboarding-bar" aria-hidden="true">
                 <span style="width: {{ member_onboarding_percent|default(0) }}%;"></span>
               </div>
-              <p>{{ member_onboarding_completed|default(0) }}/{{ member_onboarding_total|default(0) }} concluídos · {{ member_onboarding_percent|default(0) }}%</p>
             </div>
 
-            <ul class="nc-member-checklist">
-              {% for item in member_onboarding_checklist|default([]) %}
-                <li class="{{ item.done ? 'is-done' : 'is-pending' }}">
-                  <span class="nc-member-check-indicator" aria-hidden="true">{{ item.done ? '✓' : '•' }}</span>
-                  <span>{{ item.label }}</span>
-                </li>
-              {% endfor %}
-            </ul>
+            <div class="nc-member-onboarding-layout">
+              <div class="nc-member-onboarding-checklist-panel">
+                <div class="nc-member-onboarding-section-head">
+                  <h4>Etapas do cadastro</h4>
+                  <p>Veja o que já está resolvido e o que ainda precisa de atenção no seu perfil.</p>
+                </div>
 
-            <div class="nc-actions nc-admin-login-actions nc-member-actions">
-              <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="/membro/perfil/completar">Completar perfil</a>
+                <ul class="nc-member-checklist nc-member-onboarding-checklist-detailed">
+                  {% for item in member_onboarding_checklist|default([]) %}
+                    <li class="{{ item.done ? 'is-done' : 'is-pending' }}">
+                      <span class="nc-member-check-indicator" aria-hidden="true">{{ item.done ? '✓' : '•' }}</span>
+                      <div class="nc-member-check-content">
+                        <strong>{{ item.label }}</strong>
+                        {% if item.description|default('') %}
+                          <p>{{ item.description }}</p>
+                        {% endif %}
+                      </div>
+                      <span class="nc-member-check-status">{{ item.done ? 'Concluído' : 'Pendente' }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <aside class="nc-member-onboarding-side">
+                <div class="nc-member-onboarding-side-card">
+                  <span class="nc-member-onboarding-side-kicker">Próximo passo recomendado</span>
+                  <strong>{{ member_onboarding_recommended_step_title|default('Revisar seu painel') }}</strong>
+                  <p>{{ member_onboarding_recommended_step_description|default('Use o próximo passo para manter seu cadastro consistente.') }}</p>
+                </div>
+
+                <div class="nc-member-onboarding-side-card">
+                  <span class="nc-member-onboarding-side-kicker">O que melhora ao concluir</span>
+                  <ul class="nc-member-onboarding-benefits">
+                    {% for benefit in member_onboarding_benefits|default([]) %}
+                      <li>{{ benefit }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+
+                <div class="nc-actions nc-admin-login-actions nc-member-actions nc-member-onboarding-actions">
+                  <a class="nc-btn nc-btn-primary nc-btn-block-mobile" href="{{ member_onboarding_primary_action.href|default('/membro/perfil/completar') }}">{{ member_onboarding_primary_action.label|default('Completar perfil') }}</a>
+                  <a class="nc-btn nc-btn-secondary nc-btn-block-mobile" href="{{ member_onboarding_secondary_action.href|default('/membro') }}">{{ member_onboarding_secondary_action.label|default('Atualizar painel') }}</a>
+                </div>
+              </aside>
             </div>
           </article>
 

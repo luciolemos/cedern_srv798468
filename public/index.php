@@ -106,9 +106,42 @@ $normalizeBasePath = static function (string $rawBasePath): string {
     return '/' . trim($trimmed, '/');
 };
 
+$detectAppBasePath = static function () use ($normalizeBasePath): string {
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $scriptDirectory = str_replace('\\', '/', dirname($scriptName));
+
+    if ($scriptDirectory === '' || $scriptDirectory === '.' || $scriptDirectory === '/') {
+        return '';
+    }
+
+    $scriptDirectory = rtrim($scriptDirectory, '/');
+
+    // Root installs commonly execute through /public/index.php after rewrite.
+    if ($scriptDirectory === '/public') {
+        return '';
+    }
+
+    if (str_ends_with($scriptDirectory, '/public')) {
+        $scriptDirectory = substr($scriptDirectory, 0, -strlen('/public')) ?: '';
+    }
+
+    return $normalizeBasePath($scriptDirectory);
+};
+
 $appBaseEnv = getenv('APP_BASE');
 $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
 $configuredAppBasePath = $normalizeBasePath($appBaseRaw);
+
+if ($configuredAppBasePath === '') {
+    $detectedAppBasePath = $detectAppBasePath();
+
+    if ($detectedAppBasePath !== '') {
+        $configuredAppBasePath = $detectedAppBasePath;
+        $_ENV['APP_BASE'] = $detectedAppBasePath;
+        putenv('APP_BASE=' . $detectedAppBasePath);
+    }
+}
+
 $requestUriPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
 
 if (!is_string($requestUriPath) || $requestUriPath === '') {

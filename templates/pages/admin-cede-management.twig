@@ -17,8 +17,11 @@
       tone: toast_tone
     } %}
 
+    {% set export_csv_url = cede_management_export_csv_url|default('/painel/gestao-cede?export=csv') %}
+
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="80">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ export_csv_url }}">Exportar CSV</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">
         <svg class="nc-btn-inline-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -172,7 +175,7 @@
                 </td>
                 <td data-label="Função no CEDE">{{ user.institutional_role|default('-') }}</td>
                 <td data-label="Tipo de Sócio">{{ user.member_type_label|default('Não definido') }}</td>
-                <td data-label="Perfil no SISCEDE">{{ user.role_name|default('-') }}</td>
+                <td data-label="Perfil no SISCEDE">{{ user.role_name_display|default(user.role_name|default('-')) }}</td>
                 <td data-label="Acesso ao SISCEDE">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>

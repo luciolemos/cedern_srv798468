@@ -129,7 +129,8 @@ class AdminPatrimonyAssetMovementFormPageAction extends AbstractAdminPatrimonyAc
             $errors[] = 'Selecione um destino válido.';
         }
 
-        if ((string) ($asset['current_location_id'] ?? '') === (string) $destinationLocationId
+        if (
+            (string) ($asset['current_location_id'] ?? '') === (string) $destinationLocationId
             && trim((string) ($asset['current_location_complement'] ?? '')) === trim((string) ($payload['destination_location_complement'] ?? ''))
         ) {
             $errors[] = 'Selecione uma localização diferente da atual.';
@@ -167,8 +168,7 @@ class AdminPatrimonyAssetMovementFormPageAction extends AbstractAdminPatrimonyAc
         array $locations,
         array $submittedPayload,
         array $errors
-    ): Response
-    {
+    ): Response {
         $form = [
             'destination_location_id' => $submittedPayload['destination_location_id'] ?? '',
             'destination_location_complement' => $submittedPayload['destination_location_complement'] ?? '',
