@@ -128,7 +128,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
                         (string) $user['association_status'],
-                        (string) ($user['role_name_display'] ?? $user['role_name'] ?? ''),
+                        (string) $user['role_name_display'],
                         (string) ($user['status'] ?? ''),
                     ]);
 
@@ -147,10 +147,10 @@ class AdminCedeManagementPageAction extends AbstractPageAction
 
         usort($users, static function (array $firstUser, array $secondUser) use ($sortBy, $sortMultiplier): int {
             $firstValue = $sortBy === 'role_name'
-                ? (string) ($firstUser['role_name_display'] ?? $firstUser['role_name'] ?? '')
+                ? (string) $firstUser['role_name_display']
                 : (string) ($firstUser[$sortBy] ?? '');
             $secondValue = $sortBy === 'role_name'
-                ? (string) ($secondUser['role_name_display'] ?? $secondUser['role_name'] ?? '')
+                ? (string) $secondUser['role_name_display']
                 : (string) ($secondUser[$sortBy] ?? '');
 
             $comparison = strnatcasecmp($firstValue, $secondValue);

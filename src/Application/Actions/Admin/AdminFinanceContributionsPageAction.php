@@ -526,12 +526,14 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
             $notes[] = 'Completar: ' . implode(' e ', $missingItems) . '.';
         }
 
-        if ($overdueChargeCount > 0) {
+        $previousOverdueChargeCount = $this->resolvePreviousOverdueChargeCount($row, $statusKey, $competence);
+
+        if ($previousOverdueChargeCount > 0) {
             $notes[] = sprintf(
                 'Há %d mensalidade%s anterior%s em atraso.',
-                $overdueChargeCount,
-                $overdueChargeCount === 1 ? '' : 's',
-                $overdueChargeCount === 1 ? '' : 'es'
+                $previousOverdueChargeCount,
+                $previousOverdueChargeCount === 1 ? '' : 's',
+                $previousOverdueChargeCount === 1 ? '' : 'es'
             );
 
             if ($oldestOverdueDueDate !== '') {
@@ -552,6 +554,36 @@ class AdminFinanceContributionsPageAction extends AbstractAdminFinanceContributi
         }
 
         return $chargeStatus;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function resolvePreviousOverdueChargeCount(array $row, string $statusKey, string $competence): int
+    {
+        $overdueChargeCount = (int) ($row['overdue_charge_count'] ?? 0);
+        if ($overdueChargeCount <= 0) {
+            return 0;
+        }
+
+        if (in_array($statusKey, ['overdue', 'critical'], true)) {
+            return $overdueChargeCount;
+        }
+
+        $chargeStatus = strtolower(trim((string) ($row['charge_status'] ?? '')));
+        $chargeCompetence = trim((string) ($row['charge_competence'] ?? ''));
+        $chargeDueDate = trim((string) ($row['charge_due_date'] ?? ''));
+
+        if (
+            $chargeStatus === 'pending'
+            && $chargeCompetence === $competence
+            && $chargeDueDate !== ''
+            && $chargeDueDate < date('Y-m-d')
+        ) {
+            return max(0, $overdueChargeCount - 1);
+        }
+
+        return $overdueChargeCount;
     }
 
     /**

@@ -120,7 +120,7 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             $onboardingStatusTone = 'is-almost-done';
             $onboardingStatusLabel = 'Quase concluído';
             $onboardingHeadline = 'Falta só um ajuste para fechar seu onboarding.';
-            $onboardingDescription = 'Concluir "' . (string) ($nextPendingOnboardingItem['label'] ?? 'a etapa pendente') . '" deixa sua conta muito mais completa.';
+            $onboardingDescription = 'Concluir "' . (string) $nextPendingOnboardingItem['label'] . '" deixa sua conta muito mais completa.';
         } elseif ($onboardingPendingCount === 0) {
             $onboardingStatusTone = 'is-complete';
             $onboardingStatusLabel = 'Concluído';
@@ -142,10 +142,10 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'href' => '/membro/perfil/completar',
         ];
         $onboardingRecommendedStepTitle = is_array($nextPendingOnboardingItem)
-            ? (string) ($nextPendingOnboardingItem['label'] ?? 'Revisar seu painel')
+            ? (string) $nextPendingOnboardingItem['label']
             : 'Revisar seu painel';
         $onboardingRecommendedStepDescription = is_array($nextPendingOnboardingItem)
-            ? (string) ($nextPendingOnboardingItem['description'] ?? 'Revise suas informações para manter o cadastro consistente.')
+            ? (string) $nextPendingOnboardingItem['description']
             : 'Revise suas informações para manter o cadastro consistente.';
 
         if ($onboardingPendingCount === 0) {
