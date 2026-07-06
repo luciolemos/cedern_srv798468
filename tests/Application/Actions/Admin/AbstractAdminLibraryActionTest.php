@@ -211,6 +211,24 @@ class AbstractAdminLibraryActionTest extends TestCase
         );
     }
 
+    public function testLibraryUploadStorageRebasesRelativeConfiguredDirectoriesIntoManagedRoot(): void
+    {
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+        $_ENV['LIBRARY_UPLOAD_DIR'] = './var/storage/library/docs';
+        $_ENV['LIBRARY_COVER_UPLOAD_DIR'] = 'var/storage/library/covers';
+
+        $action = $this->createAction();
+
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/docs',
+            $action->exposedResolveLibraryUploadDirectory()
+        );
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/covers',
+            $action->exposedResolveLibraryCoverUploadDirectory()
+        );
+    }
+
     /**
      * @return list<string>
      */

@@ -665,7 +665,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
             return null;
         }
 
-        return $this->resolveDirectoryPath($configuredDirectory);
+        return $this->resolveManagedStorageDirectory($configuredDirectory);
     }
 
     private function resolveOptionalConfiguredUploadPublicPrefix(string $envKey): ?string
@@ -681,21 +681,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
     {
-        $managedStorageRoot = $this->resolveManagedStorageRoot();
-        if ($managedStorageRoot === null) {
-            return $this->resolveDirectoryPath($defaultDirectory);
-        }
-
-        $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
-        $storagePrefix = 'var/storage/';
-
-        if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
-            return $this->resolveDirectoryPath($defaultDirectory);
-        }
-
-        $storageSuffix = ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
-
-        return $managedStorageRoot . '/' . $storageSuffix;
+        return $this->resolveManagedStorageDirectory($defaultDirectory);
     }
 
     private function resolveManagedStorageRoot(): ?string
@@ -707,6 +693,30 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         }
 
         return $this->resolveDirectoryPath($configuredRoot);
+    }
+
+    private function resolveManagedStorageDirectory(string $path): string
+    {
+        $normalizedPath = str_replace('\\', '/', trim($path));
+        while (str_starts_with($normalizedPath, './')) {
+            $normalizedPath = substr($normalizedPath, 2);
+        }
+
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        $storagePrefix = 'var/storage/';
+        $normalizedRelativePath = ltrim($normalizedPath, '/');
+
+        if (
+            $managedStorageRoot !== null
+            && !$this->isAbsolutePath($normalizedPath)
+            && str_starts_with($normalizedRelativePath, $storagePrefix)
+        ) {
+            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
+
+            return $managedStorageRoot . '/' . $storageSuffix;
+        }
+
+        return $this->resolveDirectoryPath($normalizedPath);
     }
 
     private function resolveDirectoryPath(string $path): string

@@ -63,9 +63,11 @@
     "scripts": {
         "db:migrate": "php scripts/migrate.php",
         "storage:audit": "php scripts/audit_managed_uploads.php",
+        "storage:package": "bash scripts/package_managed_upload_archives.sh",
         "billing:contributions:run": "php scripts/process_contribution_billing_cycle.php",
         "import:bookshop:csv": "php scripts/import_bookshop_csv.php",
         "migrate:bookshop:covers": "php scripts/migrate_bookshop_cover_paths.php",
+        "migrate:library:storage": "php scripts/migrate_library_storage_paths.php",
         "renumber:bookshop:skus": "php scripts/renumber_bookshop_skus.php",
         "start": "php -S localhost:8080 -t public",
         "export:bookshop-manual-pdf": "php scripts/export_bookshop_manual_pdf.php",

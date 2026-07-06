@@ -128,7 +128,7 @@ Regra prática:
 
 ### 10. Uploads e armazenamento público
 
-- Quando `APP_MANAGED_STORAGE_ROOT` estiver definido e o diretório específico não estiver sobrescrito, os caminhos padrão passam a apontar para essa raiz compartilhada.
+- Quando `APP_MANAGED_STORAGE_ROOT` estiver definido, qualquer diretório relativo iniciado por `var/storage/` passa a ser rebaseado para essa raiz compartilhada. Diretórios absolutos continuam respeitados exatamente como informados.
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
 - `LIBRARY_COVER_UPLOAD_DIR`: diretório físico das capas da biblioteca.

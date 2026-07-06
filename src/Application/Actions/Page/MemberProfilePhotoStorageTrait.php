@@ -154,7 +154,7 @@ trait MemberProfilePhotoStorageTrait
             return null;
         }
 
-        return $this->resolveMemberProfilePhotoDirectoryPath($configuredDirectory);
+        return $this->resolveManagedStorageDirectory($configuredDirectory);
     }
 
     private function resolveOptionalConfiguredMemberProfilePhotoUploadPublicPrefix(): ?string
@@ -186,21 +186,7 @@ trait MemberProfilePhotoStorageTrait
 
     private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
     {
-        $managedStorageRoot = $this->resolveManagedStorageRoot();
-        if ($managedStorageRoot === null) {
-            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
-        }
-
-        $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
-        $storagePrefix = 'var/storage/';
-
-        if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
-            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
-        }
-
-        $storageSuffix = ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
-
-        return $managedStorageRoot . '/' . $storageSuffix;
+        return $this->resolveManagedStorageDirectory($defaultDirectory);
     }
 
     private function resolveManagedStorageRoot(): ?string
@@ -212,6 +198,30 @@ trait MemberProfilePhotoStorageTrait
         }
 
         return $this->resolveMemberProfilePhotoDirectoryPath($configuredRoot);
+    }
+
+    private function resolveManagedStorageDirectory(string $path): string
+    {
+        $normalizedPath = str_replace('\\', '/', trim($path));
+        while (str_starts_with($normalizedPath, './')) {
+            $normalizedPath = substr($normalizedPath, 2);
+        }
+
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        $storagePrefix = 'var/storage/';
+        $normalizedRelativePath = ltrim($normalizedPath, '/');
+
+        if (
+            $managedStorageRoot !== null
+            && !$this->isAbsoluteMemberProfilePhotoPath($normalizedPath)
+            && str_starts_with($normalizedRelativePath, $storagePrefix)
+        ) {
+            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
+
+            return $managedStorageRoot . '/' . $storageSuffix;
+        }
+
+        return $this->resolveMemberProfilePhotoDirectoryPath($normalizedPath);
     }
 
     private function resolveMemberProfilePhotoDirectoryPath(string $path): string

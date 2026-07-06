@@ -126,6 +126,20 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
+    public function testRebasesRelativeConfiguredMemberPhotoDirectoryIntoManagedRoot(): void
+    {
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+        $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'] = './var/storage/member-photos';
+        $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'] = 'media/membros/fotos';
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            '/srv/cede-managed-storage/member-photos/member_demo.png',
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
+        );
+    }
+
     /**
      * @return list<string>
      */

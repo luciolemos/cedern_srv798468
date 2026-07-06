@@ -82,7 +82,7 @@ Importante:
 Os arquivos dentro de `var/storage/**` sao ignorados pelo Git neste projeto. Entao o deploy por branch/webhook publica codigo e banco, mas nao leva automaticamente fotos de membros, capas, PDFs e outros uploads gerenciados. Ao promover dados entre desenvolvimento e producao, sincronize tambem esses diretorios ou mantenha um storage compartilhado entre os ambientes.
 
 Recomendacao profissional:
-defina `APP_MANAGED_STORAGE_ROOT` em desenvolvimento e producao apontando para uma pasta compartilhada fora da arvore publicada. Assim, os uploads deixam de depender do diretório `var/storage` dentro do release atual.
+defina `APP_MANAGED_STORAGE_ROOT` em desenvolvimento e producao apontando para uma pasta compartilhada fora da arvore publicada. Assim, os uploads deixam de depender do diretório `var/storage` dentro do release atual. Quando esse root estiver ativo, caminhos relativos como `var/storage/library/docs` e `var/storage/bookshop/covers` passam automaticamente a ser resolvidos dentro dele.
 
 ## Sincronizacao de uploads
 
@@ -149,10 +149,37 @@ var/storage/member-photos
 
 1. Atualize o codigo em producao pelo Git/webhook.
 2. Aplique eventual patch SQL de banco.
-3. Se ainda nao usa `APP_MANAGED_STORAGE_ROOT`, sincronize os diretorios de `var/storage` afetados pela release.
-4. Confirme permissoes de escrita.
-5. Rode `composer storage:audit`.
-6. Rode validacao manual no navegador.
+3. Se ainda houver registros antigos apontando para `assets/...`, rode a migracao correspondente no ambiente de desenvolvimento e publique o banco ja corrigido.
+4. Se ainda nao usa `APP_MANAGED_STORAGE_ROOT`, sincronize os diretorios de `var/storage` afetados pela release.
+5. Confirme permissoes de escrita.
+6. Rode `composer storage:audit`.
+7. Rode validacao manual no navegador.
+
+### Migracao da biblioteca para storage gerenciado
+
+Quando a tabela `library_books` ainda estiver com `pdf_path` em `assets/docs/library/...` e `cover_image_path` em `assets/img/library-covers/...`, use:
+
+```bash
+composer migrate:library:storage
+composer migrate:library:storage -- --apply
+```
+
+O comando copia PDFs e capas legados para os diretorios resolvidos por `LIBRARY_UPLOAD_DIR` e `LIBRARY_COVER_UPLOAD_DIR`, depois regrava `pdf_path` para `media/biblioteca/docs/...` e `cover_image_path` para `media/biblioteca/capas/...`.
+
+No seu fluxo atual, como a producao recebe um banco exportado do ambiente de desenvolvimento, rode esse comando primeiro no desenvolvimento. Depois publique o banco corrigido e sincronize os arquivos fisicos para o storage da producao.
+
+### Migracao da livraria para storage gerenciado
+
+Quando a tabela `bookshop_books` ainda estiver com `cover_image_path` em `assets/img/bookshop-covers/...`, use:
+
+```bash
+composer migrate:bookshop:covers
+composer migrate:bookshop:covers -- --apply
+```
+
+O comando copia as capas legadas para o diretorio resolvido por `BOOKSHOP_COVER_UPLOAD_DIR` e regrava `bookshop_books.cover_image_path` para `media/livraria/capas/...`.
+
+No seu fluxo atual, como a producao recebe um banco exportado do ambiente de desenvolvimento, rode esse comando primeiro no desenvolvimento. Depois publique o banco corrigido e sincronize os arquivos fisicos para o storage da producao.
 
 ### Validacao rapida
 
@@ -171,7 +198,7 @@ Resposta esperada:
 
 ### Contorno temporario para fotos de membros
 
-Se a producao estiver com URLs `media/membros/fotos/...` no banco, mas voce so tiver os arquivos em `public/assets/img/member-photos`, a aplicacao agora tenta localizar o mesmo nome de arquivo no storage legado. Isso ajuda como contingencia, mas o correto continua sendo manter a producao com os arquivos no diretorio atual `var/storage/member-photos`.
+Se a producao estiver com URLs `media/membros/fotos/...` no banco, mas voce so tiver os arquivos em `public/assets/img/member-photos`, a aplicacao agora tenta localizar o mesmo nome de arquivo no storage legado. Isso ajuda como contingencia, mas o correto continua sendo manter a producao com os arquivos no diretorio gerenciado atual do ambiente.
 
 ## Composer
 

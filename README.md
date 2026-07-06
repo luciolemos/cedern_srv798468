@@ -200,17 +200,17 @@ BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX=media/livraria/capas
 
 Valores válidos:
 
-- `APP_MANAGED_STORAGE_ROOT`: raiz opcional para uploads gerenciados fora da pasta publicada; quando definida, os diretórios padrão de biblioteca, livraria, membros e patrimônio passam a sair desse root compartilhado
+- `APP_MANAGED_STORAGE_ROOT`: raiz opcional para uploads gerenciados fora da pasta publicada; quando definida, qualquer diretório relativo começando com `var/storage/` passa a ser rebaseado para esse root compartilhado
 - `APP_DEFAULT_THEME`: `blue | red | green | violet | amber`
 - `APP_DEFAULT_MODE`: `light | dark`
 - `APP_DEFAULT_DARK_INTENSITY`: `neutral | vivid`
 - `APP_AGENDA_PUBLIC_LIMIT`: quantidade de eventos futuros exibidos em `/agenda` (mínimo `1`, máximo `100`)
 - `LIBRARY_UPLOAD_DIR`: diretório físico onde os PDFs da Biblioteca serão gravados; pode ser relativo ao projeto ou absoluto
-- `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `pdf_path` e usado nas URLs do site, por exemplo `assets/docs/library`
+- `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `pdf_path` e usado nas URLs do site, por exemplo `media/biblioteca/docs`
 - `LIBRARY_COVER_UPLOAD_DIR`: diretório físico onde as capas da Biblioteca serão gravadas; pode ser relativo ao projeto ou absoluto
-- `LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `assets/img/library-covers`
+- `LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `media/biblioteca/capas`
 - `BOOKSHOP_COVER_UPLOAD_DIR`: diretório físico onde as capas da Livraria serão gravadas; pode ser relativo ao projeto ou absoluto
-- `BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `assets/img/bookshop-covers`
+- `BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `media/livraria/capas`
 
 ## Acesso administrativo via membros
 
