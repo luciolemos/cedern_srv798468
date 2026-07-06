@@ -1,0 +1,190 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Finanças' %}
+{% set dashboard_page_title = 'Detalhes da cobrança' %}
+{% set dashboard_page_lead = 'Consulte os dados da cobrança emitida, acompanhe o status financeiro e abra os links úteis do Asaas.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Detalhamento da cobrança externa da contribuição" data-aos="fade-up" data-aos-delay="0">
+    {% set charge = finance_contribution_charge|default(null) %}
+    {% set finance_base_url = base_url ?? '' %}
+    {% include 'components/admin-toast.twig' with {
+      message: finance_contributions_toast_message|default(''),
+      tone: finance_contributions_toast_tone|default('success')
+    } %}
+
+    <div class="nc-actions nc-bookshop-toolbar nc-contribution-charge-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ finance_base_url }}/painel/financas/contribuicoes{% if charge and charge.competence|default('') %}?competence={{ charge.competence|url_encode }}{% endif %}">Voltar às contribuições</a>
+      {% if charge and charge.has_gateway_charge %}
+        <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ charge.id }}/cobranca/sincronizar">
+          {% include 'components/csrf-field.twig' %}
+          <button class="nc-btn nc-btn-secondary" type="submit">Sincronizar cobrança</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if finance_contribution_charge_error|default('') %}
+      <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="90">
+        <p>{{ finance_contribution_charge_error }}</p>
+      </article>
+    {% elseif charge %}
+      {% set gateway_cards = [
+        {
+          label: 'Associado',
+          value: charge.member_full_name|default('Associado CEDE'),
+          description: charge.member_cpf_display|default('-') ~ ' · ' ~ charge.member_email|default('-'),
+          icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.7"/></svg>'
+        },
+        {
+          label: 'Competência',
+          value: charge.competence_label|default('-'),
+          description: 'Vencimento ' ~ charge.due_date_label|default('-'),
+          icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4.75" y="5.25" width="14.5" height="13.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 3.75V6.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 3.75V6.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 9.25H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+        },
+        {
+          label: 'Valor',
+          value: charge.amount_due_label|default('R$ 0,00'),
+          description: 'Status local: ' ~ charge.local_status_label|default('Pendente') ~ (charge.payment_recorded_method_label|default('') ? ' · Recebida via ' ~ charge.payment_recorded_method_label : ''),
+          icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+        },
+        {
+          label: 'Gateway',
+          value: charge.has_gateway_charge ? charge.gateway_provider|default('ASAAS') : 'Não emitida',
+          description: charge.has_gateway_charge ? 'Gateway: ' ~ charge.gateway_status_label|default('Sem status') : 'Crie uma cobrança Pix ou boleto abaixo.',
+          icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M4 10H20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 14H11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+        }
+      ] %}
+
+      <section class="nc-dashboard-visit-panel" aria-label="Resumo da cobrança externa" data-aos="fade-up" data-aos-delay="90">
+        <div class="nc-dashboard-visit-grid">
+          {% for card in gateway_cards %}
+            {% include 'components/admin-kpi-card.twig' with {
+              kpi_label: card.label,
+              kpi_value: card.value,
+              kpi_description: card.description,
+              kpi_icon_svg: card.icon_svg
+            } only %}
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if not charge.gateway_configured %}
+        <article class="nc-finance-period-inline-summary" data-aos="fade-up" data-aos-delay="120">
+          <strong>Gateway externo desabilitado</strong>
+          <span>Use uma API Key do Asaas em `ASAAS_API_KEY`. Login e senha do painel não autenticam a API.</span>
+          {% if charge.gateway_webhook_url|default('') %}
+            <span>Webhook desta instalação: <code>{{ charge.gateway_webhook_url }}</code></span>
+          {% endif %}
+        </article>
+      {% endif %}
+
+      <div class="nc-admin-form-shell" data-aos="fade-up" data-aos-delay="140">
+        {% if not charge.has_gateway_charge %}
+          <article class="nc-card nc-admin-form-card">
+            <h3 class="nc-dashboard-visit-panel-title">Emitir cobrança no Asaas</h3>
+            <p class="nc-dashboard-visit-panel-copy">A emissão cria uma cobrança externa vinculada a esta mensalidade local. O processo é idempotente por cobrança local: uma vez emitida, use a sincronização para atualizar o status.</p>
+            <div class="nc-contribution-gateway-actions">
+              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ charge.id }}/cobranca/criar">
+                {% include 'components/csrf-field.twig' %}
+                <input type="hidden" name="competence" value="{{ charge.competence|default('') }}">
+                <input type="hidden" name="billing_type" value="pix">
+                <button class="nc-btn nc-btn-secondary" type="submit">Gerar cobrança Pix</button>
+              </form>
+              <form class="nc-admin-inline-form" method="post" action="{{ finance_base_url }}/painel/financas/contribuicoes/{{ charge.id }}/cobranca/criar">
+                {% include 'components/csrf-field.twig' %}
+                <input type="hidden" name="competence" value="{{ charge.competence|default('') }}">
+                <input type="hidden" name="billing_type" value="boleto">
+                <button class="nc-btn nc-btn-secondary" type="submit">Gerar cobrança por boleto</button>
+              </form>
+            </div>
+          </article>
+        {% else %}
+          <article class="nc-card nc-admin-form-card">
+            <div class="nc-contribution-charge-head">
+              <div>
+                <h3 class="nc-dashboard-visit-panel-title">Cobrança no {{ charge.gateway_provider|default('ASAAS') }}</h3>
+                <p class="nc-dashboard-visit-panel-copy">ID externo: {{ charge.gateway_payment_id|default('-') }}</p>
+              </div>
+              <span class="nc-admin-featured-flag {{ charge.gateway_status_tone|default('is-info') }}">{{ charge.gateway_status_label|default('Sem status') }}</span>
+            </div>
+
+            <dl class="nc-admin-summary-grid">
+              <div>
+                <dt>Status local</dt>
+                <dd>{{ charge.local_status_label|default('Pendente') }}</dd>
+              </div>
+              <div>
+                <dt>Status no gateway</dt>
+                <dd>{{ charge.gateway_status_label|default('Sem status') }}</dd>
+              </div>
+              <div>
+                <dt>Forma definida</dt>
+                <dd>{{ charge.preferred_payment_method_label|default('Não definido') }}</dd>
+              </div>
+              {% if charge.payment_recorded_method_label|default('') %}
+                <div>
+                  <dt>Forma recebida</dt>
+                  <dd>{{ charge.payment_recorded_method_label }}</dd>
+                </div>
+              {% endif %}
+              {% if charge.paid_at_label|default('-') != '-' %}
+                <div>
+                  <dt>Recebida em</dt>
+                  <dd>{{ charge.paid_at_label }}</dd>
+                </div>
+              {% endif %}
+              <div>
+                <dt>Última sincronização</dt>
+                <dd>{{ charge.gateway_last_synced_at_label|default('-') }}</dd>
+              </div>
+              <div>
+                <dt>Valor</dt>
+                <dd>{{ charge.amount_due_label|default('R$ 0,00') }}</dd>
+              </div>
+              <div>
+                <dt>Vencimento</dt>
+                <dd>{{ charge.due_date_label|default('-') }}</dd>
+              </div>
+            </dl>
+
+            <div class="nc-contribution-gateway-links">
+              {% if charge.has_gateway_invoice_url %}
+                <a class="nc-btn nc-btn-secondary" href="{{ charge.gateway_invoice_url }}" target="_blank" rel="noopener">Abrir cobrança</a>
+              {% endif %}
+              {% if charge.has_gateway_bank_slip_url %}
+                <a class="nc-btn nc-btn-secondary" href="{{ charge.gateway_bank_slip_url }}" target="_blank" rel="noopener">Abrir boleto</a>
+              {% endif %}
+              {% if charge.has_gateway_receipt_url %}
+                <a class="nc-btn nc-btn-secondary" href="{{ charge.gateway_transaction_receipt_url }}" target="_blank" rel="noopener">Comprovante</a>
+              {% endif %}
+            </div>
+          </article>
+
+          {% if charge.has_gateway_pix_assets %}
+            <article class="nc-card nc-admin-form-card nc-contribution-pix-card">
+              <h3 class="nc-dashboard-visit-panel-title">Pix</h3>
+              <p class="nc-dashboard-visit-panel-copy">Compartilhe o QR Code ou o código copia e cola com o associado.</p>
+              <div class="nc-contribution-pix-layout">
+                {% if charge.gateway_pix_encoded_image|default('') %}
+                  <div class="nc-contribution-pix-qr">
+                    <img src="data:image/png;base64,{{ charge.gateway_pix_encoded_image }}" alt="QR Code Pix da cobrança">
+                  </div>
+                {% endif %}
+                <div class="nc-contribution-pix-data">
+                  <label class="nc-admin-form-label" for="gateway_pix_payload">Copia e cola Pix</label>
+                  <textarea class="nc-admin-form-input nc-contribution-textarea" id="gateway_pix_payload" rows="6" readonly>{{ charge.gateway_pix_payload|default('') }}</textarea>
+                  <p class="nc-admin-form-note">Expira em {{ charge.gateway_pix_expiration_date_label|default('-') }}.</p>
+                </div>
+              </div>
+            </article>
+          {% elseif charge.gateway_billing_type|default('') == 'PIX' and charge.local_status_label|default('') != 'Recebida' %}
+            <article class="nc-card nc-admin-form-card">
+              <h3 class="nc-dashboard-visit-panel-title">Pix</h3>
+              <p class="nc-dashboard-visit-panel-copy">Os dados do QR Code ainda não foram retornados pelo gateway. Use a sincronização para atualizar esta cobrança.</p>
+            </article>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

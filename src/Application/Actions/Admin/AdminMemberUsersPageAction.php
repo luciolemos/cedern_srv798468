@@ -15,6 +15,7 @@ use Throwable;
 class AdminMemberUsersPageAction extends AbstractPageAction
 {
     public const FLASH_KEY = 'admin_member_users_list';
+    private const MEMBER_ROLE_DISPLAY_LABEL = 'Usuário SISCEDE';
 
     private const DEFAULT_PAGE_SIZE = 10;
 
@@ -35,6 +36,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         'Diretor de Atendimento Fraterno',
         'Diretor de Comunicação',
         'Coordenador',
+        'Coordenador(a) do Curso de Mediunidade',
         'Conselheiro',
     ];
 
@@ -50,6 +52,17 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         'blocked' => 'Bloqueado',
     ];
 
+    private const ASSOCIATION_STATUS_FILTER_OPTIONS = [
+        'applicant' => 'Solicitante',
+        'member' => 'Associado',
+        'former' => 'Desligado',
+    ];
+
+    private const CONTRIBUTOR_FILTER_OPTIONS = [
+        'yes' => 'Contribui',
+        'no' => 'Não contribui',
+    ];
+
     private MemberAuthRepository $memberAuthRepository;
 
     public function __construct(LoggerInterface $logger, Twig $twig, MemberAuthRepository $memberAuthRepository)
@@ -61,6 +74,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
     public function __invoke(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
+        $exportFormat = strtolower(trim((string) ($queryParams['export'] ?? '')));
         $flash = $this->consumeSessionFlash(self::FLASH_KEY);
         $status = trim((string) ($flash['status'] ?? ''));
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
@@ -68,6 +82,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         $selectedRoleFilter = strtolower(trim((string) ($queryParams['role_filter'] ?? '')));
         $selectedMemberTypeFilter = strtolower(trim((string) ($queryParams['member_type_filter'] ?? '')));
         $selectedStatusFilter = strtolower(trim((string) ($queryParams['status_filter'] ?? '')));
+        $selectedAssociationStatusFilter = strtolower(trim((string) ($queryParams['association_status_filter'] ?? '')));
+        $selectedContributorFilter = strtolower(trim((string) ($queryParams['contributor_filter'] ?? '')));
         $selectedInstitutionalRoleFilter = trim((string) ($queryParams['institutional_role_filter'] ?? ''));
 
         $users = [];
@@ -104,7 +120,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $roleFilterKeys[$roleKey] = true;
             $roleFilterOptions[] = [
                 'value' => $roleKey,
-                'label' => $roleName !== '' ? $roleName : ucfirst($roleKey),
+                'label' => $this->resolveRoleOptionLabel($roleKey, $roleName !== '' ? $roleName : ucfirst($roleKey)),
             ];
         }
 
@@ -123,6 +139,18 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $user['member_type_label'] = $user['member_type'] !== ''
                 ? self::MEMBER_TYPE_OPTIONS[$user['member_type']]
                 : self::MEMBER_TYPE_OPTIONS['undefined'];
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            $user['association_status'] = in_array($associationStatus, ['applicant', 'member', 'former'], true)
+                ? $associationStatus
+                : (strtolower(trim((string) ($user['status'] ?? ''))) === 'pending' ? 'applicant' : 'member');
+            $user['association_status_label'] = match ($user['association_status']) {
+                'member' => 'Associado',
+                'former' => 'Desligado',
+                default => 'Solicitante',
+            };
+            $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
+            $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+            $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
 
             return $user;
         }, $users);
@@ -148,6 +176,18 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         }
         if ($selectedStatusFilter !== '' && !array_key_exists($selectedStatusFilter, self::STATUS_FILTER_OPTIONS)) {
             $selectedStatusFilter = '';
+        }
+        if (
+            $selectedAssociationStatusFilter !== ''
+            && !array_key_exists($selectedAssociationStatusFilter, self::ASSOCIATION_STATUS_FILTER_OPTIONS)
+        ) {
+            $selectedAssociationStatusFilter = '';
+        }
+        if (
+            $selectedContributorFilter !== ''
+            && !array_key_exists($selectedContributorFilter, self::CONTRIBUTOR_FILTER_OPTIONS)
+        ) {
+            $selectedContributorFilter = '';
         }
         if (
             $selectedInstitutionalRoleFilter !== ''
@@ -187,6 +227,22 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             ));
         }
 
+        if ($selectedAssociationStatusFilter !== '') {
+            $users = array_values(array_filter(
+                $users,
+                static fn (array $user): bool =>
+                    strtolower(trim((string) $user['association_status'])) === $selectedAssociationStatusFilter
+            ));
+        }
+
+        if ($selectedContributorFilter !== '') {
+            $users = array_values(array_filter(
+                $users,
+                static fn (array $user): bool =>
+                    ((int) $user['is_contributor'] === 1) === ($selectedContributorFilter === 'yes')
+            ));
+        }
+
         if ($selectedInstitutionalRoleFilter !== '') {
             $users = array_values(array_filter(
                 $users,
@@ -212,15 +268,19 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
                         (string) ($user['status'] ?? ''),
-                        (string) ($user['role_name'] ?? ''),
+                        (string) $user['role_name_display'],
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
+                        (string) $user['association_status_label'],
+                        (string) $user['contributor_label'],
                     ]);
 
                     return stripos(strtolower($haystack), $normalizedSearch) !== false;
                 }
             ));
         }
+
+        $summary = $this->buildUsersSummary($users);
 
         $sortBy = (string) ($queryParams['sort'] ?? 'id');
         if (!in_array($sortBy, self::SORT_FIELDS, true)) {
@@ -245,6 +305,21 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             return $comparison * $sortMultiplier;
         });
 
+        $users = array_map(function (array $user): array {
+            $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
+            $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
+            $user['status_label'] = $this->resolveAccessStatusLabel((string) ($user['status'] ?? ''));
+            $user['institutional_role_display'] = trim((string) ($user['institutional_role'] ?? '')) !== ''
+                ? trim((string) ($user['institutional_role'] ?? ''))
+                : '-';
+
+            return $user;
+        }, $users);
+
+        if ($exportFormat === 'csv') {
+            return $this->renderCsvExport($response, $users);
+        }
+
         $totalItems = count($users);
         $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
         $showAllItems = $requestedPageSize === self::ALL_PAGE_SIZE;
@@ -265,13 +340,6 @@ class AdminMemberUsersPageAction extends AbstractPageAction
 
         $offset = ($currentPage - 1) * $pageSize;
         $users = array_slice($users, $offset, $pageSize);
-
-        $users = array_map(function (array $user): array {
-            $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
-            $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
-
-            return $user;
-        }, $users);
 
         $startItem = $totalItems > 0 ? $offset + 1 : 0;
         $endItem = $totalItems > 0 ? min($offset + count($users), $totalItems) : 0;
@@ -296,6 +364,12 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         if ($selectedStatusFilter !== '') {
             $baseQuery['status_filter'] = $selectedStatusFilter;
         }
+        if ($selectedAssociationStatusFilter !== '') {
+            $baseQuery['association_status_filter'] = $selectedAssociationStatusFilter;
+        }
+        if ($selectedContributorFilter !== '') {
+            $baseQuery['contributor_filter'] = $selectedContributorFilter;
+        }
         if ($selectedInstitutionalRoleFilter !== '') {
             $baseQuery['institutional_role_filter'] = $selectedInstitutionalRoleFilter;
         }
@@ -319,6 +393,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                     'role_filter' => $selectedRoleFilter,
                     'member_type_filter' => $selectedMemberTypeFilter,
                     'status_filter' => $selectedStatusFilter,
+                    'association_status_filter' => $selectedAssociationStatusFilter,
+                    'contributor_filter' => $selectedContributorFilter,
                     'institutional_role_filter' => $selectedInstitutionalRoleFilter,
                 ]),
                 'indicator' => $indicator,
@@ -355,6 +431,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'role_filter' => $selectedRoleFilter,
                 'member_type_filter' => $selectedMemberTypeFilter,
                 'status_filter' => $selectedStatusFilter,
+                'association_status_filter' => $selectedAssociationStatusFilter,
+                'contributor_filter' => $selectedContributorFilter,
                 'institutional_role_filter' => $selectedInstitutionalRoleFilter,
             ]),
         ], self::PAGE_SIZE_OPTIONS);
@@ -371,6 +449,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'role_filter' => $selectedRoleFilter,
                 'member_type_filter' => $selectedMemberTypeFilter,
                 'status_filter' => $selectedStatusFilter,
+                'association_status_filter' => $selectedAssociationStatusFilter,
+                'contributor_filter' => $selectedContributorFilter,
                 'institutional_role_filter' => $selectedInstitutionalRoleFilter,
             ]),
         ];
@@ -394,10 +474,27 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             'member_users_role_filter' => $selectedRoleFilter,
             'member_users_member_type_filter' => $selectedMemberTypeFilter,
             'member_users_status_filter' => $selectedStatusFilter,
+            'member_users_association_status_filter' => $selectedAssociationStatusFilter,
+            'member_users_contributor_filter' => $selectedContributorFilter,
             'member_users_institutional_role_filter' => $selectedInstitutionalRoleFilter,
             'member_users_role_filter_options' => $roleFilterOptions,
             'member_users_status_filter_options' => self::STATUS_FILTER_OPTIONS,
+            'member_users_association_status_filter_options' => self::ASSOCIATION_STATUS_FILTER_OPTIONS,
+            'member_users_contributor_filter_options' => self::CONTRIBUTOR_FILTER_OPTIONS,
             'member_users_institutional_role_filter_options' => $institutionalRoleFilterOptions,
+            'member_users_export_csv_url' => $basePath . '?' . http_build_query([
+                'sort' => $sortBy,
+                'dir' => $sortDirection,
+                'q' => $searchTerm,
+                'role_filter' => $selectedRoleFilter,
+                'member_type_filter' => $selectedMemberTypeFilter,
+                'status_filter' => $selectedStatusFilter,
+                'association_status_filter' => $selectedAssociationStatusFilter,
+                'contributor_filter' => $selectedContributorFilter,
+                'institutional_role_filter' => $selectedInstitutionalRoleFilter,
+                'export' => 'csv',
+            ]),
+            'member_users_summary' => $summary,
             'member_users_sort_links' => $sortLinks,
             'member_users_pagination' => [
                 'current_page' => $currentPage,
@@ -413,10 +510,68 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'next_url' => $nextPageUrl,
                 'page_size_options' => $pageSizeOptions,
             ],
-            'page_title' => 'Usuários | Dashboard Agenda',
+            'page_title' => 'Pessoas CEDE | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/usuarios',
-            'page_description' => 'Validação de cadastro e atribuição de perfis de usuário.',
+            'page_description' => 'Validação de solicitações, gestão de associados e configuração administrativa de pessoas.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $users
+     */
+    private function renderCsvExport(Response $response, array $users): Response
+    {
+        $handle = fopen('php://temp', 'w+');
+        if (!is_resource($handle)) {
+            $response->getBody()->write('Falha ao preparar exportacao.');
+
+            return $response->withStatus(500);
+        }
+
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, [
+            'id',
+            'nome',
+            'email',
+            'telefone_fixo',
+            'telefone_celular',
+            'vinculo',
+            'tipo_socio',
+            'contribuinte',
+            'funcao_cede',
+            'perfil_siscede',
+            'acesso_siscede',
+        ], ';');
+
+        foreach ($users as $user) {
+            fputcsv($handle, [
+                (string) ($user['id'] ?? ''),
+                (string) ($user['full_name'] ?? ''),
+                (string) ($user['email'] ?? ''),
+                (string) ($user['phone_landline_display'] ?? '-'),
+                (string) ($user['phone_mobile_display'] ?? '-'),
+                (string) ($user['association_status_label'] ?? ''),
+                (string) ($user['member_type_label'] ?? ''),
+                (string) ($user['contributor_label'] ?? ''),
+                (string) ($user['institutional_role_display'] ?? '-'),
+                (string) ($user['role_name_display'] ?? ''),
+                (string) ($user['status_label'] ?? ''),
+            ], ';');
+        }
+
+        rewind($handle);
+        $body = stream_get_contents($handle) ?: '';
+        fclose($handle);
+
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('America/Fortaleza')))->format('Ymd-His');
+        $filename = 'pessoas-cede-' . $timestamp . '.csv';
+
+        $response->getBody()->write($body);
+
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     private function formatMobilePhone(string $value): string
@@ -451,5 +606,96 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         }
 
         return $value;
+    }
+
+    private function resolveAccessStatusLabel(string $status): string
+    {
+        $normalizedStatus = strtolower(trim($status));
+
+        return self::STATUS_FILTER_OPTIONS[$normalizedStatus] ?? ($status !== '' ? $status : '-');
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function resolveRoleNameDisplay(array $user): string
+    {
+        $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+        $roleKey = strtolower(trim((string) ($user['role_key'] ?? '')));
+        $roleName = trim((string) ($user['role_name'] ?? ''));
+
+        if ($associationStatus === 'applicant') {
+            return 'Sem perfil liberado';
+        }
+
+        if ($associationStatus === 'former') {
+            return 'Sem perfil ativo';
+        }
+
+        return $this->resolveRoleOptionLabel($roleKey, $roleName);
+    }
+
+    private function resolveRoleOptionLabel(string $roleKey, string $roleName): string
+    {
+        if ($roleKey === 'member') {
+            return self::MEMBER_ROLE_DISPLAY_LABEL;
+        }
+
+        return $roleName !== '' ? $roleName : 'Membro';
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $users
+     * @return array<string, int>
+     */
+    private function buildUsersSummary(array $users): array
+    {
+        $summary = [
+            'total_count' => count($users),
+            'applicant_count' => 0,
+            'member_count' => 0,
+            'former_count' => 0,
+            'active_count' => 0,
+            'pending_count' => 0,
+            'blocked_count' => 0,
+            'contributor_count' => 0,
+            'non_contributor_count' => 0,
+            'institutional_role_count' => 0,
+            'without_institutional_role_count' => 0,
+        ];
+
+        foreach ($users as $user) {
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            if ($associationStatus === 'member') {
+                $summary['member_count']++;
+            } elseif ($associationStatus === 'former') {
+                $summary['former_count']++;
+            } else {
+                $summary['applicant_count']++;
+            }
+
+            $accessStatus = strtolower(trim((string) ($user['status'] ?? '')));
+            if ($accessStatus === 'active') {
+                $summary['active_count']++;
+            } elseif ($accessStatus === 'blocked') {
+                $summary['blocked_count']++;
+            } else {
+                $summary['pending_count']++;
+            }
+
+            if ((int) ($user['is_contributor'] ?? 0) === 1) {
+                $summary['contributor_count']++;
+            } else {
+                $summary['non_contributor_count']++;
+            }
+
+            if (trim((string) ($user['institutional_role'] ?? '')) !== '') {
+                $summary['institutional_role_count']++;
+            } else {
+                $summary['without_institutional_role_count']++;
+            }
+        }
+
+        return $summary;
     }
 }

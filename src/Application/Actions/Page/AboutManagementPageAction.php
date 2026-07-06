@@ -44,6 +44,9 @@ class AboutManagementPageAction extends AbstractPageAction
         'Coordenador' =>
             'Acompanha a operação de uma frente específica, organiza equipe '
             . 'e garante execução das atividades previstas.',
+        'Coordenador(a) do Curso de Mediunidade' =>
+            'Coordena o curso de mediunidade, acompanha turmas, equipe de apoio '
+            . 'e o andamento pedagógico das atividades formativas.',
         'Conselheiro' =>
             'Contribui com orientação e acompanhamento institucional, '
             . 'apoiando decisões e o fortalecimento da missão do CEDE.',
@@ -66,9 +69,18 @@ class AboutManagementPageAction extends AbstractPageAction
 
             $managementMembers = array_values(array_filter(
                 $users,
-                static fn (array $user): bool =>
-                    (string) ($user['status'] ?? '') === 'active'
-                    && trim((string) ($user['institutional_role'] ?? '')) !== ''
+                static function (array $user): bool {
+                    $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+                    if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+                        $associationStatus = strtolower(trim((string) ($user['status'] ?? ''))) === 'pending'
+                            ? 'applicant'
+                            : 'member';
+                    }
+
+                    return (string) ($user['status'] ?? '') === 'active'
+                        && $associationStatus === 'member'
+                        && trim((string) ($user['institutional_role'] ?? '')) !== '';
+                }
             ));
 
             usort($managementMembers, static function (array $first, array $second): int {
@@ -93,10 +105,10 @@ class AboutManagementPageAction extends AbstractPageAction
 
         return $this->renderPage($response, 'pages/about-management.twig', [
             'public_cede_management' => $managementMembers,
-            'page_title' => 'Gestão CEDE | Quem Somos | CEDE',
+            'page_title' => 'Diretoria CEDE | Quem Somos | CEDE',
             'page_url' => 'https://cedern.org/quem-somos/gestao-cede',
             'page_description' =>
-                'Conheça a composição da gestão atual do CEDE '
+                'Conheça a composição da diretoria atual do CEDE '
                 . 'e as atribuições institucionais de cada função.',
         ]);
     }

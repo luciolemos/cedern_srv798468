@@ -33,7 +33,11 @@ class CsrfMiddleware implements Middleware
 
     private function requiresValidation(Request $request): bool
     {
-        return in_array(strtoupper($request->getMethod()), ['POST', 'PUT', 'PATCH', 'DELETE'], true);
+        if (!in_array(strtoupper($request->getMethod()), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            return false;
+        }
+
+        return !$this->isCsrfExemptPath($request);
     }
 
     private function extractSubmittedToken(Request $request): string
@@ -161,5 +165,55 @@ class CsrfMiddleware implements Middleware
         $response->getBody()->write('Sessão expirada. Recarregue a página e tente novamente.');
 
         return $response->withHeader('Content-Type', 'text/plain; charset=UTF-8');
+    }
+
+    private function isCsrfExemptPath(Request $request): bool
+    {
+        $normalizedPath = $this->normalizePath($this->stripBasePath($request->getUri()->getPath()));
+
+        return $normalizedPath === '/webhooks/asaas/contribuicoes';
+    }
+
+    private function stripBasePath(string $path): string
+    {
+        $appBaseEnv = getenv('APP_BASE');
+        $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
+        $appBasePath = $this->normalizeBasePath($appBaseRaw);
+
+        if ($appBasePath === '') {
+            return $path;
+        }
+
+        if ($path === $appBasePath) {
+            return '/';
+        }
+
+        if (str_starts_with($path, $appBasePath . '/')) {
+            return substr($path, strlen($appBasePath));
+        }
+
+        return $path;
+    }
+
+    private function normalizeBasePath(string $rawBasePath): string
+    {
+        $trimmed = trim($rawBasePath);
+
+        if ($trimmed === '' || $trimmed === '/') {
+            return '';
+        }
+
+        return '/' . trim($trimmed, '/');
+    }
+
+    private function normalizePath(string $path): string
+    {
+        $trimmedPath = trim($path);
+
+        if ($trimmedPath === '' || $trimmedPath === '/') {
+            return '/';
+        }
+
+        return '/' . trim($trimmedPath, '/');
     }
 }

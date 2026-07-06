@@ -40,6 +40,13 @@ class AdminDashboardPageAction extends AbstractPageAction
             return $response->withHeader('Location', '/painel/livraria')->withStatus(302);
         }
 
+        if (
+            empty($_SESSION['admin_authenticated'])
+            && (string) ($_SESSION['member_role_key'] ?? '') === 'finance_operator'
+        ) {
+            return $response->withHeader('Location', '/painel/financas')->withStatus(302);
+        }
+
         $flash = $this->consumeSessionFlash(self::FLASH_KEY);
         $visitMetrics = [
             'baseline_started_at' => null,
@@ -122,6 +129,10 @@ class AdminDashboardPageAction extends AbstractPageAction
         foreach ($users as $user) {
             $status = strtolower(trim((string) ($user['status'] ?? '')));
             $memberType = strtolower(trim((string) ($user['member_type'] ?? '')));
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+                $associationStatus = $status === 'pending' ? 'applicant' : 'member';
+            }
 
             if ($status === 'pending') {
                 $metrics['total_pending_accounts']++;
@@ -134,6 +145,10 @@ class AdminDashboardPageAction extends AbstractPageAction
             }
 
             if ($status !== 'active') {
+                continue;
+            }
+
+            if ($associationStatus !== 'member') {
                 continue;
             }
 
@@ -191,7 +206,7 @@ class AdminDashboardPageAction extends AbstractPageAction
             'esde' => 'ESDE',
             'estatuto' => 'Estatuto',
             'estudos' => 'Estudos',
-            'gestao-cede' => 'Gestão CEDE',
+            'gestao-cede' => 'Diretoria CEDE',
             'historia' => 'História',
             'missao' => 'Missão',
             'nossa-marca' => 'Nossa Marca',

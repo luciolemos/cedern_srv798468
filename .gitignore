@@ -8,4 +8,16 @@
 /vendor/
 /logs/*
 !/logs/README.md
+/var/storage/patrimony/docs/*
+!/var/storage/patrimony/docs/.gitignore
+/var/storage/patrimony/img/*
+!/var/storage/patrimony/img/.gitignore
+/var/storage/bookshop/covers/*
+!/var/storage/bookshop/covers/.gitignore
+/var/storage/library/covers/*
+!/var/storage/library/covers/.gitignore
+/var/storage/library/docs/*
+!/var/storage/library/docs/.gitignore
+/var/storage/member-photos/*
+!/var/storage/member-photos/.gitignore
 .phpunit.result.cache

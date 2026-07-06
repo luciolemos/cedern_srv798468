@@ -120,4 +120,126 @@ abstract class AbstractPageAction
             ? $remoteAddress
             : null;
     }
+
+    protected function normalizeBasePath(string $rawBasePath): string
+    {
+        $trimmed = trim($rawBasePath);
+
+        if ($trimmed === '' || $trimmed === '/') {
+            return '';
+        }
+
+        return '/' . trim($trimmed, '/');
+    }
+
+    protected function resolveAppBasePath(Request $request): string
+    {
+        $appBaseEnv = getenv('APP_BASE');
+        $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
+        $configuredAppBasePath = $this->normalizeBasePath($appBaseRaw);
+        $requestUriPath = trim($request->getUri()->getPath());
+
+        if ($requestUriPath === '') {
+            $requestUriPath = '/';
+        }
+
+        if (
+            $configuredAppBasePath === ''
+            || $requestUriPath === $configuredAppBasePath
+            || str_starts_with($requestUriPath, $configuredAppBasePath . '/')
+        ) {
+            return $configuredAppBasePath;
+        }
+
+        return '';
+    }
+
+    protected function buildAppPath(Request $request, string $path): string
+    {
+        $normalizedPath = '/' . ltrim(trim($path), '/');
+
+        return $this->resolveAppBasePath($request) . $normalizedPath;
+    }
+
+    protected function buildAbsoluteAppUrl(Request $request, string $path): string
+    {
+        $origin = $this->resolveRequestOrigin($request);
+
+        return rtrim($origin, '/') . $this->buildAppPath($request, $path);
+    }
+
+    private function resolveRequestOrigin(Request $request): string
+    {
+        $configuredDefaultUrl = rtrim((string) ($_ENV['APP_DEFAULT_PAGE_URL'] ?? 'https://cedern.org/'), '/');
+        $configuredDefaultOrigin = $this->resolveConfiguredDefaultOrigin($configuredDefaultUrl);
+        $forwardedProto = $this->firstHeaderValue($request->getHeaderLine('X-Forwarded-Proto'));
+        $forwardedHost = $this->firstHeaderValue($request->getHeaderLine('X-Forwarded-Host'));
+        $scheme = strtolower($forwardedProto);
+
+        if ($scheme === '') {
+            $scheme = strtolower($request->getUri()->getScheme());
+        }
+
+        if ($scheme === '') {
+            $httpsServerParam = strtolower(trim((string) ($request->getServerParams()['HTTPS'] ?? '')));
+            $scheme = $httpsServerParam !== '' && $httpsServerParam !== 'off' ? 'https' : '';
+        }
+
+        if ($scheme === '') {
+            $scheme = strtolower(parse_url($configuredDefaultUrl, PHP_URL_SCHEME) ?: 'https');
+        }
+
+        $host = $forwardedHost !== '' ? $forwardedHost : trim($request->getUri()->getHost());
+        if ($host === '') {
+            return $configuredDefaultOrigin;
+        }
+
+        $origin = $scheme . '://' . $host;
+        $port = $request->getUri()->getPort();
+
+        if (
+            $forwardedHost === ''
+            && $port !== null
+            && !str_contains($host, ':')
+            && !(($scheme === 'http' && $port === 80) || ($scheme === 'https' && $port === 443))
+        ) {
+            $origin .= ':' . $port;
+        }
+
+        return $origin;
+    }
+
+    private function resolveConfiguredDefaultOrigin(string $configuredDefaultUrl): string
+    {
+        $scheme = strtolower((string) parse_url($configuredDefaultUrl, PHP_URL_SCHEME));
+        $host = trim((string) parse_url($configuredDefaultUrl, PHP_URL_HOST));
+        $port = parse_url($configuredDefaultUrl, PHP_URL_PORT);
+
+        if ($scheme === '' || $host === '') {
+            return 'https://cedern.org';
+        }
+
+        $origin = $scheme . '://' . $host;
+
+        if (
+            is_int($port)
+            && !(($scheme === 'http' && $port === 80) || ($scheme === 'https' && $port === 443))
+        ) {
+            $origin .= ':' . $port;
+        }
+
+        return $origin;
+    }
+
+    private function firstHeaderValue(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return '';
+        }
+
+        $parts = array_map('trim', explode(',', $normalized));
+
+        return trim((string) ($parts[0] ?? ''));
+    }
 }

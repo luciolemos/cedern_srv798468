@@ -145,8 +145,12 @@
                         <span class="nc-sr-only">Excluir</span>
                       </button>
                     </form>
-                    {% if book.pdf_url|default('') %}
-                      <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ book.pdf_url }}" target="_blank" rel="noopener" aria-label="Abrir PDF de {{ book.title }}" title="Abrir PDF">
+                    {% set book_pdf_url = book.pdf_url|default('')|trim %}
+                    {% if book_pdf_url starts with '/' %}
+                      {% set book_pdf_url = (base_url ?? '') ~ book_pdf_url %}
+                    {% endif %}
+                    {% if book_pdf_url %}
+                      <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ book_pdf_url }}" target="_blank" rel="noopener" aria-label="Abrir PDF de {{ book.title }}" title="Abrir PDF">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                           <path d="M14 5H19V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                           <path d="M10 14L19 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>

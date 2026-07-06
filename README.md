@@ -334,6 +334,26 @@ Workflow dedicado:
 
 Ele roda manualmente (`workflow_dispatch`) e deve ser executado após o deploy.
 
+## Patches SQL
+
+Mudanças incrementais de banco agora devem ser versionadas em `database/patches/*.sql` e aplicadas com:
+
+```bash
+php scripts/migrate.php
+php scripts/migrate.php --apply
+```
+
+Atalho via Composer:
+
+```bash
+composer db:migrate
+composer db:migrate -- --apply
+```
+
+Guia completo:
+
+- [docs/DB_SQL_PATCHES.md](/var/www/cedern/docs/DB_SQL_PATCHES.md)
+
 ## Checklist anti-quebra em hospedagem compartilhada
 
 Use esta lista como critério de publicação para evitar regressão em produção:

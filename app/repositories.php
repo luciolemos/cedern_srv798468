@@ -8,6 +8,7 @@ use App\Domain\Bookshop\BookshopRepository;
 use App\Domain\Institutional\InstitutionalContentRepository;
 use App\Domain\Library\LibraryRepository;
 use App\Domain\Member\MemberAuthRepository;
+use App\Domain\Patrimony\PatrimonyRepository;
 use App\Domain\User\UserRepository;
 use App\Infrastructure\Persistence\Agenda\FallbackAgendaRepository;
 use App\Infrastructure\Persistence\Agenda\MySqlAgendaRepository;
@@ -21,6 +22,8 @@ use App\Infrastructure\Persistence\Library\FallbackLibraryRepository;
 use App\Infrastructure\Persistence\Library\MySqlLibraryRepository;
 use App\Infrastructure\Persistence\Member\FallbackMemberAuthRepository;
 use App\Infrastructure\Persistence\Member\MySqlMemberAuthRepository;
+use App\Infrastructure\Persistence\Patrimony\FallbackPatrimonyRepository;
+use App\Infrastructure\Persistence\Patrimony\MySqlPatrimonyRepository;
 use App\Infrastructure\Persistence\User\InMemoryUserRepository;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
@@ -61,6 +64,13 @@ return function (ContainerBuilder $containerBuilder) {
                 return new MySqlBookshopRepository($c->get(\PDO::class));
             } catch (\Throwable $exception) {
                 return new FallbackBookshopRepository();
+            }
+        },
+        PatrimonyRepository::class => function (ContainerInterface $c): PatrimonyRepository {
+            try {
+                return new MySqlPatrimonyRepository($c->get(\PDO::class));
+            } catch (\Throwable $exception) {
+                return new FallbackPatrimonyRepository();
             }
         },
         SiteVisitRepository::class => function (ContainerInterface $c): SiteVisitRepository {

@@ -6,6 +6,7 @@ namespace App\Application\Actions\Page;
 
 use App\Application\Security\RecaptchaVerifier;
 use App\Application\Support\InstitutionalEmailTemplate;
+use App\Application\Support\SmtpSettings;
 use App\Domain\Member\MemberAuthRepository;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -242,7 +243,7 @@ class MemberForgotPasswordPageAction extends AbstractPageAction
         $mailer->Username = $smtpUser;
         $mailer->Password = $smtpPass;
         $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mailer->SMTPSecure = SmtpSettings::resolveConfiguredEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 

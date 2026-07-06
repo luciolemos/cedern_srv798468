@@ -1,8 +1,8 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = dashboard_page_title|default('Resumo do usuário') %}
-{% set dashboard_page_lead = 'Visualização rápida dos principais dados cadastrais.' %}
+{% set dashboard_page_title = dashboard_page_title|default('Editar situação da pessoa') %}
+{% set dashboard_page_lead = 'Gerencie acesso, vínculo associativo, contribuição, tipo de sócio e função institucional desta conta.' %}
 
 {% block admin_content %}
   <section class="nc-section" aria-label="Resumo do usuário">
@@ -22,6 +22,18 @@
     {% elseif summary_status == 'invalid-member-type' %}
       {% set toast_message = 'Selecione um tipo de sócio válido para continuar.' %}
       {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-association-status' %}
+      {% set toast_message = 'Selecione um vínculo associativo válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-account-status' %}
+      {% set toast_message = 'Selecione um status de acesso válido para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-contributor-choice' %}
+      {% set toast_message = 'Selecione uma situação de contribuição válida para continuar.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-contributor-state' %}
+      {% set toast_message = 'Somente associados podem ficar marcados como contribuintes.' %}
+      {% set toast_tone = 'error' %}
     {% elseif summary_status == 'assign-error' %}
       {% set toast_message = 'Não foi possível salvar o perfil do usuário agora. Tente novamente.' %}
       {% set toast_tone = 'error' %}
@@ -37,7 +49,10 @@
 
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
-      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Gestão de pessoal</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Pessoas CEDE</a>
+      {% if summary_user is not empty %}
+        <a class="nc-btn nc-btn-secondary" href="/painel/usuarios/{{ summary_user.id }}">Visualizar cadastro</a>
+      {% endif %}
     </div>
 
     {% if summary_user is empty %}
@@ -45,12 +60,22 @@
     {% else %}
       {% set summary_roles = summary_roles|default([]) %}
       {% set summary_member_type_options = summary_member_type_options|default([]) %}
+      {% set summary_association_status_options = summary_association_status_options|default([]) %}
+      {% set summary_account_status_options = summary_account_status_options|default([]) %}
       {% set summary_institutional_role_options = summary_institutional_role_options|default([]) %}
+      {% set summary_system_state_note = summary_user.association_status|default('applicant') == 'member'
+        ? 'Com vínculo Associado na CEDE, este cadastro pode receber perfil e acesso no SISCEDE.'
+        : (
+          summary_user.association_status|default('applicant') == 'former'
+            ? 'Enquanto o vínculo na CEDE for Desligado, o SISCEDE mantém "Sem perfil ativo" e "Acesso bloqueado".'
+            : 'Enquanto o vínculo na CEDE for Solicitante, o SISCEDE mantém "Sem perfil liberado" e "Acesso pendente".'
+        ) %}
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="70">
         <div class="nc-member-header">
           <div class="nc-member-avatar-wrap" aria-hidden="true">
-            {% if summary_user.profile_photo_path|default('') %}
-              <img class="nc-member-avatar" src="/{{ summary_user.profile_photo_path }}" alt="">
+            {% set summary_user_photo_path = summary_user.profile_photo_path|default('')|trim %}
+            {% if summary_user_photo_path %}
+              <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (summary_user_photo_path|trim('/')) }}" alt="">
             {% else %}
               <div class="nc-member-avatar-placeholder">{{ (summary_user.full_name|default(summary_user.email|default('U'))|slice(0, 1)|upper) }}</div>
             {% endif %}
@@ -63,8 +88,20 @@
 
         <dl class="nc-member-grid">
           <div>
-            <dt>Perfil</dt>
-            <dd>{{ summary_user.role_name|default('Membro') }}</dd>
+            <dt>Acesso ao SISCEDE</dt>
+            <dd>{{ summary_user.status_label|default('Pendente') }}</dd>
+          </div>
+          <div>
+            <dt>Vínculo associativo</dt>
+            <dd>{{ summary_user.association_status_label|default('Solicitante') }}</dd>
+          </div>
+          <div>
+            <dt>Contribuinte</dt>
+            <dd>{{ summary_user.contributor_label|default('Não') }}</dd>
+          </div>
+          <div>
+            <dt>Perfil no SISCEDE</dt>
+            <dd>{{ summary_user.role_name_display|default(summary_user.role_name|default('Membro')) }}</dd>
           </div>
           <div>
             <dt>Tipo de Sócio</dt>
@@ -84,7 +121,7 @@
           </div>
           <div>
             <dt>Data de nascimento</dt>
-            <dd>{{ summary_user.birth_date|default('-') }}</dd>
+            <dd>{{ summary_user.birth_date_display|default('-') }}</dd>
           </div>
           <div>
             <dt>Naturalidade</dt>
@@ -98,48 +135,310 @@
       </article>
 
       <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="95">
-        <h3>Editar perfil de acesso</h3>
-        <p class="nc-member-subtitle">Apenas os campos administrativos podem ser alterados pelo painel.</p>
+        <div class="nc-member-header">
+          <div class="nc-member-header-text">
+            <h3>Configuração financeira</h3>
+            <p>Resumo da cobrança mensal configurada para este cadastro.</p>
+          </div>
+        </div>
+
+        <dl class="nc-member-grid nc-member-grid-finance-summary">
+          <div>
+            <dt>Dia do vencimento da cobrança</dt>
+            <dd>{{ summary_user.preferred_due_day_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Forma definida de pagamento</dt>
+            <dd>{{ summary_user.preferred_payment_method_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Valor da contribuição</dt>
+            <dd>{{ summary_user.contribution_amount_display|default('Não definido') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="110">
+        <h3>Editar situação administrativa</h3>
+        <p class="nc-member-subtitle">Separe aqui o que pertence ao cadastro institucional da CEDE e o que pertence ao acesso no SISCEDE. Algumas combinações são aplicadas automaticamente.</p>
 
         <form class="nc-admin-login-form" method="post" action="/painel/usuarios/{{ summary_user.id }}/atribuir-papel">
           {% include 'components/csrf-field.twig' %}
           <input type="hidden" name="redirect_to" value="/painel/usuarios">
 
-          <div class="nc-admin-login-field">
-            <label class="nc-admin-login-label" for="nc-summary-role-id">Perfil no sistema</label>
-            <select class="nc-admin-login-input" id="nc-summary-role-id" name="role_id">
-              <option value="">Selecionar perfil</option>
-              {% for role in summary_roles %}
-                <option value="{{ role.id }}"{% if summary_user.role_key|default('') == role.role_key %} selected{% endif %}>{{ role.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          <div class="nc-member-admin-groups">
+            <section class="nc-member-admin-group" aria-labelledby="nc-summary-cede-title">
+              <div class="nc-member-admin-group-header">
+                <h4 class="nc-member-admin-group-title" id="nc-summary-cede-title">Configuração CEDE</h4>
+                <p class="nc-member-admin-group-description">Defina o vínculo institucional da pessoa com a CEDE, além da contribuição, do tipo de sócio e da função interna.</p>
+              </div>
 
-          <div class="nc-admin-login-field">
-            <label class="nc-admin-login-label" for="nc-summary-member-type">Tipo de sócio</label>
-            <select class="nc-admin-login-input" id="nc-summary-member-type" name="member_type">
-              <option value="">Tipo de Sócio (opcional)</option>
-              {% for member_type_option in summary_member_type_options %}
-                <option value="{{ member_type_option.value }}"{% if summary_user.member_type|default('') == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
-              {% endfor %}
-            </select>
-          </div>
+              <div class="nc-member-admin-group-fields nc-member-admin-group-fields-cede">
+                <div class="nc-admin-login-field">
+                  <div class="nc-admin-login-label-row">
+                    <label class="nc-admin-login-label" for="nc-summary-association-status">Vínculo associativo</label>
+                    <span class="nc-admin-help-tooltip">
+                      <button
+                        class="nc-admin-help-tooltip-trigger"
+                        type="button"
+                        aria-label="Entender regras do vínculo associativo"
+                        aria-describedby="nc-summary-association-status-help"
+                      >i</button>
+                      <span class="nc-admin-help-tooltip-content" id="nc-summary-association-status-help" role="tooltip">
+                        <span class="nc-admin-help-tooltip-title">Regras do vínculo na CEDE</span>
+                        <span>Solicitante deixa o acesso ao SISCEDE pendente.</span>
+                        <span>Desligado deixa o acesso ao SISCEDE bloqueado.</span>
+                        <span>Apenas Associado permite configurar manualmente o SISCEDE.</span>
+                        <span>Tipo de sócio e contribuição só permanecem para Associado, e a função no CEDE só permanece com acesso Ativo.</span>
+                      </span>
+                    </span>
+                  </div>
+                  <select
+                    class="nc-admin-login-input"
+                    id="nc-summary-association-status"
+                    name="association_status"
+                    data-summary-association-status
+                  >
+                    {% for association_status_option in summary_association_status_options %}
+                      <option value="{{ association_status_option.value }}"{% if summary_user.association_status|default('applicant') == association_status_option.value %} selected{% endif %}>{{ association_status_option.label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
 
-          <div class="nc-admin-login-field">
-            <label class="nc-admin-login-label" for="nc-summary-institutional-role">Função no CEDE</label>
-            <select class="nc-admin-login-input" id="nc-summary-institutional-role" name="institutional_role">
-              <option value="">Função no CEDE (opcional)</option>
-              {% for institutional_role_option in summary_institutional_role_options %}
-                <option value="{{ institutional_role_option }}"{% if summary_user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
-              {% endfor %}
-            </select>
+                <div class="nc-admin-login-field">
+                  <div class="nc-admin-login-label-row">
+                    <label class="nc-admin-login-label" for="nc-summary-member-type">Tipo de sócio</label>
+                    <span class="nc-admin-help-tooltip">
+                      <button
+                        class="nc-admin-help-tooltip-trigger"
+                        type="button"
+                        aria-label="Entender regras do tipo de sócio"
+                        aria-describedby="nc-summary-member-type-help"
+                      >i</button>
+                      <span class="nc-admin-help-tooltip-content" id="nc-summary-member-type-help" role="tooltip">
+                        <span class="nc-admin-help-tooltip-title">Definições do Estatuto do CEDE</span>
+                        <span>Fundador: associado que participou da Assembleia de fundação do CEDE.</span>
+                        <span>Efetivo: associado cuja proposta de admissão foi aprovada pela Diretoria, conforme o Estatuto.</span>
+                      </span>
+                    </span>
+                  </div>
+                  <select class="nc-admin-login-input" id="nc-summary-member-type" name="member_type">
+                    <option value="">Tipo de Sócio (opcional)</option>
+                    {% for member_type_option in summary_member_type_options %}
+                      <option value="{{ member_type_option.value }}"{% if summary_user.member_type|default('') == member_type_option.value %} selected{% endif %}>{{ member_type_option.label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="nc-admin-login-field">
+                  <label class="nc-admin-login-label" for="nc-summary-is-contributor">Contribuição mensal</label>
+                  <select class="nc-admin-login-input" id="nc-summary-is-contributor" name="is_contributor">
+                    <option value="0"{% if summary_user.is_contributor|default(0) != 1 %} selected{% endif %}>Não participa</option>
+                    <option value="1"{% if summary_user.is_contributor|default(0) == 1 %} selected{% endif %}>Participa</option>
+                  </select>
+                </div>
+
+                <div class="nc-admin-login-field">
+                  <div class="nc-admin-login-label-row">
+                    <label class="nc-admin-login-label" for="nc-summary-institutional-role">Função no CEDE</label>
+                    <span class="nc-admin-help-tooltip">
+                      <button
+                        class="nc-admin-help-tooltip-trigger"
+                        type="button"
+                        aria-label="Entender regras da função no CEDE"
+                        aria-describedby="nc-summary-institutional-role-help"
+                      >i</button>
+                      <span class="nc-admin-help-tooltip-content" id="nc-summary-institutional-role-help" role="tooltip">
+                        <span class="nc-admin-help-tooltip-title">Regras da função no CEDE</span>
+                        <span>A função no CEDE só permanece se o campo Vínculo associativo estiver como Associado e o Acesso ao SISCEDE estiver Ativo.</span>
+                        <span>Funções exclusivas exigem que não exista outro usuário ativo ocupando o mesmo cargo.</span>
+                      </span>
+                    </span>
+                  </div>
+                  <select class="nc-admin-login-input" id="nc-summary-institutional-role" name="institutional_role">
+                    <option value="">Função no CEDE (opcional)</option>
+                    {% for institutional_role_option in summary_institutional_role_options %}
+                      <option value="{{ institutional_role_option }}"{% if summary_user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="nc-member-admin-group" aria-labelledby="nc-summary-siscede-title">
+              <div class="nc-member-admin-group-header">
+                <h4 class="nc-member-admin-group-title" id="nc-summary-siscede-title">Configuração SISCEDE</h4>
+                <p class="nc-member-admin-group-description">Defina o perfil e a liberação de acesso no sistema. Essas opções dependem do vínculo configurado na CEDE.</p>
+              </div>
+
+              <p class="nc-member-profile-help nc-member-admin-group-note" data-summary-system-note>{{ summary_system_state_note }}</p>
+
+              <div class="nc-member-admin-group-fields">
+                <div class="nc-admin-login-field">
+                  <label class="nc-admin-login-label" for="nc-summary-role-id">Perfil no SISCEDE</label>
+                  <select
+                    class="nc-admin-login-input"
+                    id="nc-summary-role-id"
+                    name="role_id"
+                    data-summary-system-role
+                  >
+                    <option value="">Selecionar perfil</option>
+                    {% for role in summary_roles %}
+                      <option value="{{ role.id }}"{% if summary_user.role_key|default('') == role.role_key %} selected{% endif %}>{{ role.display_name|default(role.name) }}</option>
+                    {% endfor %}
+                  </select>
+                  <small class="nc-member-profile-help" data-summary-role-help>
+                    {% if summary_user.association_status|default('applicant') == 'member' %}
+                      Esse perfil controla as permissões internas da conta dentro do SISCEDE.
+                    {% elseif summary_user.association_status|default('applicant') == 'former' %}
+                      Enquanto o vínculo na CEDE for Desligado, o SISCEDE mantém esta conta sem perfil ativo.
+                    {% else %}
+                      Enquanto o vínculo na CEDE for Solicitante, o SISCEDE mantém esta conta sem perfil liberado.
+                    {% endif %}
+                  </small>
+                </div>
+
+                <div class="nc-admin-login-field">
+                  <label class="nc-admin-login-label" for="nc-summary-account-status">Acesso ao SISCEDE</label>
+                  <select
+                    class="nc-admin-login-input"
+                    id="nc-summary-account-status"
+                    name="account_status"
+                    data-summary-system-access
+                  >
+                    {% for account_status_option in summary_account_status_options %}
+                      <option
+                        value="{{ account_status_option.value }}"
+                        {% if summary_user.status|default('pending') == account_status_option.value %} selected{% endif %}
+                        {% if account_status_option.value == 'pending' %}
+                          data-summary-pending-option
+                          {% if summary_user.association_status|default('applicant') == 'member' %} hidden disabled{% endif %}
+                        {% endif %}
+                      >{{ account_status_option.label }}</option>
+                    {% endfor %}
+                  </select>
+                  <small class="nc-member-profile-help" data-summary-access-help>
+                    {% if summary_user.association_status|default('applicant') == 'member' %}
+                      Com vínculo Associado na CEDE, o SISCEDE aceita apenas acesso Ativo ou Bloqueado.
+                    {% elseif summary_user.association_status|default('applicant') == 'former' %}
+                      Enquanto o vínculo na CEDE for Desligado, o SISCEDE mantém esta conta com acesso bloqueado.
+                    {% else %}
+                      Enquanto o vínculo na CEDE for Solicitante, o SISCEDE mantém esta conta com acesso pendente.
+                    {% endif %}
+                  </small>
+                </div>
+              </div>
+            </section>
           </div>
 
           <div class="nc-actions nc-admin-login-actions">
-            <button class="nc-btn nc-btn-secondary nc-admin-login-submit" type="submit">Salvar perfil de acesso</button>
+            <button class="nc-btn nc-btn-secondary nc-admin-login-submit" type="submit">Salvar situação da pessoa</button>
           </div>
         </form>
       </article>
+
+      <script>
+        (function () {
+          var associationSelect = document.querySelector('[data-summary-association-status]');
+          var roleSelect = document.querySelector('[data-summary-system-role]');
+          var accessSelect = document.querySelector('[data-summary-system-access]');
+          var roleHelp = document.querySelector('[data-summary-role-help]');
+          var accessHelp = document.querySelector('[data-summary-access-help]');
+          var systemNote = document.querySelector('[data-summary-system-note]');
+          var pendingAccessOption = accessSelect.querySelector('[data-summary-pending-option]');
+          var rememberedRoleValue = roleSelect.value || '';
+          var rememberedAccessValue = accessSelect.value && accessSelect.value !== 'pending'
+            ? accessSelect.value
+            : 'active';
+
+          if (!associationSelect || !roleSelect || !accessSelect) {
+            return;
+          }
+
+          function rememberManualSystemValues() {
+            if (!roleSelect.disabled && roleSelect.value !== '') {
+              rememberedRoleValue = roleSelect.value;
+            }
+
+            if (!accessSelect.disabled && accessSelect.value !== '' && accessSelect.value !== 'pending') {
+              rememberedAccessValue = accessSelect.value;
+            }
+          }
+
+          function updateSystemFields() {
+            var association = String(associationSelect.value || '').toLowerCase();
+            var isMember = association === 'member';
+            var isApplicant = association === 'applicant';
+
+            rememberManualSystemValues();
+
+            roleSelect.disabled = !isMember;
+            accessSelect.disabled = !isMember;
+
+            if (pendingAccessOption) {
+              pendingAccessOption.hidden = !isApplicant;
+              pendingAccessOption.disabled = !isApplicant;
+            }
+
+            if (association === 'member') {
+              if (roleSelect.value === '') {
+                roleSelect.value = rememberedRoleValue;
+              }
+
+              if (accessSelect.value === '' || accessSelect.value === 'pending') {
+                accessSelect.value = rememberedAccessValue || 'active';
+              }
+
+              if (systemNote) {
+                systemNote.textContent = 'Com vinculo Associado na CEDE, este cadastro pode receber perfil e acesso no SISCEDE.';
+              }
+              if (roleHelp) {
+                roleHelp.textContent = 'Esse perfil controla as permissoes internas da conta dentro do SISCEDE.';
+              }
+              if (accessHelp) {
+                accessHelp.textContent = 'Com vinculo Associado na CEDE, o SISCEDE aceita apenas acesso Ativo ou Bloqueado.';
+              }
+
+              return;
+            }
+
+            if (association === 'former') {
+              roleSelect.value = '';
+              accessSelect.value = 'blocked';
+
+              if (systemNote) {
+                systemNote.textContent = 'Enquanto o vinculo na CEDE for Desligado, o SISCEDE mantem "Sem perfil ativo" e "Acesso bloqueado".';
+              }
+              if (roleHelp) {
+                roleHelp.textContent = 'Enquanto o vinculo na CEDE for Desligado, o SISCEDE mantem esta conta sem perfil ativo.';
+              }
+              if (accessHelp) {
+                accessHelp.textContent = 'Enquanto o vinculo na CEDE for Desligado, o SISCEDE mantem esta conta com acesso bloqueado.';
+              }
+
+              return;
+            }
+
+            roleSelect.value = '';
+            accessSelect.value = 'pending';
+
+            if (systemNote) {
+              systemNote.textContent = 'Enquanto o vinculo na CEDE for Solicitante, o SISCEDE mantem "Sem perfil liberado" e "Acesso pendente".';
+            }
+            if (roleHelp) {
+              roleHelp.textContent = 'Enquanto o vinculo na CEDE for Solicitante, o SISCEDE mantem esta conta sem perfil liberado.';
+            }
+            if (accessHelp) {
+              accessHelp.textContent = 'Enquanto o vinculo na CEDE for Solicitante, o SISCEDE mantem esta conta com acesso pendente.';
+            }
+          }
+
+          roleSelect.addEventListener('change', rememberManualSystemValues);
+          accessSelect.addEventListener('change', rememberManualSystemValues);
+          associationSelect.addEventListener('change', updateSystemFields);
+          updateSystemFields();
+        })();
+      </script>
     {% endif %}
   </section>
 {% endblock %}

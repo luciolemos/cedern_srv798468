@@ -14,6 +14,8 @@ use Throwable;
 
 class AdminCedeManagementPageAction extends AbstractPageAction
 {
+    private const MEMBER_ROLE_DISPLAY_LABEL = 'Usuário SISCEDE';
+
     private const DEFAULT_PAGE_SIZE = 10;
 
     private const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 25, 50, 100];
@@ -38,6 +40,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
     public function __invoke(Request $request, Response $response): Response
     {
         $queryParams = $request->getQueryParams();
+        $exportFormat = strtolower(trim((string) ($queryParams['export'] ?? '')));
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
         $selectedInstitutionalRole = trim((string) ($queryParams['institutional_role'] ?? ''));
         $selectedStatus = trim((string) ($queryParams['status_filter'] ?? ''));
@@ -50,9 +53,9 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             $users = $this->memberAuthRepository->findAllUsersForAdmin();
         } catch (Throwable $exception) {
             $status = $status !== '' ? $status : 'load-error';
-            $loadError = 'Não foi possível carregar a Gestão CEDE no momento.';
+            $loadError = 'Não foi possível carregar a Diretoria CEDE no momento.';
 
-            $this->logger->error('Falha ao carregar lista de Gestão CEDE.', [
+            $this->logger->error('Falha ao carregar lista da Diretoria CEDE.', [
                 'exception' => $exception,
             ]);
         }
@@ -63,13 +66,20 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 ? $memberType
                 : '';
             $user['member_type_label'] = self::MEMBER_TYPE_OPTIONS[$user['member_type']] ?? 'Não definido';
+            $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+            $user['association_status'] = in_array($associationStatus, ['applicant', 'member', 'former'], true)
+                ? $associationStatus
+                : (strtolower(trim((string) ($user['status'] ?? ''))) === 'pending' ? 'applicant' : 'member');
+            $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
 
             return $user;
         }, $users);
 
         $users = array_values(array_filter(
             $users,
-            static fn (array $user): bool => trim((string) ($user['institutional_role'] ?? '')) !== ''
+            static fn (array $user): bool =>
+                trim((string) ($user['institutional_role'] ?? '')) !== ''
+                && strtolower(trim((string) $user['association_status'])) === 'member'
         ));
 
         $institutionalRoleOptions = array_values(array_unique(array_map(
@@ -97,14 +107,14 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         }
 
         $statusOptions = ['active', 'pending', 'blocked'];
-        if ($selectedStatus !== '' && in_array($selectedStatus, $statusOptions, true)) {
-            $users = array_values(array_filter(
-                $users,
-                static fn (array $user): bool => (string) ($user['status'] ?? '') === $selectedStatus
-            ));
-        } else {
-            $selectedStatus = '';
+        if (!in_array($selectedStatus, $statusOptions, true)) {
+            $selectedStatus = 'active';
         }
+
+        $users = array_values(array_filter(
+            $users,
+            static fn (array $user): bool => (string) ($user['status'] ?? '') === $selectedStatus
+        ));
 
         if ($searchTerm !== '') {
             $normalizedSearch = strtolower($searchTerm);
@@ -117,7 +127,8 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                         (string) ($user['email'] ?? ''),
                         (string) ($user['institutional_role'] ?? ''),
                         (string) $user['member_type_label'],
-                        (string) ($user['role_name'] ?? ''),
+                        (string) $user['association_status'],
+                        (string) $user['role_name_display'],
                         (string) ($user['status'] ?? ''),
                     ]);
 
@@ -135,13 +146,29 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         $sortMultiplier = $sortDirection === 'desc' ? -1 : 1;
 
         usort($users, static function (array $firstUser, array $secondUser) use ($sortBy, $sortMultiplier): int {
-            $firstValue = (string) ($firstUser[$sortBy] ?? '');
-            $secondValue = (string) ($secondUser[$sortBy] ?? '');
+            $firstValue = $sortBy === 'role_name'
+                ? (string) $firstUser['role_name_display']
+                : (string) ($firstUser[$sortBy] ?? '');
+            $secondValue = $sortBy === 'role_name'
+                ? (string) $secondUser['role_name_display']
+                : (string) ($secondUser[$sortBy] ?? '');
 
             $comparison = strnatcasecmp($firstValue, $secondValue);
 
             return $comparison * $sortMultiplier;
         });
+
+        $users = array_map(function (array $user): array {
+            $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
+            $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
+            $user['status_label'] = $this->resolveAccessStatusLabel((string) ($user['status'] ?? ''));
+
+            return $user;
+        }, $users);
+
+        if ($exportFormat === 'csv') {
+            return $this->renderCsvExport($response, $users);
+        }
 
         $totalItems = count($users);
         $requestedPageSize = trim((string) ($queryParams['per_page'] ?? (string) self::DEFAULT_PAGE_SIZE));
@@ -163,13 +190,6 @@ class AdminCedeManagementPageAction extends AbstractPageAction
 
         $offset = ($currentPage - 1) * $pageSize;
         $users = array_slice($users, $offset, $pageSize);
-
-        $users = array_map(function (array $user): array {
-            $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
-            $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
-
-            return $user;
-        }, $users);
 
         $startItem = $totalItems > 0 ? $offset + 1 : 0;
         $endItem = $totalItems > 0 ? min($offset + count($users), $totalItems) : 0;
@@ -251,6 +271,14 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             'cede_management_institutional_role' => $selectedInstitutionalRole,
             'cede_management_institutional_role_options' => $institutionalRoleOptions,
             'cede_management_status_filter' => $selectedStatus,
+            'cede_management_export_csv_url' => $basePath . '?' . http_build_query([
+                'sort' => $sortBy,
+                'dir' => $sortDirection,
+                'q' => $searchTerm,
+                'institutional_role' => $selectedInstitutionalRole,
+                'status_filter' => $selectedStatus,
+                'export' => 'csv',
+            ]),
             'cede_management_sort_links' => $sortLinks,
             'cede_management_pagination' => [
                 'current_page' => $currentPage,
@@ -267,12 +295,66 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 'page_size_options' => $pageSizeOptions,
             ],
             'dashboard_page_kicker' => 'Dashboard',
-            'dashboard_page_title' => 'Gestão CEDE',
-            'dashboard_page_lead' => 'Usuários com função institucional ativa no CEDE.',
-            'page_title' => 'Gestão CEDE | Dashboard Agenda',
+            'dashboard_page_title' => 'Diretoria CEDE',
+            'dashboard_page_lead' => 'Associados com função institucional ativa no CEDE.',
+            'page_title' => 'Diretoria CEDE | Dashboard Agenda',
             'page_url' => 'https://cedern.org/painel/gestao-cede',
-            'page_description' => 'Lista administrativa de funções institucionais do CEDE.',
+            'page_description' => 'Lista administrativa dos associados com funções institucionais ativas no CEDE.',
         ]);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $users
+     */
+    private function renderCsvExport(Response $response, array $users): Response
+    {
+        $handle = fopen('php://temp', 'w+');
+        if (!is_resource($handle)) {
+            $response->getBody()->write('Falha ao preparar exportacao.');
+
+            return $response->withStatus(500);
+        }
+
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, [
+            'id',
+            'nome',
+            'email',
+            'telefone_fixo',
+            'telefone_celular',
+            'funcao_cede',
+            'tipo_socio',
+            'perfil_siscede',
+            'acesso_siscede',
+        ], ';');
+
+        foreach ($users as $user) {
+            fputcsv($handle, [
+                (string) ($user['id'] ?? ''),
+                (string) ($user['full_name'] ?? ''),
+                (string) ($user['email'] ?? ''),
+                (string) ($user['phone_landline_display'] ?? '-'),
+                (string) ($user['phone_mobile_display'] ?? '-'),
+                (string) ($user['institutional_role'] ?? ''),
+                (string) ($user['member_type_label'] ?? ''),
+                (string) ($user['role_name_display'] ?? $user['role_name'] ?? ''),
+                (string) ($user['status_label'] ?? ''),
+            ], ';');
+        }
+
+        rewind($handle);
+        $body = stream_get_contents($handle) ?: '';
+        fclose($handle);
+
+        $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('America/Fortaleza')))->format('Ymd-His');
+        $filename = 'diretoria-cede-' . $timestamp . '.csv';
+
+        $response->getBody()->write($body);
+
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     private function formatMobilePhone(string $value): string
@@ -307,5 +389,44 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         }
 
         return $value;
+    }
+
+    private function resolveAccessStatusLabel(string $status): string
+    {
+        return match (strtolower(trim($status))) {
+            'active' => 'Ativo',
+            'pending' => 'Pendente',
+            'blocked' => 'Bloqueado',
+            default => $status !== '' ? $status : '-',
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function resolveRoleNameDisplay(array $user): string
+    {
+        $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
+        $roleKey = strtolower(trim((string) ($user['role_key'] ?? '')));
+        $roleName = trim((string) ($user['role_name'] ?? ''));
+
+        if ($associationStatus === 'applicant') {
+            return 'Sem perfil liberado';
+        }
+
+        if ($associationStatus === 'former') {
+            return 'Sem perfil ativo';
+        }
+
+        return $this->resolveRoleOptionLabel($roleKey, $roleName);
+    }
+
+    private function resolveRoleOptionLabel(string $roleKey, string $roleName): string
+    {
+        if ($roleKey === 'member') {
+            return self::MEMBER_ROLE_DISPLAY_LABEL;
+        }
+
+        return $roleName !== '' ? $roleName : 'Membro';
     }
 }

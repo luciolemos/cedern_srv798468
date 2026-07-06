@@ -22,7 +22,7 @@
         }
     ],
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^8.3 || ^8.4",
         "ext-json": "*",
         "monolog/monolog": "^2.8",
         "php-di/php-di": "^6.4",
@@ -44,6 +44,9 @@
         "allow-plugins": {
             "phpstan/extension-installer": true
         },
+        "platform": {
+            "php": "8.3.0"
+        },
         "process-timeout": 0,
         "sort-packages": true
     },
@@ -58,6 +61,8 @@
         }
     },
     "scripts": {
+        "db:migrate": "php scripts/migrate.php",
+        "billing:contributions:run": "php scripts/process_contribution_billing_cycle.php",
         "import:bookshop:csv": "php scripts/import_bookshop_csv.php",
         "migrate:bookshop:covers": "php scripts/migrate_bookshop_cover_paths.php",
         "renumber:bookshop:skus": "php scripts/renumber_bookshop_skus.php",

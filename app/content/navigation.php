@@ -12,7 +12,7 @@ return [
         'fundador' => 'Fundador',
         'estatuto' => 'Estatuto',
         'nossa-marca' => 'Nossa Marca',
-        'gestao-cede' => 'Gestão CEDE',
+        'gestao-cede' => 'Diretoria CEDE',
         'estudos' => 'Estudos',
         'esde' => 'ESDE',
         'eade' => 'EADE',
@@ -37,6 +37,12 @@ return [
         'dados-de-acesso' => 'Dados de acesso',
         'termos-de-uso' => 'Termos de Uso',
         'contato' => 'Contato',
+        'membro' => 'Área do Membro',
+        'perfil' => 'Perfil',
+        'completar' => 'Completar perfil',
+        'operacao' => 'Área de Operação',
+        'gestao' => 'Área de Gestão',
+        'administracao' => 'Área Administrativa',
     ],
     'menu' => [
         [

@@ -1,0 +1,376 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Controle patrimonial' %}
+{% set dashboard_page_lead = 'Cadastre, acompanhe e movimente os bens do CEDE com histórico, manutenção e baixa patrimonial.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Controle patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if patrimony_admin_status == 'created' %}
+      {% set toast_message = 'Patrimônio cadastrado com sucesso.' %}
+    {% elseif patrimony_admin_status == 'updated' %}
+      {% set toast_message = 'Patrimônio atualizado com sucesso.' %}
+    {% elseif patrimony_admin_status == 'deleted' %}
+      {% set toast_message = 'Patrimônio excluído com sucesso.' %}
+    {% elseif patrimony_admin_status == 'delete-blocked' %}
+      {% set toast_message = 'Este patrimônio possui histórico e não pode ser excluído diretamente. Use a baixa patrimonial.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_admin_status == 'not-found' %}
+      {% set toast_message = 'Patrimônio não encontrado.' %}
+      {% set toast_tone = 'error' %}
+    {% elseif patrimony_admin_status == 'delete-error' %}
+      {% set toast_message = 'Não foi possível excluir o patrimônio.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    <div class="nc-actions nc-admin-toolbar is-stacked-mobile" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio/categorias">Categorias patrimoniais</a>
+      <a class="nc-btn nc-btn-primary nc-admin-action-create nc-actions-edge-button" href="{{ patrimony_base_url }}/painel/patrimonio/novo">+ Patrimônio</a>
+    </div>
+
+    {% set summary = patrimony_dashboard_summary|default({}) %}
+    {% set metrics = summary.metrics|default({}) %}
+    <div class="nc-dashboard-visit-grid is-members" data-aos="fade-up" data-aos-delay="90">
+      <article class="nc-dashboard-visit-card is-hoverable">
+        <span class="nc-metric-label">Total de bens</span>
+        <strong class="nc-metric-value">{{ metrics.total_assets|default(0) }}</strong>
+        <p>Itens cadastrados no patrimônio.</p>
+      </article>
+      <article class="nc-dashboard-visit-card is-hoverable">
+        <span class="nc-metric-label">Bens ativos</span>
+        <strong class="nc-metric-value">{{ metrics.active_assets|default(0) }}</strong>
+        <p>Itens que ainda compõem o patrimônio ativo.</p>
+      </article>
+      <article class="nc-dashboard-visit-card is-hoverable">
+        <span class="nc-metric-label">Em manutenção</span>
+        <strong class="nc-metric-value">{{ metrics.maintenance_assets|default(0) }}</strong>
+        <p>Bens com situação operacional em manutenção.</p>
+      </article>
+      <article class="nc-dashboard-visit-card is-hoverable">
+        <span class="nc-metric-label">Baixados</span>
+        <strong class="nc-metric-value">{{ metrics.disposed_assets|default(0) }}</strong>
+        <p>Itens preservados apenas para consulta histórica.</p>
+      </article>
+      <article class="nc-dashboard-visit-card is-hoverable">
+        <span class="nc-metric-label">Valor estimado ativo</span>
+        <strong class="nc-metric-value">{{ metrics.total_active_value_label|default('R$ 0,00') }}</strong>
+        <p>Soma de aquisição apenas dos bens não baixados.</p>
+      </article>
+    </div>
+
+    <div class="nc-dashboard-visit-grid" data-aos="fade-up" data-aos-delay="110">
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Patrimônio por categoria</h3>
+        {% if summary.category_rows|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for row in summary.category_rows|slice(0, 6) %}
+              <li>
+                <div><strong>{{ row.label }}</strong></div>
+                <span>{{ row.count }} item(ns)</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma categoria com bens cadastrados.</p>
+        {% endif %}
+      </article>
+
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Patrimônio por localização</h3>
+        {% if summary.location_rows|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for row in summary.location_rows|slice(0, 6) %}
+              <li>
+                <div><strong>{{ row.label }}</strong></div>
+                <span>{{ row.count }} item(ns)</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma localização com bens cadastrados.</p>
+        {% endif %}
+      </article>
+
+      <article class="nc-card nc-admin-form-card">
+        <h3 class="nc-dashboard-visit-panel-title">Garantias em atenção</h3>
+        {% if summary.warranty_alerts|default([])|length > 0 %}
+          <ul class="nc-dashboard-visit-top-list">
+            {% for asset in summary.warranty_alerts %}
+              <li>
+                <div>
+                  <strong>{{ asset.asset_code }} · {{ asset.name }}</strong>
+                  <p>{{ asset.warranty_expires_at|date('d/m/Y') }}</p>
+                </div>
+                <span>{{ asset.warranty_expired ? 'Vencida' : 'Vence em ' ~ asset.warranty_days_remaining ~ ' dia(s)' }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="nc-member-empty">Nenhuma garantia vencendo no horizonte imediato.</p>
+        {% endif %}
+      </article>
+    </div>
+
+    <article class="nc-card nc-admin-form-card" data-aos="fade-up" data-aos-delay="130">
+      <h3 class="nc-dashboard-visit-panel-title">Últimas movimentações</h3>
+      {% if patrimony_recent_movements|default([])|length > 0 %}
+        <ul class="nc-dashboard-visit-top-list">
+          {% for movement in patrimony_recent_movements %}
+            <li>
+              <div>
+                <strong>{{ movement.asset_code|default('-') }} · {{ movement.asset_name|default('Patrimônio') }}</strong>
+                <p>{{ movement.origin_display|default('-') }} → {{ movement.destination_display|default('-') }}</p>
+              </div>
+              <span>{{ movement.moved_at|date('d/m/Y H:i') }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="nc-member-empty">Nenhuma movimentação registrada até o momento.</p>
+      {% endif %}
+    </article>
+
+    {% set pagination = patrimony_assets_pagination|default({}) %}
+    {% set sort_links = patrimony_assets_sort_links|default({}) %}
+    {% set filters = patrimony_assets_filters|default({}) %}
+    {% set options = patrimony_assets_filter_options|default({}) %}
+    {% set search_term = patrimony_assets_search|default('') %}
+    {% set has_active_filters = search_term != ''
+      or filters.category_id|default('') != ''
+      or filters.location_id|default('') != ''
+      or filters.status_filter|default('') != ''
+      or filters.conservation_filter|default('') != ''
+      or filters.acquisition_type|default('') != ''
+      or filters.warranty_filter|default('') != ''
+      or filters.responsible|default('') != ''
+    %}
+
+    <form class="nc-admin-table-search" method="get" action="{{ patrimony_base_url }}/painel/patrimonio" data-aos="fade-up" data-aos-delay="150">
+      <label for="nc-patrimony-search">Buscar patrimônio</label>
+      <div class="nc-admin-table-search-controls">
+        <input id="nc-patrimony-search" name="q" type="search" value="{{ search_term }}" placeholder="Código, nome, marca, modelo, série, fornecedor...">
+        <select name="category_id" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+          {% for category in options.categories|default([]) %}
+            <option value="{{ category.id }}"{% if filters.category_id|default('') == category.id|striptags|trim %} selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+        <select name="location_id" aria-label="Filtrar por localização">
+          <option value="">Todas as localizações</option>
+          {% for location in options.locations|default([]) %}
+            <option value="{{ location.id }}"{% if filters.location_id|default('') == location.id|striptags|trim %} selected{% endif %}>{{ location.name }}</option>
+          {% endfor %}
+        </select>
+        <select name="status_filter" aria-label="Filtrar por situação">
+          <option value="">Todas as situações</option>
+          {% for key, label in options.status|default({}) %}
+            <option value="{{ key }}"{% if filters.status_filter|default('') == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="conservation_filter" aria-label="Filtrar por conservação">
+          <option value="">Todos os estados</option>
+          {% for key, label in options.conservation|default({}) %}
+            <option value="{{ key }}"{% if filters.conservation_filter|default('') == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="acquisition_type" aria-label="Filtrar por aquisição">
+          <option value="">Todos os tipos</option>
+          {% for key, label in options.acquisition_types|default({}) %}
+            <option value="{{ key }}"{% if filters.acquisition_type|default('') == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="warranty_filter" aria-label="Filtrar por garantia">
+          <option value="">Todas as garantias</option>
+          <option value="expiring"{% if filters.warranty_filter|default('') == 'expiring' %} selected{% endif %}>Vencendo</option>
+          <option value="expired"{% if filters.warranty_filter|default('') == 'expired' %} selected{% endif %}>Vencidas</option>
+          <option value="none"{% if filters.warranty_filter|default('') == 'none' %} selected{% endif %}>Sem garantia</option>
+        </select>
+        <input name="responsible" type="search" value="{{ filters.responsible|default('') }}" placeholder="Responsável atual">
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('asset_code') }}">
+        <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+        <button class="nc-btn nc-btn-secondary" type="submit">Buscar</button>
+        {% if has_active_filters %}
+          <a class="nc-btn nc-btn-secondary" href="{{ patrimony_base_url }}/painel/patrimonio">Limpar filtros</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if patrimony_assets|length == 0 %}
+      <p>{{ has_active_filters ? 'Nenhum patrimônio encontrado para os filtros aplicados.' : 'Nenhum patrimônio cadastrado.' }}</p>
+    {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="170">
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="{{ patrimony_base_url }}/painel/patrimonio">
+          <label for="nc-patrimony-per-page">Registros por página</label>
+          <select id="nc-patrimony-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('asset_code') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('asc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="category_id" value="{{ filters.category_id|default('') }}">
+          <input type="hidden" name="location_id" value="{{ filters.location_id|default('') }}">
+          <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('') }}">
+          <input type="hidden" name="conservation_filter" value="{{ filters.conservation_filter|default('') }}">
+          <input type="hidden" name="acquisition_type" value="{{ filters.acquisition_type|default('') }}">
+          <input type="hidden" name="warranty_filter" value="{{ filters.warranty_filter|default('') }}">
+          <input type="hidden" name="responsible" value="{{ filters.responsible|default('') }}">
+          <noscript>
+            <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+          </noscript>
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="190">
+        <table class="nc-admin-table">
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th><a class="nc-admin-sort-link{% if sort_links.asset_code.active %} is-active{% endif %}" href="{{ sort_links.asset_code.url }}">Código <span aria-hidden="true">{{ sort_links.asset_code.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.name.active %} is-active{% endif %}" href="{{ sort_links.name.url }}">Bem <span aria-hidden="true">{{ sort_links.name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.category_name.active %} is-active{% endif %}" href="{{ sort_links.category_name.url }}">Categoria <span aria-hidden="true">{{ sort_links.category_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.location_name.active %} is-active{% endif %}" href="{{ sort_links.location_name.url }}">Localização <span aria-hidden="true">{{ sort_links.location_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.current_status.active %} is-active{% endif %}" href="{{ sort_links.current_status.url }}">Situação <span aria-hidden="true">{{ sort_links.current_status.indicator }}</span></a></th>
+              <th>Responsável</th>
+              <th><a class="nc-admin-sort-link{% if sort_links.warranty_expires_at.active %} is-active{% endif %}" href="{{ sort_links.warranty_expires_at.url }}">Garantia <span aria-hidden="true">{{ sort_links.warranty_expires_at.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.acquisition_value.active %} is-active{% endif %}" href="{{ sort_links.acquisition_value.url }}">Valor <span aria-hidden="true">{{ sort_links.acquisition_value.indicator }}</span></a></th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for asset in patrimony_assets %}
+              {% set asset_photo_url = asset.main_photo_url|default('')|trim %}
+              {% if asset_photo_url starts with '/' %}
+                {% set asset_photo_url = patrimony_base_url ~ asset_photo_url %}
+              {% endif %}
+              <tr>
+                <td class="nc-admin-asset-photo-cell" data-label="Foto">
+                  {% if asset_photo_url %}
+                    <a class="nc-admin-asset-photo" href="{{ asset_photo_url }}" target="_blank" rel="noopener" aria-label="Abrir foto de {{ asset.name }}">
+                      <img src="{{ asset_photo_url }}" alt="" loading="lazy">
+                    </a>
+                  {% else %}
+                    <span class="nc-admin-asset-photo is-empty" aria-hidden="true">{{ asset.name|default('P')|slice(0, 1)|upper }}</span>
+                  {% endif %}
+                </td>
+                <td data-label="Código"><strong>{{ asset.asset_code }}</strong></td>
+                {% set asset_identity_meta = (asset.brand|default('') ~ ' ' ~ asset.model|default(''))|trim %}
+                <td class="nc-agenda-activity-cell" data-label="Bem">
+                  <strong>{{ asset.name }}</strong>
+                  {% if asset_identity_meta or asset.serial_number|default('') %}
+                    <small>
+                      {{ asset_identity_meta }}{% if asset.serial_number|default('') %}{% if asset_identity_meta %} · {% endif %}Série {{ asset.serial_number }}{% endif %}
+                    </small>
+                  {% endif %}
+                </td>
+                <td data-label="Categoria">{{ asset.category_name|default('Sem categoria') }}</td>
+                <td data-label="Localização">{{ asset.current_location_display|default('-') }}</td>
+                <td data-label="Situação">
+                  <span class="nc-admin-featured-flag{{ asset.current_status == 'baixado' ? ' is-off' : ' is-on' }}">{{ asset.current_status_label|default(asset.current_status) }}</span>
+                </td>
+                <td data-label="Responsável">{{ asset.current_responsible|default('-') ?: '-' }}</td>
+                <td data-label="Garantia">
+                  {% if asset.warranty_expires_at %}
+                    <div class="nc-admin-asset-warranty">
+                      <span class="nc-admin-asset-warranty-date">{{ asset.warranty_expires_at|date('d/m/Y') }}</span>
+                      {% if asset.warranty_expired %}
+                        <small class="nc-admin-login-error nc-admin-asset-warranty-status">Vencida</small>
+                      {% elseif asset.warranty_expires_soon %}
+                        <small class="nc-admin-login-success nc-admin-asset-warranty-status">Vence em {{ asset.warranty_days_remaining }} dia(s)</small>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <span>-</span>
+                  {% endif %}
+                </td>
+                <td data-label="Valor">{{ asset.acquisition_value_label|default('-') ?: '-' }}</td>
+                <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}" aria-label="Visualizar patrimônio {{ asset.name }}" title="Visualizar">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <ellipse cx="12" cy="12" rx="10" ry="6.5" stroke="currentColor" stroke-width="1.8"/>
+                      <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span class="nc-sr-only">Visualizar</span>
+                  </a>
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/editar" aria-label="Editar patrimônio {{ asset.name }}" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M4 20H8L18.5 9.5C19.3 8.7 19.3 7.3 18.5 6.5L17.5 5.5C16.7 4.7 15.3 4.7 14.5 5.5L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="nc-sr-only">Editar</span>
+                  </a>
+                  {% if asset.current_status != 'baixado' %}
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/movimentar" aria-label="Movimentar patrimônio {{ asset.name }}" title="Movimentar">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M15 8L19 12L15 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 8L5 12L9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span class="nc-sr-only">Movimentar</span>
+                    </a>
+                    <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/baixa" aria-label="Registrar baixa de {{ asset.name }}" title="Baixa">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 5V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M8 11L12 15L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="5" y="17" width="14" height="2.5" rx="1.25" stroke="currentColor" stroke-width="1.8"/>
+                      </svg>
+                      <span class="nc-sr-only">Baixa</span>
+                    </a>
+                  {% endif %}
+                  <form method="post" action="{{ patrimony_base_url }}/painel/patrimonio/{{ asset.id }}/excluir" onsubmit="return confirm('Tem certeza que deseja excluir este patrimônio? O sistema bloqueará a exclusão se houver histórico.');">
+                    {% include 'components/csrf-field.twig' %}
+                    <button class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-delete" type="submit" aria-label="Excluir patrimônio {{ asset.name }}" title="Excluir">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M4 7H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M9 11V17M15 11V17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M7 7L8 19C8.08 19.9 8.84 20.6 9.75 20.6H14.25C15.16 20.6 15.92 19.9 16 19L17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 4H14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                      </svg>
+                      <span class="nc-sr-only">Excluir</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação do patrimônio" data-aos="fade-up" data-aos-delay="210">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

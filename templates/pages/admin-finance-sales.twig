@@ -1,0 +1,273 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Finanças' %}
+{% set dashboard_page_title = 'Vendas e cancelamentos' %}
+{% set dashboard_page_lead = 'Acompanhe clientes, itens vendidos, meios de pagamento, operadores e cancelamentos da livraria.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Consulta financeira de vendas da livraria" data-aos="fade-up" data-aos-delay="0">
+    {% set toast_message = '' %}
+    {% set toast_tone = 'success' %}
+    {% if admin_status == 'not-found' %}
+      {% set toast_message = 'Venda não encontrada para consulta financeira.' %}
+      {% set toast_tone = 'error' %}
+    {% endif %}
+
+    {% include 'components/admin-toast.twig' with {
+      message: toast_message,
+      tone: toast_tone
+    } %}
+
+    {% set export_csv_url = finance_sales_export_csv_url|default('/painel/financas?export=csv') %}
+
+    <div class="nc-actions nc-bookshop-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ export_csv_url }}">Exportar CSV</a>
+    </div>
+
+    {% set summary = finance_sales_summary|default({}) %}
+    {% set finance_kpi_cards = [
+      {
+        label: 'Vendas concluídas',
+        value: summary.completed_count|default(0),
+        description: summary.completed_total_label|default('R$ 0,00') ~ ' em vendas confirmadas.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5.25" y="5.25" width="13.5" height="13.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8.5 10H15.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8.5 13.5H12.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+      },
+      {
+        label: 'Receita ativa',
+        value: summary.recognized_total_label|default('R$ 0,00'),
+        description: 'Somente vendas concluídas entram no valor reconhecido.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.75 17.75L9 12.75L12 15.25L18.75 7.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.75 7.25H18.75V10.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      },
+      {
+        label: 'Cancelamentos',
+        value: summary.cancelled_count|default(0),
+        description: summary.cancelled_total_label|default('R$ 0,00') ~ ' em vendas estornadas.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 7L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M17 7L7 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="7.25" stroke="currentColor" stroke-width="1.7"/></svg>'
+      },
+      {
+        label: 'Ticket médio',
+        value: summary.average_ticket_label|default('R$ 0,00'),
+        description: 'Média por venda concluída dentro do recorte filtrado.',
+        icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
+      }
+    ] %}
+    <section class="nc-dashboard-visit-panel" aria-label="Indicadores financeiros" data-aos="fade-up" data-aos-delay="90">
+      <div class="nc-dashboard-visit-panel-head">
+        <div>
+          <h3 class="nc-dashboard-visit-panel-title">Painel financeiro</h3>
+          <p class="nc-dashboard-visit-panel-copy">Os indicadores abaixo respeitam os filtros aplicados na consulta.</p>
+        </div>
+      </div>
+
+      <div class="nc-dashboard-visit-grid">
+        {% for card in finance_kpi_cards %}
+          {% include 'components/admin-kpi-card.twig' with {
+            kpi_label: card.label,
+            kpi_value: card.value,
+            kpi_description: card.description,
+            kpi_icon_svg: card.icon_svg
+          } only %}
+        {% endfor %}
+      </div>
+    </section>
+
+    {% set pagination = finance_sales_pagination|default({}) %}
+    {% set sort_links = finance_sales_sort_links|default({}) %}
+    {% set search_term = finance_sales_search|default('') %}
+    {% set filters = finance_sales_filters|default({}) %}
+    {% set filter_summary = finance_sales_filter_summary|default(null) %}
+    {% set filter_options = finance_sales_filter_options|default({}) %}
+    {% set payment_options = filter_options.payment_methods|default({}) %}
+    {% set seller_options = filter_options.sellers|default({}) %}
+    {% set has_active_filters = search_term != ''
+      or filters.status_filter|default('all') != 'all'
+      or filters.payment_filter|default('all') != 'all'
+      or filters.seller_filter|default('all') != 'all'
+      or filters.period_field|default('sold_at') != 'sold_at'
+      or filters.date_from|default('') != ''
+      or filters.date_to|default('') != ''
+      or filters.amount_min|default('') != ''
+      or filters.amount_max|default('') != '' %}
+
+    <form class="nc-admin-table-search" method="get" action="/painel/financas" data-aos="fade-up" data-aos-delay="120">
+      <label for="nc-finance-sales-search">Filtrar movimentação financeira</label>
+      <div class="nc-admin-table-search-controls nc-bookshop-table-filters nc-finance-filter-controls">
+        <input id="nc-finance-sales-search" name="q" type="search" value="{{ search_term }}" placeholder="Cliente, item, código, pagamento, vendedor ou cancelador...">
+        <select name="status_filter" aria-label="Filtrar por status">
+          <option value="all" {{ filters.status_filter|default('all') == 'all' ? 'selected' : '' }}>Todos os status</option>
+          <option value="completed" {{ filters.status_filter|default('all') == 'completed' ? 'selected' : '' }}>Somente concluídas</option>
+          <option value="cancelled" {{ filters.status_filter|default('all') == 'cancelled' ? 'selected' : '' }}>Somente canceladas</option>
+        </select>
+        <select name="payment_filter" aria-label="Filtrar por pagamento">
+          {% for value, label in payment_options %}
+            <option value="{{ value }}"{% if filters.payment_filter|default('all') == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="seller_filter" aria-label="Filtrar por vendedor">
+          {% for value, label in seller_options %}
+            <option value="{{ value }}"{% if filters.seller_filter|default('all') == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <div class="nc-finance-period-range" aria-label="Período da consulta">
+          <select name="period_field" aria-label="Selecionar período">
+            <option value="sold_at" {{ filters.period_field|default('sold_at') == 'sold_at' ? 'selected' : '' }}>Período da venda</option>
+            <option value="cancelled_at" {{ filters.period_field|default('sold_at') == 'cancelled_at' ? 'selected' : '' }}>Período do cancelamento</option>
+          </select>
+          <input class="nc-admin-form-input" name="date_from" type="date" value="{{ filters.date_from|default('') }}" aria-label="Data inicial">
+          <span class="nc-finance-period-range-separator" aria-hidden="true">a</span>
+          <input class="nc-admin-form-input" name="date_to" type="date" value="{{ filters.date_to|default('') }}" aria-label="Data final">
+        </div>
+        <input class="nc-admin-form-input" name="amount_min" type="number" min="0" step="0.01" value="{{ filters.amount_min|default('') }}" placeholder="Valor mínimo" aria-label="Valor mínimo">
+        <input class="nc-admin-form-input" name="amount_max" type="number" min="0" step="0.01" value="{{ filters.amount_max|default('') }}" placeholder="Valor máximo" aria-label="Valor máximo">
+        <input type="hidden" name="sort" value="{{ pagination.sort|default('sold_at') }}">
+        <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+        <input type="hidden" name="per_page" value="{{ pagination.page_size|default(10) }}">
+        <button class="nc-btn nc-btn-secondary" type="submit">Aplicar</button>
+        {% if has_active_filters %}
+          <a class="nc-btn nc-btn-secondary" href="/painel/financas">Limpar</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if finance_sales|length == 0 %}
+      {% if filter_summary %}
+        <article class="nc-finance-period-inline-summary" data-aos="fade-up" data-aos-delay="140">
+          <strong>Montante do recorte: {{ filter_summary.recognized_total_label }}</strong>
+          {% for label in filter_summary.context_labels|default([]) %}
+            <span>{{ label }}</span>
+          {% endfor %}
+          <span>{{ filter_summary.completed_count_label }}</span>
+        </article>
+      {% endif %}
+      <article class="nc-card nc-bookshop-empty-card" data-aos="fade-up" data-aos-delay="150">
+        <p>{{ has_active_filters ? 'Nenhuma venda encontrada para os filtros informados.' : 'Nenhuma movimentação financeira registrada ainda.' }}</p>
+      </article>
+    {% else %}
+      <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="150">
+        {% if filter_summary %}
+          <div class="nc-finance-period-inline-summary">
+            <strong>Montante do recorte: {{ filter_summary.recognized_total_label }}</strong>
+            {% for label in filter_summary.context_labels|default([]) %}
+              <span>{{ label }}</span>
+            {% endfor %}
+            <span>{{ filter_summary.completed_count_label }}</span>
+          </div>
+        {% endif %}
+        <p class="nc-admin-table-counter">
+          Mostrando {{ pagination.start_item }}-{{ pagination.end_item }} de {{ pagination.total_items }} registros
+        </p>
+
+        <form class="nc-admin-table-page-size" method="get" action="/painel/financas">
+          <label for="nc-finance-sales-per-page">Registros por página</label>
+          <select id="nc-finance-sales-per-page" name="per_page" onchange="this.form.submit()">
+            {% for option in pagination.page_size_options %}
+              <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label|default(option.value) }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="sort" value="{{ pagination.sort|default('sold_at') }}">
+          <input type="hidden" name="dir" value="{{ pagination.dir|default('desc') }}">
+          <input type="hidden" name="q" value="{{ search_term }}">
+          <input type="hidden" name="status_filter" value="{{ filters.status_filter|default('all') }}">
+          <input type="hidden" name="payment_filter" value="{{ filters.payment_filter|default('all') }}">
+          <input type="hidden" name="seller_filter" value="{{ filters.seller_filter|default('all') }}">
+          <input type="hidden" name="period_field" value="{{ filters.period_field|default('sold_at') }}">
+          <input type="hidden" name="date_from" value="{{ filters.date_from|default('') }}">
+          <input type="hidden" name="date_to" value="{{ filters.date_to|default('') }}">
+          <input type="hidden" name="amount_min" value="{{ filters.amount_min|default('') }}">
+          <input type="hidden" name="amount_max" value="{{ filters.amount_max|default('') }}">
+        </form>
+      </div>
+
+      <div class="nc-admin-table-wrap" data-aos="fade-up" data-aos-delay="170">
+        <table class="nc-admin-table nc-admin-table-bookshop">
+          <thead>
+            <tr>
+              <th><a class="nc-admin-sort-link{% if sort_links.sold_at.active %} is-active{% endif %}" href="{{ sort_links.sold_at.url }}">Data <span aria-hidden="true">{{ sort_links.sold_at.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.customer_name.active %} is-active{% endif %}" href="{{ sort_links.customer_name.url }}">Quem comprou <span aria-hidden="true">{{ sort_links.customer_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.items_summary.active %} is-active{% endif %}" href="{{ sort_links.items_summary.url }}">O que comprou <span aria-hidden="true">{{ sort_links.items_summary.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.payment_method.active %} is-active{% endif %}" href="{{ sort_links.payment_method.url }}">Pagamento <span aria-hidden="true">{{ sort_links.payment_method.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.total_amount.active %} is-active{% endif %}" href="{{ sort_links.total_amount.url }}">Valor <span aria-hidden="true">{{ sort_links.total_amount.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.created_by_name.active %} is-active{% endif %}" href="{{ sort_links.created_by_name.url }}">Quem vendeu <span aria-hidden="true">{{ sort_links.created_by_name.indicator }}</span></a></th>
+              <th><a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a></th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in finance_sales %}
+              <tr>
+                <td class="nc-agenda-activity-cell" data-label="Data">
+                  <strong>{{ sale.sold_at_label|default('-') ?: '-' }}</strong>
+                  {% if sale.cancelled_at_label|default('') %}
+                    <small>Cancelada em {{ sale.cancelled_at_label }}</small>
+                  {% endif %}
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="Quem comprou">
+                  <strong>{{ sale.customer_name_display|default('Balcão') }}</strong>
+                  {% if sale.customer_cpf_display|default('') %}
+                    <small>{{ sale.customer_cpf_display }}</small>
+                  {% endif %}
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="O que comprou">
+                  <strong>{{ sale.items_summary_short|default('') ?: 'Itens detalhados na visualização' }}</strong>
+                  <small>{{ sale.item_count|default(0) }} item{{ sale.item_count|default(0) == 1 ? '' : 'ns' }}</small>
+                  <small>{{ sale.sale_code|default('-') }}</small>
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="Pagamento">
+                  <strong>{{ sale.payment_method_label|default('-') }}</strong>
+                  {% if sale.received_amount_label|default('') %}
+                    <small>Recebido {{ sale.received_amount_label }}</small>
+                  {% endif %}
+                  {% if sale.change_amount_label|default('') %}
+                    <small>Troco {{ sale.change_amount_label }}</small>
+                  {% endif %}
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="Valor">
+                  <strong>{{ sale.total_amount_label|default('R$ 0,00') }}</strong>
+                  <small>Subtotal {{ sale.subtotal_amount_label|default('R$ 0,00') }}</small>
+                  {% if sale.discount_amount|default(0) > 0 %}
+                    <small>Desconto {{ sale.discount_amount_label|default('R$ 0,00') }}</small>
+                  {% endif %}
+                </td>
+                <td class="nc-agenda-activity-cell" data-label="Quem vendeu">
+                  <strong>{{ sale.created_by_name|default('Não informado') ?: 'Não informado' }}</strong>
+                  {% if sale.cancelled_by_name|default('') %}
+                    <small>Cancelada por {{ sale.cancelled_by_name }}</small>
+                  {% endif %}
+                </td>
+                <td data-label="Status">
+                  <span class="nc-admin-featured-flag{{ sale.status == 'completed' ? ' is-on' : ' is-off' }}">{{ sale.status_label|default('-') }}</span>
+                </td>
+                <td class="nc-admin-table-actions" data-label="Ações">
+                  <a class="nc-btn nc-btn-secondary" href="/painel/financas/vendas/{{ sale.id }}">Visualizar</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.total_pages > 1 %}
+        <nav class="nc-admin-pagination" aria-label="Paginação financeira" data-aos="fade-up" data-aos-delay="190">
+          {% if pagination.previous_url %}
+            <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
+          {% else %}
+            <span class="is-disabled">← Anterior</span>
+          {% endif %}
+
+          <div class="nc-admin-pagination-pages">
+            {% for link in pagination.links %}
+              <a class="nc-link{% if link.active %} is-active{% endif %}" href="{{ link.url }}">{{ link.number }}</a>
+            {% endfor %}
+          </div>
+
+          {% if pagination.next_url %}
+            <a class="nc-link" href="{{ pagination.next_url }}">Próxima →</a>
+          {% else %}
+            <span class="is-disabled">Próxima →</span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

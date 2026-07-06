@@ -28,6 +28,56 @@
     (function () {
       try {
         var root = document.documentElement;
+        var defaultTheme = '{{ default_theme|default('amber')|e('js') }}'.toLowerCase();
+        var defaultMode = '{{ default_mode|default('light')|e('js') }}'.toLowerCase();
+        var theme = (root.getAttribute('data-theme') || defaultTheme || 'amber').toLowerCase();
+        var mode = (root.getAttribute('data-mode') || defaultMode || 'light').toLowerCase();
+        var pageBackgroundByMode = {
+          light: '#f8fafc',
+          dark: '#101216'
+        };
+        var glowByMode = {
+          light: {
+            amber: '#fef3c7',
+            blue: '#dbeafe',
+            green: '#dcfce7',
+            red: '#fee2e2',
+            violet: '#ede9fe'
+          },
+          dark: {
+            amber: '#322114',
+            blue: '#111a2c',
+            green: '#10271c',
+            red: '#2f1114',
+            violet: '#22153a'
+          }
+        };
+        var resolvedMode = Object.prototype.hasOwnProperty.call(pageBackgroundByMode, mode) ? mode : 'light';
+        var pageBackground = pageBackgroundByMode[resolvedMode];
+        var glowPalette = glowByMode[resolvedMode] || glowByMode.light;
+        var glowBackground = glowPalette[theme] || glowPalette[defaultTheme] || glowPalette.amber;
+        var criticalPaint = document.getElementById('nc-dashboard-critical-paint');
+
+        if (!criticalPaint) {
+          criticalPaint = document.createElement('style');
+          criticalPaint.id = 'nc-dashboard-critical-paint';
+          document.head.appendChild(criticalPaint);
+        }
+
+        criticalPaint.textContent =
+          'html,body{margin:0;min-height:100%;background-color:' + pageBackground + ';}' +
+          'html{color-scheme:' + (resolvedMode === 'dark' ? 'dark' : 'light') + ';}' +
+          'body{background-image:radial-gradient(circle at top right,' + glowBackground + ',' + pageBackground + ' 50%);background-repeat:no-repeat;}';
+
+        root.style.backgroundColor = pageBackground;
+      } catch (error) {
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var root = document.documentElement;
         var isDesktop = window.matchMedia && window.matchMedia('(min-width: 981px)').matches;
         var savedSidebarCollapsed = localStorage.getItem('natalcode_dashboard_sidebar_collapsed') === '1';
 
@@ -47,10 +97,14 @@
   <link rel="stylesheet" href="{{ google_fonts_href }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="{{ google_fonts_href }}"></noscript>
   {% set asset_version = app_asset_version|default('1') %}
+  {% set favicon_version = app_favicon_version|default(asset_version ~ '-cede-apple180') %}
   <link rel="stylesheet" href="/assets/css/cedern.css?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/brands/cede4_favicon_32.png?v={{ asset_version }}">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/brands/cede4_favicon_192.png?v={{ asset_version }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/brands/cede4_apple_touch_180.png?v={{ asset_version }}">
+  <link rel="icon" type="image/png" sizes="180x180" href="{{ base_url ?? '' }}/assets/img/brands/cede4_apple_touch_180.png?v={{ favicon_version }}">
+  <link rel="shortcut icon" href="{{ base_url ?? '' }}/favicon.ico?v={{ favicon_version }}" type="image/x-icon">
+  <link rel="icon" type="image/x-icon" href="{{ base_url ?? '' }}/favicon.ico?v={{ favicon_version }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ base_url ?? '' }}/assets/img/brands/cede4_favicon_32.png?v={{ favicon_version }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ base_url ?? '' }}/assets/img/brands/cede4_favicon_192.png?v={{ favicon_version }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ base_url ?? '' }}/assets/img/brands/cede4_apple_touch_180.png?v={{ favicon_version }}">
   <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>
   {% block head %}{% endblock %}
 </head>

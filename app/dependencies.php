@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Application\Settings\SettingsInterface;
 use App\Application\Security\RecaptchaVerifier;
+use App\Domain\Billing\ContributionBillingGateway;
+use App\Infrastructure\Billing\AsaasContributionBillingGateway;
+use App\Infrastructure\Billing\NullContributionBillingGateway;
 use App\Support\ThemeConfig;
 use DI\ContainerBuilder;
 use Monolog\Handler\StreamHandler;
@@ -28,6 +31,11 @@ return function (ContainerBuilder $containerBuilder) {
             $logger->pushHandler($handler);
 
             return $logger;
+        },
+        ContributionBillingGateway::class => function (): ContributionBillingGateway {
+            $gateway = new AsaasContributionBillingGateway();
+
+            return $gateway->isConfigured() ? $gateway : new NullContributionBillingGateway();
         },
         \PDO::class => function (ContainerInterface $c): \PDO {
             $settings = $c->get(SettingsInterface::class);

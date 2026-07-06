@@ -10,6 +10,8 @@ use DI\ContainerBuilder;
 use Dotenv\Dotenv;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
+use Slim\Views\Twig;
+use Twig\TwigFunction;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -104,9 +106,42 @@ $normalizeBasePath = static function (string $rawBasePath): string {
     return '/' . trim($trimmed, '/');
 };
 
+$detectAppBasePath = static function () use ($normalizeBasePath): string {
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $scriptDirectory = str_replace('\\', '/', dirname($scriptName));
+
+    if ($scriptDirectory === '' || $scriptDirectory === '.' || $scriptDirectory === '/') {
+        return '';
+    }
+
+    $scriptDirectory = rtrim($scriptDirectory, '/');
+
+    // Root installs commonly execute through /public/index.php after rewrite.
+    if ($scriptDirectory === '/public') {
+        return '';
+    }
+
+    if (str_ends_with($scriptDirectory, '/public')) {
+        $scriptDirectory = substr($scriptDirectory, 0, -strlen('/public')) ?: '';
+    }
+
+    return $normalizeBasePath($scriptDirectory);
+};
+
 $appBaseEnv = getenv('APP_BASE');
 $appBaseRaw = trim((string) ($appBaseEnv !== false ? $appBaseEnv : ($_ENV['APP_BASE'] ?? '')));
 $configuredAppBasePath = $normalizeBasePath($appBaseRaw);
+
+if ($configuredAppBasePath === '') {
+    $detectedAppBasePath = $detectAppBasePath();
+
+    if ($detectedAppBasePath !== '') {
+        $configuredAppBasePath = $detectedAppBasePath;
+        $_ENV['APP_BASE'] = $detectedAppBasePath;
+        putenv('APP_BASE=' . $detectedAppBasePath);
+    }
+}
+
 $requestUriPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
 
 if (!is_string($requestUriPath) || $requestUriPath === '') {
@@ -133,6 +168,66 @@ $middleware($app);
 // Register routes
 $routes = require __DIR__ . '/../app/routes.php';
 $routes($app);
+
+$routePatternToRegex = static function (string $pattern): string {
+    $trimmedPattern = trim($pattern, '/');
+
+    if ($trimmedPattern === '') {
+        return '#^/$#';
+    }
+
+    $segments = array_values(array_filter(explode('/', $trimmedPattern), 'strlen'));
+    $regexSegments = [];
+
+    foreach ($segments as $segment) {
+        if (preg_match('/^\{([^}:]+)(?::(.+))?\}$/', $segment, $matches) === 1) {
+            $regexSegments[] = $matches[2] ?? '[^/]+';
+            continue;
+        }
+
+        $regexSegments[] = preg_quote($segment, '#');
+    }
+
+    return '#^/' . implode('/', $regexSegments) . '$#';
+};
+
+$breadcrumbLinkPaths = [];
+$breadcrumbLinkPatterns = [];
+
+foreach ($app->getRouteCollector()->getRoutes() as $route) {
+    if (!in_array('GET', $route->getMethods(), true)) {
+        continue;
+    }
+
+    $pattern = $route->getPattern();
+
+    if (preg_match('/\{[^}]+\}/', $pattern) === 1) {
+        $breadcrumbLinkPatterns[] = $routePatternToRegex($pattern);
+        continue;
+    }
+
+    $breadcrumbLinkPaths[$pattern] = true;
+}
+
+/** @var Twig $twig */
+$twig = $container->get(Twig::class);
+$breadcrumbLinkPatterns = array_values(array_unique($breadcrumbLinkPatterns));
+$twig->getEnvironment()->addFunction(new TwigFunction(
+    'is_breadcrumb_linkable',
+    static function (string $path) use ($breadcrumbLinkPaths, $breadcrumbLinkPatterns): bool {
+        if (isset($breadcrumbLinkPaths[$path])) {
+            return true;
+        }
+
+        foreach ($breadcrumbLinkPatterns as $pattern) {
+            if (preg_match($pattern, $path) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+));
 
 /** @var SettingsInterface $settings */
 $settings = $container->get(SettingsInterface::class);

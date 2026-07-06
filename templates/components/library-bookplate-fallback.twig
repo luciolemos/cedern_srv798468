@@ -6,6 +6,7 @@
 {% set bookplate_section_title = bookplate_section_title|default('Biblioteca')|trim %}
 {% set bookplate_subtitle_line_1 = bookplate_subtitle_line_1|default('Centro de Estudos')|trim %}
 {% set bookplate_subtitle_line_2 = bookplate_subtitle_line_2|default('da Doutrina Espirita')|trim %}
+{% set bookplate_base_url = base_url|default('') %}
 {% if bookplate_display_title == '' or bookplate_display_title == 'livro' %}
   {% set bookplate_display_title = 'Acervo CEDE' %}
 {% endif %}
@@ -18,7 +19,7 @@
     <span class="nc-library-bookplate-default-portrait-frame">
       <img
         class="nc-library-bookplate-default-portrait"
-        src="/assets/img/brands/cede1_logo.png"
+        src="{{ bookplate_base_url }}/assets/img/brands/cede1_logo.png"
         alt=""
         loading="lazy"
       >

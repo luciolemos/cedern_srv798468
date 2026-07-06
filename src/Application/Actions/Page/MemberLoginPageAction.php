@@ -146,9 +146,9 @@ class MemberLoginPageAction extends AbstractPageAction
             'member_login_success' => $success,
             'member_login_form' => $form,
             'member_login_redirect_to' => $redirectTo,
-            'page_title' => 'Acessar área do membro | CEDE',
+            'page_title' => 'Acesso ao SISCEDE | CEDE',
             'page_url' => 'https://cedern.org/entrar',
-            'page_description' => 'Acesso à área do membro do CEDE conforme seu perfil de permissão.',
+            'page_description' => 'Acesso ao SISCEDE, o sistema do CEDE para membros e perfis internos autorizados.',
         ]);
     }
 

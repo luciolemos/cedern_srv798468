@@ -1,0 +1,95 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = 'Movimentar patrimônio' %}
+{% set dashboard_page_lead = 'Registre a troca de local do bem e preserve o histórico patrimonial.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Movimentação patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% if patrimony_movement_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in patrimony_movement_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Voltar ao patrimônio</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <p><strong>{{ patrimony_asset.asset_code }}</strong> · {{ patrimony_asset.name }}</p>
+      <p>Localização atual: {{ patrimony_asset.current_location_display|default('-') }}</p>
+
+      <form class="nc-admin-form" method="post" action="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/movimentar">
+        {% include 'components/csrf-field.twig' %}
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="destination_location_id">Destino</label>
+            <select class="nc-admin-form-input" id="destination_location_id" name="destination_location_id" required>
+              <option value="">Selecione</option>
+              {% for location in patrimony_locations %}
+                <option value="{{ location.id }}"{% if patrimony_movement_form.destination_location_id|default('') == location.id|striptags|trim %} selected{% endif %}>{{ location.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="destination_location_complement">Complemento do destino</label>
+            <input class="nc-admin-form-input" id="destination_location_complement" name="destination_location_complement" type="text" value="{{ patrimony_movement_form.destination_location_complement|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="movement_responsible">Responsável pela movimentação</label>
+            <input class="nc-admin-form-input" id="movement_responsible" name="movement_responsible" type="text" value="{{ patrimony_movement_form.movement_responsible|default('') }}" required>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="new_responsible">Novo responsável pelo bem</label>
+            <input class="nc-admin-form-input" id="new_responsible" name="new_responsible" type="text" value="{{ patrimony_movement_form.new_responsible|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="responsible_department">Setor responsável</label>
+            <input class="nc-admin-form-input" id="responsible_department" name="responsible_department" type="text" value="{{ patrimony_movement_form.responsible_department|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="current_status">Situação após movimentação</label>
+            <select class="nc-admin-form-input" id="current_status" name="current_status" required>
+              {% for key, label in patrimony_status_options %}
+                <option value="{{ key }}"{% if patrimony_movement_form.current_status|default('em_uso') == key %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="movement_reason">Motivo</label>
+            <input class="nc-admin-form-input" id="movement_reason" name="movement_reason" type="text" value="{{ patrimony_movement_form.movement_reason|default('') }}" required>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="moved_at">Data da movimentação</label>
+            <input class="nc-admin-form-input" id="moved_at" name="moved_at" type="datetime-local" value="{{ patrimony_movement_form.moved_at|default('') }}" required>
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="notes">Observações</label>
+          <textarea class="nc-admin-form-input" id="notes" name="notes" rows="4">{{ patrimony_movement_form.notes|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">Registrar movimentação</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/{{ patrimony_asset.id }}/editar">Cancelar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

@@ -12,10 +12,14 @@ use Slim\Views\Twig;
 
 abstract class AbstractAdminLibraryAction extends AbstractPageAction
 {
-    private const DEFAULT_LIBRARY_UPLOAD_DIR = 'public/assets/docs/library';
-    private const DEFAULT_LIBRARY_UPLOAD_PUBLIC_PREFIX = 'assets/docs/library';
-    private const DEFAULT_LIBRARY_COVER_UPLOAD_DIR = 'public/assets/img/library-covers';
-    private const DEFAULT_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX = 'assets/img/library-covers';
+    private const DEFAULT_LIBRARY_UPLOAD_DIR = 'var/storage/library/docs';
+    private const DEFAULT_LIBRARY_UPLOAD_PUBLIC_PREFIX = 'media/biblioteca/docs';
+    private const DEFAULT_LIBRARY_COVER_UPLOAD_DIR = 'var/storage/library/covers';
+    private const DEFAULT_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX = 'media/biblioteca/capas';
+    private const LEGACY_LIBRARY_UPLOAD_DIR = 'public/assets/docs/library';
+    private const LEGACY_LIBRARY_UPLOAD_PUBLIC_PREFIX = 'assets/docs/library';
+    private const LEGACY_LIBRARY_COVER_UPLOAD_DIR = 'public/assets/img/library-covers';
+    private const LEGACY_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX = 'assets/img/library-covers';
 
     protected LibraryRepository $libraryRepository;
 
@@ -56,26 +60,13 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
             return ['error' => 'Formato inválido. Envie um arquivo PDF.'];
         }
 
-        $targetDirectory = $this->resolveLibraryUploadDirectory();
-        $publicPrefix = $this->resolveLibraryUploadPublicPrefix();
-
-        if (!is_dir($targetDirectory) && !@mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
-            $this->logger->warning('Diretório de PDFs da biblioteca indisponível.', [
-                'directory' => $targetDirectory,
-                'public_prefix' => $publicPrefix,
-            ]);
-
-            return ['error' => 'Não foi possível preparar o armazenamento de PDFs da biblioteca no servidor.'];
-        }
-
-        if (!is_writable($targetDirectory)) {
-            $this->logger->warning('Diretório de PDFs da biblioteca sem permissão de escrita.', [
-                'directory' => $targetDirectory,
-                'public_prefix' => $publicPrefix,
-            ]);
-
+        $storage = $this->resolveWritableLibraryPdfStorage();
+        if ($storage === null) {
             return ['error' => 'O armazenamento de PDFs da biblioteca está sem permissão de escrita no servidor.'];
         }
+
+        $targetDirectory = $storage['directory'];
+        $publicPrefix = $storage['public_prefix'];
 
         try {
             $timestamp = date('YmdHis');
@@ -103,7 +94,7 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         }
 
         return [
-            'path' => $this->buildManagedLibraryPdfRelativePath($fileName),
+            'path' => $this->buildManagedLibraryPdfRelativePath($fileName, $publicPrefix),
             'mime_type' => $clientMimeType !== '' ? $clientMimeType : 'application/pdf',
             'size_bytes' => $size,
         ];
@@ -139,26 +130,13 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
             return ['error' => 'Formato inválido para a capa. Use JPG, PNG ou WEBP.'];
         }
 
-        $targetDirectory = $this->resolveLibraryCoverUploadDirectory();
-        $publicPrefix = $this->resolveLibraryCoverUploadPublicPrefix();
-
-        if (!is_dir($targetDirectory) && !@mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
-            $this->logger->warning('Diretório de capas da biblioteca indisponível.', [
-                'directory' => $targetDirectory,
-                'public_prefix' => $publicPrefix,
-            ]);
-
-            return ['error' => 'Não foi possível preparar o armazenamento de capas da biblioteca no servidor.'];
-        }
-
-        if (!is_writable($targetDirectory)) {
-            $this->logger->warning('Diretório de capas da biblioteca sem permissão de escrita.', [
-                'directory' => $targetDirectory,
-                'public_prefix' => $publicPrefix,
-            ]);
-
+        $storage = $this->resolveWritableLibraryCoverStorage();
+        if ($storage === null) {
             return ['error' => 'O armazenamento de capas da biblioteca está sem permissão de escrita no servidor.'];
         }
+
+        $targetDirectory = $storage['directory'];
+        $publicPrefix = $storage['public_prefix'];
 
         try {
             $timestamp = date('YmdHis');
@@ -187,7 +165,7 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         }
 
         return [
-            'path' => $this->buildManagedLibraryCoverRelativePath($fileName),
+            'path' => $this->buildManagedLibraryCoverRelativePath($fileName, $publicPrefix),
             'mime_type' => $clientMimeType !== '' ? $clientMimeType : 'image/jpeg',
             'size_bytes' => $size,
         ];
@@ -243,9 +221,11 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         return trim(str_replace('\\', '/', $normalizedPrefix), '/');
     }
 
-    protected function buildManagedLibraryPdfRelativePath(string $fileName): string
+    protected function buildManagedLibraryPdfRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        return $this->resolveLibraryUploadPublicPrefix() . '/' . ltrim($fileName, '/');
+        $normalizedPrefix = trim((string) ($publicPrefix ?? $this->resolveLibraryUploadPublicPrefix()), '/');
+
+        return $normalizedPrefix . '/' . ltrim($fileName, '/');
     }
 
     protected function resolveLibraryCoverUploadDirectory(): string
@@ -264,26 +244,26 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         );
     }
 
-    protected function buildManagedLibraryCoverRelativePath(string $fileName): string
+    protected function buildManagedLibraryCoverRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        return $this->resolveLibraryCoverUploadPublicPrefix() . '/' . ltrim($fileName, '/');
+        $normalizedPrefix = trim((string) ($publicPrefix ?? $this->resolveLibraryCoverUploadPublicPrefix()), '/');
+
+        return $normalizedPrefix . '/' . ltrim($fileName, '/');
     }
 
     protected function resolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
     {
-        return $this->resolveManagedAbsolutePath(
+        return $this->resolveManagedLibraryScopedAbsolutePath(
             $relativePath,
-            $this->resolveLibraryUploadPublicPrefix(),
-            $this->resolveLibraryUploadDirectory()
+            $this->resolveLibraryPdfStorageDefinitions()
         );
     }
 
     protected function resolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
     {
-        return $this->resolveManagedAbsolutePath(
+        return $this->resolveManagedLibraryScopedAbsolutePath(
             $relativePath,
-            $this->resolveLibraryCoverUploadPublicPrefix(),
-            $this->resolveLibraryCoverUploadDirectory()
+            $this->resolveLibraryCoverStorageDefinitions()
         );
     }
 
@@ -292,30 +272,235 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         return dirname(__DIR__, 4);
     }
 
-    private function resolveConfiguredUploadDirectory(string $envKey, string $defaultDirectory): string
+    /**
+     * @return array{directory: string, public_prefix: string}|null
+     */
+    private function resolveWritableLibraryPdfStorage(): ?array
     {
-        $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
-        $normalizedDirectory = $configuredDirectory !== ''
-            ? $configuredDirectory
-            : $defaultDirectory;
+        return $this->resolveWritableUploadStorage(
+            $this->resolveLibraryPdfStorageDefinitions(),
+            'PDFs da biblioteca'
+        );
+    }
 
-        $normalizedDirectory = str_replace('\\', '/', $normalizedDirectory);
+    /**
+     * @return array{directory: string, public_prefix: string}|null
+     */
+    private function resolveWritableLibraryCoverStorage(): ?array
+    {
+        return $this->resolveWritableUploadStorage(
+            $this->resolveLibraryCoverStorageDefinitions(),
+            'capas da biblioteca'
+        );
+    }
 
-        if ($this->isAbsolutePath($normalizedDirectory)) {
-            return rtrim($normalizedDirectory, '/');
+    /**
+     * @param array<int, array{directory: string, public_prefix: string}> $definitions
+     */
+    private function resolveManagedLibraryScopedAbsolutePath(?string $relativePath, array $definitions): ?string
+    {
+        $fallbackPath = null;
+
+        foreach ($definitions as $definition) {
+            $absolutePath = $this->resolveManagedAbsolutePath(
+                $relativePath,
+                $definition['public_prefix'],
+                $definition['directory']
+            );
+
+            if ($absolutePath === null) {
+                continue;
+            }
+
+            if (is_file($absolutePath)) {
+                return $absolutePath;
+            }
+
+            $fallbackPath ??= $absolutePath;
         }
 
-        return $this->resolveProjectRoot() . '/' . ltrim($normalizedDirectory, '/');
+        return $fallbackPath;
+    }
+
+    /**
+     * @return array<int, array{directory: string, public_prefix: string}>
+     */
+    private function resolveLibraryPdfStorageDefinitions(): array
+    {
+        return $this->resolveUploadStorageDefinitions(
+            'LIBRARY_UPLOAD_DIR',
+            'LIBRARY_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_LIBRARY_UPLOAD_DIR,
+            self::DEFAULT_LIBRARY_UPLOAD_PUBLIC_PREFIX,
+            self::LEGACY_LIBRARY_UPLOAD_DIR,
+            self::LEGACY_LIBRARY_UPLOAD_PUBLIC_PREFIX
+        );
+    }
+
+    /**
+     * @return array<int, array{directory: string, public_prefix: string}>
+     */
+    private function resolveLibraryCoverStorageDefinitions(): array
+    {
+        return $this->resolveUploadStorageDefinitions(
+            'LIBRARY_COVER_UPLOAD_DIR',
+            'LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_LIBRARY_COVER_UPLOAD_DIR,
+            self::DEFAULT_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX,
+            self::LEGACY_LIBRARY_COVER_UPLOAD_DIR,
+            self::LEGACY_LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX
+        );
+    }
+
+    /**
+     * @return array<int, array{directory: string, public_prefix: string}>
+     */
+    private function resolveUploadStorageDefinitions(
+        string $directoryEnvKey,
+        string $publicPrefixEnvKey,
+        string $defaultDirectory,
+        string $defaultPublicPrefix,
+        string $legacyDirectory,
+        string $legacyPublicPrefix
+    ): array {
+        $definitions = [];
+        $configuredDirectory = $this->resolveOptionalConfiguredUploadDirectory($directoryEnvKey);
+        $configuredPublicPrefix = $this->resolveOptionalConfiguredUploadPublicPrefix($publicPrefixEnvKey);
+
+        if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
+            $definitions[] = [
+                'directory' => $configuredDirectory ?? $this->resolveDirectoryPath($defaultDirectory),
+                'public_prefix' => $configuredPublicPrefix ?? $this->normalizePublicPrefix($defaultPublicPrefix),
+            ];
+        }
+
+        $definitions[] = [
+            'directory' => $this->resolveDirectoryPath($defaultDirectory),
+            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
+        ];
+        $definitions[] = [
+            'directory' => $this->resolveDirectoryPath($legacyDirectory),
+            'public_prefix' => $this->normalizePublicPrefix($legacyPublicPrefix),
+        ];
+
+        $uniqueDefinitions = [];
+        $seenDefinitions = [];
+
+        foreach ($definitions as $definition) {
+            $definitionHash = $definition['directory'] . '|' . $definition['public_prefix'];
+            if (isset($seenDefinitions[$definitionHash])) {
+                continue;
+            }
+
+            $seenDefinitions[$definitionHash] = true;
+            $uniqueDefinitions[] = $definition;
+        }
+
+        return $uniqueDefinitions;
+    }
+
+    /**
+     * @param array<int, array{directory: string, public_prefix: string}> $definitions
+     * @return array{directory: string, public_prefix: string}|null
+     */
+    private function resolveWritableUploadStorage(array $definitions, string $storageLabel): ?array
+    {
+        $attemptedDirectories = [];
+
+        foreach ($definitions as $definition) {
+            $directory = $definition['directory'];
+            $attemptedDirectories[] = [
+                'directory' => $directory,
+                'public_prefix' => $definition['public_prefix'],
+            ];
+
+            if ($this->prepareWritableDirectory($directory)) {
+                return $definition;
+            }
+        }
+
+        $this->logger->warning('Nenhum diretório da biblioteca ficou gravável.', [
+            'storage_label' => $storageLabel,
+            'attempted' => $attemptedDirectories,
+        ]);
+
+        return null;
+    }
+
+    private function prepareWritableDirectory(string $directory): bool
+    {
+        clearstatcache(true, $directory);
+
+        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+            return false;
+        }
+
+        if (!is_writable($directory)) {
+            @chmod($directory, 0775);
+            clearstatcache(true, $directory);
+        }
+
+        return is_writable($directory);
+    }
+
+    private function resolveConfiguredUploadDirectory(string $envKey, string $defaultDirectory): string
+    {
+        $configuredDirectory = $this->resolveOptionalConfiguredUploadDirectory($envKey);
+
+        if ($configuredDirectory !== null) {
+            return $configuredDirectory;
+        }
+
+        return $this->resolveDirectoryPath($defaultDirectory);
     }
 
     private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
     {
-        $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
-        $normalizedPrefix = $configuredPrefix !== ''
-            ? $configuredPrefix
-            : $defaultPrefix;
+        $configuredPrefix = $this->resolveOptionalConfiguredUploadPublicPrefix($envKey);
 
-        return trim(str_replace('\\', '/', $normalizedPrefix), '/');
+        if ($configuredPrefix !== null) {
+            return $configuredPrefix;
+        }
+
+        return $this->normalizePublicPrefix($defaultPrefix);
+    }
+
+    private function resolveOptionalConfiguredUploadDirectory(string $envKey): ?string
+    {
+        $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
+
+        if ($configuredDirectory === '') {
+            return null;
+        }
+
+        return $this->resolveDirectoryPath($configuredDirectory);
+    }
+
+    private function resolveOptionalConfiguredUploadPublicPrefix(string $envKey): ?string
+    {
+        $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
+
+        if ($configuredPrefix === '') {
+            return null;
+        }
+
+        return $this->normalizePublicPrefix($configuredPrefix);
+    }
+
+    private function resolveDirectoryPath(string $path): string
+    {
+        $normalizedPath = str_replace('\\', '/', $path);
+
+        if ($this->isAbsolutePath($normalizedPath)) {
+            return rtrim($normalizedPath, '/');
+        }
+
+        return $this->resolveProjectRoot() . '/' . ltrim($normalizedPath, '/');
+    }
+
+    private function normalizePublicPrefix(string $prefix): string
+    {
+        return trim(str_replace('\\', '/', $prefix), '/');
     }
 
     private function resolveManagedAbsolutePath(?string $relativePath, string $publicPrefix, string $directory): ?string

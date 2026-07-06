@@ -132,6 +132,7 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
         if ($paymentMethod !== 'cash') {
             $receivedAmountRaw = '';
         }
+        $customerName = $this->normalizeCustomerNameInput($input['customer_name'] ?? '');
         $customerPhone = $this->normalizePhoneInput($input['customer_phone'] ?? '');
         $customerEmail = strtolower(trim((string) ($input['customer_email'] ?? '')));
         $customerCpf = $this->normalizeCpfInput($input['customer_cpf'] ?? '');
@@ -163,7 +164,7 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
 
         return [
             'sold_at' => $soldAt,
-            'customer_name' => trim((string) ($input['customer_name'] ?? '')),
+            'customer_name' => $customerName,
             'customer_phone' => $customerPhone,
             'customer_email' => $customerEmail,
             'customer_cpf' => $customerCpf,
@@ -175,6 +176,20 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
             'notes' => trim((string) ($input['notes'] ?? '')),
             'items' => $items,
         ];
+    }
+
+    private function normalizeCustomerNameInput(mixed $value): string
+    {
+        $normalized = trim((string) $value);
+        if ($normalized === '') {
+            return '';
+        }
+
+        if (function_exists('mb_strtoupper')) {
+            return mb_strtoupper($normalized, 'UTF-8');
+        }
+
+        return strtoupper($normalized);
     }
 
     /**
@@ -198,6 +213,11 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
             $errors[] = 'Informe uma data e hora válidas para a venda.';
         }
 
+        $customerName = trim((string) ($payload['customer_name'] ?? ''));
+        if ($customerName === '') {
+            $errors[] = 'Informe o nome do cliente.';
+        }
+
         $customerEmail = trim((string) ($payload['customer_email'] ?? ''));
         if ($customerEmail !== '' && filter_var($customerEmail, FILTER_VALIDATE_EMAIL) === false) {
             $errors[] = 'Informe um e-mail válido para o cliente ou deixe em branco.';
@@ -209,8 +229,10 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
         }
 
         $customerCpf = trim((string) ($payload['customer_cpf'] ?? ''));
-        if ($customerCpf !== '' && !$this->isValidCpf($customerCpf)) {
-            $errors[] = 'Informe um CPF válido para o cliente ou deixe em branco.';
+        if ($customerCpf === '') {
+            $errors[] = 'Informe o CPF do cliente.';
+        } elseif (!$this->isValidCpf($customerCpf)) {
+            $errors[] = 'Informe um CPF válido para o cliente.';
         }
 
         if (

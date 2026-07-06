@@ -865,30 +865,42 @@ class MySqlBookshopRepository implements BookshopRepository
         $operation = function (): array {
             $statement = $this->pdo->query(<<<SQL
                 SELECT
-                    id,
-                    sale_code,
-                    sold_at,
-                    customer_name,
-                    customer_phone,
-                    customer_email,
-                    customer_cpf,
-                    payment_method,
-                    item_count,
-                    subtotal_amount,
-                    discount_amount,
-                    total_amount,
-                    received_amount,
-                    change_amount,
-                    notes,
-                    status,
-                    created_by_member_id,
-                    created_by_name,
-                    cancelled_at,
-                    cancelled_by_member_id,
-                    cancelled_by_name,
-                    created_at,
-                    updated_at
-                FROM bookshop_sales
+                    s.id,
+                    s.sale_code,
+                    s.sold_at,
+                    s.customer_name,
+                    s.customer_phone,
+                    s.customer_email,
+                    s.customer_cpf,
+                    s.payment_method,
+                    s.item_count,
+                    s.subtotal_amount,
+                    s.discount_amount,
+                    s.total_amount,
+                    s.received_amount,
+                    s.change_amount,
+                    s.notes,
+                    s.status,
+                    s.created_by_member_id,
+                    s.created_by_name,
+                    s.cancelled_at,
+                    s.cancelled_by_member_id,
+                    s.cancelled_by_name,
+                    s.created_at,
+                    s.updated_at,
+                    (
+                        SELECT GROUP_CONCAT(
+                            CASE
+                                WHEN si.quantity > 1 THEN CONCAT(si.title_snapshot, ' x', si.quantity)
+                                ELSE si.title_snapshot
+                            END
+                            ORDER BY si.id ASC
+                            SEPARATOR ' • '
+                        )
+                        FROM bookshop_sale_items si
+                        WHERE si.sale_id = s.id
+                    ) AS items_summary
+                FROM bookshop_sales s
                 ORDER BY sold_at DESC, id DESC
             SQL);
 
@@ -2784,6 +2796,8 @@ class MySqlBookshopRepository implements BookshopRepository
      */
     private function normalizeSale(array $sale): array
     {
+        $customerName = trim((string) ($sale['customer_name'] ?? ''));
+        $itemsSummary = trim((string) ($sale['items_summary'] ?? ''));
         $subtotal = (float) ($sale['subtotal_amount'] ?? 0);
         $discount = (float) ($sale['discount_amount'] ?? 0);
         $total = (float) ($sale['total_amount'] ?? 0);
@@ -2796,8 +2810,11 @@ class MySqlBookshopRepository implements BookshopRepository
 
         return array_merge($sale, [
             'item_count' => (int) ($sale['item_count'] ?? 0),
+            'customer_name_display' => $customerName !== '' ? $customerName : 'Balcão',
             'customer_phone_display' => $this->formatPhoneDisplay((string) ($sale['customer_phone'] ?? '')),
             'customer_cpf_display' => $this->formatCpfDisplay((string) ($sale['customer_cpf'] ?? '')),
+            'items_summary' => $itemsSummary,
+            'items_summary_short' => $this->truncateText($itemsSummary, 140),
             'subtotal_amount' => $subtotal,
             'discount_amount' => $discount,
             'total_amount' => $total,
@@ -2813,6 +2830,28 @@ class MySqlBookshopRepository implements BookshopRepository
             'sold_at_label' => $this->formatDateTime($sale['sold_at'] ?? null),
             'cancelled_at_label' => $this->formatDateTime($sale['cancelled_at'] ?? null),
         ]);
+    }
+
+    private function truncateText(string $value, int $limit): string
+    {
+        $normalizedValue = trim($value);
+        if ($normalizedValue === '' || $limit <= 0) {
+            return '';
+        }
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            if (mb_strlen($normalizedValue) <= $limit) {
+                return $normalizedValue;
+            }
+
+            return rtrim(mb_substr($normalizedValue, 0, max($limit - 1, 1))) . '…';
+        }
+
+        if (strlen($normalizedValue) <= $limit) {
+            return $normalizedValue;
+        }
+
+        return rtrim(substr($normalizedValue, 0, max($limit - 1, 1))) . '...';
     }
 
     /**

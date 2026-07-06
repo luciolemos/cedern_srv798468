@@ -104,6 +104,35 @@ class CsrfMiddlewareTest extends TestCase
         $this->assertSame(403, $response->getStatusCode());
     }
 
+    public function testWebhookRouteBypassesCsrfValidation(): void
+    {
+        $originalAppBase = $_ENV['APP_BASE'] ?? null;
+        putenv('APP_BASE=/cedern');
+        $_ENV['APP_BASE'] = '/cedern';
+
+        try {
+            $middleware = new CsrfMiddleware();
+            $request = $this->createRequest(
+                'POST',
+                '/cedern/webhooks/asaas/contribuicoes',
+                ['Content-Type' => 'application/json']
+            );
+
+            $response = $middleware->process($request, $this->okHandler());
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('ok', (string) $response->getBody());
+        } finally {
+            putenv($originalAppBase === null ? 'APP_BASE' : 'APP_BASE=' . $originalAppBase);
+
+            if ($originalAppBase === null) {
+                unset($_ENV['APP_BASE']);
+            } else {
+                $_ENV['APP_BASE'] = $originalAppBase;
+            }
+        }
+    }
+
     private function okHandler(): RequestHandler
     {
         return new class implements RequestHandler {

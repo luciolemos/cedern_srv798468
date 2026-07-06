@@ -1,0 +1,50 @@
+{% set kpi_label = kpi_label|default('Indicador') %}
+{% set kpi_value = kpi_value|default('-') %}
+{% set kpi_description = kpi_description|default('') %}
+{% set kpi_icon_svg = kpi_icon_svg|default('') %}
+{% set kpi_card_class = kpi_card_class|default('nc-dashboard-visit-card') %}
+{% set kpi_head_class = kpi_head_class|default('nc-dashboard-visit-card-head') %}
+{% set kpi_icon_class = kpi_icon_class|default('nc-dashboard-visit-card-icon') %}
+{% set kpi_cta = kpi_cta|default('') %}
+{% set kpi_href = kpi_href|default('') %}
+{% set kpi_link_class = kpi_link_class|default('nc-dashboard-visit-card-link') %}
+{% set kpi_hoverable = kpi_hoverable|default(false) %}
+{% set kpi_classes = kpi_card_class ~ (kpi_hoverable ? ' is-hoverable' : '') %}
+
+{% if kpi_href %}
+  <a class="{{ kpi_classes }} {{ kpi_link_class }}" href="{{ kpi_href }}">
+    {% if kpi_icon_svg %}
+      <span class="{{ kpi_head_class }}">
+        <span class="{{ kpi_icon_class }}" aria-hidden="true">{{ kpi_icon_svg|raw }}</span>
+        <span class="nc-metric-label">{{ kpi_label }}</span>
+      </span>
+    {% else %}
+      <span class="nc-metric-label">{{ kpi_label }}</span>
+    {% endif %}
+    <strong class="nc-metric-value">{{ kpi_value }}</strong>
+    {% if kpi_description %}
+      <p>{{ kpi_description }}</p>
+    {% endif %}
+    {% if kpi_cta %}
+      <span class="nc-dashboard-visit-card-cta">{{ kpi_cta }}</span>
+    {% endif %}
+  </a>
+{% else %}
+  <article class="{{ kpi_classes }}">
+    {% if kpi_icon_svg %}
+      <div class="{{ kpi_head_class }}">
+        <span class="{{ kpi_icon_class }}" aria-hidden="true">{{ kpi_icon_svg|raw }}</span>
+        <span class="nc-metric-label">{{ kpi_label }}</span>
+      </div>
+    {% else %}
+      <span class="nc-metric-label">{{ kpi_label }}</span>
+    {% endif %}
+    <strong class="nc-metric-value">{{ kpi_value }}</strong>
+    {% if kpi_description %}
+      <p>{{ kpi_description }}</p>
+    {% endif %}
+    {% if kpi_cta %}
+      <span class="nc-dashboard-visit-card-cta">{{ kpi_cta }}</span>
+    {% endif %}
+  </article>
+{% endif %}

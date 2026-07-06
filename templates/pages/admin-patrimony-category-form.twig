@@ -1,0 +1,67 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = patrimony_category_form_is_edit ? 'Editar categoria patrimonial' : 'Nova categoria patrimonial' %}
+{% set dashboard_page_lead = 'Organize a classificação dos bens usados no controle patrimonial do CEDE.' %}
+{% set patrimony_base_url = base_url ?? '' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Formulário de categoria patrimonial" data-aos="fade-up" data-aos-delay="0">
+    {% if patrimony_category_form_errors|length > 0 %}
+      <article class="nc-admin-form-errors" role="alert">
+        <strong>Corrija os campos abaixo:</strong>
+        <ul>
+          {% for error in patrimony_category_form_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endif %}
+
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/categorias">Voltar</a>
+    </div>
+
+    <article class="nc-card nc-admin-form-card">
+      <form class="nc-admin-form" method="post" action="{{ patrimony_base_url }}{{ patrimony_category_form_is_edit ? '/painel/patrimonio/categorias/' ~ patrimony_category_id ~ '/editar' : '/painel/patrimonio/categorias/nova' }}">
+        {% include 'components/csrf-field.twig' %}
+        <div class="nc-admin-form-grid nc-admin-form-grid-identity">
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="name">Nome da categoria</label>
+            <input class="nc-admin-form-input" id="name" name="name" type="text" required value="{{ patrimony_category_form.name|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="slug">Slug</label>
+            <input class="nc-admin-form-input" id="slug" name="slug" type="text" value="{{ patrimony_category_form.slug|default('') }}">
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="is_active">Status</label>
+            <select class="nc-admin-form-input" id="is_active" name="is_active" required>
+              <option value="" {% if patrimony_category_form.is_active|default('') == '' %}selected{% endif %} disabled>Selecione</option>
+              <option value="1" {{ patrimony_category_form.is_active == '1' ? 'selected' : '' }}>Ativa</option>
+              <option value="0" {{ patrimony_category_form.is_active == '0' ? 'selected' : '' }}>Inativa</option>
+            </select>
+          </div>
+
+          <div class="nc-admin-form-field">
+            <label class="nc-admin-form-label" for="color">Cor (hex)</label>
+            <input class="nc-admin-form-input" id="color" name="color" type="text" value="{{ patrimony_category_form.color|default('') }}" placeholder="Ex: #275dad">
+          </div>
+        </div>
+
+        <div class="nc-admin-form-field nc-admin-form-field-full">
+          <label class="nc-admin-form-label" for="description">Descrição</label>
+          <textarea class="nc-admin-form-input" id="description" name="description" rows="4">{{ patrimony_category_form.description|default('') }}</textarea>
+        </div>
+
+        <div class="nc-actions nc-admin-form-actions" data-aos="fade-up" data-aos-delay="120">
+          <button class="nc-btn nc-btn-primary nc-admin-action-create" type="submit">{{ patrimony_category_form_is_edit ? 'Salvar alterações' : 'Criar categoria' }}</button>
+          <a class="nc-btn nc-btn-secondary nc-btn-back" href="{{ patrimony_base_url }}/painel/patrimonio/categorias">Voltar</a>
+        </div>
+      </form>
+    </article>
+  </section>
+{% endblock %}

@@ -9,7 +9,7 @@
   'fundador': 'Fundador',
   'estatuto': 'Estatuto',
   'nossa-marca': 'Nossa Marca',
-  'gestao-cede': 'Gestão CEDE',
+  'gestao-cede': 'Diretoria CEDE',
   'estudos': 'Estudos',
   'eade': 'EADE',
   'esde': 'ESDE',
@@ -31,11 +31,19 @@
   'participacao': 'Participação',
   'praticas': 'Práticas da Casa',
   'dados-de-acesso': 'Dados de acesso',
-  'contato': 'Contato'
+  'contato': 'Contato',
+  'membro': 'Área do Membro',
+  'perfil': 'Perfil',
+  'completar': 'Completar perfil',
+  'operacao': 'Área de Operação',
+  'gestao': 'Área de Gestão',
+  'administracao': 'Área Administrativa'
 } %}
 {% set labels = navigation_labels|default(fallback_labels) %}
 
-{% if segments|length > 1 %}
+{% set show_breadcrumbs = segments|length > 1 or trimmed_path == 'membro' %}
+
+{% if show_breadcrumbs %}
   <div class="nc-breadcrumbs-wrap">
     <div class="nc-container">
       <nav class="nc-breadcrumbs" aria-label="Breadcrumb">
@@ -44,11 +52,14 @@
         {% for segment in segments %}
           {% set path_accumulator = path_accumulator ~ '/' ~ segment %}
           {% set label = labels[segment]|default(segment|replace({'-': ' '})|capitalize) %}
+          {% set is_linkable = is_breadcrumb_linkable(path_accumulator) %}
           <span class="nc-breadcrumb-separator" aria-hidden="true">/</span>
           {% if loop.last %}
             <span class="nc-breadcrumb-current" aria-current="page">{{ label }}</span>
-          {% else %}
+          {% elseif is_linkable %}
             <a class="nc-breadcrumb-link" href="{{ path_accumulator }}">{{ label }}</a>
+          {% else %}
+            <span class="nc-breadcrumb-text">{{ label }}</span>
           {% endif %}
         {% endfor %}
       </nav>

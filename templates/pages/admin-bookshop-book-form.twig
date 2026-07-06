@@ -203,6 +203,9 @@
             <label class="nc-admin-form-label" for="cover_image_file">Capa do item</label>
             <div class="nc-library-admin-cover-preview-wrap" data-bookshop-cover-preview-wrap>
               {% set admin_cover_image_url = bookshop_book_form.cover_image_url|default('')|trim %}
+              {% if admin_cover_image_url starts with '/' %}
+                {% set admin_cover_image_url = (base_url ?? '') ~ admin_cover_image_url %}
+              {% endif %}
               {% set admin_cover_remove_requested = bookshop_book_form.remove_cover_image|default(false) %}
               {% if admin_cover_image_url and not admin_cover_remove_requested %}
                 <img
@@ -216,7 +219,8 @@
                   bookplate_author: bookshop_book_form.author_name|default(''),
                   bookplate_collection_label: 'Livraria Auta de Sousa',
                   bookplate_section_title: 'Livraria',
-                  bookplate_modifier_class: 'is-admin-preview'
+                  bookplate_modifier_class: 'is-admin-preview',
+                  base_url: base_url|default('')
                 } only %}
               {% endif %}
             </div>
@@ -226,7 +230,8 @@
                 bookplate_author: bookshop_book_form.author_name|default(''),
                 bookplate_collection_label: 'Livraria Auta de Sousa',
                 bookplate_section_title: 'Livraria',
-                bookplate_modifier_class: 'is-admin-preview'
+                bookplate_modifier_class: 'is-admin-preview',
+                base_url: base_url|default('')
               } only %}
             </template>
             <input class="nc-admin-form-input" id="cover_image_file" name="cover_image_file" type="file" accept="image/jpeg,image/png,image/webp" data-bookshop-cover-input>

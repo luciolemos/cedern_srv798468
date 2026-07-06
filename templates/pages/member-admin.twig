@@ -11,12 +11,12 @@
         } %}
 
         <article class="nc-card nc-admin-login-card">
-          <p>Perfil atual: <strong>{{ member_data.role_name|default('Membro') }}</strong></p>
+          <p>Perfil atual: <strong>{{ member_role_display_name|default(member_data.role_name|default('Membro')) }}</strong></p>
           <p>Use esta seção para recursos administrativos avançados da área de membros.</p>
 
           <div class="nc-actions nc-admin-login-actions" data-aos="fade-up" data-aos-delay="80">
             <a class="nc-btn nc-btn-secondary" href="/membro">Voltar para minha área</a>
-            <a class="nc-btn nc-btn-primary" href="/painel/usuarios">Gerenciar usuários no painel</a>
+            <a class="nc-btn nc-btn-primary" href="/painel/usuarios">Gerenciar associados no painel</a>
           </div>
         </article>
       </div>

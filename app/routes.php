@@ -29,6 +29,19 @@ use App\Application\Actions\Admin\AdminBookshopCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryListPageAction;
 use App\Application\Actions\Admin\AdminBookshopCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminBookshopDashboardPageAction;
+use App\Application\Actions\Admin\AdminFinanceContributionsGenerateAction;
+use App\Application\Actions\Admin\AdminFinanceContributionsPageAction;
+use App\Application\Actions\Admin\AdminFinanceContributionMarkExemptAction;
+use App\Application\Actions\Admin\AdminFinanceContributionMarkPaidAction;
+use App\Application\Actions\Admin\AdminFinanceContributionOpenWhatsappAction;
+use App\Application\Actions\Admin\AdminFinanceContributionSendEmailAction;
+use App\Application\Actions\Admin\AdminFinanceContributionAsaasWebhookAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewayCreateAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewaySyncAction;
+use App\Application\Actions\Admin\AdminFinanceContributionGatewayViewPageAction;
+use App\Application\Actions\Admin\AdminFinanceSectionPlaceholderPageAction;
+use App\Application\Actions\Admin\AdminFinanceSalesPageAction;
+use App\Application\Actions\Admin\AdminFinanceSaleViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreListPageAction;
 use App\Application\Actions\Admin\AdminBookshopGenreToggleStatusAction;
@@ -52,8 +65,22 @@ use App\Application\Actions\Admin\AdminLibraryCategoryFormPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryListPageAction;
 use App\Application\Actions\Admin\AdminLibraryCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminMemberAssignRoleAction;
+use App\Application\Actions\Admin\AdminMemberUserPdfAction;
+use App\Application\Actions\Admin\AdminMemberUserViewPageAction;
 use App\Application\Actions\Admin\AdminMemberUsersPageAction;
 use App\Application\Actions\Admin\AdminMemberUserSummaryPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetAttachmentDeleteAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetAttachmentFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetDeleteAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetDisposalFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetListPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetMaintenanceFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetMovementFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyAssetViewPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryFormPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryListPageAction;
+use App\Application\Actions\Admin\AdminPatrimonyCategoryToggleStatusAction;
 use App\Application\Actions\Admin\AdminCedeManagementPageAction;
 use App\Application\Actions\Admin\AdminPrivacyPolicyPageAction;
 use App\Application\Actions\Admin\AdminPracticalGuidePageAction;
@@ -67,6 +94,9 @@ use App\Application\Actions\Page\AgendaEventIcsDownloadAction;
 use App\Application\Actions\Page\AgendaPageAction;
 use App\Application\Actions\Page\BookshopCoverImagePageAction;
 use App\Application\Actions\Page\BookshopAutaDeSousaPageAction;
+use App\Application\Actions\Page\LibraryManagedFilePageAction;
+use App\Application\Actions\Page\MemberProfilePhotoPageAction;
+use App\Application\Actions\Page\PatrimonyManagedFilePageAction;
 use App\Application\Actions\Page\ContactPageAction;
 use App\Application\Actions\Page\EadePageAction;
 use App\Application\Actions\Page\EsdePageAction;
@@ -82,6 +112,7 @@ use App\Application\Actions\Page\StoreBookshopIiPageAction;
 use App\Application\Actions\Page\StoreBookshopPageAction;
 use App\Application\Actions\Page\StorePageAction;
 use App\Application\Actions\Page\MemberCompleteProfilePageAction;
+use App\Application\Actions\Page\MemberCompleteProfilePdfAction;
 use App\Application\Actions\Page\MemberEventInterestToggleAction;
 use App\Application\Actions\Page\MemberAdminAreaPageAction;
 use App\Application\Actions\Page\MemberForgotPasswordPageAction;
@@ -146,7 +177,7 @@ return function (App $app) {
     };
 
     $memberHasPanelAccess = static function () use ($memberHasAnyRole, $memberHasMinimumRole): bool {
-        return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator']);
+        return $memberHasMinimumRole('operator') || $memberHasAnyRole(['bookshop_operator', 'finance_operator']);
     };
 
     $adminSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasPanelAccess): Response {
@@ -207,6 +238,20 @@ return function (App $app) {
         return $response->withHeader('Location', '/entrar');
     };
 
+    $panelFinanceAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app, $memberHasAnyRole): Response {
+        if ($memberHasAnyRole(['finance_operator', 'admin'])) {
+            return $handler->handle($request);
+        }
+
+        $response = $app->getResponseFactory()->createResponse(302);
+
+        if (!empty($_SESSION['member_authenticated'])) {
+            return $response->withHeader('Location', '/membro?status=forbidden');
+        }
+
+        return $response->withHeader('Location', '/entrar');
+    };
+
     $memberSessionAuthMiddleware = function (Request $request, RequestHandler $handler) use ($app): Response {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             @session_start();
@@ -255,6 +300,9 @@ return function (App $app) {
     $app->get('/agenda/{slug}', AgendaDetailPageAction::class);
     $app->get('/agenda/{slug}/ics', AgendaEventIcsDownloadAction::class);
     $app->get('/media/livraria/capas/{file}', BookshopCoverImagePageAction::class);
+    $app->get('/media/biblioteca/{bucket}/{file}', LibraryManagedFilePageAction::class);
+    $app->get('/media/membros/fotos/{file}', MemberProfilePhotoPageAction::class);
+    $app->get('/media/patrimonio/{bucket}/{file}', PatrimonyManagedFilePageAction::class);
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
     $app->get('/loja/livraria', StoreBookshopIiPageAction::class);
@@ -302,14 +350,21 @@ return function (App $app) {
     $app->map(['GET', 'POST'], '/redefinir-senha', MemberResetPasswordPageAction::class);
     $app->map(['GET', 'POST'], '/membro/sair', MemberLogoutAction::class);
     $app->get('/membro', MemberHomePageAction::class);
+    $app->get('/membro/perfil', function (Request $request, Response $response) {
+        $queryString = trim($request->getUri()->getQuery());
+        $target = '/membro/perfil/completar' . ($queryString !== '' ? '?' . $queryString : '');
+
+        return $response->withHeader('Location', $target)->withStatus(302);
+    });
     $app->map(['GET', 'POST'], '/membro/perfil/completar', MemberCompleteProfilePageAction::class);
+    $app->map(['GET', 'POST'], '/membro/perfil/completar/pdf', MemberCompleteProfilePdfAction::class);
     $app->post('/membro/eventos/{id}/participacao', MemberEventInterestToggleAction::class);
     $app->get('/membro/operacao', MemberOperatorAreaPageAction::class);
     $app->get('/membro/gestao', MemberManagerAreaPageAction::class);
     $app->get('/membro/administracao', MemberAdminAreaPageAction::class);
     $app->map(['GET', 'POST'], '/painel/login', AdminLoginPageAction::class);
     $app->get('/painel/logout', AdminLogoutAction::class);
-    $app->group('/painel', function (Group $group) use ($panelBookshopAccessMiddleware, $panelDashboardAccessMiddleware, $panelRoleMiddlewareFactory) {
+    $app->group('/painel', function (Group $group) use ($panelBookshopAccessMiddleware, $panelDashboardAccessMiddleware, $panelFinanceAccessMiddleware, $panelRoleMiddlewareFactory) {
         $group->get('', AdminDashboardPageAction::class)->add($panelDashboardAccessMiddleware);
         $group->get('/eventos', AdminAgendaListPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
         $group->map(['GET', 'POST'], '/eventos/novo', AdminAgendaFormPageAction::class)->add($panelRoleMiddlewareFactory('operator'));
@@ -387,8 +442,48 @@ return function (App $app) {
             ->add($panelBookshopAccessMiddleware);
         $group->post('/livraria/vendas/{id}/cancelar', AdminBookshopSaleCancelAction::class)
             ->add($panelBookshopAccessMiddleware);
+        $group->get('/financas', AdminFinanceSalesPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/contribuicoes', AdminFinanceContributionsPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->post('/financas/contribuicoes/gerar', AdminFinanceContributionsGenerateAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/financas/contribuicoes/{id}/receber', AdminFinanceContributionMarkPaidAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/financas/contribuicoes/{id}/isentar', AdminFinanceContributionMarkExemptAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/financas/contribuicoes/{id}/cobranca', AdminFinanceContributionGatewayViewPageAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/financas/contribuicoes/{id}/cobranca/criar', AdminFinanceContributionGatewayCreateAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/financas/contribuicoes/{id}/cobranca/sincronizar', AdminFinanceContributionGatewaySyncAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->post('/financas/contribuicoes/{id}/enviar-email', AdminFinanceContributionSendEmailAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/financas/contribuicoes/{id}/whatsapp', AdminFinanceContributionOpenWhatsappAction::class)
+            ->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/financas/{section:cantina|bazar}', AdminFinanceSectionPlaceholderPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
+        $group->get('/financas/vendas/{id}', AdminFinanceSaleViewPageAction::class)
+            ->add($panelFinanceAccessMiddleware);
         $group->get('/usuarios', AdminMemberUsersPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/usuarios/{id}/pdf', AdminMemberUserPdfAction::class)->add($panelRoleMiddlewareFactory('admin'));
+        $group->get('/usuarios/{id}', AdminMemberUserViewPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->get('/gestao-cede', AdminCedeManagementPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio', AdminPatrimonyAssetListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/novo', AdminPatrimonyAssetFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/editar', AdminPatrimonyAssetFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/{id}/excluir', AdminPatrimonyAssetDeleteAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/movimentar', AdminPatrimonyAssetMovementFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/baixa', AdminPatrimonyAssetDisposalFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/manutencoes/nova', AdminPatrimonyAssetMaintenanceFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/{id}/anexos/novo', AdminPatrimonyAssetAttachmentFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/{id}/anexos/{attachmentId}/excluir', AdminPatrimonyAssetAttachmentDeleteAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio/categorias', AdminPatrimonyCategoryListPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/categorias/nova', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->map(['GET', 'POST'], '/patrimonio/categorias/{id}/editar', AdminPatrimonyCategoryFormPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->post('/patrimonio/categorias/{id}/alternar-status', AdminPatrimonyCategoryToggleStatusAction::class)->add($panelRoleMiddlewareFactory('manager'));
+        $group->get('/patrimonio/{id}', AdminPatrimonyAssetViewPageAction::class)->add($panelRoleMiddlewareFactory('manager'));
         $group->get('/usuarios/{id}/resumo', AdminMemberUserSummaryPageAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/usuarios/{id}/atribuir-papel', AdminMemberAssignRoleAction::class)->add($panelRoleMiddlewareFactory('admin'));
         $group->post('/visitas/nova-contagem', AdminVisitCounterResetAction::class)->add($panelRoleMiddlewareFactory('admin'));
@@ -412,6 +507,23 @@ return function (App $app) {
     $app->get('/admin/dashboard', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel')->withStatus(302);
     });
+    $app->get('/admin/financas', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/financas')->withStatus(302);
+    });
+    $app->get('/admin/financas/contribuicoes', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/financas/contribuicoes')->withStatus(302);
+    });
+    $app->get('/admin/financas/contribuicoes/{id}/cobranca', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/financas/contribuicoes/' . $id . '/cobranca')->withStatus(302);
+    });
+    $app->get('/admin/financas/vendas/{id}', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+
+        return $response->withHeader('Location', '/painel/financas/vendas/' . $id)->withStatus(302);
+    });
+    $app->post('/webhooks/asaas/contribuicoes', AdminFinanceContributionAsaasWebhookAction::class);
     $app->get('/admin/agenda', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/eventos')->withStatus(302);
     });
@@ -547,9 +659,19 @@ return function (App $app) {
     $app->get('/admin/gestao-cede', function (Request $request, Response $response) {
         return $response->withHeader('Location', '/painel/gestao-cede')->withStatus(302);
     });
+    $app->get('/admin/patrimonio', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/patrimonio')->withStatus(302);
+    });
+    $app->get('/admin/patrimonio/categorias', function (Request $request, Response $response) {
+        return $response->withHeader('Location', '/painel/patrimonio/categorias')->withStatus(302);
+    });
     $app->get('/admin/usuarios/{id}/resumo', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
         return $response->withHeader('Location', '/painel/usuarios/' . $id . '/resumo')->withStatus(302);
+    });
+    $app->get('/admin/usuarios/{id}', function (Request $request, Response $response) {
+        $id = (string) ($request->getAttribute('id') ?? '');
+        return $response->withHeader('Location', '/painel/usuarios/' . $id)->withStatus(302);
     });
     $app->post('/admin/usuarios/{id}/atribuir-papel', function (Request $request, Response $response) {
         $id = (string) ($request->getAttribute('id') ?? '');
@@ -679,10 +801,65 @@ return function (App $app) {
                 ['template' => 'pages/admin-bookshop-import.twig', 'context' => []],
                 ['template' => 'pages/admin-bookshop-sales.twig', 'context' => ['bookshop_sales' => []]],
                 [
+                    'template' => 'pages/admin-finance-sales.twig',
+                    'context' => [
+                        'finance_sales' => [],
+                        'finance_sales_summary' => [],
+                        'finance_sales_filter_options' => ['payment_methods' => [], 'sellers' => []],
+                    ],
+                ],
+                [
+                    'template' => 'pages/admin-finance-section-placeholder.twig',
+                    'context' => [
+                        'finance_section_key' => 'cantina',
+                        'finance_section_label' => 'Cantina',
+                    ],
+                ],
+                [
                     'template' => 'pages/admin-bookshop-sale-form.twig',
                     'context' => ['bookshop_sale_form' => ['items' => []], 'bookshop_sale_book_options' => []],
                 ],
                 ['template' => 'pages/admin-bookshop-sale-view.twig', 'context' => ['bookshop_sale' => ['items' => []]]],
+                [
+                    'template' => 'pages/admin-patrimony-assets.twig',
+                    'context' => [
+                        'patrimony_assets' => [],
+                        'patrimony_assets_filter_options' => ['categories' => [], 'locations' => [], 'status' => [], 'conservation' => [], 'acquisition_types' => []],
+                        'patrimony_dashboard_summary' => ['metrics' => [], 'category_rows' => [], 'location_rows' => [], 'warranty_alerts' => []],
+                        'patrimony_recent_movements' => [],
+                    ],
+                ],
+                [
+                    'template' => 'pages/admin-patrimony-asset-form.twig',
+                    'context' => [
+                        'patrimony_asset_form' => [],
+                        'patrimony_asset_categories' => [],
+                        'patrimony_asset_locations' => [],
+                        'patrimony_asset_acquisition_types' => [],
+                        'patrimony_asset_status_options' => [],
+                        'patrimony_asset_conservation_options' => [],
+                        'patrimony_asset_movements' => [],
+                        'patrimony_asset_maintenances' => [],
+                        'patrimony_asset_disposals' => [],
+                        'patrimony_asset_attachments' => [],
+                    ],
+                ],
+                [
+                    'template' => 'pages/admin-patrimony-asset-view.twig',
+                    'context' => [
+                        'patrimony_asset' => [],
+                        'patrimony_asset_movements' => [],
+                        'patrimony_asset_maintenances' => [],
+                        'patrimony_asset_disposals' => [],
+                        'patrimony_asset_attachments' => [],
+                    ],
+                ],
+                ['template' => 'pages/admin-patrimony-categories.twig', 'context' => ['patrimony_categories' => []]],
+                ['template' => 'pages/admin-patrimony-category-form.twig', 'context' => ['patrimony_category_form' => []]],
+                ['template' => 'pages/admin-patrimony-movement-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_locations' => [], 'patrimony_status_options' => []]],
+                ['template' => 'pages/admin-patrimony-disposal-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_disposal_reason_options' => []]],
+                ['template' => 'pages/admin-patrimony-maintenance-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_status_options' => []]],
+                ['template' => 'pages/admin-patrimony-attachment-form.twig', 'context' => ['patrimony_asset' => [], 'patrimony_attachment_type_options' => []]],
                 ['template' => 'pages/agenda.twig', 'context' => ['homeContent' => $homeContent]],
                 ['template' => 'pages/agenda-detail.twig', 'context' => ['homeContent' => $homeContent, 'agenda' => $homeContent['agendaPages']['estudo-do-evangelho'] ?? []]],
                 ['template' => 'pages/store.twig', 'context' => ['homeContent' => $homeContent]],
@@ -725,6 +902,55 @@ return function (App $app) {
             $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
             return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        $app->get('/health/preview/admin-finance-sales', function (Request $request, Response $response) use ($app) {
+            $twig = $app->getContainer()->get(Twig::class);
+
+            return $twig->render($response, 'pages/admin-finance-sales.twig', [
+                'dashboard_is_authenticated' => true,
+                'dashboard_user' => 'Equipe Financeira',
+                'member_role_key' => 'finance_operator',
+                'member_role_name' => 'Operador Financeiro',
+                'current_path' => '/painel/financas',
+                'finance_sales' => [],
+                'finance_sales_summary' => [
+                    'completed_count' => 18,
+                    'completed_total_label' => 'R$ 3.420,00',
+                    'recognized_total_label' => 'R$ 3.420,00',
+                    'cancelled_count' => 2,
+                    'cancelled_total_label' => 'R$ 180,00',
+                    'average_ticket_label' => 'R$ 190,00',
+                ],
+                'finance_sales_search' => 'allan',
+                'finance_sales_filters' => [
+                    'status_filter' => 'completed',
+                    'payment_filter' => 'pix',
+                    'seller_filter' => 'Maria Silva',
+                    'period_field' => 'sold_at',
+                    'date_from' => '2026-06-01',
+                    'date_to' => '2026-06-30',
+                    'amount_min' => '40.00',
+                    'amount_max' => '250.00',
+                ],
+                'finance_sales_filter_options' => [
+                    'payment_methods' => [
+                        'all' => 'Todos os meios',
+                        'pix' => 'PIX',
+                        'cash' => 'Dinheiro',
+                        'credit' => 'Cartão de crédito',
+                    ],
+                    'sellers' => [
+                        'all' => 'Todos os vendedores',
+                        'Maria Silva' => 'Maria Silva',
+                        'João Souza' => 'João Souza',
+                    ],
+                ],
+                'admin_status' => '',
+                'page_title' => 'Prévia Financeira | Dashboard',
+                'page_url' => 'https://cedern.org/painel/financas',
+                'page_description' => 'Prévia diagnóstica da tela financeira da livraria do CEDE.',
+            ]);
         });
 
         $app->get('/health/db', function (Request $request, Response $response) use ($app) {
@@ -771,6 +997,7 @@ return function (App $app) {
 
         $app->get('/users', $disabledDiagnosticRoute);
         $app->get('/health/render', $disabledDiagnosticRoute);
+        $app->get('/health/preview/admin-finance-sales', $disabledDiagnosticRoute);
         $app->get('/health/db', $disabledDiagnosticRoute);
         $app->group('/api/users', function (Group $group) use ($disabledDiagnosticRoute) {
             $group->get('', $disabledDiagnosticRoute);

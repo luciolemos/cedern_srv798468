@@ -9,6 +9,9 @@
 {% elseif panel_role_key == 'bookshop_operator' %}
   {% set dashboard_page_title = 'Área da livraria' %}
   {% set dashboard_page_lead = 'Acesso dedicado ao acervo, ao PDV e às rotinas internas da Livraria.' %}
+{% elseif panel_role_key == 'finance_operator' %}
+  {% set dashboard_page_title = 'Área financeira' %}
+  {% set dashboard_page_lead = 'Acesso dedicado ao acompanhamento de vendas, pagamentos e cancelamentos da livraria.' %}
 {% elseif panel_role_key == 'manager' %}
   {% set dashboard_page_title = 'Área de gestão' %}
   {% set dashboard_page_lead = 'Acesso de gestão: organize eventos e categorias da agenda.' %}
@@ -21,8 +24,10 @@
   {% set panel_can_events = panel_is_superuser or panel_role_key in ['operator', 'manager', 'admin'] %}
   {% set panel_can_categories = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set panel_can_bookshop = panel_is_superuser or panel_role_key in ['bookshop_operator', 'admin'] %}
+  {% set panel_can_finance = panel_is_superuser or panel_role_key in ['finance_operator', 'admin'] %}
   {% set panel_can_users = panel_is_superuser or panel_role_key == 'admin' %}
   {% set panel_can_visit_reset = panel_is_superuser or panel_role_key == 'admin' %}
+  {% set panel_can_patrimony = panel_is_superuser or panel_role_key in ['manager', 'admin'] %}
   {% set visit_metrics = dashboard_visit_metrics|default({}) %}
   {% set member_metrics = dashboard_member_metrics|default({}) %}
 
@@ -37,7 +42,7 @@
       <div class="nc-dashboard-visit-panel-head">
         <div>
           <h3 class="nc-dashboard-visit-panel-title">Pessoas e cadastros</h3>
-          <p class="nc-dashboard-visit-panel-copy">Visão rápida do quadro atual de associados e contas em análise no sistema.</p>
+          <p class="nc-dashboard-visit-panel-copy">Visão rápida do quadro atual de solicitantes, associados e contas em análise no sistema.</p>
         </div>
       </div>
 
@@ -48,8 +53,8 @@
           {
             label: 'Total de Associados',
             value: member_metrics.total_associates|default(0),
-            description: 'Contas ativas liberadas para uso da área do membro.',
-            href: '/painel/usuarios?status_filter=active',
+            description: 'Cadastros ativos já validados como associados.',
+            href: '/painel/usuarios?status_filter=active&association_status_filter=member',
             cta: 'Abrir ativos',
             icon: 'group'
           },
@@ -57,7 +62,7 @@
             label: 'Sócios Efetivos',
             value: member_metrics.total_effective_members|default(0),
             description: 'Associados ativos classificados como efetivos.',
-            href: '/painel/usuarios?status_filter=active&member_type_filter=efetivo',
+            href: '/painel/usuarios?status_filter=active&association_status_filter=member&member_type_filter=efetivo',
             cta: 'Filtrar efetivos',
             icon: 'effective'
           },
@@ -65,7 +70,7 @@
             label: 'Sócios Fundadores',
             value: member_metrics.total_founder_members|default(0),
             description: 'Associados ativos classificados como fundadores.',
-            href: '/painel/usuarios?status_filter=active&member_type_filter=fundador',
+            href: '/painel/usuarios?status_filter=active&association_status_filter=member&member_type_filter=fundador',
             cta: 'Filtrar fundadores',
             icon: 'founder'
           },
@@ -73,7 +78,7 @@
             label: 'Contas Pendentes',
             value: member_metrics.total_pending_accounts|default(0),
             description: 'Cadastros aguardando validação administrativa.',
-            href: '/painel/usuarios?status_filter=pending',
+            href: '/painel/usuarios?status_filter=pending&association_status_filter=applicant',
             cta: 'Ver pendências',
             icon: 'pending'
           },
@@ -89,7 +94,7 @@
             label: 'Sem Tipo Definido',
             value: member_metrics.total_active_without_type|default(0),
             description: 'Associados ativos ainda sem classificação de tipo de sócio.',
-            href: '/painel/usuarios?status_filter=active&member_type_filter=undefined',
+            href: '/painel/usuarios?status_filter=active&association_status_filter=member&member_type_filter=undefined',
             cta: 'Ver sem tipo',
             icon: 'undefined'
           }
@@ -253,26 +258,52 @@
     {% if panel_can_users %}
       {% include 'components/check-item.twig' with {
         step: '04',
-        title: 'Usuários',
+        title: 'Associados CEDE',
         description: 'Aprove cadastros pendentes e atribua perfil de acesso aos membros.',
         href: '/painel/usuarios',
-        link_label: 'Gerenciar usuários',
+        link_label: 'Gerenciar associados',
         link_icon: 'list',
         link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
         delay: 260
       } %}
     {% endif %}
 
-    {% if panel_can_bookshop %}
+    {% if panel_can_patrimony %}
       {% include 'components/check-item.twig' with {
         step: '05',
+        title: 'Patrimônio',
+        description: 'Cadastre bens, controle movimentações, baixas e acompanhe garantias do CEDE.',
+        href: (base_url ?? '') ~ '/painel/patrimonio',
+        link_label: 'Abrir patrimônio',
+        link_icon: 'list',
+        link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
+        delay: 300
+      } %}
+    {% endif %}
+
+    {% if panel_can_bookshop %}
+      {% include 'components/check-item.twig' with {
+        step: '06',
         title: 'Livraria',
         description: 'Controle o acervo, importe o CSV da planilha e opere as vendas de balcão.',
         href: '/painel/livraria',
         link_label: 'Abrir livraria',
         link_icon: 'list',
         link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
-        delay: 300
+        delay: 340
+      } %}
+    {% endif %}
+
+    {% if panel_can_finance %}
+      {% include 'components/check-item.twig' with {
+        step: '07',
+        title: 'Finanças',
+        description: 'Consulte vendas, cancelamentos, clientes, pagamentos e operadores da livraria.',
+        href: '/painel/financas',
+        link_label: 'Abrir finanças',
+        link_icon: 'list',
+        link_action_class: 'nc-admin-action-open nc-dashboard-shortcut-btn',
+        delay: 380
       } %}
     {% endif %}
   </ul>

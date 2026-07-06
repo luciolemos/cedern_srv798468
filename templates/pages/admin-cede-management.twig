@@ -1,11 +1,11 @@
 {% extends 'layouts/admin-dashboard.twig' %}
 
 {% set dashboard_page_kicker = 'Dashboard' %}
-{% set dashboard_page_title = 'Gestão CEDE' %}
+{% set dashboard_page_title = 'Diretoria CEDE' %}
 {% set dashboard_page_lead = 'Usuários com função institucional ativa no CEDE.' %}
 
 {% block admin_content %}
-  <section class="nc-section" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="0">
+  <section class="nc-section" aria-label="Diretoria CEDE" data-aos="fade-up" data-aos-delay="0">
     {% set toast_message = '' %}
     {% set toast_tone = 'error' %}
     {% if cede_management_status == 'load-error' %}
@@ -17,8 +17,11 @@
       tone: toast_tone
     } %}
 
+    {% set export_csv_url = cede_management_export_csv_url|default('/painel/gestao-cede?export=csv') %}
+
     <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="80">
       <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary" href="{{ export_csv_url }}">Exportar CSV</a>
       <a class="nc-btn nc-btn-secondary" href="/painel/usuarios">
         <svg class="nc-btn-inline-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M16 19C16 16.7909 14.2091 15 12 15C9.79086 15 8 16.7909 8 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -26,7 +29,7 @@
           <path d="M5 19C5 17.3431 3.65685 16 2 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           <path d="M19 19C19 17.3431 20.3431 16 22 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
-        Gestão de pessoas
+        Pessoas CEDE
       </a>
     </div>
 
@@ -39,7 +42,7 @@
     {% set has_active_filters = search_term != '' or selected_institutional_role != '' or selected_status_filter != '' %}
 
     <form class="nc-admin-table-search" method="get" action="/painel/gestao-cede" data-aos="fade-up" data-aos-delay="95">
-      <label for="nc-cede-management-search">Buscar na Gestão CEDE</label>
+      <label for="nc-cede-management-search">Buscar na Diretoria CEDE</label>
       <div class="nc-admin-table-search-controls">
         <input id="nc-cede-management-search" name="q" type="search" value="{{ search_term }}" placeholder="Nome, e-mail, função, perfil, status...">
         <select name="institutional_role" aria-label="Filtrar por função no CEDE">
@@ -65,7 +68,7 @@
     </form>
 
     {% if cede_management_users|length == 0 %}
-      <p>{{ search_term ? 'Nenhum usuário com função no CEDE encontrado para a busca informada.' : 'Nenhum usuário com função institucional ativa no CEDE.' }}</p>
+      <p>{{ search_term ? 'Nenhum associado com função no CEDE encontrado para a busca informada.' : 'Nenhum associado com função institucional ativa no CEDE.' }}</p>
     {% else %}
       <div class="nc-admin-table-toolbar" data-aos="fade-up" data-aos-delay="110">
         <p class="nc-admin-table-counter">
@@ -104,10 +107,10 @@
               </th>
               <th>Tipo de Sócio</th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil no sistema <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.role_name.active %} is-active{% endif %}" href="{{ sort_links.role_name.url }}">Perfil no SISCEDE <span aria-hidden="true">{{ sort_links.role_name.indicator }}</span></a>
               </th>
               <th>
-                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Status <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
+                <a class="nc-admin-sort-link{% if sort_links.status.active %} is-active{% endif %}" href="{{ sort_links.status.url }}">Acesso ao SISCEDE <span aria-hidden="true">{{ sort_links.status.indicator }}</span></a>
               </th>
               <th>Ações</th>
             </tr>
@@ -123,8 +126,9 @@
               <tr>
                 <td class="nc-admin-user-photo-cell" data-label="Foto">
                   <span class="nc-admin-user-photo" aria-hidden="true">
-                    {% if user.profile_photo_path|default('') %}
-                      <img src="/{{ user.profile_photo_path }}" alt="">
+                    {% set user_photo_path = user.profile_photo_path|default('')|trim %}
+                    {% if user_photo_path %}
+                      <img src="{{ (base_url ?? '') ~ '/' ~ (user_photo_path|trim('/')) }}" alt="">
                     {% else %}
                       <span>{{ (user.full_name|default(user.email|default('U'))|slice(0, 1)|upper) }}</span>
                     {% endif %}
@@ -171,17 +175,24 @@
                 </td>
                 <td data-label="Função no CEDE">{{ user.institutional_role|default('-') }}</td>
                 <td data-label="Tipo de Sócio">{{ user.member_type_label|default('Não definido') }}</td>
-                <td data-label="Perfil no sistema">{{ user.role_name|default('-') }}</td>
-                <td data-label="Status">
+                <td data-label="Perfil no SISCEDE">{{ user.role_name_display|default(user.role_name|default('-')) }}</td>
+                <td data-label="Acesso ao SISCEDE">
                   <span class="nc-admin-featured-flag{{ user_status_key == 'active' ? ' is-on' : ' is-off' }}">{{ user_status_label }}</span>
                 </td>
                 <td class="nc-admin-table-actions" data-label="Ações">
-                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Visualizar resumo de {{ user.full_name|default('usuário') }}" title="Visualizar">
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-open" href="/painel/usuarios/{{ user.id }}" aria-label="Visualizar cadastro de {{ user.full_name|default('usuário') }}" title="Visualizar cadastro">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                       <path d="M2 12C4.5 7.5 8 5.5 12 5.5C16 5.5 19.5 7.5 22 12C19.5 16.5 16 18.5 12 18.5C8 18.5 4.5 16.5 2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
                     </svg>
-                    <span class="nc-sr-only">Visualizar</span>
+                    <span class="nc-sr-only">Visualizar cadastro</span>
+                  </a>
+                  <a class="nc-btn nc-btn-secondary nc-btn-icon nc-admin-action-edit" href="/painel/usuarios/{{ user.id }}/resumo" aria-label="Editar acesso de {{ user.full_name|default('usuário') }}" title="Editar acesso">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M4 20H8L18 10C18.9 9.1 18.9 7.7 18 6.8L17.2 6C16.3 5.1 14.9 5.1 14 6L4 16V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M13 7L17 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="nc-sr-only">Editar acesso</span>
                   </a>
                 </td>
               </tr>
@@ -191,7 +202,7 @@
       </div>
 
       {% if pagination.total_pages > 1 %}
-        <nav class="nc-admin-pagination" aria-label="Paginação da Gestão CEDE" data-aos="fade-up" data-aos-delay="170">
+        <nav class="nc-admin-pagination" aria-label="Paginação da Diretoria CEDE" data-aos="fade-up" data-aos-delay="170">
           {% if pagination.previous_url %}
             <a class="nc-link" href="{{ pagination.previous_url }}">← Anterior</a>
           {% else %}

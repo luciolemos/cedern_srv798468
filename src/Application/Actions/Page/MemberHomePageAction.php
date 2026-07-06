@@ -15,6 +15,18 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
 {
     public const FLASH_KEY = 'member_home';
     private const BIRTHDAY_TIMEZONE = 'America/Fortaleza';
+    private const CONTRIBUTION_HISTORY_FETCH_LIMIT = 240;
+    private const DEFAULT_CONTRIBUTION_HISTORY_SORT = 'competence_desc';
+    private const PAYMENT_METHOD_LABELS = [
+        'boleto' => 'Boleto',
+        'pix' => 'Pix',
+        'pix_automatico' => 'Pix Automático',
+        'manual' => 'Pagamento manual',
+    ];
+    private const CONTRIBUTION_HISTORY_SORT_OPTIONS = [
+        'competence_desc' => 'Competência mais recente',
+        'competence_asc' => 'Competência mais antiga',
+    ];
 
     private AgendaRepository $agendaRepository;
 
@@ -36,26 +48,35 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             return $member;
         }
 
+        $member = $this->withAssociationLabels($member);
+        $member = $this->withFinancialSummary($member);
+        $member = $this->withDisplayFields($member);
+
         $flash = $this->consumeSessionFlash(self::FLASH_KEY);
         $status = trim((string) ($flash['status'] ?? ''));
         $roleKey = (string) ($member['role_key'] ?? 'member');
         $memberId = (int) ($member['id'] ?? 0);
+        $queryParams = $request->getQueryParams();
 
         $onboardingChecklist = [
             [
                 'label' => 'Nome completo preenchido',
+                'description' => 'Esse dado identifica você no painel, no menu do membro e nos fluxos internos do CEDE.',
                 'done' => trim((string) ($member['full_name'] ?? '')) !== '',
             ],
             [
                 'label' => 'Celular informado',
+                'description' => 'Seu celular facilita contato rápido, avisos institucionais e lembretes importantes.',
                 'done' => trim((string) ($member['phone_mobile'] ?? '')) !== '',
             ],
             [
                 'label' => 'Naturalidade informada',
+                'description' => 'A naturalidade mantém seu cadastro institucional mais completo e consistente.',
                 'done' => trim((string) ($member['birth_place'] ?? '')) !== '',
             ],
             [
                 'label' => 'Foto de perfil definida',
+                'description' => 'A foto melhora sua identificação visual nas áreas internas e na navegação da conta.',
                 'done' => trim((string) ($member['profile_photo_path'] ?? '')) !== '',
             ],
         ];
@@ -68,6 +89,73 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         }
         $onboardingTotal = count($onboardingChecklist);
         $onboardingPercent = (int) round(($onboardingCompleted / $onboardingTotal) * 100);
+        $onboardingPendingCount = max($onboardingTotal - $onboardingCompleted, 0);
+        $nextPendingOnboardingItem = null;
+        foreach ($onboardingChecklist as $item) {
+            if (empty($item['done'])) {
+                $nextPendingOnboardingItem = $item;
+                break;
+            }
+        }
+
+        $onboardingStatusTone = 'is-progress';
+        $onboardingStatusLabel = 'Em andamento';
+        $onboardingHeadline = 'Sua experiência na área do membro ainda pode evoluir.';
+        $onboardingDescription = 'Conclua as etapas pendentes para ativar um cadastro mais completo e deixar sua presença no painel mais consistente.';
+        $onboardingSecondaryAction = [
+            'label' => 'Ver agenda',
+            'href' => '/agenda',
+        ];
+        $onboardingBenefits = [
+            'Mais clareza de identificação no menu e nas áreas internas.',
+            'Contato institucional mais ágil quando a equipe precisar falar com você.',
+            'Cadastro mais completo para acompanhar sua jornada como associado.',
+        ];
+
+        if ($onboardingCompleted === 0) {
+            $onboardingStatusLabel = 'Começando agora';
+            $onboardingHeadline = 'Seu cadastro ainda não avançou nas etapas principais.';
+            $onboardingDescription = 'Vale começar pelo perfil para registrar seus dados essenciais e evitar lacunas logo no primeiro acesso.';
+        } elseif ($onboardingPendingCount === 1 && is_array($nextPendingOnboardingItem)) {
+            $onboardingStatusTone = 'is-almost-done';
+            $onboardingStatusLabel = 'Quase concluído';
+            $onboardingHeadline = 'Falta só um ajuste para fechar seu onboarding.';
+            $onboardingDescription = 'Concluir "' . (string) $nextPendingOnboardingItem['label'] . '" deixa sua conta muito mais completa.';
+        } elseif ($onboardingPendingCount === 0) {
+            $onboardingStatusTone = 'is-complete';
+            $onboardingStatusLabel = 'Concluído';
+            $onboardingHeadline = 'Seu onboarding está completo.';
+            $onboardingDescription = 'Seu cadastro essencial já está em dia. Agora você pode concentrar sua atenção nos próximos eventos e nas trilhas liberadas para seu perfil.';
+            $onboardingSecondaryAction = [
+                'label' => 'Atualizar painel',
+                'href' => '/membro',
+            ];
+            $onboardingBenefits = [
+                'Seu perfil já oferece identificação visual e dados básicos consistentes.',
+                'A equipe consegue localizar suas informações principais com rapidez.',
+                'Você pode focar a área do membro em agenda, contribuições e próximos passos.',
+            ];
+        }
+
+        $onboardingPrimaryAction = [
+            'label' => 'Completar perfil',
+            'href' => '/membro/perfil/completar',
+        ];
+        $onboardingRecommendedStepTitle = is_array($nextPendingOnboardingItem)
+            ? (string) $nextPendingOnboardingItem['label']
+            : 'Revisar seu painel';
+        $onboardingRecommendedStepDescription = is_array($nextPendingOnboardingItem)
+            ? (string) $nextPendingOnboardingItem['description']
+            : 'Revise suas informações para manter o cadastro consistente.';
+
+        if ($onboardingPendingCount === 0) {
+            $onboardingPrimaryAction = [
+                'label' => 'Abrir agenda',
+                'href' => '/agenda',
+            ];
+            $onboardingRecommendedStepTitle = 'Aproveitar a área do membro';
+            $onboardingRecommendedStepDescription = 'Seu cadastro essencial já foi concluído. O próximo melhor uso do painel é acompanhar eventos, contribuições e trilhas liberadas.';
+        }
 
         $roleWeights = [
             'member' => 10,
@@ -210,6 +298,8 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         }
 
         $recentTimeline = [];
+        $contributionHistory = [];
+        $contributionHistoryFilters = $this->buildContributionHistoryFilters([], $queryParams);
         if ($status === 'profile-updated') {
             $recentTimeline[] = [
                 'title' => 'Perfil atualizado',
@@ -240,6 +330,25 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
                 'detail' => 'A atividade deixou de aparecer na sua agenda pessoal.',
                 'meta' => 'Nesta sessão',
             ];
+        }
+
+        if ($memberId > 0) {
+            try {
+                $allContributionCharges = $this->memberAuthRepository->findContributionChargesByMember(
+                    $memberId,
+                    self::CONTRIBUTION_HISTORY_FETCH_LIMIT
+                );
+                $contributionHistoryFilters = $this->buildContributionHistoryFilters($allContributionCharges, $queryParams);
+                $contributionHistory = $this->normalizeContributionHistory(
+                    $this->applyContributionHistoryFilters($allContributionCharges, $contributionHistoryFilters)
+                );
+                $contributionHistoryFilters['result_count'] = count($contributionHistory);
+            } catch (\Throwable $exception) {
+                $this->logger->warning('Falha ao carregar histórico de contribuições na área do membro.', [
+                    'member_id' => $memberId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
 
         $memberNotifications = [];
@@ -353,6 +462,8 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         return $this->renderPage($response, 'pages/member-home.twig', [
             'member_data' => $member,
             'member_home_status' => $status,
+            'member_contribution_history' => $contributionHistory,
+            'member_contribution_history_filters' => $contributionHistoryFilters,
             'member_primary_action' => $primaryAction,
             'member_notifications' => array_slice($memberNotifications, 0, 3),
             'member_birthday_members' => $birthdayMembers,
@@ -363,6 +474,16 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'member_onboarding_completed' => $onboardingCompleted,
             'member_onboarding_total' => $onboardingTotal,
             'member_onboarding_percent' => $onboardingPercent,
+            'member_onboarding_pending_count' => $onboardingPendingCount,
+            'member_onboarding_status_tone' => $onboardingStatusTone,
+            'member_onboarding_status_label' => $onboardingStatusLabel,
+            'member_onboarding_headline' => $onboardingHeadline,
+            'member_onboarding_description' => $onboardingDescription,
+            'member_onboarding_primary_action' => $onboardingPrimaryAction,
+            'member_onboarding_secondary_action' => $onboardingSecondaryAction,
+            'member_onboarding_recommended_step_title' => $onboardingRecommendedStepTitle,
+            'member_onboarding_recommended_step_description' => $onboardingRecommendedStepDescription,
+            'member_onboarding_benefits' => $onboardingBenefits,
             'member_next_actions' => $nextActions,
             'member_upcoming_events' => $upcomingEvents,
             'member_my_upcoming_events' => $myUpcomingEvents,
@@ -443,5 +564,346 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
         $parts = explode(' ', $normalized);
 
         return $parts[0] !== '' ? $parts[0] : $normalized;
+    }
+
+    /**
+     * @param array<string, mixed> $member
+     * @return array<string, mixed>
+     */
+    private function withAssociationLabels(array $member): array
+    {
+        $associationStatus = strtolower(trim((string) ($member['association_status'] ?? '')));
+        if (!in_array($associationStatus, ['applicant', 'member', 'former'], true)) {
+            $associationStatus = strtolower(trim((string) ($member['status'] ?? ''))) === 'pending'
+                ? 'applicant'
+                : 'member';
+        }
+
+        $member['association_status'] = $associationStatus;
+        $member['association_status_label'] = match ($associationStatus) {
+            'member' => 'Associado',
+            'former' => 'Desligado',
+            default => 'Solicitante',
+        };
+        $member['is_contributor'] = (int) ($member['is_contributor'] ?? 0);
+        $member['contributor_label'] = $member['is_contributor'] === 1 ? 'Sim' : 'Não';
+
+        return $member;
+    }
+
+    /**
+     * @param array<string, mixed> $member
+     * @return array<string, mixed>
+     */
+    private function withFinancialSummary(array $member): array
+    {
+        $member['preferred_due_day_display'] = $this->formatDueDay($member['preferred_due_day'] ?? null);
+        $member['contribution_amount_display'] = $this->formatCurrency((string) ($member['contribution_amount'] ?? ''));
+
+        $preferredPaymentMethod = strtolower(trim((string) ($member['preferred_payment_method'] ?? '')));
+        $member['preferred_payment_method_display'] = self::PAYMENT_METHOD_LABELS[$preferredPaymentMethod] ?? 'Não definido';
+
+        return $member;
+    }
+
+    /**
+     * @param array<string, mixed> $member
+     * @return array<string, mixed>
+     */
+    private function withDisplayFields(array $member): array
+    {
+        $member['birth_date_display'] = $this->formatDate((string) ($member['birth_date'] ?? ''));
+
+        return $member;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $charges
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeContributionHistory(array $charges): array
+    {
+        return array_map(function (array $charge): array {
+            $statusKey = strtolower(trim((string) ($charge['status'] ?? 'pending')));
+            $preferredPaymentMethod = strtolower(trim((string) ($charge['preferred_payment_method'] ?? '')));
+            $recordedPaymentMethod = strtolower(trim((string) ($charge['payment_recorded_method'] ?? '')));
+            $gatewayBillingType = strtoupper(trim((string) ($charge['gateway_billing_type'] ?? '')));
+
+            $paymentMethodLabel = self::PAYMENT_METHOD_LABELS[$recordedPaymentMethod]
+                ?? self::PAYMENT_METHOD_LABELS[$preferredPaymentMethod]
+                ?? ($gatewayBillingType === 'PIX'
+                    ? 'Pix'
+                    : ($gatewayBillingType === 'BOLETO' ? 'Boleto' : 'Não definido'));
+
+            $charge['competence_label'] = $this->formatCompetenceLabel((string) ($charge['competence'] ?? ''));
+            $charge['status_key'] = $statusKey;
+            $charge['status_label'] = match ($statusKey) {
+                'paid' => 'Recebida',
+                'exempt' => 'Isenta',
+                default => 'Em aberto',
+            };
+            $charge['status_tone'] = match ($statusKey) {
+                'paid' => 'is-on',
+                'exempt' => 'is-info',
+                default => 'is-warning',
+            };
+            $charge['status_summary'] = match ($statusKey) {
+                'paid' => $recordedPaymentMethod !== ''
+                    ? 'Recebida via ' . $paymentMethodLabel . '.'
+                    : 'Recebimento confirmado.',
+                'exempt' => trim((string) ($charge['exemption_reason'] ?? '')) !== ''
+                    ? (string) $charge['exemption_reason']
+                    : 'Cobrança isentada.',
+                default => trim((string) ($charge['gateway_status'] ?? '')) !== ''
+                    ? 'Status atual: ' . $this->formatGatewayStatus((string) ($charge['gateway_status'] ?? '')) . '.'
+                    : 'Aguardando pagamento.',
+            };
+            $charge['due_date_label'] = $this->formatDate((string) ($charge['due_date'] ?? ''));
+            $charge['paid_at_label'] = $statusKey === 'paid'
+                ? $this->formatDateTime((string) ($charge['paid_at'] ?? ''))
+                : ($statusKey === 'exempt' ? 'Isenta' : 'Ainda não registrada');
+            $charge['amount_due_label'] = $this->formatCurrency((string) ($charge['amount_due'] ?? ''));
+            $charge['payment_method_label'] = $paymentMethodLabel;
+            $charge['payment_method_context_label'] = $statusKey === 'paid' ? 'Forma recebida' : 'Forma prevista';
+
+            return $charge;
+        }, $charges);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $charges
+     * @param array<string, mixed> $queryParams
+     * @return array<string, mixed>
+     */
+    private function buildContributionHistoryFilters(array $charges, array $queryParams): array
+    {
+        $selectedSort = trim((string) ($queryParams['history_sort'] ?? self::DEFAULT_CONTRIBUTION_HISTORY_SORT));
+        if (!array_key_exists($selectedSort, self::CONTRIBUTION_HISTORY_SORT_OPTIONS)) {
+            $selectedSort = self::DEFAULT_CONTRIBUTION_HISTORY_SORT;
+        }
+
+        $availableYears = [];
+        foreach ($charges as $charge) {
+            $competenceYear = $this->extractCompetenceYear((string) ($charge['competence'] ?? ''));
+            if ($competenceYear === '') {
+                continue;
+            }
+
+            $availableYears[$competenceYear] = true;
+        }
+
+        $yearOptions = array_map('strval', array_keys($availableYears));
+        rsort($yearOptions, SORT_STRING);
+
+        $selectedYear = trim((string) ($queryParams['history_year'] ?? ''));
+        if ($selectedYear !== '' && !in_array($selectedYear, $yearOptions, true)) {
+            $selectedYear = '';
+        }
+
+        $availableCompetences = [];
+        foreach ($charges as $charge) {
+            $competence = trim((string) ($charge['competence'] ?? ''));
+            if ($competence === '') {
+                continue;
+            }
+
+            if ($selectedYear !== '' && $this->extractCompetenceYear($competence) !== $selectedYear) {
+                continue;
+            }
+
+            $availableCompetences[$competence] = true;
+        }
+
+        $competenceOptions = array_keys($availableCompetences);
+        rsort($competenceOptions, SORT_STRING);
+
+        $selectedCompetence = trim((string) ($queryParams['history_competence'] ?? ''));
+        if ($selectedCompetence !== '' && !in_array($selectedCompetence, $competenceOptions, true)) {
+            $selectedCompetence = '';
+        }
+
+        return [
+            'year' => $selectedYear,
+            'competence' => $selectedCompetence,
+            'sort' => $selectedSort,
+            'has_active' => $selectedYear !== ''
+                || $selectedCompetence !== ''
+                || $selectedSort !== self::DEFAULT_CONTRIBUTION_HISTORY_SORT,
+            'total_count' => count($charges),
+            'result_count' => count($charges),
+            'year_options' => array_map(
+                static fn (string $value): array => [
+                    'value' => $value,
+                    'label' => $value,
+                    'selected' => $value === $selectedYear,
+                ],
+                $yearOptions
+            ),
+            'competence_options' => array_map(
+                fn (string $value): array => [
+                    'value' => $value,
+                    'label' => $this->formatCompetenceLabel($value),
+                    'selected' => $value === $selectedCompetence,
+                ],
+                $competenceOptions
+            ),
+            'sort_options' => array_map(
+                static fn (string $value, string $label): array => [
+                    'value' => $value,
+                    'label' => $label,
+                    'selected' => $value === $selectedSort,
+                ],
+                array_keys(self::CONTRIBUTION_HISTORY_SORT_OPTIONS),
+                self::CONTRIBUTION_HISTORY_SORT_OPTIONS
+            ),
+        ];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $charges
+     * @param array<string, mixed> $filters
+     * @return array<int, array<string, mixed>>
+     */
+    private function applyContributionHistoryFilters(array $charges, array $filters): array
+    {
+        $selectedYear = trim((string) ($filters['year'] ?? ''));
+        $selectedCompetence = trim((string) ($filters['competence'] ?? ''));
+        $selectedSort = trim((string) ($filters['sort'] ?? self::DEFAULT_CONTRIBUTION_HISTORY_SORT));
+
+        $filteredCharges = array_values(array_filter(
+            $charges,
+            function (array $charge) use ($selectedYear, $selectedCompetence): bool {
+                $competence = trim((string) ($charge['competence'] ?? ''));
+                if ($selectedYear !== '' && $this->extractCompetenceYear($competence) !== $selectedYear) {
+                    return false;
+                }
+
+                if ($selectedCompetence !== '' && $competence !== $selectedCompetence) {
+                    return false;
+                }
+
+                return true;
+            }
+        ));
+
+        $directionMultiplier = $selectedSort === 'competence_asc' ? 1 : -1;
+        usort($filteredCharges, static function (array $first, array $second) use ($directionMultiplier): int {
+            $competenceComparison = strcmp(
+                (string) ($first['competence'] ?? ''),
+                (string) ($second['competence'] ?? '')
+            );
+
+            if ($competenceComparison !== 0) {
+                return $competenceComparison * $directionMultiplier;
+            }
+
+            $idComparison = ((int) ($first['id'] ?? 0)) <=> ((int) ($second['id'] ?? 0));
+
+            return $idComparison * $directionMultiplier;
+        });
+
+        return $filteredCharges;
+    }
+
+    private function extractCompetenceYear(string $competence): string
+    {
+        $normalized = trim($competence);
+        if (preg_match('/^(\d{4})-\d{2}$/', $normalized, $matches) !== 1) {
+            return '';
+        }
+
+        return $matches[1];
+    }
+
+    private function formatDueDay(mixed $value): string
+    {
+        $day = (int) $value;
+        if ($day < 1 || $day > 28) {
+            return 'Não definido';
+        }
+
+        return 'Dia ' . sprintf('%02d', $day);
+    }
+
+    private function formatCompetenceLabel(string $competence): string
+    {
+        $normalized = trim($competence);
+
+        if (preg_match('/^\d{4}-\d{2}$/', $normalized) !== 1) {
+            return $normalized !== '' ? $normalized : 'Competência não definida';
+        }
+
+        [$year, $month] = array_map('intval', explode('-', $normalized));
+        $months = [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro',
+        ];
+
+        return ($months[$month] ?? $normalized) . ' de ' . $year;
+    }
+
+    private function formatCurrency(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return 'Não definido';
+        }
+
+        $amount = (float) $normalized;
+        if ($amount <= 0) {
+            return 'Não definido';
+        }
+
+        return 'R$ ' . number_format($amount, 2, ',', '.');
+    }
+
+    private function formatDate(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return '-';
+        }
+
+        try {
+            return (new \DateTimeImmutable($normalized))->format('d/m/Y');
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    private function formatDateTime(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return '-';
+        }
+
+        try {
+            return (new \DateTimeImmutable($normalized))->format('d/m/Y H:i');
+        } catch (\Throwable) {
+            return $value;
+        }
+    }
+
+    private function formatGatewayStatus(string $value): string
+    {
+        return match (strtoupper(trim($value))) {
+            'PENDING' => 'Pendente',
+            'RECEIVED' => 'Recebida',
+            'CONFIRMED' => 'Confirmada',
+            'OVERDUE' => 'Vencida',
+            'RECEIVED_IN_CASH' => 'Recebida em dinheiro',
+            default => trim($value) !== '' ? trim($value) : 'Sem status',
+        };
     }
 }

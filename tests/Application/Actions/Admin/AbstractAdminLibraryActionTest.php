@@ -12,6 +12,54 @@ use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
 use Tests\TestCase;
 
+final class TestableAbstractAdminLibraryAction extends AbstractAdminLibraryAction
+{
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        return $response;
+    }
+
+    public function exposedResolveLibraryUploadDirectory(): string
+    {
+        return $this->resolveLibraryUploadDirectory();
+    }
+
+    public function exposedResolveLibraryUploadPublicPrefix(): string
+    {
+        return $this->resolveLibraryUploadPublicPrefix();
+    }
+
+    public function exposedBuildManagedLibraryPdfRelativePath(string $fileName): string
+    {
+        return $this->buildManagedLibraryPdfRelativePath($fileName);
+    }
+
+    public function exposedResolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedLibraryPdfAbsolutePath($relativePath);
+    }
+
+    public function exposedResolveLibraryCoverUploadDirectory(): string
+    {
+        return $this->resolveLibraryCoverUploadDirectory();
+    }
+
+    public function exposedResolveLibraryCoverUploadPublicPrefix(): string
+    {
+        return $this->resolveLibraryCoverUploadPublicPrefix();
+    }
+
+    public function exposedBuildManagedLibraryCoverRelativePath(string $fileName): string
+    {
+        return $this->buildManagedLibraryCoverRelativePath($fileName);
+    }
+
+    public function exposedResolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
+    {
+        return $this->resolveManagedLibraryCoverAbsolutePath($relativePath);
+    }
+}
+
 class AbstractAdminLibraryActionTest extends TestCase
 {
     /** @var array<string, string|null> */
@@ -55,28 +103,28 @@ class AbstractAdminLibraryActionTest extends TestCase
         $projectRoot = dirname(__DIR__, 4);
 
         $this->assertSame(
-            $projectRoot . '/public/assets/docs/library',
+            $projectRoot . '/var/storage/library/docs',
             $action->exposedResolveLibraryUploadDirectory()
         );
         $this->assertSame(
-            'assets/docs/library',
+            'media/biblioteca/docs',
             $action->exposedResolveLibraryUploadPublicPrefix()
         );
         $this->assertSame(
-            $projectRoot . '/public/assets/docs/library/book_demo.pdf',
-            $action->exposedResolveManagedLibraryPdfAbsolutePath('assets/docs/library/book_demo.pdf')
+            $projectRoot . '/var/storage/library/docs/book_demo.pdf',
+            $action->exposedResolveManagedLibraryPdfAbsolutePath('media/biblioteca/docs/book_demo.pdf')
         );
         $this->assertSame(
-            $projectRoot . '/public/assets/img/library-covers',
+            $projectRoot . '/var/storage/library/covers',
             $action->exposedResolveLibraryCoverUploadDirectory()
         );
         $this->assertSame(
-            'assets/img/library-covers',
+            'media/biblioteca/capas',
             $action->exposedResolveLibraryCoverUploadPublicPrefix()
         );
         $this->assertSame(
-            $projectRoot . '/public/assets/img/library-covers/cover_demo.jpg',
-            $action->exposedResolveManagedLibraryCoverAbsolutePath('assets/img/library-covers/cover_demo.jpg')
+            $projectRoot . '/var/storage/library/covers/cover_demo.jpg',
+            $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.jpg')
         );
     }
 
@@ -105,7 +153,9 @@ class AbstractAdminLibraryActionTest extends TestCase
             '/srv/cede-storage/library-pdfs/book_demo.pdf',
             $action->exposedResolveManagedLibraryPdfAbsolutePath('media/biblioteca/book_demo.pdf')
         );
-        $this->assertNull(
+        $projectRoot = dirname(__DIR__, 4);
+        $this->assertSame(
+            $projectRoot . '/public/assets/docs/library/book_demo.pdf',
             $action->exposedResolveManagedLibraryPdfAbsolutePath('assets/docs/library/book_demo.pdf')
         );
         $this->assertSame(
@@ -124,7 +174,8 @@ class AbstractAdminLibraryActionTest extends TestCase
             '/srv/cede-storage/library-covers/cover_demo.webp',
             $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.webp')
         );
-        $this->assertNull(
+        $this->assertSame(
+            dirname(__DIR__, 4) . '/public/assets/img/library-covers/cover_demo.webp',
             $action->exposedResolveManagedLibraryCoverAbsolutePath('assets/img/library-covers/cover_demo.webp')
         );
     }
@@ -142,7 +193,7 @@ class AbstractAdminLibraryActionTest extends TestCase
         ];
     }
 
-    private function createAction(): AbstractAdminLibraryAction
+    private function createAction(): TestableAbstractAdminLibraryAction
     {
         $app = $this->getAppInstance();
         $container = $app->getContainer();
@@ -154,51 +205,6 @@ class AbstractAdminLibraryActionTest extends TestCase
 
         $libraryRepository = $this->prophesize(LibraryRepository::class)->reveal();
 
-        return new class ($logger, $twig, $libraryRepository) extends AbstractAdminLibraryAction {
-            public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-            {
-                return $response;
-            }
-
-            public function exposedResolveLibraryUploadDirectory(): string
-            {
-                return $this->resolveLibraryUploadDirectory();
-            }
-
-            public function exposedResolveLibraryUploadPublicPrefix(): string
-            {
-                return $this->resolveLibraryUploadPublicPrefix();
-            }
-
-            public function exposedBuildManagedLibraryPdfRelativePath(string $fileName): string
-            {
-                return $this->buildManagedLibraryPdfRelativePath($fileName);
-            }
-
-            public function exposedResolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
-            {
-                return $this->resolveManagedLibraryPdfAbsolutePath($relativePath);
-            }
-
-            public function exposedResolveLibraryCoverUploadDirectory(): string
-            {
-                return $this->resolveLibraryCoverUploadDirectory();
-            }
-
-            public function exposedResolveLibraryCoverUploadPublicPrefix(): string
-            {
-                return $this->resolveLibraryCoverUploadPublicPrefix();
-            }
-
-            public function exposedBuildManagedLibraryCoverRelativePath(string $fileName): string
-            {
-                return $this->buildManagedLibraryCoverRelativePath($fileName);
-            }
-
-            public function exposedResolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
-            {
-                return $this->resolveManagedLibraryCoverAbsolutePath($relativePath);
-            }
-        };
+        return new TestableAbstractAdminLibraryAction($logger, $twig, $libraryRepository);
     }
 }

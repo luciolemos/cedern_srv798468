@@ -156,10 +156,14 @@
               <tr>
                 <td data-label="Capa">
                   <div class="nc-library-admin-cover-thumb-wrap" aria-hidden="true">
-                    {% if book.cover_image_url|default('') %}
+                    {% set book_cover_image_url = book.cover_image_url|default('')|trim %}
+                    {% if book_cover_image_url starts with '/' %}
+                      {% set book_cover_image_url = (base_url ?? '') ~ book_cover_image_url %}
+                    {% endif %}
+                    {% if book_cover_image_url %}
                       <img
                         class="nc-library-admin-cover-thumb"
-                        src="{{ book.cover_image_url }}"
+                        src="{{ book_cover_image_url }}"
                         alt=""
                         loading="lazy"
                       >
@@ -169,7 +173,8 @@
                         bookplate_author: book.author_name|default(''),
                         bookplate_collection_label: 'Livraria Auta de Sousa',
                         bookplate_section_title: 'Livraria',
-                        bookplate_modifier_class: 'is-admin-list-thumb'
+                        bookplate_modifier_class: 'is-admin-list-thumb',
+                        base_url: base_url|default('')
                       } only %}
                     {% endif %}
                   </div>

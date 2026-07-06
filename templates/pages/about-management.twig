@@ -7,17 +7,17 @@
 
 {% block content %}
   <main class="nc-main nc-container nc-home-flow">
-    <section class="nc-section nc-management-slideshow" aria-label="Gestão CEDE" data-aos="fade-up" data-aos-delay="40" data-cards-slideshow data-page-size-mobile="1" data-page-size-tablet="3" data-page-size-desktop="3" data-autoplay="true" data-autoplay-interval="4500">
+    <section class="nc-section nc-management-slideshow" aria-label="Diretoria CEDE" data-aos="fade-up" data-aos-delay="40" data-cards-slideshow data-page-size-mobile="1" data-page-size-tablet="3" data-page-size-desktop="3" data-autoplay="true" data-autoplay-interval="4500">
       {% include 'components/section-header.twig' with {
         kicker: 'Quem Somos',
-        title: 'Gestão CEDE',
-        lead: 'Conheça os membros da gestão atual e as atribuições de cada função institucional, responsáveis por conduzir o CEDE com dedicação, equilíbrio e compromisso com seus princípios.'
+        title: 'Diretoria CEDE',
+        lead: 'Conheça os membros da diretoria atual e as atribuições de cada função institucional, responsáveis por conduzir o CEDE com dedicação, equilíbrio e compromisso com seus princípios.'
       } %}
 
       <div class="nc-management-intro" data-aos="fade-up" data-aos-delay="80">
-        <p>A gestão do CEDE é pautada na seriedade, responsabilidade e fidelidade aos ensinamentos da Doutrina Espírita, assegurando que todas as atividades da casa sejam realizadas com organização, harmonia e propósito. Cada integrante da gestão exerce seu papel com espírito de serviço, buscando sempre o bem coletivo e o crescimento moral e espiritual de todos os frequentadores.</p>
-        <p>Mais do que uma estrutura administrativa, a gestão representa um instrumento de sustentação e continuidade da missão do CEDE, garantindo que os estudos, atendimentos e ações fraternas sejam conduzidos com qualidade, acolhimento e coerência doutrinária.</p>
-        <p>Uma gestão comprometida fortalece a instituição, amplia seu alcance e consolida sua credibilidade perante a comunidade, permitindo que o CEDE continue sendo um espaço de luz, aprendizado e transformação interior.</p>
+        <p>A diretoria do CEDE é pautada na seriedade, responsabilidade e fidelidade aos ensinamentos da Doutrina Espírita, assegurando que todas as atividades da casa sejam realizadas com organização, harmonia e propósito. Cada integrante da diretoria exerce seu papel com espírito de serviço, buscando sempre o bem coletivo e o crescimento moral e espiritual de todos os frequentadores.</p>
+        <p>Mais do que uma estrutura administrativa, a diretoria representa um instrumento de sustentação e continuidade da missão do CEDE, garantindo que os estudos, atendimentos e ações fraternas sejam conduzidos com qualidade, acolhimento e coerência doutrinária.</p>
+        <p>Uma diretoria comprometida fortalece a instituição, amplia seu alcance e consolida sua credibilidade perante a comunidade, permitindo que o CEDE continue sendo um espaço de luz, aprendizado e transformação interior.</p>
       </div>
 
       {% if public_cede_management|default([])|length > 0 %}
@@ -25,8 +25,9 @@
           {% for member in public_cede_management %}
             <article class="nc-testimonial-card" data-aos="fade-up" data-aos-delay="{{ 120 + (loop.index0 * 40) }}">
               <div class="nc-testimonial-head">
-                {% if member.profile_photo_path|default('') %}
-                  <img class="nc-testimonial-avatar" src="/{{ member.profile_photo_path }}" alt="Foto de {{ member.full_name|default('Membro') }}">
+                {% set management_member_photo_path = member.profile_photo_path|default('')|trim %}
+                {% if management_member_photo_path %}
+                  <img class="nc-testimonial-avatar" src="{{ (base_url ?? '') ~ '/' ~ (management_member_photo_path|trim('/')) }}" alt="Foto de {{ member.full_name|default('Membro') }}">
                 {% else %}
                   <span class="nc-testimonial-avatar nc-testimonial-avatar-fallback" aria-hidden="true">{{ member.full_name|default('M')|slice(0, 1)|upper }}</span>
                 {% endif %}

@@ -1,0 +1,184 @@
+{% extends 'layouts/admin-dashboard.twig' %}
+
+{% set dashboard_page_kicker = 'Dashboard' %}
+{% set dashboard_page_title = dashboard_page_title|default('Cadastro do usuário') %}
+{% set dashboard_page_lead = 'Visualização completa dos dados cadastrais e de acesso desta conta.' %}
+
+{% block admin_content %}
+  <section class="nc-section" aria-label="Cadastro do usuário">
+    <div class="nc-actions nc-admin-toolbar" data-aos="fade-up" data-aos-delay="60">
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel">Voltar ao painel</a>
+      <a class="nc-btn nc-btn-secondary nc-btn-back" href="/painel/usuarios">Voltar para Pessoas CEDE</a>
+      {% if view_user is not empty %}
+        <a class="nc-btn nc-btn-secondary" href="/painel/usuarios/{{ view_user.id }}/resumo">Editar acesso</a>
+      {% endif %}
+    </div>
+
+    {% if view_user is empty %}
+      <p>{{ view_error_message|default('Usuário não encontrado.') }}</p>
+    {% else %}
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="70">
+        <div class="nc-member-header">
+          <div class="nc-member-avatar-wrap" aria-hidden="true">
+            {% set view_user_photo_path = view_user.profile_photo_path|default('')|trim %}
+            {% if view_user_photo_path %}
+              <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (view_user_photo_path|trim('/')) }}" alt="">
+            {% else %}
+              <div class="nc-member-avatar-placeholder">{{ (view_user.full_name|default(view_user.email|default('U'))|slice(0, 1)|upper) }}</div>
+            {% endif %}
+          </div>
+          <div class="nc-member-header-text">
+            <h3>{{ view_user.full_name|default(view_user.email|default('Usuário')) }}</h3>
+            <p>Dados principais do cadastro e identificação administrativa desta pessoa.</p>
+          </div>
+        </div>
+
+        <dl class="nc-member-grid">
+          <div>
+            <dt>Acesso ao SISCEDE</dt>
+            <dd>
+              <span class="nc-admin-featured-flag{{ view_user.status_key|default('pending') == 'active' ? ' is-on' : ' is-off' }}">{{ view_user.status_label|default('Pendente') }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Vínculo associativo</dt>
+            <dd>{{ view_user.association_status_label|default('Solicitante') }}</dd>
+          </div>
+          <div>
+            <dt>Contribuinte</dt>
+            <dd>{{ view_user.contributor_label|default('Não') }}</dd>
+          </div>
+          <div>
+            <dt>Perfil no SISCEDE</dt>
+            <dd>{{ view_user.role_name_display|default('Membro') }}</dd>
+          </div>
+          <div>
+            <dt>Tipo de Sócio</dt>
+            <dd>{{ view_user.member_type_label|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Função no CEDE</dt>
+            <dd>{{ view_user.institutional_role_display|default('Sem função definida') }}</dd>
+          </div>
+          <div>
+            <dt>E-mail</dt>
+            <dd>{{ view_user.email|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Celular</dt>
+            <dd>{{ view_user.phone_mobile_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Telefone</dt>
+            <dd>{{ view_user.phone_landline_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Data de nascimento</dt>
+            <dd>{{ view_user.birth_date_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Naturalidade</dt>
+            <dd>{{ view_user.birth_place|default('-') ?: '-' }}</dd>
+          </div>
+          <div>
+            <dt>CPF</dt>
+            <dd>{{ view_user.cpf_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Perfil completo</dt>
+            <dd>{{ view_user.profile_completed_label|default('Não') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="82">
+        <h3>Endereço e contribuição</h3>
+        <p class="nc-member-subtitle">Dados de cobrança e preferências financeiras vinculadas ao associado.</p>
+
+        <dl class="nc-member-grid">
+          <div>
+            <dt>CEP</dt>
+            <dd>{{ view_user.postal_code_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Vencimento</dt>
+            <dd>{{ view_user.preferred_due_day_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Endereço</dt>
+            <dd>{{ view_user.address_display|default('-')|nl2br }}</dd>
+          </div>
+          <div>
+            <dt>Valor da contribuição</dt>
+            <dd>{{ view_user.contribution_amount_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Plano definido</dt>
+            <dd>{{ view_user.contribution_plan_label_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Forma preferida</dt>
+            <dd>{{ view_user.preferred_payment_method_display|default('Não definido') }}</dd>
+          </div>
+          <div>
+            <dt>Cobrança por e-mail</dt>
+            <dd>{{ view_user.billing_email_opt_in_label|default('Não autorizado') }}</dd>
+          </div>
+          <div>
+            <dt>Lembretes por WhatsApp</dt>
+            <dd>{{ view_user.billing_whatsapp_opt_in_label|default('Não autorizado') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="95">
+        <h3>Conta e conformidade</h3>
+        <p class="nc-member-subtitle">Indicadores administrativos vinculados ao cadastro desta pessoa.</p>
+
+        <dl class="nc-member-grid">
+          <div>
+            <dt>ID do usuário</dt>
+            <dd>#{{ view_user.id }}</dd>
+          </div>
+          <div>
+            <dt>Versão do aviso de privacidade</dt>
+            <dd>{{ view_user.privacy_notice_version_display|default('Não registrado') }}</dd>
+          </div>
+          <div>
+            <dt>Aceite do aviso de privacidade</dt>
+            <dd>{{ view_user.privacy_notice_accepted_at_display|default('Não registrado') }}</dd>
+          </div>
+          <div>
+            <dt>Foto de perfil</dt>
+            <dd>{{ view_user.profile_photo_path|default('') ? 'Cadastrada' : 'Não cadastrada' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="108">
+        <h3>Histórico administrativo</h3>
+        <p class="nc-member-subtitle">Registro das mudanças de aprovação, vínculo, contribuição e bloqueio desta conta.</p>
+
+        {% set view_user_history = view_user_history|default([]) %}
+        {% if view_user_history|length == 0 %}
+          <p>{{ view_user_history_error|default('Nenhum evento administrativo registrado até o momento.') }}</p>
+        {% else %}
+          <div class="nc-member-history-list">
+            {% for history_event in view_user_history %}
+              <article class="nc-member-history-item">
+                <p><strong>{{ history_event.created_at_display|default('Não registrado') }}</strong> · {{ history_event.acted_by_user_display|default('Sistema') }}</p>
+                <p>{{ history_event.event_description|default('Atualização administrativa registrada.') }}</p>
+                {% if history_event.current_state_summary|default('') %}
+                  <p><strong>Estado resultante:</strong> {{ history_event.current_state_summary }}</p>
+                {% endif %}
+                {% if history_event.rules_applied_display|default('') %}
+                  <p><strong>Regras aplicadas:</strong> {{ history_event.rules_applied_display }}</p>
+                {% endif %}
+              </article>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </article>
+    {% endif %}
+  </section>
+{% endblock %}

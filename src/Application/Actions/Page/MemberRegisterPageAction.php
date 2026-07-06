@@ -6,6 +6,7 @@ namespace App\Application\Actions\Page;
 
 use App\Application\Security\RecaptchaVerifier;
 use App\Application\Support\InstitutionalEmailTemplate;
+use App\Application\Support\SmtpSettings;
 use App\Domain\Member\MemberAuthRepository;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -58,7 +59,7 @@ class MemberRegisterPageAction extends AbstractPageAction
 
         if ($method === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
-            $fullName = trim((string) ($body['full_name'] ?? ''));
+            $fullName = $this->normalizeUppercaseFullName((string) ($body['full_name'] ?? ''));
             $email = strtolower(trim((string) ($body['email'] ?? '')));
             $password = (string) ($body['password'] ?? '');
             $passwordConfirmation = (string) ($body['password_confirmation'] ?? '');
@@ -163,6 +164,21 @@ class MemberRegisterPageAction extends AbstractPageAction
         ]);
     }
 
+    private function normalizeUppercaseFullName(string $value): string
+    {
+        $normalizedValue = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
+
+        if ($normalizedValue === '') {
+            return '';
+        }
+
+        if (function_exists('mb_strtoupper')) {
+            return mb_strtoupper($normalizedValue, 'UTF-8');
+        }
+
+        return strtoupper($normalizedValue);
+    }
+
     /**
      * @throws Exception
      */
@@ -182,7 +198,7 @@ class MemberRegisterPageAction extends AbstractPageAction
         }
 
         $headerMetaHtml = InstitutionalEmailTemplate::buildInstitutionHeaderMeta();
-        $panelReviewUrl = $siteUrl . '/painel/usuarios?sort=created_at&dir=desc&q=pending';
+        $panelReviewUrl = $siteUrl . '/painel/usuarios?sort=created_at&dir=desc&status_filter=pending';
         $memberLoginUrl = $siteUrl . '/entrar';
         $contactUrl = $siteUrl . '/contato';
         $adminReplyUrl = $this->buildMailToLink(
@@ -340,7 +356,7 @@ class MemberRegisterPageAction extends AbstractPageAction
         $mailer->Username = $smtpUser;
         $mailer->Password = $smtpPass;
         $mailer->Port = $smtpPort;
-        $mailer->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mailer->SMTPSecure = SmtpSettings::resolveConfiguredEncryption($smtpPort);
         $mailer->CharSet = 'UTF-8';
         $mailer->Sender = $fromEmail;
 

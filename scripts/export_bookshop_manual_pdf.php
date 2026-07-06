@@ -46,8 +46,21 @@ $html = $twig->getEnvironment()->render('pages/admin-bookshop-manual-pdf.twig', 
 file_put_contents($htmlPath, $html);
 
 $nodeScript = $projectRoot . '/scripts/export_bookshop_manual_pdf.mjs';
+$playwrightBrowsersPath = $projectRoot . '/var/cache/ms-playwright';
+
+if (
+    !is_dir($playwrightBrowsersPath)
+    && !mkdir($playwrightBrowsersPath, 0775, true)
+    && !is_dir($playwrightBrowsersPath)
+) {
+    throw new RuntimeException(
+        'Não foi possível criar o diretório de cache do Playwright em ' . $playwrightBrowsersPath
+    );
+}
+
 $command = sprintf(
-    'node %s %s %s',
+    'PLAYWRIGHT_BROWSERS_PATH=%s node %s %s %s',
+    escapeshellarg($playwrightBrowsersPath),
     escapeshellarg($nodeScript),
     escapeshellarg($htmlPath),
     escapeshellarg($pdfPath)
