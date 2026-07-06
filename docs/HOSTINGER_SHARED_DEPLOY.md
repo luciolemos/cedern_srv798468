@@ -25,6 +25,10 @@ Com isso, a aplicacao pode ser publicada mantendo a estrutura inteira do projeto
 
 Mantenha o arquivo real de ambiente fora do repositório e aponte para ele com `APP_ENV_FILE`.
 
+Template completo versionado:
+
+- [.env.production.example](/var/www/cedern/.env.production.example)
+
 Exemplo:
 
 ```apache
@@ -69,6 +73,9 @@ Garanta permissao de escrita para:
 - `var/storage/patrimony/docs`
 - `var/storage/patrimony/img`
 - o caminho configurado em `APP_LOG_PATH`, se estiver fora do projeto
+
+Importante:
+Os arquivos dentro de `var/storage/**` sao ignorados pelo Git neste projeto. Entao o deploy por branch/webhook publica codigo e banco, mas nao leva automaticamente fotos de membros, capas, PDFs e outros uploads gerenciados. Ao promover dados entre desenvolvimento e producao, sincronize tambem esses diretorios ou mantenha um storage compartilhado entre os ambientes.
 
 ## Composer
 

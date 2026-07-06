@@ -48,11 +48,12 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
+        $normalizedPath = ltrim(trim((string) $relativePath), '/');
         $fallbackPath = null;
 
         foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
             $absolutePath = $this->resolveManagedAbsoluteMemberProfilePhotoPath(
-                $relativePath,
+                $normalizedPath,
                 $definition['public_prefix'],
                 $definition['directory']
             );
@@ -66,6 +67,11 @@ trait MemberProfilePhotoStorageTrait
             }
 
             $fallbackPath ??= $absolutePath;
+        }
+
+        $fileNameFallbackPath = $this->resolveManagedMemberProfilePhotoFallbackByFileName($normalizedPath);
+        if ($fileNameFallbackPath !== null) {
+            return $fileNameFallbackPath;
         }
 
         return $fallbackPath;
@@ -219,6 +225,33 @@ trait MemberProfilePhotoStorageTrait
         }
 
         return $directory . '/' . $relativeFilePath;
+    }
+
+    private function resolveManagedMemberProfilePhotoFallbackByFileName(string $normalizedPath): ?string
+    {
+        if ($normalizedPath === '') {
+            return null;
+        }
+
+        $fileName = basename(str_replace('\\', '/', $normalizedPath));
+        if (
+            $fileName === ''
+            || $fileName === '.'
+            || $fileName === '..'
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
+        ) {
+            return null;
+        }
+
+        foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
+            $candidatePath = $definition['directory'] . '/' . $fileName;
+
+            if (is_file($candidatePath)) {
+                return $candidatePath;
+            }
+        }
+
+        return null;
     }
 
     private function resolveMemberProfilePhotoProjectRoot(): string
