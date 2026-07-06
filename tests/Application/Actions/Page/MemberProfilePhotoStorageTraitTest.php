@@ -92,7 +92,8 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
     {
         unset(
             $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
-            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['APP_MANAGED_STORAGE_ROOT']
         );
 
         $projectRoot = dirname(__DIR__, 4);
@@ -109,6 +110,22 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
+    public function testUsesSharedManagedStorageRootWhenConfigured(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+        );
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            '/srv/cede-managed-storage/member-photos/member_demo.png',
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
+        );
+    }
+
     /**
      * @return list<string>
      */
@@ -117,6 +134,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         return [
             'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
             'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
+            'APP_MANAGED_STORAGE_ROOT',
         ];
     }
 }

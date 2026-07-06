@@ -96,7 +96,8 @@ class AbstractAdminLibraryActionTest extends TestCase
             $_ENV['LIBRARY_UPLOAD_DIR'],
             $_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'],
             $_ENV['LIBRARY_COVER_UPLOAD_DIR'],
-            $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX']
+            $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['APP_MANAGED_STORAGE_ROOT']
         );
 
         $action = $this->createAction();
@@ -180,6 +181,36 @@ class AbstractAdminLibraryActionTest extends TestCase
         );
     }
 
+    public function testLibraryUploadStorageUsesSharedManagedStorageRootWhenConfigured(): void
+    {
+        unset(
+            $_ENV['LIBRARY_UPLOAD_DIR'],
+            $_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['LIBRARY_COVER_UPLOAD_DIR'],
+            $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX']
+        );
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+
+        $action = $this->createAction();
+
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/docs',
+            $action->exposedResolveLibraryUploadDirectory()
+        );
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/covers',
+            $action->exposedResolveLibraryCoverUploadDirectory()
+        );
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/docs/book_demo.pdf',
+            $action->exposedResolveManagedLibraryPdfAbsolutePath('media/biblioteca/docs/book_demo.pdf')
+        );
+        $this->assertSame(
+            '/srv/cede-managed-storage/library/covers/cover_demo.jpg',
+            $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.jpg')
+        );
+    }
+
     /**
      * @return list<string>
      */
@@ -190,6 +221,7 @@ class AbstractAdminLibraryActionTest extends TestCase
             'LIBRARY_UPLOAD_PUBLIC_PREFIX',
             'LIBRARY_COVER_UPLOAD_DIR',
             'LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX',
+            'APP_MANAGED_STORAGE_ROOT',
         ];
     }
 

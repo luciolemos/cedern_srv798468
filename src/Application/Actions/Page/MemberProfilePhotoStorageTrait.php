@@ -88,7 +88,7 @@ trait MemberProfilePhotoStorageTrait
 
         if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
             $definitions[] = [
-                'directory' => $configuredDirectory ?? $this->resolveMemberProfilePhotoDirectoryPath(
+                'directory' => $configuredDirectory ?? $this->resolveManagedStorageDefaultDirectory(
                     self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR
                 ),
                 'public_prefix' => $configuredPublicPrefix
@@ -99,7 +99,7 @@ trait MemberProfilePhotoStorageTrait
         }
 
         $definitions[] = [
-            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
+            'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
             'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
                 self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
             ),
@@ -182,6 +182,36 @@ trait MemberProfilePhotoStorageTrait
         }
 
         return is_writable($directory);
+    }
+
+    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
+    {
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        if ($managedStorageRoot === null) {
+            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
+        }
+
+        $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
+        $storagePrefix = 'var/storage/';
+
+        if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
+            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
+        }
+
+        $storageSuffix = ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
+
+        return $managedStorageRoot . '/' . $storageSuffix;
+    }
+
+    private function resolveManagedStorageRoot(): ?string
+    {
+        $configuredRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
+
+        if ($configuredRoot === '') {
+            return null;
+        }
+
+        return $this->resolveMemberProfilePhotoDirectoryPath($configuredRoot);
     }
 
     private function resolveMemberProfilePhotoDirectoryPath(string $path): string

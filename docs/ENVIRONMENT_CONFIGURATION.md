@@ -35,6 +35,7 @@ Organize o `.env` em blocos:
 - `APP_LOG_PATH`: caminho absoluto do log da aplicação. Em Hostinger normalmente fica fora do projeto.
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
 - `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
+- `APP_MANAGED_STORAGE_ROOT`: opcional. Define uma raiz única para uploads gerenciados fora da pasta publicada/versionada, por exemplo `/home/usuario/cedern-storage`.
 - `APP_ASSET_VERSION`: versão manual dos assets. Troque o valor para quebrar cache de CSS, JS, ícones e templates que dependem de asset busting.
 
 ### 2. Aparência e seletor de tema
@@ -127,6 +128,7 @@ Regra prática:
 
 ### 10. Uploads e armazenamento público
 
+- Quando `APP_MANAGED_STORAGE_ROOT` estiver definido e o diretório específico não estiver sobrescrito, os caminhos padrão passam a apontar para essa raiz compartilhada.
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
 - `LIBRARY_COVER_UPLOAD_DIR`: diretório físico das capas da biblioteca.
