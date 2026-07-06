@@ -48,11 +48,12 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
+        $normalizedPath = ltrim(trim((string) $relativePath), '/');
         $fallbackPath = null;
 
         foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
             $absolutePath = $this->resolveManagedAbsoluteMemberProfilePhotoPath(
-                $relativePath,
+                $normalizedPath,
                 $definition['public_prefix'],
                 $definition['directory']
             );
@@ -66,6 +67,11 @@ trait MemberProfilePhotoStorageTrait
             }
 
             $fallbackPath ??= $absolutePath;
+        }
+
+        $fileNameFallbackPath = $this->resolveManagedMemberProfilePhotoFallbackByFileName($normalizedPath);
+        if ($fileNameFallbackPath !== null) {
+            return $fileNameFallbackPath;
         }
 
         return $fallbackPath;
@@ -82,7 +88,7 @@ trait MemberProfilePhotoStorageTrait
 
         if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
             $definitions[] = [
-                'directory' => $configuredDirectory ?? $this->resolveMemberProfilePhotoDirectoryPath(
+                'directory' => $configuredDirectory ?? $this->resolveManagedStorageDefaultDirectory(
                     self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR
                 ),
                 'public_prefix' => $configuredPublicPrefix
@@ -93,7 +99,7 @@ trait MemberProfilePhotoStorageTrait
         }
 
         $definitions[] = [
-            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
+            'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
             'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
                 self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
             ),
@@ -178,6 +184,36 @@ trait MemberProfilePhotoStorageTrait
         return is_writable($directory);
     }
 
+    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
+    {
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        if ($managedStorageRoot === null) {
+            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
+        }
+
+        $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
+        $storagePrefix = 'var/storage/';
+
+        if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
+            return $this->resolveMemberProfilePhotoDirectoryPath($defaultDirectory);
+        }
+
+        $storageSuffix = ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
+
+        return $managedStorageRoot . '/' . $storageSuffix;
+    }
+
+    private function resolveManagedStorageRoot(): ?string
+    {
+        $configuredRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
+
+        if ($configuredRoot === '') {
+            return null;
+        }
+
+        return $this->resolveMemberProfilePhotoDirectoryPath($configuredRoot);
+    }
+
     private function resolveMemberProfilePhotoDirectoryPath(string $path): string
     {
         $normalizedPath = str_replace('\\', '/', $path);
@@ -219,6 +255,33 @@ trait MemberProfilePhotoStorageTrait
         }
 
         return $directory . '/' . $relativeFilePath;
+    }
+
+    private function resolveManagedMemberProfilePhotoFallbackByFileName(string $normalizedPath): ?string
+    {
+        if ($normalizedPath === '') {
+            return null;
+        }
+
+        $fileName = basename(str_replace('\\', '/', $normalizedPath));
+        if (
+            $fileName === ''
+            || $fileName === '.'
+            || $fileName === '..'
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
+        ) {
+            return null;
+        }
+
+        foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
+            $candidatePath = $definition['directory'] . '/' . $fileName;
+
+            if (is_file($candidatePath)) {
+                return $candidatePath;
+            }
+        }
+
+        return null;
     }
 
     private function resolveMemberProfilePhotoProjectRoot(): string

@@ -25,6 +25,10 @@ Com isso, a aplicacao pode ser publicada mantendo a estrutura inteira do projeto
 
 Mantenha o arquivo real de ambiente fora do repositório e aponte para ele com `APP_ENV_FILE`.
 
+Template completo versionado:
+
+- [.env.production.example](/var/www/cedern/.env.production.example)
+
 Exemplo:
 
 ```apache
@@ -36,6 +40,7 @@ Exemplo minimo para dominio raiz:
 ```dotenv
 APP_ENV=production
 APP_BASE=""
+APP_MANAGED_STORAGE_ROOT="/home/usuario/cedern-storage"
 APP_ENV_FILE="/home/usuario/.secrets/cedern.prod.env"
 APP_LOG_PATH="/home/usuario/logs/cedern-app.log"
 APP_ASSET_VERSION="1"
@@ -50,6 +55,7 @@ Exemplo minimo para subdiretório:
 ```dotenv
 APP_ENV=production
 APP_BASE="/cedern"
+APP_MANAGED_STORAGE_ROOT="/home/usuario/cedern-storage"
 APP_LOG_PATH="/home/usuario/logs/cedern-app.log"
 APP_ASSET_VERSION="1"
 APP_ENABLE_THEME_PALETTE="false"
@@ -69,6 +75,103 @@ Garanta permissao de escrita para:
 - `var/storage/patrimony/docs`
 - `var/storage/patrimony/img`
 - o caminho configurado em `APP_LOG_PATH`, se estiver fora do projeto
+
+Se `APP_MANAGED_STORAGE_ROOT` estiver ativo, a exigencia de escrita passa a valer para os subdiretorios correspondentes dentro desse root compartilhado.
+
+Importante:
+Os arquivos dentro de `var/storage/**` sao ignorados pelo Git neste projeto. Entao o deploy por branch/webhook publica codigo e banco, mas nao leva automaticamente fotos de membros, capas, PDFs e outros uploads gerenciados. Ao promover dados entre desenvolvimento e producao, sincronize tambem esses diretorios ou mantenha um storage compartilhado entre os ambientes.
+
+Recomendacao profissional:
+defina `APP_MANAGED_STORAGE_ROOT` em desenvolvimento e producao apontando para uma pasta compartilhada fora da arvore publicada. Assim, os uploads deixam de depender do diretório `var/storage` dentro do release atual.
+
+## Sincronizacao de uploads
+
+Diretorios que precisam acompanhar a publicacao quando houver dados reais:
+
+- `var/storage/member-photos`
+- `var/storage/bookshop/covers`
+- `var/storage/library/docs`
+- `var/storage/library/covers`
+- `var/storage/patrimony/docs`
+- `var/storage/patrimony/img`
+
+### Procedimento recomendado com SSH
+
+Use quando desenvolvimento e producao estiverem acessiveis por terminal no mesmo servidor ou em servidores com SSH liberado.
+
+Defina os caminhos reais:
+
+```bash
+DEV_ROOT="/caminho/do/ambiente-de-desenvolvimento"
+PROD_ROOT="/caminho/do/ambiente-de-producao"
+```
+
+Exemplo de sincronizacao so das fotos de membros:
+
+```bash
+rsync -av --progress "$DEV_ROOT/var/storage/member-photos/" "$PROD_ROOT/var/storage/member-photos/"
+```
+
+Exemplo completo:
+
+```bash
+rsync -av --progress "$DEV_ROOT/var/storage/member-photos/" "$PROD_ROOT/var/storage/member-photos/"
+rsync -av --progress "$DEV_ROOT/var/storage/bookshop/covers/" "$PROD_ROOT/var/storage/bookshop/covers/"
+rsync -av --progress "$DEV_ROOT/var/storage/library/docs/" "$PROD_ROOT/var/storage/library/docs/"
+rsync -av --progress "$DEV_ROOT/var/storage/library/covers/" "$PROD_ROOT/var/storage/library/covers/"
+rsync -av --progress "$DEV_ROOT/var/storage/patrimony/docs/" "$PROD_ROOT/var/storage/patrimony/docs/"
+rsync -av --progress "$DEV_ROOT/var/storage/patrimony/img/" "$PROD_ROOT/var/storage/patrimony/img/"
+```
+
+Se `rsync` nao estiver disponivel, use `cp` no mesmo servidor:
+
+```bash
+cp -a "$DEV_ROOT/var/storage/member-photos/." "$PROD_ROOT/var/storage/member-photos/"
+```
+
+### Procedimento sem SSH
+
+Use quando o acesso for apenas pelo painel da Hostinger.
+
+1. No ambiente de desenvolvimento, compacte o conteudo do diretorio desejado.
+2. Baixe o `.zip` para sua maquina.
+3. No ambiente de producao, envie esse `.zip` para o diretorio correspondente.
+4. Extraia o conteudo mantendo os nomes originais dos arquivos.
+5. Apague o `.zip` depois da extracao.
+
+Para o problema atual das fotos de membros, o diretorio a sincronizar e:
+
+```text
+var/storage/member-photos
+```
+
+### Ordem segura no seu fluxo atual
+
+1. Atualize o codigo em producao pelo Git/webhook.
+2. Aplique eventual patch SQL de banco.
+3. Se ainda nao usa `APP_MANAGED_STORAGE_ROOT`, sincronize os diretorios de `var/storage` afetados pela release.
+4. Confirme permissoes de escrita.
+5. Rode `composer storage:audit`.
+6. Rode validacao manual no navegador.
+
+### Validacao rapida
+
+Teste pelo menos uma URL de cada tipo de arquivo gerenciado:
+
+```bash
+curl -I https://cedern.org/media/membros/fotos/ARQUIVO_REAL.png
+curl -I https://cedern.org/media/livraria/capas/ARQUIVO_REAL.jpg
+curl -I https://cedern.org/media/biblioteca/docs/ARQUIVO_REAL.pdf
+```
+
+Resposta esperada:
+
+- `200 OK` para arquivos existentes
+- `404` apenas para arquivos realmente inexistentes
+
+### Contorno temporario para fotos de membros
+
+Se a producao estiver com URLs `media/membros/fotos/...` no banco, mas voce so tiver os arquivos em `public/assets/img/member-photos`, a aplicacao agora tenta localizar o mesmo nome de arquivo no storage legado. Isso ajuda como contingencia, mas o correto continua sendo manter a producao com os arquivos no diretorio atual `var/storage/member-photos`.
 
 ## Composer
 

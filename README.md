@@ -185,20 +185,22 @@ Com isso, o bootstrap prioriza `APP_ENV_FILE`; se não estiver definido, usa fal
 Chaves disponíveis:
 
 ```env
+APP_MANAGED_STORAGE_ROOT=/home/usuario/cedern-storage
 APP_DEFAULT_THEME=amber
 APP_DEFAULT_MODE=light
 APP_DEFAULT_DARK_INTENSITY=neutral
 APP_AGENDA_PUBLIC_LIMIT=12
-LIBRARY_UPLOAD_DIR=public/assets/docs/library
-LIBRARY_UPLOAD_PUBLIC_PREFIX=assets/docs/library
-LIBRARY_COVER_UPLOAD_DIR=public/assets/img/library-covers
-LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX=assets/img/library-covers
-BOOKSHOP_COVER_UPLOAD_DIR=public/assets/img/bookshop-covers
-BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX=assets/img/bookshop-covers
+LIBRARY_UPLOAD_DIR=var/storage/library/docs
+LIBRARY_UPLOAD_PUBLIC_PREFIX=media/biblioteca/docs
+LIBRARY_COVER_UPLOAD_DIR=var/storage/library/covers
+LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX=media/biblioteca/capas
+BOOKSHOP_COVER_UPLOAD_DIR=var/storage/bookshop/covers
+BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX=media/livraria/capas
 ```
 
 Valores válidos:
 
+- `APP_MANAGED_STORAGE_ROOT`: raiz opcional para uploads gerenciados fora da pasta publicada; quando definida, os diretórios padrão de biblioteca, livraria, membros e patrimônio passam a sair desse root compartilhado
 - `APP_DEFAULT_THEME`: `blue | red | green | violet | amber`
 - `APP_DEFAULT_MODE`: `light | dark`
 - `APP_DEFAULT_DARK_INTENSITY`: `neutral | vivid`

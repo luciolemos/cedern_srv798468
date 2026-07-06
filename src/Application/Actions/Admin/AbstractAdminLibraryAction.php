@@ -197,18 +197,13 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
 
     protected function resolveLibraryUploadDirectory(): string
     {
-        $configuredDirectory = trim((string) ($_ENV['LIBRARY_UPLOAD_DIR'] ?? ''));
-        $normalizedDirectory = $configuredDirectory !== ''
-            ? $configuredDirectory
-            : self::DEFAULT_LIBRARY_UPLOAD_DIR;
+        $configuredDirectory = $this->resolveOptionalConfiguredUploadDirectory('LIBRARY_UPLOAD_DIR');
 
-        $normalizedDirectory = str_replace('\\', '/', $normalizedDirectory);
-
-        if ($this->isAbsolutePath($normalizedDirectory)) {
-            return rtrim($normalizedDirectory, '/');
+        if ($configuredDirectory !== null) {
+            return $configuredDirectory;
         }
 
-        return $this->resolveProjectRoot() . '/' . ltrim($normalizedDirectory, '/');
+        return $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_LIBRARY_UPLOAD_DIR);
     }
 
     protected function resolveLibraryUploadPublicPrefix(): string
@@ -369,13 +364,13 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
 
         if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
             $definitions[] = [
-                'directory' => $configuredDirectory ?? $this->resolveDirectoryPath($defaultDirectory),
+                'directory' => $configuredDirectory ?? $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
                 'public_prefix' => $configuredPublicPrefix ?? $this->normalizePublicPrefix($defaultPublicPrefix),
             ];
         }
 
         $definitions[] = [
-            'directory' => $this->resolveDirectoryPath($defaultDirectory),
+            'directory' => $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
             'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
         ];
         $definitions[] = [
@@ -451,7 +446,7 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
             return $configuredDirectory;
         }
 
-        return $this->resolveDirectoryPath($defaultDirectory);
+        return $this->resolveManagedStorageDefaultDirectory($defaultDirectory);
     }
 
     private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
@@ -485,6 +480,36 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         }
 
         return $this->normalizePublicPrefix($configuredPrefix);
+    }
+
+    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
+    {
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        if ($managedStorageRoot === null) {
+            return $this->resolveDirectoryPath($defaultDirectory);
+        }
+
+        $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
+        $storagePrefix = 'var/storage/';
+
+        if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
+            return $this->resolveDirectoryPath($defaultDirectory);
+        }
+
+        $storageSuffix = ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
+
+        return $managedStorageRoot . '/' . $storageSuffix;
+    }
+
+    private function resolveManagedStorageRoot(): ?string
+    {
+        $configuredRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
+
+        if ($configuredRoot === '') {
+            return null;
+        }
+
+        return $this->resolveDirectoryPath($configuredRoot);
     }
 
     private function resolveDirectoryPath(string $path): string
