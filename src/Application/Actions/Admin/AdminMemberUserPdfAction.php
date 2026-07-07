@@ -57,6 +57,17 @@ class AdminMemberUserPdfAction extends MemberCompleteProfilePdfAction
                 'error' => $exception->getMessage(),
             ]);
 
+            $fallbackResponse = $this->respondWithPrintableHtmlFallback(
+                $request,
+                $response,
+                $user,
+                [],
+                $this->buildAbsoluteAppUrl($request, '/painel/usuarios/' . $userId)
+            );
+            if ($fallbackResponse !== null) {
+                return $fallbackResponse;
+            }
+
             $response->getBody()->write('Não foi possível gerar o PDF do cadastro neste momento.');
 
             return $response

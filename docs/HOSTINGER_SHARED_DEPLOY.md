@@ -181,6 +181,17 @@ O comando copia as capas legadas para o diretorio resolvido por `BOOKSHOP_COVER_
 
 No seu fluxo atual, como a producao recebe um banco exportado do ambiente de desenvolvimento, rode esse comando primeiro no desenvolvimento. Depois publique o banco corrigido e sincronize os arquivos fisicos para o storage da producao.
 
+### Migracao das fotos de membros para storage gerenciado
+
+Quando a tabela `member_users` ainda estiver com `profile_photo_path` em `assets/img/member-photos/...` ou `assets/img/avatar/...`, a correcao tem duas partes:
+
+1. copiar os arquivos referenciados para o diretorio resolvido por `MEMBER_PROFILE_PHOTO_UPLOAD_DIR`
+2. aplicar o patch SQL `2026-07-07-002-migrate-managed-member-photo-paths.sql`
+
+O patch regrava `member_users.profile_photo_path` para `media/membros/fotos/...`.
+
+Como a producao nao tem SSH no seu fluxo atual, a copia fisica dos arquivos legados deve ser feita pelo File Manager antes de executar o SQL no phpMyAdmin.
+
 ### Validacao rapida
 
 Teste pelo menos uma URL de cada tipo de arquivo gerenciado:
