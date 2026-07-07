@@ -27,7 +27,7 @@
               <div class="nc-testimonial-head">
                 {% set management_member_photo_path = member.profile_photo_path|default('')|trim %}
                 {% if management_member_photo_path %}
-                  <img class="nc-testimonial-avatar" src="{{ (base_url ?? '') ~ '/' ~ (management_member_photo_path|trim('/')) }}" alt="Foto de {{ member.full_name|default('Membro') }}">
+                  <img class="nc-testimonial-avatar" src="{{ member_profile_photo_url(management_member_photo_path, base_url ?? '') }}" alt="Foto de {{ member.full_name|default('Membro') }}">
                 {% else %}
                   <span class="nc-testimonial-avatar nc-testimonial-avatar-fallback" aria-hidden="true">{{ member.full_name|default('M')|slice(0, 1)|upper }}</span>
                 {% endif %}

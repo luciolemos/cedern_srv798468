@@ -22,7 +22,7 @@
           <div class="nc-member-avatar-wrap" aria-hidden="true">
             {% set view_user_photo_path = view_user.profile_photo_path|default('')|trim %}
             {% if view_user_photo_path %}
-              <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (view_user_photo_path|trim('/')) }}" alt="">
+              <img class="nc-member-avatar" src="{{ member_profile_photo_url(view_user_photo_path, base_url ?? '') }}" alt="">
             {% else %}
               <div class="nc-member-avatar-placeholder">{{ (view_user.full_name|default(view_user.email|default('U'))|slice(0, 1)|upper) }}</div>
             {% endif %}

@@ -75,7 +75,7 @@
           <div class="nc-member-avatar-wrap" aria-hidden="true">
             {% set summary_user_photo_path = summary_user.profile_photo_path|default('')|trim %}
             {% if summary_user_photo_path %}
-              <img class="nc-member-avatar" src="{{ (base_url ?? '') ~ '/' ~ (summary_user_photo_path|trim('/')) }}" alt="">
+              <img class="nc-member-avatar" src="{{ member_profile_photo_url(summary_user_photo_path, base_url ?? '') }}" alt="">
             {% else %}
               <div class="nc-member-avatar-placeholder">{{ (summary_user.full_name|default(summary_user.email|default('U'))|slice(0, 1)|upper) }}</div>
             {% endif %}

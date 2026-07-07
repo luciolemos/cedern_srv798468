@@ -12,6 +12,7 @@ trait MemberProfilePhotoStorageTrait
     private const LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX = 'assets/img/member-photos';
     private const LEGACY_MEMBER_AVATAR_UPLOAD_DIR = 'public/assets/img/avatar';
     private const LEGACY_MEMBER_AVATAR_UPLOAD_PUBLIC_PREFIX = 'assets/img/avatar';
+    private const LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR = 'public/assets/img';
 
     /**
      * @return array{directory: string, public_prefix: string}|null
@@ -289,6 +290,14 @@ trait MemberProfilePhotoStorageTrait
             if (is_file($candidatePath)) {
                 return $candidatePath;
             }
+        }
+
+        $legacyGenericPath = $this->resolveMemberProfilePhotoDirectoryPath(
+            self::LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR
+        ) . '/' . $fileName;
+
+        if (is_file($legacyGenericPath)) {
+            return $legacyGenericPath;
         }
 
         return null;

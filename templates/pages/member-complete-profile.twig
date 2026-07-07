@@ -72,7 +72,7 @@
                     <div class="nc-member-photo-preview-wrap">
                       {% set member_profile_photo_path = member_profile_form.profile_photo_path|default('')|trim %}
                       {% if member_profile_photo_path %}
-                        <img class="nc-member-photo-preview" src="{{ (base_url ?? '') ~ '/' ~ (member_profile_photo_path|trim('/')) }}" alt="Foto atual do perfil">
+                        <img class="nc-member-photo-preview" src="{{ member_profile_photo_url(member_profile_photo_path, base_url ?? '') }}" alt="Foto atual do perfil">
                       {% else %}
                         <div class="nc-member-photo-placeholder" aria-hidden="true">Sem foto</div>
                       {% endif %}
