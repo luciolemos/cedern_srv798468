@@ -65,6 +65,9 @@ class AbstractAdminLibraryActionTest extends TestCase
     /** @var array<string, string|null> */
     private array $originalEnv = [];
 
+    /** @var list<string> */
+    private array $temporaryDirectories = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -85,6 +88,12 @@ class AbstractAdminLibraryActionTest extends TestCase
             }
 
             $_ENV[$key] = $originalValue;
+        }
+
+        foreach ($this->temporaryDirectories as $directoryPath) {
+            if (is_dir($directoryPath)) {
+                @rmdir($directoryPath);
+            }
         }
 
         parent::tearDown();
@@ -225,6 +234,35 @@ class AbstractAdminLibraryActionTest extends TestCase
         );
         $this->assertSame(
             '/srv/cede-managed-storage/library/covers',
+            $action->exposedResolveLibraryCoverUploadDirectory()
+        );
+    }
+
+    public function testLibraryUploadStorageUsesExistingAncestorManagedStorageRootWhenConfiguredWithBareRelativeName(): void
+    {
+        unset(
+            $_ENV['LIBRARY_UPLOAD_DIR'],
+            $_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['LIBRARY_COVER_UPLOAD_DIR'],
+            $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX']
+        );
+
+        $projectRoot = dirname(__DIR__, 4);
+        $directoryName = '_cedern_storage_test_' . bin2hex(random_bytes(4));
+        $sharedRoot = dirname($projectRoot) . '/' . $directoryName;
+        mkdir($sharedRoot, 0775, true);
+        $this->temporaryDirectories[] = $sharedRoot;
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $directoryName;
+
+        $action = $this->createAction();
+
+        $this->assertSame(
+            $sharedRoot . '/library/docs',
+            $action->exposedResolveLibraryUploadDirectory()
+        );
+        $this->assertSame(
+            $sharedRoot . '/library/covers',
             $action->exposedResolveLibraryCoverUploadDirectory()
         );
     }

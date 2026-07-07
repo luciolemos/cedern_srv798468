@@ -34,6 +34,9 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
     /** @var list<string> */
     private array $temporaryFiles = [];
 
+    /** @var list<string> */
+    private array $temporaryDirectories = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -48,6 +51,12 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         foreach ($this->temporaryFiles as $filePath) {
             if (is_file($filePath)) {
                 @unlink($filePath);
+            }
+        }
+
+        foreach ($this->temporaryDirectories as $directoryPath) {
+            if (is_dir($directoryPath)) {
+                @rmdir($directoryPath);
             }
         }
 
@@ -144,6 +153,46 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
 
         $this->assertSame(
             '/srv/cede-managed-storage/member-photos/member_demo.png',
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
+        );
+    }
+
+    public function testUsesExistingAncestorManagedStorageRootWhenConfiguredWithBareRelativeName(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+        );
+
+        $projectRoot = dirname(__DIR__, 4);
+        $directoryName = '_cedern_storage_test_' . bin2hex(random_bytes(4));
+        $sharedRoot = dirname($projectRoot) . '/' . $directoryName;
+        mkdir($sharedRoot, 0775, true);
+        $this->temporaryDirectories[] = $sharedRoot;
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $directoryName;
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $sharedRoot . '/member-photos/member_demo.png',
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
+        );
+    }
+
+    public function testKeepsExplicitProjectRelativeManagedStorageRootWhenConfiguredWithDotSlash(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+        );
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = './_cedern_storage_explicit';
+        $projectRoot = dirname(__DIR__, 4);
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $projectRoot . '/_cedern_storage_explicit/member-photos/member_demo.png',
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
         );
     }

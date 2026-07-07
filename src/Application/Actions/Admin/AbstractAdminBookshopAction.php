@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Bookshop\BookshopRepository;
+use App\Support\ManagedStorageRootResolver;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
@@ -949,13 +950,10 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     private function resolveManagedStorageRoot(): ?string
     {
-        $configuredRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-
-        if ($configuredRoot === '') {
-            return null;
-        }
-
-        return $this->resolveDirectoryPath($configuredRoot);
+        return ManagedStorageRootResolver::resolve(
+            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
+            $this->resolveProjectRoot()
+        );
     }
 
     private function resolveManagedStorageDirectory(string $path): string

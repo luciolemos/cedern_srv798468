@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Page;
 
+use App\Support\ManagedStorageRootResolver;
+
 trait MemberProfilePhotoStorageTrait
 {
     private const DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR = 'var/storage/member-photos';
@@ -192,13 +194,10 @@ trait MemberProfilePhotoStorageTrait
 
     private function resolveManagedStorageRoot(): ?string
     {
-        $configuredRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-
-        if ($configuredRoot === '') {
-            return null;
-        }
-
-        return $this->resolveMemberProfilePhotoDirectoryPath($configuredRoot);
+        return ManagedStorageRootResolver::resolve(
+            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
+            $this->resolveMemberProfilePhotoProjectRoot()
+        );
     }
 
     private function resolveManagedStorageDirectory(string $path): string
