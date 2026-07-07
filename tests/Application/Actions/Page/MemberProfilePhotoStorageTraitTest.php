@@ -110,6 +110,28 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
+    public function testFallsBackToLegacyGenericImageDirectoryUsingOnlyFileName(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['APP_MANAGED_STORAGE_ROOT']
+        );
+
+        $projectRoot = dirname(__DIR__, 4);
+        $fileName = 'member_test_generic_fallback_' . bin2hex(random_bytes(4)) . '.jpg';
+        $legacyPath = $projectRoot . '/public/assets/img/' . $fileName;
+        file_put_contents($legacyPath, 'legacy-generic-image');
+        $this->temporaryFiles[] = $legacyPath;
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $legacyPath,
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
+        );
+    }
+
     public function testUsesSharedManagedStorageRootWhenConfigured(): void
     {
         unset(

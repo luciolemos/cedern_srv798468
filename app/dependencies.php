@@ -15,6 +15,7 @@ use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
+use Twig\TwigFunction;
 
 return function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
@@ -98,6 +99,40 @@ return function (ContainerBuilder $containerBuilder) {
             $twig = Twig::create(__DIR__ . '/../templates', [
                 'cache' => $twigCache,
             ]);
+
+            $twig->getEnvironment()->addFunction(new TwigFunction(
+                'member_profile_photo_url',
+                static function (?string $rawPath, string $baseUrl = ''): string {
+                    $normalizedPath = trim(str_replace('\\', '/', (string) $rawPath));
+                    if ($normalizedPath === '') {
+                        return '';
+                    }
+
+                    if (preg_match('#^https?://#i', $normalizedPath) === 1) {
+                        return $normalizedPath;
+                    }
+
+                    $fileName = basename($normalizedPath);
+                    if (
+                        $fileName === ''
+                        || $fileName === '.'
+                        || $fileName === '..'
+                        || !str_contains($fileName, '.')
+                        || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
+                    ) {
+                        return '';
+                    }
+
+                    $publicPath = ltrim($normalizedPath, '/');
+                    if (!str_starts_with($publicPath, 'media/membros/fotos/')) {
+                        $publicPath = 'media/membros/fotos/' . $fileName;
+                    }
+
+                    $normalizedBaseUrl = rtrim(trim($baseUrl), '/');
+
+                    return ($normalizedBaseUrl !== '' ? $normalizedBaseUrl : '') . '/' . ltrim($publicPath, '/');
+                }
+            ));
 
             $appDefaultPageTitle = trim((string) ($_ENV['APP_DEFAULT_PAGE_TITLE'] ?? 'CEDE | Centro de Estudos da Doutrina Espírita'));
             $appDefaultPageDescription = trim((string) ($_ENV['APP_DEFAULT_PAGE_DESCRIPTION'] ?? 'Centro de Estudos da Doutrina Espírita (CEDE): instituição filantrópica dedicada ao estudo, à prática e à divulgação da Doutrina Espírita.'));

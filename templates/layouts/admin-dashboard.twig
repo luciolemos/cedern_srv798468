@@ -77,7 +77,7 @@
           }[panel_role_key]|default('Membro')) %}
           {% set dashboard_user_initial = dashboard_user_label|slice(0, 1)|upper %}
           {% set dashboard_user_photo_path = dashboard_user_photo_path|default('') %}
-          {% set dashboard_user_photo_url = dashboard_user_photo_path ? ((base_url ?? '') ~ '/' ~ (dashboard_user_photo_path|trim('/'))) : '' %}
+          {% set dashboard_user_photo_url = member_profile_photo_url(dashboard_user_photo_path, base_url ?? '') %}
           <summary>
             <span class="nc-dashboard-user-avatar">
               {% if dashboard_user_photo_url %}

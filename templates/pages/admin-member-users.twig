@@ -297,7 +297,7 @@
                   <span class="nc-admin-user-photo" aria-hidden="true">
                     {% set user_photo_path = user.profile_photo_path|default('')|trim %}
                     {% if user_photo_path %}
-                      <img src="{{ (base_url ?? '') ~ '/' ~ (user_photo_path|trim('/')) }}" alt="">
+                      <img src="{{ member_profile_photo_url(user_photo_path, base_url ?? '') }}" alt="">
                     {% else %}
                       <span>{{ (user.full_name|default(user.email|default('U'))|slice(0, 1)|upper) }}</span>
                     {% endif %}
