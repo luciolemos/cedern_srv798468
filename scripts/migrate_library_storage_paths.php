@@ -6,10 +6,14 @@ use Dotenv\Dotenv;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-const DEFAULT_BOOKSHOP_COVER_DIRECTORY = 'var/storage/bookshop/covers';
-const DEFAULT_BOOKSHOP_COVER_PUBLIC_PREFIX = 'media/livraria/capas';
-const LEGACY_BOOKSHOP_COVER_DIRECTORY = 'public/assets/img/bookshop-covers';
-const LEGACY_BOOKSHOP_COVER_PUBLIC_PREFIX = 'assets/img/bookshop-covers';
+const DEFAULT_LIBRARY_PDF_DIRECTORY = 'var/storage/library/docs';
+const DEFAULT_LIBRARY_PDF_PUBLIC_PREFIX = 'media/biblioteca/docs';
+const DEFAULT_LIBRARY_COVER_DIRECTORY = 'var/storage/library/covers';
+const DEFAULT_LIBRARY_COVER_PUBLIC_PREFIX = 'media/biblioteca/capas';
+const LEGACY_LIBRARY_PDF_DIRECTORY = 'public/assets/docs/library';
+const LEGACY_LIBRARY_PDF_PUBLIC_PREFIX = 'assets/docs/library';
+const LEGACY_LIBRARY_COVER_DIRECTORY = 'public/assets/img/library-covers';
+const LEGACY_LIBRARY_COVER_PUBLIC_PREFIX = 'assets/img/library-covers';
 
 $options = parseOptions($argv);
 
@@ -22,35 +26,51 @@ $projectRoot = dirname(__DIR__);
 loadEnvironment($projectRoot);
 
 $pdo = createPdoFromEnvironment();
-$storage = resolveBookshopStorage($projectRoot);
+$storages = resolveLibraryStorages($projectRoot);
 
-if ($options['apply'] && !ensureWritableDirectory($storage['target_directory'])) {
-    fwrite(
-        STDERR,
-        sprintf("Diretorio de destino sem escrita para capas da livraria: %s\n", $storage['target_directory'])
-    );
-    exit(1);
+if ($options['apply']) {
+    foreach ($storages as $storage) {
+        if (!ensureWritableDirectory($storage['target_directory'])) {
+            fwrite(
+                STDERR,
+                sprintf(
+                    "Diretorio de destino sem escrita para %s: %s\n",
+                    $storage['label'],
+                    $storage['target_directory']
+                )
+            );
+            exit(1);
+        }
+    }
 }
 
 $statement = $pdo->query(
-    "SELECT id, sku, title, cover_image_path
-     FROM bookshop_books
-     WHERE cover_image_path LIKE '" . LEGACY_BOOKSHOP_COVER_PUBLIC_PREFIX . "%'
+    "SELECT id, title, pdf_path, cover_image_path
+     FROM library_books
+     WHERE pdf_path LIKE '" . LEGACY_LIBRARY_PDF_PUBLIC_PREFIX . "%'
+        OR cover_image_path LIKE '" . LEGACY_LIBRARY_COVER_PUBLIC_PREFIX . "%'
      ORDER BY id ASC"
 );
 
 $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-$summary = createSummary(count($rows));
+$summary = [
+    'rows_found' => count($rows),
+    'rows_updated' => 0,
+    'pdf' => createBucketSummary(),
+    'cover' => createBucketSummary(),
+];
 $notes = [];
 
 if (!$options['apply']) {
     foreach ($rows as $row) {
-        inspectLegacyReference($row, $storage, $summary, $notes);
+        foreach ($storages as $bucketKey => $storage) {
+            inspectLegacyReference($row, $storage, $summary[$bucketKey], $notes);
+        }
     }
 
     echo json_encode([
         'mode' => 'dry-run',
-        'storage' => summarizeStorage($storage),
+        'storages' => summarizeStorages($storages),
         'summary' => $summary,
         'notes' => array_slice($notes, 0, 20),
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
@@ -58,8 +78,9 @@ if (!$options['apply']) {
 }
 
 $update = $pdo->prepare(
-    'UPDATE bookshop_books
-     SET cover_image_path = :cover_image_path
+    'UPDATE library_books
+     SET pdf_path = :pdf_path,
+         cover_image_path = :cover_image_path
      WHERE id = :id'
 );
 
@@ -72,16 +93,27 @@ try {
             continue;
         }
 
-        $newRelativePath = migrateLegacyReference($row, $storage, $summary, $notes);
-        if ($newRelativePath === null) {
+        $updatedFields = [];
+
+        foreach ($storages as $bucketKey => $storage) {
+            $newRelativePath = migrateLegacyReference($row, $storage, $summary[$bucketKey], $notes);
+            if ($newRelativePath !== null) {
+                $updatedFields[$storage['column']] = $newRelativePath;
+            }
+        }
+
+        if ($updatedFields === []) {
             continue;
         }
 
         $update->execute([
             'id' => $bookId,
-            'cover_image_path' => $newRelativePath,
+            'pdf_path' => $updatedFields['pdf_path'] ?? (string) ($row['pdf_path'] ?? ''),
+            'cover_image_path' => array_key_exists('cover_image_path', $updatedFields)
+                ? $updatedFields['cover_image_path']
+                : nullableString($row['cover_image_path'] ?? null),
         ]);
-        $summary['updated']++;
+        $summary['rows_updated']++;
     }
 
     $pdo->commit();
@@ -90,13 +122,13 @@ try {
         $pdo->rollBack();
     }
 
-    fwrite(STDERR, "Falha ao migrar capas legadas da livraria: {$exception->getMessage()}\n");
+    fwrite(STDERR, "Falha ao migrar arquivos legados da biblioteca: {$exception->getMessage()}\n");
     exit(1);
 }
 
 echo json_encode([
     'mode' => 'apply',
-    'storage' => summarizeStorage($storage),
+    'storages' => summarizeStorages($storages),
     'summary' => $summary,
     'notes' => array_slice($notes, 0, 20),
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
@@ -132,10 +164,10 @@ function parseOptions(array $argv): array
 function renderHelp(): void
 {
     echo "Uso:\n";
-    echo "  php scripts/migrate_bookshop_cover_paths.php [--apply]\n\n";
+    echo "  php scripts/migrate_library_storage_paths.php [--apply]\n\n";
     echo "Comportamento:\n";
-    echo "  Sem --apply: analisa livros ainda apontando para assets/img/bookshop-covers.\n";
-    echo "  Com --apply: copia as capas legadas para o storage gerenciado e atualiza bookshop_books.cover_image_path para media/livraria/capas.\n";
+    echo "  Sem --apply: analisa livros ainda apontando para assets/docs/library e assets/img/library-covers.\n";
+    echo "  Com --apply: copia PDFs/capas legados para o storage gerenciado configurado e atualiza a tabela library_books.\n";
 }
 
 function loadEnvironment(string $projectRoot): void
@@ -190,74 +222,72 @@ function createPdoFromEnvironment(): PDO
 }
 
 /**
- * @return array{legacy_prefix: string, managed_prefix: string, source_directory: string, target_directory: string}
+ * @return array{
+ *   pdf: array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string},
+ *   cover: array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string}
+ * }
  */
-function resolveBookshopStorage(string $projectRoot): array
+function resolveLibraryStorages(string $projectRoot): array
 {
     return [
-        'legacy_prefix' => LEGACY_BOOKSHOP_COVER_PUBLIC_PREFIX,
-        'managed_prefix' => resolveManagedPublicPrefix(
-            'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
-            DEFAULT_BOOKSHOP_COVER_PUBLIC_PREFIX
-        ),
-        'source_directory' => resolveProjectPath($projectRoot, LEGACY_BOOKSHOP_COVER_DIRECTORY),
-        'target_directory' => resolveManagedDirectory(
-            $projectRoot,
-            'BOOKSHOP_COVER_UPLOAD_DIR',
-            DEFAULT_BOOKSHOP_COVER_DIRECTORY
-        ),
-    ];
-}
-
-/**
- * @return array{found: int, updated: int, copied: int, already_in_target: int, missing_source: int, copy_failed: int}
- */
-function createSummary(int $found): array
-{
-    return [
-        'found' => $found,
-        'updated' => 0,
-        'copied' => 0,
-        'already_in_target' => 0,
-        'missing_source' => 0,
-        'copy_failed' => 0,
+        'pdf' => [
+            'label' => 'PDFs da biblioteca',
+            'column' => 'pdf_path',
+            'legacy_prefix' => LEGACY_LIBRARY_PDF_PUBLIC_PREFIX,
+            'managed_prefix' => resolveManagedPublicPrefix('LIBRARY_UPLOAD_PUBLIC_PREFIX', DEFAULT_LIBRARY_PDF_PUBLIC_PREFIX),
+            'target_directory' => resolveManagedDirectory($projectRoot, 'LIBRARY_UPLOAD_DIR', DEFAULT_LIBRARY_PDF_DIRECTORY),
+            'source_directory' => resolveProjectPath($projectRoot, LEGACY_LIBRARY_PDF_DIRECTORY),
+        ],
+        'cover' => [
+            'label' => 'capas da biblioteca',
+            'column' => 'cover_image_path',
+            'legacy_prefix' => LEGACY_LIBRARY_COVER_PUBLIC_PREFIX,
+            'managed_prefix' => resolveManagedPublicPrefix('LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX', DEFAULT_LIBRARY_COVER_PUBLIC_PREFIX),
+            'target_directory' => resolveManagedDirectory($projectRoot, 'LIBRARY_COVER_UPLOAD_DIR', DEFAULT_LIBRARY_COVER_DIRECTORY),
+            'source_directory' => resolveProjectPath($projectRoot, LEGACY_LIBRARY_COVER_DIRECTORY),
+        ],
     ];
 }
 
 /**
  * @param array<string, mixed> $row
- * @param array{legacy_prefix: string, managed_prefix: string, source_directory: string, target_directory: string} $storage
+ * @param array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string} $storage
  * @param array{found: int, updated: int, copied: int, already_in_target: int, missing_source: int, copy_failed: int} $summary
  * @param array<int, string> $notes
  */
 function inspectLegacyReference(array $row, array $storage, array &$summary, array &$notes): void
 {
-    $relativePath = ltrim((string) ($row['cover_image_path'] ?? ''), '/');
+    $relativePath = ltrim((string) ($row[$storage['column']] ?? ''), '/');
+    if ($relativePath === '' || !str_starts_with($relativePath, $storage['legacy_prefix'] . '/')) {
+        return;
+    }
+
+    $summary['found']++;
     $fileName = basename($relativePath);
+    $targetPath = $storage['target_directory'] . '/' . $fileName;
 
     if ($fileName === '') {
         $summary['missing_source']++;
         $notes[] = sprintf(
-            'Livro %s (%s): caminho legado invalido (%s)',
-            (string) ($row['sku'] ?? 'sem-sku'),
+            'Livro %s: caminho legado invalido em %s (%s)',
             (string) ($row['title'] ?? 'sem-titulo'),
+            $storage['column'],
             $relativePath
         );
         return;
     }
 
-    $targetPath = $storage['target_directory'] . '/' . $fileName;
     if (is_file($targetPath)) {
         $summary['already_in_target']++;
         return;
     }
 
     $sourcePath = $storage['source_directory'] . '/' . $fileName;
+
     if (!is_file($sourcePath) || !is_readable($sourcePath)) {
         $summary['missing_source']++;
         $notes[] = sprintf(
-            'Livro %s (%s): arquivo legado nao encontrado para %s',
-            (string) ($row['sku'] ?? 'sem-sku'),
+            'Livro %s: arquivo legado nao encontrado para %s',
             (string) ($row['title'] ?? 'sem-titulo'),
             $relativePath
         );
@@ -269,21 +299,26 @@ function inspectLegacyReference(array $row, array $storage, array &$summary, arr
 
 /**
  * @param array<string, mixed> $row
- * @param array{legacy_prefix: string, managed_prefix: string, source_directory: string, target_directory: string} $storage
+ * @param array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string} $storage
  * @param array{found: int, updated: int, copied: int, already_in_target: int, missing_source: int, copy_failed: int} $summary
  * @param array<int, string> $notes
  */
 function migrateLegacyReference(array $row, array $storage, array &$summary, array &$notes): ?string
 {
-    $relativePath = ltrim((string) ($row['cover_image_path'] ?? ''), '/');
+    $relativePath = ltrim((string) ($row[$storage['column']] ?? ''), '/');
+    if ($relativePath === '' || !str_starts_with($relativePath, $storage['legacy_prefix'] . '/')) {
+        return null;
+    }
+
+    $summary['found']++;
     $fileName = basename($relativePath);
 
     if ($fileName === '') {
         $summary['missing_source']++;
         $notes[] = sprintf(
-            'Livro %s (%s): caminho legado invalido (%s)',
-            (string) ($row['sku'] ?? 'sem-sku'),
+            'Livro %s: caminho legado invalido em %s (%s)',
             (string) ($row['title'] ?? 'sem-titulo'),
+            $storage['column'],
             $relativePath
         );
         return null;
@@ -294,6 +329,7 @@ function migrateLegacyReference(array $row, array $storage, array &$summary, arr
 
     if (is_file($targetPath)) {
         $summary['already_in_target']++;
+        $summary['updated']++;
         return $newRelativePath;
     }
 
@@ -301,8 +337,7 @@ function migrateLegacyReference(array $row, array $storage, array &$summary, arr
     if (!is_file($sourcePath) || !is_readable($sourcePath)) {
         $summary['missing_source']++;
         $notes[] = sprintf(
-            'Livro %s (%s): arquivo legado nao encontrado para %s',
-            (string) ($row['sku'] ?? 'sem-sku'),
+            'Livro %s: arquivo legado nao encontrado para %s',
             (string) ($row['title'] ?? 'sem-titulo'),
             $relativePath
         );
@@ -312,8 +347,7 @@ function migrateLegacyReference(array $row, array $storage, array &$summary, arr
     if (!@copy($sourcePath, $targetPath)) {
         $summary['copy_failed']++;
         $notes[] = sprintf(
-            'Livro %s (%s): falha ao copiar %s para %s',
-            (string) ($row['sku'] ?? 'sem-sku'),
+            'Livro %s: falha ao copiar %s para %s',
             (string) ($row['title'] ?? 'sem-titulo'),
             $sourcePath,
             $targetPath
@@ -323,17 +357,57 @@ function migrateLegacyReference(array $row, array $storage, array &$summary, arr
 
     @chmod($targetPath, 0664);
     $summary['copied']++;
+    $summary['updated']++;
 
     return $newRelativePath;
 }
 
 /**
- * @param array{legacy_prefix: string, managed_prefix: string, source_directory: string, target_directory: string} $storage
- * @return array{legacy_prefix: string, managed_prefix: string, source_directory: string, target_directory: string}
+ * @return array{found: int, updated: int, copied: int, already_in_target: int, missing_source: int, copy_failed: int}
  */
-function summarizeStorage(array $storage): array
+function createBucketSummary(): array
 {
-    return $storage;
+    return [
+        'found' => 0,
+        'updated' => 0,
+        'copied' => 0,
+        'already_in_target' => 0,
+        'missing_source' => 0,
+        'copy_failed' => 0,
+    ];
+}
+
+/**
+ * @param array{
+ *   pdf: array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string},
+ *   cover: array{label: string, column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string}
+ * } $storages
+ * @return array<string, array{column: string, legacy_prefix: string, managed_prefix: string, target_directory: string, source_directory: string}>
+ */
+function summarizeStorages(array $storages): array
+{
+    $summary = [];
+
+    foreach ($storages as $bucketKey => $storage) {
+        $summary[$bucketKey] = [
+            'column' => $storage['column'],
+            'legacy_prefix' => $storage['legacy_prefix'],
+            'managed_prefix' => $storage['managed_prefix'],
+            'target_directory' => $storage['target_directory'],
+            'source_directory' => $storage['source_directory'],
+        ];
+    }
+
+    return $summary;
+}
+
+function nullableString(mixed $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+
+    return (string) $value;
 }
 
 function resolveManagedDirectory(string $projectRoot, string $envKey, string $defaultDirectory): string

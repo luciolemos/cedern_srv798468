@@ -88,10 +88,35 @@ function resolveManagedDirectory(string $projectRoot, string $envKey, string $de
     $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
 
     if ($configuredDirectory !== '') {
-        return resolveProjectPath($projectRoot, $configuredDirectory);
+        return resolveConfiguredManagedDirectory($projectRoot, $configuredDirectory);
     }
 
     return resolveManagedStorageDefaultDirectory($projectRoot, $defaultDirectory);
+}
+
+function resolveConfiguredManagedDirectory(string $projectRoot, string $path): string
+{
+    $normalizedPath = str_replace('\\', '/', trim($path));
+    while (str_starts_with($normalizedPath, './')) {
+        $normalizedPath = substr($normalizedPath, 2);
+    }
+
+    $managedStorageRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
+    $storagePrefix = 'var/storage/';
+    $normalizedRelativePath = ltrim($normalizedPath, '/');
+
+    if (
+        $managedStorageRoot !== ''
+        && !str_starts_with($normalizedPath, '/')
+        && preg_match('/^[A-Za-z]:[\\\\\\/]/', $normalizedPath) !== 1
+        && str_starts_with($normalizedRelativePath, $storagePrefix)
+    ) {
+        $resolvedRoot = resolveProjectPath($projectRoot, $managedStorageRoot);
+
+        return $resolvedRoot . '/' . ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
+    }
+
+    return resolveProjectPath($projectRoot, $normalizedPath);
 }
 
 /**

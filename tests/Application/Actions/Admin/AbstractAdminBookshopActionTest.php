@@ -80,6 +80,23 @@ final class AbstractAdminBookshopActionTest extends TestCase
         );
     }
 
+    public function testBookshopCoverUploadDirectoryRebasesRelativeConfiguredDirectoryIntoManagedRoot(): void
+    {
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+        $_ENV['BOOKSHOP_COVER_UPLOAD_DIR'] = './var/storage/bookshop/covers';
+
+        $action = $this->createAction();
+
+        $this->assertSame(
+            '/srv/cede-managed-storage/bookshop/covers',
+            $action->exposedResolveBookshopCoverUploadDirectory()
+        );
+        $this->assertSame(
+            '/srv/cede-managed-storage/bookshop/covers/cover_demo.jpg',
+            $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/cover_demo.jpg')
+        );
+    }
+
     /**
      * @return list<string>
      */
