@@ -20,6 +20,8 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
 
     private const DOCUMENT_TIMEZONE = 'America/Fortaleza';
     private const PLAYWRIGHT_BROWSER_CACHE_DIR = 'var/cache/ms-playwright';
+    private const PRINTABLE_HTML_FALLBACK_NOTICE =
+        'Gerador de PDF indisponível neste servidor no momento. Use a impressão do navegador para salvar em PDF.';
     private const PAYMENT_METHOD_LABELS = [
         'boleto' => 'Boleto',
         'pix' => 'Pix',
@@ -40,10 +42,11 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
             return $member;
         }
 
+        $submittedData = strtoupper($request->getMethod()) === 'POST'
+            ? (array) ($request->getParsedBody() ?? [])
+            : [];
+
         try {
-            $submittedData = strtoupper($request->getMethod()) === 'POST'
-                ? (array) ($request->getParsedBody() ?? [])
-                : [];
             $documentData = $this->buildDocumentData($request, $member, $submittedData);
             $html = $this->twig->getEnvironment()->render('pages/member-registration-form-pdf.twig', $documentData);
             $pdfBinary = $this->renderPdfFromHtml($html);
@@ -52,6 +55,11 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
                 'member_id' => (int) ($member['id'] ?? 0),
                 'error' => $exception->getMessage(),
             ]);
+
+            $fallbackResponse = $this->respondWithPrintableHtmlFallback($request, $response, $member, $submittedData);
+            if ($fallbackResponse !== null) {
+                return $fallbackResponse;
+            }
 
             $response->getBody()->write('Não foi possível gerar o PDF do cadastro neste momento.');
 
@@ -65,6 +73,44 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
         return $response
             ->withHeader('Content-Type', 'application/pdf')
             ->withHeader('Content-Disposition', 'inline; filename="formulario-cadastro-associado.pdf"')
+            ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->withHeader('Pragma', 'no-cache');
+    }
+
+    /**
+     * @param array<string, mixed> $member
+     * @param array<string, mixed> $submittedData
+     */
+    protected function respondWithPrintableHtmlFallback(
+        Request $request,
+        Response $response,
+        array $member,
+        array $submittedData,
+        ?string $documentUrlOverride = null
+    ): ?Response {
+        try {
+            $documentData = $this->buildDocumentData($request, $member, $submittedData);
+            $documentData['pdf_notice'] = self::PRINTABLE_HTML_FALLBACK_NOTICE;
+
+            if ($documentUrlOverride !== null && trim($documentUrlOverride) !== '') {
+                $documentData['pdf_document_url'] = $documentUrlOverride;
+            }
+
+            $html = $this->twig->getEnvironment()->render('pages/member-registration-form-pdf.twig', $documentData);
+        } catch (Throwable $fallbackException) {
+            $this->logger->error('Falha ao gerar fallback HTML do formulário de cadastro do associado.', [
+                'member_id' => (int) ($member['id'] ?? 0),
+                'error' => $fallbackException->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        $response->getBody()->write($html);
+
+        return $response
+            ->withHeader('Content-Type', 'text/html; charset=utf-8')
+            ->withHeader('X-Cede-Document-Fallback', 'html')
             ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->withHeader('Pragma', 'no-cache');
     }

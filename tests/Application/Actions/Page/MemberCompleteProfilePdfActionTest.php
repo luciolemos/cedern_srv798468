@@ -196,4 +196,61 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         $this->assertLessThan($cepPosition, $ufPosition);
         $this->assertLessThan($planoPosition, $privacidadePosition);
     }
+
+    public function testFallsBackToPrintableHtmlWhenPdfGeneratorFails(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Associado Fallback',
+            'email' => 'fallback@example.com',
+            'password_hash' => 'hash',
+        ]);
+
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Associado Fallback',
+            'phone_mobile' => '84999990001',
+            'birth_date' => '1992-08-18',
+            'birth_place' => 'Natal/RN',
+            'cpf' => '12345678909',
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole(
+            $userId,
+            1,
+            'Sem função definida',
+            'efetivo',
+            'member',
+            true,
+            'active'
+        );
+
+        $_SESSION['member_authenticated'] = true;
+        $_SESSION['member_user_id'] = $userId;
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new class ($logger, $twig, $memberAuthRepository) extends MemberCompleteProfilePdfAction {
+            protected function renderPdfFromHtml(string $html): string
+            {
+                throw new \RuntimeException('pdf-unavailable');
+            }
+        };
+
+        $request = $this->createRequest('GET', '/membro/perfil/completar/pdf', ['HTTP_ACCEPT' => 'application/pdf']);
+        $response = $action($request, new Response());
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('html', $response->getHeaderLine('X-Cede-Document-Fallback'));
+        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
+        $this->assertStringContainsString('Use a impressão do navegador para salvar em PDF.', $body);
+        $this->assertStringContainsString('Associado Fallback', $body);
+    }
 }

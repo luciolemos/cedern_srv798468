@@ -115,4 +115,60 @@ final class AdminMemberUserPdfActionTest extends TestCase
         $this->assertStringContainsString('Presidente do CEDE', $action->capturedHtml);
         $this->assertStringContainsString('/painel/usuarios/' . $userId, $action->capturedHtml);
     }
+
+    public function testFallsBackToPrintableHtmlWhenAdministrativePdfGeneratorFails(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Helena Fallback',
+            'email' => 'helena-fallback@example.com',
+            'password_hash' => 'hash',
+        ]);
+
+        $memberAuthRepository->updateProfile($userId, [
+            'full_name' => 'Helena Fallback',
+            'birth_date' => '1988-03-25',
+            'birth_place' => 'Natal/RN',
+            'cpf' => '52998224725',
+            'profile_completed' => 1,
+        ]);
+        $memberAuthRepository->approveAndAssignRole(
+            $userId,
+            1,
+            'Coordenador',
+            'efetivo',
+            'member',
+            true,
+            'active'
+        );
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new class ($logger, $twig, $memberAuthRepository) extends AdminMemberUserPdfAction {
+            protected function renderPdfFromHtml(string $html): string
+            {
+                throw new \RuntimeException('pdf-unavailable');
+            }
+        };
+
+        $request = $this->createRequest('GET', '/painel/usuarios/' . $userId . '/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
+            ->withAttribute('id', $userId);
+
+        $response = $action($request, new Response());
+        $body = (string) $response->getBody();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('html', $response->getHeaderLine('X-Cede-Document-Fallback'));
+        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
+        $this->assertStringContainsString('Use a impressão do navegador para salvar em PDF.', $body);
+        $this->assertStringContainsString('Helena Fallback', $body);
+        $this->assertStringContainsString('/painel/usuarios/' . $userId, $body);
+    }
 }
