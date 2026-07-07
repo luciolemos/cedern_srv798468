@@ -83,6 +83,36 @@ composer db:migrate -- --apply
 4. Rodar smoke check.
 5. Validar as rotas e fluxos críticos.
 
+## Aplicacao manual via phpMyAdmin
+
+Quando a producao nao tiver SSH, o patch ainda pode ser aplicado manualmente:
+
+1. Fazer backup do banco de producao.
+2. Abrir o arquivo SQL do patch em `database/patches/`.
+3. Copiar o conteudo e executar na aba `SQL` do phpMyAdmin da producao.
+4. Se quiser manter o controle de `schema_migrations` consistente com o fluxo automatizado, criar a tabela de controle se necessario e registrar manualmente o patch aplicado com a `migration_key` e o `checksum_sha256` do arquivo versionado.
+
+Estrutura da tabela de controle:
+
+```sql
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    migration_key VARCHAR(190) NOT NULL PRIMARY KEY,
+    checksum_sha256 CHAR(64) NOT NULL,
+    applied_at DATETIME NOT NULL,
+    KEY idx_schema_migrations_applied_at (applied_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+Registro manual do patch:
+
+```sql
+INSERT INTO schema_migrations (migration_key, checksum_sha256, applied_at)
+VALUES ('NOME_DO_PATCH', 'CHECKSUM_SHA256_DO_ARQUIVO', NOW())
+ON DUPLICATE KEY UPDATE
+    checksum_sha256 = VALUES(checksum_sha256),
+    applied_at = applied_at;
+```
+
 ## Ordem segura de deploy
 
 Quando a mudança altera schema:
