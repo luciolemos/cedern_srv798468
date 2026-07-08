@@ -8,6 +8,7 @@ use App\Application\ResponseEmitter\ResponseEmitter;
 use App\Application\Settings\SettingsInterface;
 use DI\ContainerBuilder;
 use Dotenv\Dotenv;
+use Psr\Log\LoggerInterface;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
 use Slim\Views\Twig;
@@ -176,7 +177,10 @@ $routePatternToRegex = static function (string $pattern): string {
         return '#^/$#';
     }
 
-    $segments = array_values(array_filter(explode('/', $trimmedPattern), 'strlen'));
+    $segments = array_values(array_filter(
+        explode('/', $trimmedPattern),
+        static fn (string $segment): bool => $segment !== ''
+    ));
     $regexSegments = [];
 
     foreach ($segments as $segment) {
@@ -242,7 +246,11 @@ $request = $serverRequestCreator->createServerRequestFromGlobals();
 
 // Create Error Handler
 $responseFactory = $app->getResponseFactory();
-$errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
+$errorHandler = new HttpErrorHandler(
+    $callableResolver,
+    $responseFactory,
+    $container->get(LoggerInterface::class)
+);
 
 // Create Shutdown Handler
 $shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDetails);
