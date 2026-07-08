@@ -52,6 +52,40 @@ final class MySqlMemberAuthRepositoryTest extends TestCase
         $this->assertContains('finance_operator', array_column($roles, 'role_key'));
         $this->assertSame('Operador Financeiro', $pdo->findRoleName('finance_operator'));
     }
+
+    public function testFindAllRolesNormalizesLegacyMemberStatusColumnBeforeBootstrapping(): void
+    {
+        $pdo = new MemberRepositoryFakePdo([
+            [
+                'id' => 1,
+                'role_key' => 'member',
+                'name' => 'Membro',
+                'description' => 'Acesso à área de membro e recursos básicos.',
+            ],
+        ], [
+            'member_users.status' => [
+                'data_type' => 'enum',
+                'column_type' => "enum('pending','approved')",
+                'is_nullable' => 'NO',
+                'column_default' => 'pending',
+            ],
+            'member_users.association_status' => [
+                'data_type' => 'varchar',
+                'column_type' => 'varchar(20)',
+                'is_nullable' => 'NO',
+                'column_default' => 'applicant',
+            ],
+        ]);
+
+        $repository = new MySqlMemberAuthRepository($pdo);
+        $repository->findAllRoles();
+
+        $this->assertTrue(
+            $pdo->hasExecutedStatementContaining(
+                "ALTER TABLE member_users MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending'"
+            )
+        );
+    }
 }
 
 final class MemberRepositoryFakePdo extends PDO
@@ -59,18 +93,59 @@ final class MemberRepositoryFakePdo extends PDO
     /** @var array<int, array<string, mixed>> */
     private array $roles;
 
+    /** @var array<string, array<string, mixed>> */
+    private array $columnMetadata;
+
+    /** @var list<string> */
+    private array $executedStatements = [];
+
     /**
      * @param array<int, array<string, mixed>> $roles
+     * @param array<string, array<string, mixed>> $columnMetadata
      */
-    public function __construct(array $roles)
+    public function __construct(array $roles, array $columnMetadata = [])
     {
         $this->roles = array_values($roles);
+        $this->columnMetadata = $columnMetadata + [
+            'member_users.status' => [
+                'data_type' => 'varchar',
+                'column_type' => 'varchar(20)',
+                'is_nullable' => 'NO',
+                'column_default' => 'pending',
+            ],
+            'member_users.association_status' => [
+                'data_type' => 'varchar',
+                'column_type' => 'varchar(20)',
+                'is_nullable' => 'NO',
+                'column_default' => 'applicant',
+            ],
+        ];
     }
 
     public function exec(string $statement): int|false
     {
+        $this->executedStatements[] = $statement;
+
         if (str_starts_with(trim($statement), 'INSERT INTO roles')) {
             $this->mergeDefaultRoles();
+        }
+
+        if (str_contains($statement, 'ALTER TABLE member_users MODIFY COLUMN status')) {
+            $this->columnMetadata['member_users.status'] = [
+                'data_type' => 'varchar',
+                'column_type' => 'varchar(20)',
+                'is_nullable' => 'NO',
+                'column_default' => 'pending',
+            ];
+        }
+
+        if (str_contains($statement, 'ALTER TABLE member_users MODIFY COLUMN association_status')) {
+            $this->columnMetadata['member_users.association_status'] = [
+                'data_type' => 'varchar',
+                'column_type' => 'varchar(20)',
+                'is_nullable' => 'NO',
+                'column_default' => 'applicant',
+            ];
         }
 
         return 1;
@@ -114,6 +189,27 @@ final class MemberRepositoryFakePdo extends PDO
         $role = $this->findRoleByKeyValue($roleKey);
 
         return $role !== null ? (string) ($role['name'] ?? '') : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findColumnMetadata(string $tableName, string $columnName): ?array
+    {
+        $key = $tableName . '.' . $columnName;
+
+        return $this->columnMetadata[$key] ?? null;
+    }
+
+    public function hasExecutedStatementContaining(string $needle): bool
+    {
+        foreach ($this->executedStatements as $statement) {
+            if (str_contains($statement, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function mergeDefaultRoles(): void
@@ -264,8 +360,18 @@ final class MemberRepositoryFakePreparedStatement extends MemberRepositoryFakePd
     {
         $normalized = preg_replace('/\s+/', ' ', trim($this->query)) ?? trim($this->query);
 
-        if (str_contains($normalized, 'FROM INFORMATION_SCHEMA.COLUMNS')) {
+        if (str_contains($normalized, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS')) {
             $this->setRows([[0 => 1]]);
+
+            return true;
+        }
+
+        if (str_contains($normalized, 'SELECT DATA_TYPE AS data_type, COLUMN_TYPE AS column_type, IS_NULLABLE AS is_nullable, COLUMN_DEFAULT AS column_default FROM INFORMATION_SCHEMA.COLUMNS')) {
+            $metadata = $this->pdo->findColumnMetadata(
+                (string) ($params['table_name'] ?? ''),
+                (string) ($params['column_name'] ?? '')
+            );
+            $this->setRows($metadata !== null ? [$metadata] : []);
 
             return true;
         }

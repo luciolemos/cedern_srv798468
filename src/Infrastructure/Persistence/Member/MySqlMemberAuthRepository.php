@@ -2146,6 +2146,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'status',
             "ALTER TABLE member_users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending'"
         );
+        $this->ensureMemberUsersStatusColumnCompatibility();
         $this->ensureColumn(
             'member_users',
             'profile_completed',
@@ -2256,6 +2257,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'association_status',
             "ALTER TABLE member_users ADD COLUMN association_status VARCHAR(20) NOT NULL DEFAULT 'applicant'"
         );
+        $this->ensureMemberUsersAssociationStatusColumnCompatibility();
         $this->ensureColumn(
             'member_users',
             'is_contributor',
@@ -3181,6 +3183,95 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         if (!$exists) {
             $this->pdo->exec($alterSql);
         }
+    }
+
+    /**
+     * @return array{
+     *     data_type?: string,
+     *     column_type?: string,
+     *     is_nullable?: string,
+     *     column_default?: string|null
+     * }|null
+     */
+    private function findColumnMetadata(string $tableName, string $columnName): ?array
+    {
+        $statement = $this->pdo->prepare(
+            'SELECT DATA_TYPE AS data_type, COLUMN_TYPE AS column_type, IS_NULLABLE AS is_nullable, '
+            . 'COLUMN_DEFAULT AS column_default '
+            . 'FROM INFORMATION_SCHEMA.COLUMNS '
+            . 'WHERE TABLE_SCHEMA = DATABASE() '
+            . 'AND TABLE_NAME = :table_name '
+            . 'AND COLUMN_NAME = :column_name '
+            . 'LIMIT 1'
+        );
+        $statement->execute([
+            'table_name' => $tableName,
+            'column_name' => $columnName,
+        ]);
+
+        $row = $statement->fetch();
+
+        return is_array($row) ? $row : null;
+    }
+
+    private function ensureMemberUsersStatusColumnCompatibility(): void
+    {
+        $metadata = $this->findColumnMetadata('member_users', 'status');
+        if ($metadata === null) {
+            return;
+        }
+
+        $dataType = strtolower(trim((string) ($metadata['data_type'] ?? '')));
+        $columnType = strtolower(trim((string) ($metadata['column_type'] ?? '')));
+        $isNullable = strtoupper(trim((string) ($metadata['is_nullable'] ?? '')));
+        $columnDefault = strtolower(trim((string) ($metadata['column_default'] ?? '')));
+
+        $hasExpectedEnumValues = $dataType === 'enum'
+            && str_contains($columnType, "'pending'")
+            && str_contains($columnType, "'active'")
+            && str_contains($columnType, "'blocked'");
+
+        $isCompatible = $isNullable === 'NO'
+            && $columnDefault === 'pending'
+            && ($dataType === 'varchar' || $hasExpectedEnumValues);
+
+        if ($isCompatible) {
+            return;
+        }
+
+        $this->pdo->exec(
+            "ALTER TABLE member_users MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending'"
+        );
+    }
+
+    private function ensureMemberUsersAssociationStatusColumnCompatibility(): void
+    {
+        $metadata = $this->findColumnMetadata('member_users', 'association_status');
+        if ($metadata === null) {
+            return;
+        }
+
+        $dataType = strtolower(trim((string) ($metadata['data_type'] ?? '')));
+        $columnType = strtolower(trim((string) ($metadata['column_type'] ?? '')));
+        $isNullable = strtoupper(trim((string) ($metadata['is_nullable'] ?? '')));
+        $columnDefault = strtolower(trim((string) ($metadata['column_default'] ?? '')));
+
+        $hasExpectedEnumValues = $dataType === 'enum'
+            && str_contains($columnType, "'applicant'")
+            && str_contains($columnType, "'member'")
+            && str_contains($columnType, "'former'");
+
+        $isCompatible = $isNullable === 'NO'
+            && $columnDefault === 'applicant'
+            && ($dataType === 'varchar' || $hasExpectedEnumValues);
+
+        if ($isCompatible) {
+            return;
+        }
+
+        $this->pdo->exec(
+            "ALTER TABLE member_users MODIFY COLUMN association_status VARCHAR(20) NOT NULL DEFAULT 'applicant'"
+        );
     }
 
     private function ensureIndex(string $tableName, string $indexName, string $alterSql): void
