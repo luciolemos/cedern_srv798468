@@ -738,6 +738,7 @@ return function (App $app) {
                 (string) ($request->getQueryParams()['write'] ?? 'false'),
                 FILTER_VALIDATE_BOOLEAN
             );
+            $tailLinesRequested = max(0, min(100, (int) ($request->getQueryParams()['tail'] ?? 0)));
 
             $payload = [
                 'environment' => [
@@ -803,6 +804,26 @@ return function (App $app) {
                         'token' => $token,
                         'status' => 'error',
                         'message' => $exception->getMessage(),
+                    ];
+                }
+            }
+
+            if ($tailLinesRequested > 0) {
+                if ($isStreamTarget || $loggerPath === '' || !is_file($loggerPath) || !is_readable($loggerPath)) {
+                    $payload['tail'] = [
+                        'requested_lines' => $tailLinesRequested,
+                        'available' => false,
+                        'reason' => 'Log target is not a readable file.',
+                    ];
+                } else {
+                    $lines = @file($loggerPath, FILE_IGNORE_NEW_LINES);
+
+                    $payload['tail'] = [
+                        'requested_lines' => $tailLinesRequested,
+                        'available' => is_array($lines),
+                        'lines' => is_array($lines)
+                            ? array_slice($lines, -$tailLinesRequested)
+                            : [],
                     ];
                 }
             }
