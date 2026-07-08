@@ -13,6 +13,27 @@ use Throwable;
 
 class AboutManagementPageAction extends AbstractPageAction
 {
+    private const ROLE_DISPLAY_ORDER = [
+        'Presidente CEDE',
+        'Vice-presidente CEDE',
+        'Secretário',
+        'Diretor de Finanças',
+        'Diretor de Eventos',
+        'Diretor de Patrimônio',
+        'Diretor de Estudos',
+        'Diretor de Atendimento Fraterno',
+        'Diretor de Comunicação',
+        'Coordenador',
+        'Coordenador(a) do Curso de Mediunidade',
+        'Conselheiro',
+    ];
+
+    private const ROLE_ALIASES = [
+        'Vice presidente CEDE' => 'Vice-presidente CEDE',
+        'Vice Presidente CEDE' => 'Vice-presidente CEDE',
+        'Vice-Presidente CEDE' => 'Vice-presidente CEDE',
+    ];
+
     private const ROLE_RESPONSIBILITIES = [
         'Presidente CEDE' =>
             'Representa institucionalmente o CEDE, coordena decisões estratégicas '
@@ -84,14 +105,24 @@ class AboutManagementPageAction extends AbstractPageAction
             ));
 
             usort($managementMembers, static function (array $first, array $second): int {
+                $firstRole = self::normalizeInstitutionalRole((string) ($first['institutional_role'] ?? ''));
+                $secondRole = self::normalizeInstitutionalRole((string) ($second['institutional_role'] ?? ''));
+                $firstRolePosition = self::resolveRoleDisplayPosition($firstRole);
+                $secondRolePosition = self::resolveRoleDisplayPosition($secondRole);
+
+                if ($firstRolePosition !== $secondRolePosition) {
+                    return $firstRolePosition <=> $secondRolePosition;
+                }
+
                 return strnatcasecmp(
-                    (string) ($first['institutional_role'] ?? '') . ' ' . (string) ($first['full_name'] ?? ''),
-                    (string) ($second['institutional_role'] ?? '') . ' ' . (string) ($second['full_name'] ?? '')
+                    $firstRole . ' ' . (string) ($first['full_name'] ?? ''),
+                    $secondRole . ' ' . (string) ($second['full_name'] ?? '')
                 );
             });
 
             $managementMembers = array_map(function (array $member): array {
-                $role = trim((string) ($member['institutional_role'] ?? ''));
+                $role = self::normalizeInstitutionalRole((string) ($member['institutional_role'] ?? ''));
+                $member['institutional_role'] = $role;
                 $member['institutional_role_description'] = self::ROLE_RESPONSIBILITIES[$role]
                     ?? 'Atua na organização e no fortalecimento das atividades institucionais do CEDE.';
 
@@ -111,5 +142,19 @@ class AboutManagementPageAction extends AbstractPageAction
                 'Conheça a composição da diretoria atual do CEDE '
                 . 'e as atribuições institucionais de cada função.',
         ]);
+    }
+
+    private static function normalizeInstitutionalRole(string $role): string
+    {
+        $normalizedRole = trim((string) preg_replace('/\s+/', ' ', trim($role)));
+
+        return self::ROLE_ALIASES[$normalizedRole] ?? $normalizedRole;
+    }
+
+    private static function resolveRoleDisplayPosition(string $role): int
+    {
+        $position = array_search($role, self::ROLE_DISPLAY_ORDER, true);
+
+        return is_int($position) ? $position : count(self::ROLE_DISPLAY_ORDER);
     }
 }

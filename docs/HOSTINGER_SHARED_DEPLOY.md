@@ -21,6 +21,20 @@ substituto da configuracao final de producao.
 O repositório ja possui um `.htaccess` na raiz que reescreve as requisicoes para `public/`.
 Com isso, a aplicacao pode ser publicada mantendo a estrutura inteira do projeto.
 
+## Modelo operacional recomendado
+
+Trate a aplicacao em tres blocos independentes:
+
+- `codigo`: sobe por Git/webhook
+- `banco`: evolui por patches SQL incrementais
+- `midia`: vive no storage gerenciado e nao no repositório
+
+Na pratica, isso significa:
+
+- deploy de codigo nao deve sobrescrever dados reais do banco;
+- deploy de codigo nao leva junto fotos, capas, PDFs e anexos;
+- depois que producao entra em uso real, o banco de producao deixa de ser descartavel.
+
 ## Ambiente de producao
 
 Mantenha o arquivo real de ambiente fora do repositório e aponte para ele com `APP_ENV_FILE`.
@@ -145,6 +159,63 @@ Para o problema atual das fotos de membros, o diretorio a sincronizar e:
 var/storage/member-photos
 ```
 
+## Primeira publicacao em producao
+
+Esta secao vale para o momento em que o dominio final ainda nao tem banco real em uso.
+Depois que producao comecar a receber cadastros, cobrancas, cursos, agenda ou uploads reais,
+esse fluxo muda e voce passa a trabalhar so com patches incrementais.
+
+### Caminho A: producao nasce vazia
+
+Use quando a aplicacao deve subir com schema base, sem copiar dados operacionais do desenvolvimento.
+
+1. Publicar o codigo.
+2. Criar o banco vazio na hospedagem.
+3. Importar os arquivos base de `database/schema/`:
+   - `database/schema/agenda.sql`
+   - `database/schema/library.sql`
+   - `database/schema/bookshop.sql`
+   - `database/schema/patrimony.sql`
+4. Aplicar os patches pendentes de `database/patches/`.
+5. Criar o primeiro admin.
+6. Configurar `APP_MANAGED_STORAGE_ROOT` e as subpastas de uploads.
+7. Validar home, login, painel e uploads.
+
+Observacao:
+esse caminho cria a estrutura e os dados institucionais minimos previstos nos schemas,
+mas nao leva automaticamente catalogos, capas, PDFs ou fotos que so existam no desenvolvimento.
+
+### Caminho B: baseline inicial vindo do desenvolvimento
+
+Use apenas uma vez, antes do go-live, quando a producao deve nascer ja com acervo, livros,
+conteudo institucional e outros dados iniciais montados no ambiente de desenvolvimento.
+
+1. Publicar o codigo.
+2. Exportar do desenvolvimento um dump de baseline.
+3. Importar esse dump na producao vazia.
+4. Aplicar os patches pendentes, se existirem.
+5. Sincronizar os arquivos fisicos correspondentes no storage gerenciado.
+6. Validar o sistema completo antes de abrir o uso real.
+
+Importante:
+esse dump inicial deve ser tratado como `baseline de entrada em producao`, nao como mecanismo
+normal de deploy. Depois do go-live, pare de substituir o banco inteiro de producao por dump
+do desenvolvimento.
+
+## Release normal apos o go-live
+
+Depois que producao ja possui dados reais, o fluxo seguro muda para este:
+
+1. Fazer backup do banco de producao.
+2. Publicar o codigo por Git/webhook.
+3. Aplicar apenas os patches SQL novos daquela release.
+4. Sincronizar uploads apenas se a release depender de novos arquivos fisicos.
+5. Rodar smoke check.
+6. Validar os fluxos criticos no navegador.
+
+Regra principal:
+`producao nunca mais deve ser "refeita" com dump inteiro do desenvolvimento`.
+
 ### Ordem segura no seu fluxo atual
 
 1. Atualize o codigo em producao pelo Git/webhook.
@@ -210,6 +281,13 @@ Resposta esperada:
 ### Contorno temporario para fotos de membros
 
 Se a producao estiver com URLs `media/membros/fotos/...` no banco, mas voce so tiver os arquivos em `public/assets/img/member-photos`, a aplicacao agora tenta localizar o mesmo nome de arquivo no storage legado. Isso ajuda como contingencia, mas o correto continua sendo manter a producao com os arquivos no diretorio gerenciado atual do ambiente.
+
+## O que nao fazer
+
+- nao substituir o banco inteiro de producao por um dump recente do desenvolvimento depois do go-live;
+- nao assumir que webhook/Git deploy leva uploads junto com o codigo;
+- nao deixar uploads reais dependentes apenas de `var/storage/**` dentro do release publicado;
+- nao aplicar SQL manual em producao sem backup imediatamente anterior.
 
 ## Composer
 
