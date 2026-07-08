@@ -216,9 +216,20 @@ foreach ($app->getRouteCollector()->getRoutes() as $route) {
 /** @var Twig $twig */
 $twig = $container->get(Twig::class);
 $twigEnvironment = $twig->getEnvironment();
+$registerTwigFunction = static function (\Twig\Environment $environment, TwigFunction $function): void {
+    try {
+        $environment->addFunction($function);
+    } catch (\LogicException $exception) {
+        if (str_contains($exception->getMessage(), 'already registered')) {
+            return;
+        }
+
+        throw $exception;
+    }
+};
+
 $breadcrumbLinkPatterns = array_values(array_unique($breadcrumbLinkPatterns));
-if ($twigEnvironment->getFunction('member_profile_photo_url') === null) {
-    $twigEnvironment->addFunction(new TwigFunction(
+$registerTwigFunction($twigEnvironment, new TwigFunction(
         'member_profile_photo_url',
         static function (?string $rawPath, string $baseUrl = ''): string {
             $normalizedPath = trim(str_replace('\\', '/', (string) $rawPath));
@@ -251,9 +262,8 @@ if ($twigEnvironment->getFunction('member_profile_photo_url') === null) {
             return ($normalizedBaseUrl !== '' ? $normalizedBaseUrl : '') . '/' . ltrim($publicPath, '/');
         }
     ));
-}
 
-$twigEnvironment->addFunction(new TwigFunction(
+$registerTwigFunction($twigEnvironment, new TwigFunction(
     'is_breadcrumb_linkable',
     static function (string $path) use ($breadcrumbLinkPaths, $breadcrumbLinkPatterns): bool {
         if (isset($breadcrumbLinkPaths[$path])) {
