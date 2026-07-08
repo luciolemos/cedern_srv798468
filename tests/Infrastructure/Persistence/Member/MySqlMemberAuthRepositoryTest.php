@@ -86,6 +86,38 @@ final class MySqlMemberAuthRepositoryTest extends TestCase
             )
         );
     }
+
+    public function testApproveAndAssignRoleFallbackUsesNumericApprovalFlag(): void
+    {
+        $pdo = new MemberRepositoryFakePdo([]);
+        $repository = new MySqlMemberAuthRepository($pdo);
+
+        $method = new \ReflectionMethod($repository, 'approveAndAssignRoleFallback');
+        $method->setAccessible(true);
+
+        $updated = $method->invoke(
+            $repository,
+            13,
+            4,
+            [
+                'member_type' => 'efetivo',
+                'institutional_role' => null,
+                'association_status' => 'member',
+                'is_contributor' => 1,
+                'status' => 'active',
+            ],
+            new \RuntimeException('legacy failure')
+        );
+
+        $this->assertTrue($updated);
+
+        $execution = $pdo->findPreparedExecutionContaining('UPDATE member_users SET role_id = :role_id, status = :account_status');
+        $this->assertNotNull($execution);
+        $this->assertArrayHasKey('should_set_approved_at', $execution['params']);
+        $this->assertSame(1, $execution['params']['should_set_approved_at']);
+        $this->assertArrayNotHasKey('account_status_for_approval', $execution['params']);
+        $this->assertStringContainsString(':should_set_approved_at = 1', $execution['query']);
+    }
 }
 
 final class MemberRepositoryFakePdo extends PDO
@@ -98,6 +130,9 @@ final class MemberRepositoryFakePdo extends PDO
 
     /** @var list<string> */
     private array $executedStatements = [];
+
+    /** @var list<array{query:string, params:array<string, mixed>}> */
+    private array $preparedExecutions = [];
 
     /**
      * @param array<int, array<string, mixed>> $roles
@@ -210,6 +245,31 @@ final class MemberRepositoryFakePdo extends PDO
         }
 
         return false;
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    public function recordPreparedExecution(string $query, array $params = []): void
+    {
+        $this->preparedExecutions[] = [
+            'query' => $query,
+            'params' => $params,
+        ];
+    }
+
+    /**
+     * @return array{query:string, params:array<string, mixed>}|null
+     */
+    public function findPreparedExecutionContaining(string $needle): ?array
+    {
+        foreach ($this->preparedExecutions as $execution) {
+            if (str_contains($execution['query'], $needle)) {
+                return $execution;
+            }
+        }
+
+        return null;
     }
 
     private function mergeDefaultRoles(): void
@@ -359,6 +419,7 @@ final class MemberRepositoryFakePreparedStatement extends MemberRepositoryFakePd
     public function execute(?array $params = null): bool
     {
         $normalized = preg_replace('/\s+/', ' ', trim($this->query)) ?? trim($this->query);
+        $this->pdo->recordPreparedExecution($normalized, is_array($params) ? $params : []);
 
         if (str_contains($normalized, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS')) {
             $this->setRows([[0 => 1]]);
