@@ -24,6 +24,14 @@ final class TestableMemberProfilePhotoStorageHarness
     {
         return $this->resolveManagedMemberProfilePhotoAbsolutePath($relativePath);
     }
+
+    /**
+     * @return array{directory: string, public_prefix: string}|null
+     */
+    public function exposedResolveWritableMemberProfilePhotoStorage(): ?array
+    {
+        return $this->resolveWritableMemberProfilePhotoStorage();
+    }
 }
 
 final class MemberProfilePhotoStorageTraitTest extends TestCase
@@ -195,6 +203,21 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
             $projectRoot . '/_cedern_storage_explicit/member-photos/member_demo.png',
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
         );
+    }
+
+    public function testManagedWriteModeDoesNotFallBackToLegacyDirectoryWhenPrimaryDestinationIsUnavailable(): void
+    {
+        $invalidPath = sys_get_temp_dir() . '/cedern-member-photo-invalid-' . bin2hex(random_bytes(4));
+        file_put_contents($invalidPath, 'not-a-directory');
+        $this->temporaryFiles[] = $invalidPath;
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+        $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'] = $invalidPath;
+        $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'] = 'media/membros/fotos';
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertNull($storage->exposedResolveWritableMemberProfilePhotoStorage());
     }
 
     public function testRebasesRelativeConfiguredMemberPhotoDirectoryIntoManagedRoot(): void

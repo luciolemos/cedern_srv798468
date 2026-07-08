@@ -401,6 +401,22 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
      */
     private function resolveWritableUploadStorage(array $definitions, string $storageLabel): ?array
     {
+        if ($this->isStrictManagedUploadWriteModeEnabled()) {
+            $primaryDefinition = $definitions[0] ?? null;
+
+            if (is_array($primaryDefinition) && $this->prepareWritableDirectory($primaryDefinition['directory'])) {
+                return $primaryDefinition;
+            }
+
+            $this->logger->warning('Diretório principal da biblioteca indisponível para escrita.', [
+                'storage_label' => $storageLabel,
+                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+                'primary_definition' => $primaryDefinition,
+            ]);
+
+            return null;
+        }
+
         $attemptedDirectories = [];
 
         foreach ($definitions as $definition) {
@@ -421,6 +437,11 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         ]);
 
         return null;
+    }
+
+    private function isStrictManagedUploadWriteModeEnabled(): bool
+    {
+        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
     }
 
     private function prepareWritableDirectory(string $directory): bool
