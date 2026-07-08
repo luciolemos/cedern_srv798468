@@ -212,6 +212,25 @@ Valores válidos:
 - `BOOKSHOP_COVER_UPLOAD_DIR`: diretório físico onde as capas da Livraria serão gravadas; pode ser relativo ao projeto ou absoluto
 - `BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX`: prefixo público salvo em `cover_image_path` e usado nas URLs das capas, por exemplo `media/livraria/capas`
 
+## Publicação e operação
+
+O fluxo recomendado do projeto agora separa três coisas:
+
+- código: sobe por Git/webhook;
+- banco: evolui por patches SQL incrementais;
+- mídia: fotos, capas, PDFs e anexos ficam no storage gerenciado, fora do Git.
+
+Regra operacional:
+
+- antes do go-live, a produção pode nascer por schema base ou por uma baseline inicial controlada;
+- depois que a produção passa a receber dados reais, não se deve mais substituir o banco inteiro por dump do desenvolvimento.
+
+Guias práticos:
+
+- deploy em Hostinger: [docs/HOSTINGER_SHARED_DEPLOY.md](/var/www/cedern/docs/HOSTINGER_SHARED_DEPLOY.md)
+- patches de banco: [docs/DB_SQL_PATCHES.md](/var/www/cedern/docs/DB_SQL_PATCHES.md)
+- configuração de ambiente: [docs/ENVIRONMENT_CONFIGURATION.md](/var/www/cedern/docs/ENVIRONMENT_CONFIGURATION.md)
+
 ## Acesso administrativo via membros
 
 O painel (`/painel`) utiliza papéis de `member_users`.

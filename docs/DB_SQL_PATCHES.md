@@ -17,6 +17,12 @@ O fluxo correto passa a ser:
 - banco evolui por patches SQL pequenos
 - dados reais continuam nascendo e permanecendo em produção
 
+Existe uma exceção controlada:
+
+- antes do go-live, quando a produção ainda está vazia, pode existir uma `carga inicial`
+  vinda do desenvolvimento;
+- depois do go-live, esse padrão deve parar.
+
 ## Estrutura
 
 - patches incrementais: `database/patches/*.sql`
@@ -83,6 +89,58 @@ composer db:migrate -- --apply
 4. Rodar smoke check.
 5. Validar as rotas e fluxos críticos.
 
+## Primeira carga de produção
+
+Quando a produção ainda não existe como banco em uso real, há dois caminhos válidos.
+
+### Opção A: bootstrap pelo schema versionado
+
+Use quando a produção deve nascer limpa, com estrutura base e dados mínimos institucionais.
+
+1. Criar o banco vazio.
+2. Importar, nesta ordem recomendada:
+   - `database/schema/agenda.sql`
+   - `database/schema/library.sql`
+   - `database/schema/bookshop.sql`
+   - `database/schema/patrimony.sql`
+3. Aplicar os patches de `database/patches/`.
+4. Criar o primeiro usuário admin.
+5. Validar a aplicação completa.
+
+### Opção B: baseline inicial exportada do desenvolvimento
+
+Use apenas antes do go-live, quando você quer nascer com dados iniciais já montados no desenvolvimento.
+
+Exemplos aceitáveis nessa baseline:
+
+- acervo da biblioteca;
+- catálogo da livraria;
+- conteúdo institucional;
+- usuários administrativos controlados;
+- configurações de gestão já preparadas.
+
+Regra:
+essa importação é um evento de `bootstrap inicial`, não um fluxo recorrente de deploy.
+
+## Depois que produção entra em uso
+
+A partir do momento em que produção começa a receber:
+
+- cadastros reais;
+- alterações administrativas reais;
+- cobranças;
+- inscrições;
+- uploads feitos pelos usuários;
+
+o banco de produção passa a ser a fonte de verdade.
+
+Nesse ponto, o fluxo correto é:
+
+1. manter os dados reais em produção;
+2. subir código por Git/webhook;
+3. aplicar patches incrementais;
+4. nunca sobrescrever o banco inteiro com dump do desenvolvimento.
+
 ## Aplicacao manual via phpMyAdmin
 
 Quando a producao nao tiver SSH, o patch ainda pode ser aplicado manualmente:
@@ -128,6 +186,19 @@ Quando a mudança não altera schema:
 1. `deploy do código`
 2. `smoke check`
 3. `validação funcional`
+
+## Cenário Hostinger sem SSH em produção
+
+No seu fluxo atual, o equivalente prático é:
+
+1. manter o patch `.sql` versionado em `database/patches/`;
+2. testar esse patch no desenvolvimento;
+3. fazer backup do banco de produção no phpMyAdmin;
+4. executar manualmente o mesmo patch no phpMyAdmin da produção;
+5. publicar o código pela branch `main`;
+6. validar o resultado.
+
+Se a release não tiver mudança de banco, pule apenas a etapa do patch.
 
 ## Observações sobre baseline
 

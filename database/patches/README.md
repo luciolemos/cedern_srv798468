@@ -16,7 +16,15 @@ Fluxo:
 3. rodar `php scripts/migrate.php --apply` no ambiente desejado;
 4. publicar o código depois do banco, quando a mudança depender do novo schema.
 
+Primeira publicação em produção:
+
+- se a produção ainda estiver vazia, você pode primeiro bootstrapar o banco base por
+  `database/schema/*.sql` ou importar uma baseline inicial controlada;
+- depois que a produção entrar em uso real, pare de substituir o banco inteiro e
+  trabalhe apenas com patches incrementais.
+
 Observação:
 
 - `database/schema/*.sql` continua servindo como bootstrap/base histórica;
 - `database/patches/*.sql` passa a registrar apenas as mudanças incrementais daqui em diante.
+- detalhes operacionais estão em `docs/DB_SQL_PATCHES.md`.
