@@ -127,12 +127,14 @@ use App\Application\Actions\Page\PrivacyPolicyPageAction;
 use App\Application\Actions\Page\PublicLecturesPageAction;
 use App\Application\Actions\Page\StudiesPageAction;
 use App\Application\Actions\Page\TermsOfUsePageAction;
+use App\Application\Settings\SettingsInterface;
 use App\Application\Actions\User\ListUsersAction;
 use App\Application\Actions\User\ViewUserAction;
 use App\Domain\User\UserRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Log\LoggerInterface;
 use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use Slim\Views\Twig;
@@ -715,6 +717,110 @@ return function (App $app) {
     $app->get('/termos-de-uso', TermsOfUsePageAction::class);
 
     if ($diagnosticRoutesEnabled()) {
+        $app->get('/health/logger', function (Request $request, Response $response) use ($app) {
+            /** @var SettingsInterface $settings */
+            $settings = $app->getContainer()->get(SettingsInterface::class);
+            $loggerSettings = (array) $settings->get('logger');
+            $loggerPath = trim((string) ($loggerSettings['path'] ?? ''));
+            $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
+            if ($appAssetVersion === '') {
+                $appAssetVersion = '1';
+            }
+
+            $cacheVersionSuffix = preg_replace('/[^a-zA-Z0-9._-]/', '-', $appAssetVersion) ?? '';
+            if ($cacheVersionSuffix === '') {
+                $cacheVersionSuffix = '1';
+            }
+
+            $isStreamTarget = preg_match('#^[a-z0-9.+-]+://#i', $loggerPath) === 1;
+            $loggerDirectory = $isStreamTarget || $loggerPath === '' ? null : dirname($loggerPath);
+            $writeRequested = filter_var(
+                (string) ($request->getQueryParams()['write'] ?? 'false'),
+                FILTER_VALIDATE_BOOLEAN
+            );
+
+            $payload = [
+                'environment' => [
+                    'app_env' => (string) ($_ENV['APP_ENV'] ?? 'production'),
+                    'app_env_file' => (string) ($_ENV['APP_ENV_FILE'] ?? ''),
+                    'app_log_path_env' => (string) ($_ENV['APP_LOG_PATH'] ?? ''),
+                    'app_asset_version' => $appAssetVersion,
+                ],
+                'logger' => [
+                    'path' => $loggerPath,
+                    'is_stream_target' => $isStreamTarget,
+                    'directory' => $loggerDirectory,
+                    'target_exists' => $loggerPath !== '' && file_exists($loggerPath),
+                    'target_is_file' => $loggerPath !== '' && is_file($loggerPath),
+                    'target_is_writable' => $loggerPath !== '' && is_writable($loggerPath),
+                    'directory_exists' => $loggerDirectory !== null && is_dir($loggerDirectory),
+                    'directory_is_writable' => $loggerDirectory !== null && is_writable($loggerDirectory),
+                    'level' => $loggerSettings['level'] ?? null,
+                ],
+                'runtime' => [
+                    'project_root' => dirname(__DIR__),
+                    'container_cache_directory' => dirname(__DIR__) . '/var/cache/container-v' . $cacheVersionSuffix,
+                    'twig_cache_directory' => dirname(__DIR__) . '/var/cache/twig/v' . $cacheVersionSuffix,
+                ],
+            ];
+
+            if ($writeRequested) {
+                $beforeExists = $loggerPath !== '' && is_file($loggerPath);
+                $beforeSize = $beforeExists ? filesize($loggerPath) : false;
+                $beforeMtime = $beforeExists ? filemtime($loggerPath) : false;
+                $token = bin2hex(random_bytes(6));
+
+                try {
+                    /** @var LoggerInterface $logger */
+                    $logger = $app->getContainer()->get(LoggerInterface::class);
+                    $logger->warning('[cedern diagnostic] logger write test', [
+                        'token' => $token,
+                        'source' => '/health/logger',
+                    ]);
+
+                    if (!$isStreamTarget && $loggerPath !== '') {
+                        clearstatcache(true, $loggerPath);
+                    }
+
+                    $afterExists = $loggerPath !== '' && is_file($loggerPath);
+                    $afterSize = $afterExists ? filesize($loggerPath) : false;
+                    $afterMtime = $afterExists ? filemtime($loggerPath) : false;
+
+                    $payload['write_test'] = [
+                        'attempted' => true,
+                        'token' => $token,
+                        'status' => 'ok',
+                        'before_exists' => $beforeExists,
+                        'before_size' => $beforeSize === false ? null : $beforeSize,
+                        'before_mtime' => $beforeMtime === false ? null : gmdate('c', (int) $beforeMtime),
+                        'after_exists' => $afterExists,
+                        'after_size' => $afterSize === false ? null : $afterSize,
+                        'after_mtime' => $afterMtime === false ? null : gmdate('c', (int) $afterMtime),
+                    ];
+                } catch (\Throwable $exception) {
+                    $payload['write_test'] = [
+                        'attempted' => true,
+                        'token' => $token,
+                        'status' => 'error',
+                        'message' => $exception->getMessage(),
+                    ];
+                }
+            }
+
+            $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                $response->getBody()->write('{"error":"Falha ao serializar relatório."}');
+
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(500);
+            }
+
+            $response->getBody()->write($json);
+
+            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        });
+
         $app->get('/health/storage', function (Request $request, Response $response) {
             $queryParams = $request->getQueryParams();
             $report = new \App\Support\ManagedMediaPathReport(dirname(__DIR__));
@@ -1018,6 +1124,7 @@ return function (App $app) {
         };
 
         $app->get('/users', $disabledDiagnosticRoute);
+        $app->get('/health/logger', $disabledDiagnosticRoute);
         $app->get('/health/render', $disabledDiagnosticRoute);
         $app->get('/health/preview/admin-finance-sales', $disabledDiagnosticRoute);
         $app->get('/health/db', $disabledDiagnosticRoute);

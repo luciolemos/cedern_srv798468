@@ -36,7 +36,7 @@ Organize o `.env` em blocos:
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
 - `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
 - `APP_MANAGED_STORAGE_ROOT`: opcional. Define uma raiz única para uploads gerenciados fora da pasta publicada/versionada, por exemplo `/home/usuario/cedern-storage`.
-- `APP_ASSET_VERSION`: versão manual dos assets. Troque o valor para quebrar cache de CSS, JS, ícones e templates que dependem de asset busting.
+- `APP_ASSET_VERSION`: versão manual usada para trocar o namespace dos caches públicos e internos. Além de quebrar cache de CSS, JS, ícones e marcação renderizada, o projeto também usa esse valor para mudar o diretório do container compilado e do cache do Twig. Em produção, quando um deploy alterar definições do container, templates ou bootstrap, incremente esse valor.
 
 ### 2. Aparência e seletor de tema
 

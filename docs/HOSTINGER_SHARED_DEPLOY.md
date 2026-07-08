@@ -308,7 +308,7 @@ composer2 install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 ## Publicacao segura
 
 1. Ajuste o `.env` real no servidor.
-2. Incremente `APP_ASSET_VERSION` quando houver mudanca visual relevante.
+2. Incremente `APP_ASSET_VERSION` a cada deploy com mudanca de interface, templates, bootstrap ou definicoes do container. Esse valor tambem troca o diretorio do container compilado e do cache do Twig, entao manter o mesmo numero pode fazer a producao continuar rodando codigo/cache antigos.
 3. Se houver mudanca de schema, rode `php scripts/migrate.php` e depois `php scripts/migrate.php --apply`.
 4. Envie a branch de deploy.
 5. Execute o install de dependencias no servidor, se o fluxo nao fizer isso automaticamente.
