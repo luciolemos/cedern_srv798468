@@ -217,7 +217,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         }
 
         try {
-            $this->memberAuthRepository->approveAndAssignRole(
+            $updated = $this->memberAuthRepository->approveAndAssignRole(
                 $id,
                 $roleId,
                 $institutionalRole,
@@ -237,6 +237,20 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
                 'is_contributor' => $isContributor,
                 'account_status' => $accountStatus,
                 'exception' => $exception,
+            ]);
+
+            return $this->redirectWithStatus($response, $redirectTarget, 'assign-error');
+        }
+
+        if (!$updated) {
+            $this->logger->warning('Atribuição administrativa do usuário não foi persistida.', [
+                'user_id' => $id,
+                'role_id' => $roleId,
+                'institutional_role' => $institutionalRole,
+                'member_type' => $memberType,
+                'association_status' => $associationStatus,
+                'is_contributor' => $isContributor,
+                'account_status' => $accountStatus,
             ]);
 
             return $this->redirectWithStatus($response, $redirectTarget, 'assign-error');
