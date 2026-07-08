@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Member;
 
 use App\Domain\Member\MemberAuthRepository;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class MySqlMemberAuthRepository implements MemberAuthRepository
 {
     private const DEFAULT_MANAGEMENT_NAME = 'Gestão Atual';
 
     private \PDO $pdo;
+    private LoggerInterface $logger;
     private bool $memberSchemaCompatibilityBooted = false;
 
-    public function __construct(\PDO $pdo)
+    public function __construct(\PDO $pdo, ?LoggerInterface $logger = null)
     {
         $this->pdo = $pdo;
+        $this->logger = $logger ?? new NullLogger();
     }
 
     public function createPendingUser(array $data): int
@@ -764,11 +768,33 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         try {
             return $this->approveAndAssignRoleInternal($id, $roleId, $normalizedState, $rulesApplied, $actedByUserId);
         } catch (\Throwable $exception) {
+            $this->loggerSafeWarning('Falha ao aprovar/atribuir papel de usuário na tentativa principal.', $exception, [
+                'member_user_id' => $id,
+                'role_id' => $roleId,
+                'institutional_role' => $normalizedState['institutional_role'],
+                'member_type' => $normalizedState['member_type'],
+                'association_status' => $normalizedState['association_status'],
+                'is_contributor' => $normalizedState['is_contributor'],
+                'status' => $normalizedState['status'],
+                'acted_by_user_id' => $actedByUserId,
+            ]);
             $this->ensureMemberSchemaCompatibility();
 
             try {
                 return $this->approveAndAssignRoleInternal($id, $roleId, $normalizedState, $rulesApplied, $actedByUserId);
             } catch (\Throwable $innerException) {
+                $this->loggerSafeWarning('Falha ao aprovar/atribuir papel de usuário após compatibilização de schema.', $innerException, [
+                    'member_user_id' => $id,
+                    'role_id' => $roleId,
+                    'institutional_role' => $normalizedState['institutional_role'],
+                    'member_type' => $normalizedState['member_type'],
+                    'association_status' => $normalizedState['association_status'],
+                    'is_contributor' => $normalizedState['is_contributor'],
+                    'status' => $normalizedState['status'],
+                    'acted_by_user_id' => $actedByUserId,
+                    'previous_error' => $exception->getMessage(),
+                ]);
+
                 return $this->approveAndAssignRoleFallback($id, $roleId, $normalizedState, $innerException);
             }
         }
@@ -2580,10 +2606,21 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 . 'LIMIT 1'
             );
 
-            return $deleteStatement->execute([
+            $deleted = $deleteStatement->execute([
                 'management_id' => $managementId,
                 'member_user_id' => $userId,
             ]);
+
+            if (!$deleted) {
+                $this->logger->warning('Falha ao remover função administrativa da gestão atual.', [
+                    'management_id' => $managementId,
+                    'member_user_id' => $userId,
+                    'institutional_role' => null,
+                    'pdo_error' => $deleteStatement->errorInfo(),
+                ]);
+            }
+
+            return $deleted;
         }
 
         $sql = <<<SQL
@@ -2607,12 +2644,23 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         $statement = $this->pdo->prepare($sql);
 
-        return $statement->execute([
+        $saved = $statement->execute([
             'management_id' => $managementId,
             'member_user_id' => $userId,
             'role_name' => $institutionalRole,
             'starts_at' => date('Y-m-d'),
         ]);
+
+        if (!$saved) {
+            $this->logger->warning('Falha ao sincronizar função administrativa da gestão atual.', [
+                'management_id' => $managementId,
+                'member_user_id' => $userId,
+                'institutional_role' => $institutionalRole,
+                'pdo_error' => $statement->errorInfo(),
+            ]);
+        }
+
+        return $saved;
     }
 
     private function migrateLegacyInstitutionalRolesToCurrentManagement(int $managementId): void
@@ -2774,15 +2822,31 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         ?int $actedByUserId = null
     ): bool {
         if ($id <= 0) {
+            $this->logger->warning('Atribuição administrativa abortada: usuário inválido.', [
+                'member_user_id' => $id,
+                'role_id' => $roleId,
+            ]);
+
             return false;
         }
 
         if ($normalizedState['association_status'] === 'member' && $roleId <= 0) {
+            $this->logger->warning('Atribuição administrativa abortada: associado sem papel SISCEDE válido.', [
+                'member_user_id' => $id,
+                'role_id' => $roleId,
+                'association_status' => $normalizedState['association_status'],
+            ]);
+
             return false;
         }
 
         $currentUser = $this->findById($id);
         if ($currentUser === null) {
+            $this->logger->warning('Atribuição administrativa abortada: usuário não encontrado.', [
+                'member_user_id' => $id,
+                'role_id' => $roleId,
+            ]);
+
             return false;
         }
 
@@ -2822,6 +2886,11 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             ]);
 
             if (!$this->syncInstitutionalRoleForCurrentManagement($id, $normalizedState['institutional_role'])) {
+                $this->logger->warning('Atribuição administrativa revertida: falha ao sincronizar função com a gestão atual.', [
+                    'member_user_id' => $id,
+                    'role_id' => $roleId,
+                    'institutional_role' => $normalizedState['institutional_role'],
+                ]);
                 $this->pdo->rollBack();
 
                 return false;
@@ -3434,6 +3503,13 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
     private function loggerSafeWarning(string $message, \Throwable $exception, array $context = []): void
     {
         $context['error'] = $exception->getMessage();
+
+        try {
+            $this->logger->warning($message, $context);
+
+            return;
+        } catch (\Throwable) {
+        }
 
         $encodedContext = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($encodedContext === false) {

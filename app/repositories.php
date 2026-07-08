@@ -27,6 +27,7 @@ use App\Infrastructure\Persistence\Patrimony\MySqlPatrimonyRepository;
 use App\Infrastructure\Persistence\User\InMemoryUserRepository;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 return function (ContainerBuilder $containerBuilder) {
     // Here we map our UserRepository interface to its in memory implementation
@@ -40,7 +41,10 @@ return function (ContainerBuilder $containerBuilder) {
         },
         MemberAuthRepository::class => function (ContainerInterface $c): MemberAuthRepository {
             try {
-                return new MySqlMemberAuthRepository($c->get(\PDO::class));
+                return new MySqlMemberAuthRepository(
+                    $c->get(\PDO::class),
+                    $c->get(LoggerInterface::class)
+                );
             } catch (\Throwable $exception) {
                 return new FallbackMemberAuthRepository();
             }
