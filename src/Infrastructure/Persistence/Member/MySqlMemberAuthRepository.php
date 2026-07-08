@@ -2852,6 +2852,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
         $previousSnapshot = $this->buildAdministrativeSnapshot($currentUser);
         $roleIdForUpdate = $normalizedState['association_status'] === 'member' ? $roleId : null;
+        $shouldSetApprovedAt = $normalizedState['status'] === 'active' ? 1 : 0;
 
         $sql = <<<SQL
             UPDATE member_users
@@ -2863,7 +2864,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 is_contributor = :is_contributor,
                 status = :account_status,
                 approved_at = CASE
-                    WHEN :account_status_for_approval = 'active' AND approved_at IS NULL THEN NOW()
+                    WHEN :should_set_approved_at = 1 AND approved_at IS NULL THEN NOW()
                     ELSE approved_at
                 END
             WHERE id = :id
@@ -2882,7 +2883,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 'association_status' => $normalizedState['association_status'],
                 'is_contributor' => $normalizedState['is_contributor'],
                 'account_status' => $normalizedState['status'],
-                'account_status_for_approval' => $normalizedState['status'],
+                'should_set_approved_at' => $shouldSetApprovedAt,
             ]);
 
             if (!$this->syncInstitutionalRoleForCurrentManagement($id, $normalizedState['institutional_role'])) {
@@ -2951,13 +2952,14 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
     ): bool {
         try {
             $roleIdForUpdate = $normalizedState['association_status'] === 'member' ? $roleId : null;
+            $shouldSetApprovedAt = $normalizedState['status'] === 'active' ? 1 : 0;
             $fallbackStatement = $this->pdo->prepare(<<<SQL
                 UPDATE member_users
                 SET
                     role_id = :role_id,
                     status = :account_status,
                     approved_at = CASE
-                        WHEN :account_status_for_approval = 'active' AND approved_at IS NULL THEN NOW()
+                        WHEN :should_set_approved_at = 1 AND approved_at IS NULL THEN NOW()
                         ELSE approved_at
                     END
                 WHERE id = :id
@@ -2968,7 +2970,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 'id' => $id,
                 'role_id' => $roleIdForUpdate,
                 'account_status' => $normalizedState['status'],
-                'account_status_for_approval' => $normalizedState['status'],
+                'should_set_approved_at' => $shouldSetApprovedAt,
             ]) && $this->syncInstitutionalRoleForCurrentManagement($id, $normalizedState['institutional_role']);
         } catch (\Throwable $fallbackException) {
             $this->loggerSafeWarning('Falha ao atualizar situação administrativa do usuário.', $fallbackException, [
