@@ -11,16 +11,33 @@ return function (ContainerBuilder $containerBuilder) {
     // Global Settings Object
     $containerBuilder->addDefinitions([
         SettingsInterface::class => function () {
-            $appEnv = strtolower((string) ($_ENV['APP_ENV'] ?? 'production'));
+            $readEnv = static function (string $key, string $default = ''): string {
+                $value = getenv($key);
+                if ($value !== false) {
+                    return trim((string) $value);
+                }
+
+                if (isset($_SERVER[$key])) {
+                    return trim((string) $_SERVER[$key]);
+                }
+
+                if (isset($_ENV[$key])) {
+                    return trim((string) $_ENV[$key]);
+                }
+
+                return $default;
+            };
+
+            $appEnv = strtolower($readEnv('APP_ENV', 'production'));
             $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
             $isDockerEnv = filter_var(
-                trim((string) ($_ENV['docker'] ?? '')),
+                $readEnv('docker'),
                 FILTER_VALIDATE_BOOLEAN
             );
-            $customLogPath = trim((string) ($_ENV['APP_LOG_PATH'] ?? ''));
+            $customLogPath = $readEnv('APP_LOG_PATH');
             $loggerPath = $customLogPath !== ''
                 ? $customLogPath
-                : (($_ENV['APP_ENV'] ?? '') === 'test'
+                : ($appEnv === 'test'
                     ? 'php://stderr'
                     : ($isDockerEnv ? 'php://stdout' : __DIR__ . '/../logs/app.log'));
 
