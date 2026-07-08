@@ -21,6 +21,26 @@ trait MemberProfilePhotoStorageTrait
      */
     protected function resolveWritableMemberProfilePhotoStorage(): ?array
     {
+        if ($this->isStrictManagedMemberPhotoWriteModeEnabled()) {
+            $primaryDefinition = $this->resolvePrimaryMemberProfilePhotoStorageDefinition();
+
+            if ($primaryDefinition === null) {
+                return null;
+            }
+
+            if ($this->prepareWritableMemberProfilePhotoDirectory($primaryDefinition['directory'])) {
+                return $primaryDefinition;
+            }
+
+            $this->logger->warning('Diretório principal de foto de perfil indisponível para escrita.', [
+                'directory' => $primaryDefinition['directory'],
+                'public_prefix' => $primaryDefinition['public_prefix'],
+                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+            ]);
+
+            return null;
+        }
+
         $attemptedDirectories = [];
 
         foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
@@ -40,6 +60,16 @@ trait MemberProfilePhotoStorageTrait
         ]);
 
         return null;
+    }
+
+    /**
+     * @return array{directory: string, public_prefix: string}|null
+     */
+    private function resolvePrimaryMemberProfilePhotoStorageDefinition(): ?array
+    {
+        $definitions = $this->resolveMemberProfilePhotoStorageDefinitions();
+
+        return $definitions[0] ?? null;
     }
 
     protected function buildManagedMemberProfilePhotoRelativePath(string $fileName, ?string $publicPrefix = null): string
@@ -169,6 +199,11 @@ trait MemberProfilePhotoStorageTrait
         }
 
         return $this->normalizeMemberProfilePhotoPublicPrefix($configuredPrefix);
+    }
+
+    private function isStrictManagedMemberPhotoWriteModeEnabled(): bool
+    {
+        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
     }
 
     private function prepareWritableMemberProfilePhotoDirectory(string $directory): bool

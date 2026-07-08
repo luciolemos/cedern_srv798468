@@ -793,11 +793,27 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
      */
     private function resolveWritableBookshopCoverDestination(): ?array
     {
+        $primaryCandidate = [
+            'directory' => $this->resolveBookshopCoverUploadDirectory(),
+            'public_prefix' => $this->resolveBookshopCoverUploadPublicPrefix(),
+        ];
+
+        if ($this->isStrictManagedBookshopCoverWriteModeEnabled()) {
+            if ($this->ensureWritableDirectory($primaryCandidate['directory'])) {
+                return $primaryCandidate;
+            }
+
+            $this->logger->warning('Diretório principal de capas da livraria indisponível para escrita.', [
+                'directory' => $primaryCandidate['directory'],
+                'public_prefix' => $primaryCandidate['public_prefix'],
+                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+            ]);
+
+            return null;
+        }
+
         $candidates = [
-            [
-                'directory' => $this->resolveBookshopCoverUploadDirectory(),
-                'public_prefix' => $this->resolveBookshopCoverUploadPublicPrefix(),
-            ],
+            $primaryCandidate,
             [
                 'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
                 'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
@@ -820,6 +836,11 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
         }
 
         return null;
+    }
+
+    private function isStrictManagedBookshopCoverWriteModeEnabled(): bool
+    {
+        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
     }
 
     protected function resolveManagedPrivateBookshopCoverAbsolutePath(?string $relativePath): ?string

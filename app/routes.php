@@ -715,6 +715,28 @@ return function (App $app) {
     $app->get('/termos-de-uso', TermsOfUsePageAction::class);
 
     if ($diagnosticRoutesEnabled()) {
+        $app->get('/health/storage', function (Request $request, Response $response) {
+            $queryParams = $request->getQueryParams();
+            $report = new \App\Support\ManagedMediaPathReport(dirname(__DIR__));
+            $payload = $report->build(
+                isset($queryParams['kind']) ? (string) $queryParams['kind'] : null,
+                isset($queryParams['file']) ? (string) $queryParams['file'] : null
+            );
+
+            $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                $response->getBody()->write('{"error":"Falha ao serializar relatório."}');
+
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(500);
+            }
+
+            $response->getBody()->write($json);
+
+            return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
+        });
+
         $app->get('/users', function (Request $request, Response $response) use ($app) {
             $twig = $app->getContainer()->get(Twig::class);
             $repository = $app->getContainer()->get(UserRepository::class);
