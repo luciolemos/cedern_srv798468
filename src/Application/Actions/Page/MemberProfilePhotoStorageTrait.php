@@ -94,6 +94,17 @@ trait MemberProfilePhotoStorageTrait
         );
     }
 
+    protected function deleteStoredMemberProfilePhotoIfManaged(?string $relativePath): void
+    {
+        $absolutePath = $this->resolveManagedMemberProfilePhotoAbsolutePath($relativePath);
+
+        if ($absolutePath === null || !is_file($absolutePath)) {
+            return;
+        }
+
+        @unlink($absolutePath);
+    }
+
     /**
      * @return array<int, array{directory: string, public_prefix: string}>
      */

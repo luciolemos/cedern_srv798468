@@ -18,7 +18,7 @@ class SessionMiddleware implements Middleware
     {
         if (session_status() !== PHP_SESSION_ACTIVE && !headers_sent()) {
             $this->configureSessionCookie();
-            session_start();
+            $this->startSessionSafely();
         }
 
         $request = $request->withAttribute('session', $_SESSION ?? []);
@@ -33,6 +33,57 @@ class SessionMiddleware implements Middleware
         $params = session_get_cookie_params();
         session_set_cookie_params([
             'lifetime' => $params['lifetime'],
+            'path' => $params['path'],
+            'domain' => $params['domain'],
+            'secure' => $this->isHttpsRequest(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    private function startSessionSafely(): void
+    {
+        if ($this->attemptSessionStart()) {
+            return;
+        }
+
+        $this->resetBrokenSessionCookie();
+
+        if (!$this->attemptSessionStart()) {
+            $_SESSION = [];
+        }
+    }
+
+    private function attemptSessionStart(): bool
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return true;
+        }
+
+        return @session_start();
+    }
+
+    private function resetBrokenSessionCookie(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $sessionName = session_name();
+        if ($sessionName !== false && isset($_COOKIE[$sessionName])) {
+            unset($_COOKIE[$sessionName]);
+        }
+
+        session_id('');
+        $_SESSION = [];
+
+        if ($sessionName === false || headers_sent()) {
+            return;
+        }
+
+        $params = session_get_cookie_params();
+        setcookie($sessionName, '', [
+            'expires' => time() - 3600,
             'path' => $params['path'],
             'domain' => $params['domain'],
             'secure' => $this->isHttpsRequest(),
