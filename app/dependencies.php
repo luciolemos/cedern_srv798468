@@ -33,6 +33,9 @@ return function (ContainerBuilder $containerBuilder) {
 
             return $logger;
         },
+        RecaptchaVerifier::class => function (ContainerInterface $c): RecaptchaVerifier {
+            return new RecaptchaVerifier($c->get(LoggerInterface::class));
+        },
         ContributionBillingGateway::class => function (): ContributionBillingGateway {
             $gateway = new AsaasContributionBillingGateway();
 
@@ -66,7 +69,7 @@ return function (ContainerBuilder $containerBuilder) {
 
             return $pdo;
         },
-        Twig::class => function () {
+        Twig::class => function (ContainerInterface $c) {
             $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
             $isDevelopment = in_array($appEnv, ['dev', 'development', 'local', 'test'], true);
             $appAssetVersion = trim((string) ($_ENV['APP_ASSET_VERSION'] ?? '1'));
@@ -140,7 +143,7 @@ return function (ContainerBuilder $containerBuilder) {
             $appDefaultPageImage = trim((string) ($_ENV['APP_DEFAULT_PAGE_IMAGE'] ?? 'https://cedern.org/assets/img/cedern/cede1_1600_1000.png'));
             $appDefaultSiteName = trim((string) ($_ENV['APP_DEFAULT_SITE_NAME'] ?? 'CEDE'));
             $appDefaultTwitterSite = trim((string) ($_ENV['APP_DEFAULT_TWITTER_SITE'] ?? '@cedeoficialrn'));
-            $recaptchaVerifier = new RecaptchaVerifier();
+            $recaptchaVerifier = $c->get(RecaptchaVerifier::class);
             $appRecaptchaEnabled = $recaptchaVerifier->isReady();
             $appRecaptchaSiteKey = $recaptchaVerifier->getSiteKey();
             $themeConfig = ThemeConfig::resolve($_ENV);
