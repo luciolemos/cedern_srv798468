@@ -51,7 +51,6 @@ final class ManagedMediaLocatorTest extends TestCase
                 ],
             ])
         );
-
     }
 
     public function testFallsBackToLegacyDirectoryByFileNameWhenPublicPrefixWasNormalized(): void
@@ -80,7 +79,6 @@ final class ManagedMediaLocatorTest extends TestCase
                 ],
             ])
         );
-
     }
 
     public function testFallsBackToAdditionalDirectoryByFileName(): void
@@ -109,7 +107,6 @@ final class ManagedMediaLocatorTest extends TestCase
                 [$genericDirectory]
             )
         );
-
     }
 
     public function testReturnsManagedFallbackPathWhenNoFileExistsAnywhere(): void
