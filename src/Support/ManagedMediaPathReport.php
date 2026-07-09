@@ -208,6 +208,7 @@ final class ManagedMediaPathReport
         $configuredPublicPrefix = $this->normalizePrefix($rawPublicPrefix !== '' ? $rawPublicPrefix : $defaultPublicPrefix);
         $resolvedDirectory = $this->resolveManagedDirectory($configuredDirectory, $managedRoot);
         $defaultResolvedDirectory = $this->resolveManagedDirectory($defaultDirectory, $managedRoot);
+        $projectDefaultDirectory = $this->resolveProjectPath($defaultDirectory);
 
         $readCandidates = [
             [
@@ -218,6 +219,11 @@ final class ManagedMediaPathReport
             [
                 'label' => 'default_managed',
                 'directory' => $defaultResolvedDirectory,
+                'public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
+            ],
+            [
+                'label' => 'project_storage_default',
+                'directory' => $projectDefaultDirectory,
                 'public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
             ],
         ];
@@ -236,6 +242,7 @@ final class ManagedMediaPathReport
             'configured_directory' => $this->describePath($resolvedDirectory, true),
             'configured_public_prefix' => $configuredPublicPrefix,
             'default_managed_directory' => $this->describePath($defaultResolvedDirectory, true),
+            'project_storage_default_directory' => $this->describePath($projectDefaultDirectory, true),
             'default_public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
             'read_candidates' => array_map(
                 fn (array $candidate): array => $this->describeCandidate($candidate),
