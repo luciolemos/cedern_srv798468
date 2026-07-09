@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Patrimony;
 
 use App\Domain\Patrimony\PatrimonyRepository;
+use App\Support\ManagedPublicMediaPath;
 
 class MySqlPatrimonyRepository implements PatrimonyRepository
 {
@@ -1079,9 +1080,12 @@ class MySqlPatrimonyRepository implements PatrimonyRepository
             'acquisition_value' => $acquisitionValue,
             'acquisition_value_label' => $acquisitionValue !== null ? $this->formatCurrency($acquisitionValue) : '',
             'main_photo_size_bytes' => $mainPhotoSize,
-            'main_photo_url' => $mainPhotoPath !== '' ? '/' . $mainPhotoPath : '',
+            'main_photo_url' => ManagedPublicMediaPath::toUrl($mainPhotoPath, 'media/patrimonio/img'),
             'purchase_document_size_bytes' => $purchaseDocumentSize,
-            'purchase_document_url' => $purchaseDocumentPath !== '' ? '/' . $purchaseDocumentPath : '',
+            'purchase_document_url' => ManagedPublicMediaPath::toUrl(
+                $purchaseDocumentPath,
+                'media/patrimonio/docs'
+            ),
             'purchase_document_size_label' => $purchaseDocumentSize !== null ? $this->formatBytes($purchaseDocumentSize) : '',
             'current_status_label' => $this->formatStatusLabel((string) ($asset['current_status'] ?? '')),
             'conservation_state_label' => $this->formatConservationLabel((string) ($asset['conservation_state'] ?? '')),
@@ -1130,7 +1134,7 @@ class MySqlPatrimonyRepository implements PatrimonyRepository
             : null;
 
         return array_merge($maintenance, [
-            'attachment_url' => $attachmentPath !== '' ? '/' . $attachmentPath : '',
+            'attachment_url' => ManagedPublicMediaPath::toUrl($attachmentPath, 'media/patrimonio/docs'),
             'attachment_size_bytes' => $sizeBytes,
             'attachment_size_label' => $sizeBytes !== null ? $this->formatBytes($sizeBytes) : '',
             'cost_amount' => $costAmount,
@@ -1150,7 +1154,7 @@ class MySqlPatrimonyRepository implements PatrimonyRepository
             : null;
 
         return array_merge($disposal, [
-            'document_url' => $documentPath !== '' ? '/' . $documentPath : '',
+            'document_url' => ManagedPublicMediaPath::toUrl($documentPath, 'media/patrimonio/docs'),
             'document_size_bytes' => $sizeBytes,
             'document_size_label' => $sizeBytes !== null ? $this->formatBytes($sizeBytes) : '',
         ]);
@@ -1168,7 +1172,7 @@ class MySqlPatrimonyRepository implements PatrimonyRepository
             : null;
 
         return array_merge($attachment, [
-            'file_url' => $filePath !== '' ? '/' . $filePath : '',
+            'file_url' => ManagedPublicMediaPath::toUrl($filePath, 'media/patrimonio/docs'),
             'size_bytes' => $sizeBytes,
             'size_label' => $sizeBytes !== null ? $this->formatBytes($sizeBytes) : '',
             'attachment_type_label' => $this->formatAttachmentTypeLabel((string) ($attachment['attachment_type'] ?? '')),
