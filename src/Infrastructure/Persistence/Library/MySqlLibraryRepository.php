@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Library;
 
 use App\Domain\Library\LibraryRepository;
+use App\Support\ManagedPublicMediaPath;
 
 class MySqlLibraryRepository implements LibraryRepository
 {
@@ -474,9 +475,9 @@ class MySqlLibraryRepository implements LibraryRepository
             'publication_year' => $publicationYear,
             'page_count' => $pageCount,
             'cover_image_size_bytes' => $coverImageSizeBytes,
-            'cover_image_url' => $coverImagePath !== '' ? '/' . $coverImagePath : '',
+            'cover_image_url' => ManagedPublicMediaPath::toUrl($coverImagePath, 'media/biblioteca/capas'),
             'pdf_size_bytes' => $pdfSizeBytes,
-            'pdf_url' => $pdfPath !== '' ? '/' . $pdfPath : '',
+            'pdf_url' => ManagedPublicMediaPath::toUrl($pdfPath, 'media/biblioteca/docs'),
             'pdf_size_label' => $pdfSizeBytes !== null ? $this->formatBytes($pdfSizeBytes) : '',
             'status_label' => $this->formatStatusLabel((string) ($book['status'] ?? 'draft')),
             'editorial_reference' => $this->buildEditorialReference($book),

@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Bookshop;
 
 use App\Domain\Bookshop\BookshopRepository;
 use App\Support\BookshopTextNormalizer;
+use App\Support\ManagedPublicMediaPath;
 
 class MySqlBookshopRepository implements BookshopRepository
 {
@@ -1903,7 +1904,7 @@ class MySqlBookshopRepository implements BookshopRepository
                 ? (int) $book['page_count']
                 : null,
             'cover_image_size_bytes' => $coverImageSizeBytes,
-            'cover_image_url' => $coverImagePath !== '' ? '/' . $coverImagePath : '',
+            'cover_image_url' => ManagedPublicMediaPath::toUrl($coverImagePath, 'media/livraria/capas'),
             'cost_price' => $costPrice,
             'sale_price' => $salePrice,
             'stock_quantity' => $stockQuantity,

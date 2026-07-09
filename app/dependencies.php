@@ -7,6 +7,7 @@ use App\Application\Security\RecaptchaVerifier;
 use App\Domain\Billing\ContributionBillingGateway;
 use App\Infrastructure\Billing\AsaasContributionBillingGateway;
 use App\Infrastructure\Billing\NullContributionBillingGateway;
+use App\Support\ManagedPublicMediaPath;
 use App\Support\ThemeConfig;
 use DI\ContainerBuilder;
 use Monolog\Handler\StreamHandler;
@@ -101,39 +102,13 @@ return function (ContainerBuilder $containerBuilder) {
 
             $twig = Twig::create(__DIR__ . '/../templates', [
                 'cache' => $twigCache,
+                'auto_reload' => true,
             ]);
 
             $twig->getEnvironment()->addFunction(new TwigFunction(
                 'member_profile_photo_url',
                 static function (?string $rawPath, string $baseUrl = ''): string {
-                    $normalizedPath = trim(str_replace('\\', '/', (string) $rawPath));
-                    if ($normalizedPath === '') {
-                        return '';
-                    }
-
-                    if (preg_match('#^https?://#i', $normalizedPath) === 1) {
-                        return $normalizedPath;
-                    }
-
-                    $fileName = basename($normalizedPath);
-                    if (
-                        $fileName === ''
-                        || $fileName === '.'
-                        || $fileName === '..'
-                        || !str_contains($fileName, '.')
-                        || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
-                    ) {
-                        return '';
-                    }
-
-                    $publicPath = ltrim($normalizedPath, '/');
-                    if (!str_starts_with($publicPath, 'media/membros/fotos/')) {
-                        $publicPath = 'media/membros/fotos/' . $fileName;
-                    }
-
-                    $normalizedBaseUrl = rtrim(trim($baseUrl), '/');
-
-                    return ($normalizedBaseUrl !== '' ? $normalizedBaseUrl : '') . '/' . ltrim($publicPath, '/');
+                    return ManagedPublicMediaPath::toUrl($rawPath, 'media/membros/fotos', $baseUrl);
                 }
             ));
 
