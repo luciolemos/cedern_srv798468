@@ -7,7 +7,7 @@ namespace App\Application\Actions\Admin;
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Patrimony\PatrimonyRepository;
 use App\Support\ManagedMediaLocator;
-use App\Support\ManagedStorageRootResolver;
+use App\Support\ManagedUploadStorage;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UploadedFileInterface;
@@ -444,7 +444,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     private function resolvePatrimonyDocumentUploadPublicPrefix(): string
     {
-        return $this->resolveConfiguredUploadPublicPrefix(
+        return $this->patrimonyStorage()->resolveUploadPublicPrefix(
             'PATRIMONY_DOCUMENT_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_PATRIMONY_DOC_UPLOAD_PUBLIC_PREFIX
         );
@@ -452,7 +452,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     private function resolvePatrimonyImageUploadPublicPrefix(): string
     {
-        return $this->resolveConfiguredUploadPublicPrefix(
+        return $this->patrimonyStorage()->resolveUploadPublicPrefix(
             'PATRIMONY_IMAGE_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_PATRIMONY_IMAGE_UPLOAD_PUBLIC_PREFIX
         );
@@ -482,16 +482,18 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     private function buildManagedPatrimonyDocumentRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        $normalizedPrefix = trim((string) ($publicPrefix ?? $this->resolvePatrimonyDocumentUploadPublicPrefix()), '/');
-
-        return $normalizedPrefix . '/' . ltrim($fileName, '/');
+        return $this->patrimonyStorage()->buildRelativePath(
+            $fileName,
+            (string) ($publicPrefix ?? $this->resolvePatrimonyDocumentUploadPublicPrefix())
+        );
     }
 
     private function buildManagedPatrimonyImageRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        $normalizedPrefix = trim((string) ($publicPrefix ?? $this->resolvePatrimonyImageUploadPublicPrefix()), '/');
-
-        return $normalizedPrefix . '/' . ltrim($fileName, '/');
+        return $this->patrimonyStorage()->buildRelativePath(
+            $fileName,
+            (string) ($publicPrefix ?? $this->resolvePatrimonyImageUploadPublicPrefix())
+        );
     }
 
     protected function resolveManagedPatrimonyAbsolutePath(?string $relativePath): ?string
@@ -540,11 +542,6 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         );
     }
 
-    private function resolveProjectRoot(): string
-    {
-        return dirname(__DIR__, 4);
-    }
-
     /**
      * @return array<int, array{directory: string, public_prefix: string}>
      */
@@ -556,44 +553,19 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         string $legacyDirectory,
         string $legacyPublicPrefix
     ): array {
-        $definitions = [];
-        $configuredDirectory = $this->resolveOptionalConfiguredUploadDirectory($directoryEnvKey);
-        $configuredPublicPrefix = $this->resolveOptionalConfiguredUploadPublicPrefix($publicPrefixEnvKey);
-
-        if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
-            $definitions[] = [
-                'directory' => $configuredDirectory ?? $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
-                'public_prefix' => $configuredPublicPrefix ?? $this->normalizePublicPrefix($defaultPublicPrefix),
-            ];
-        }
-
-        $definitions[] = [
-            'directory' => $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
-            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
-        ];
-        $definitions[] = [
-            'directory' => $this->resolveDirectoryPath($defaultDirectory),
-            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
-        ];
-        $definitions[] = [
-            'directory' => $this->resolveDirectoryPath($legacyDirectory),
-            'public_prefix' => $this->normalizePublicPrefix($legacyPublicPrefix),
-        ];
-
-        $uniqueDefinitions = [];
-        $seenDefinitions = [];
-
-        foreach ($definitions as $definition) {
-            $definitionHash = $definition['directory'] . '|' . $definition['public_prefix'];
-            if (isset($seenDefinitions[$definitionHash])) {
-                continue;
-            }
-
-            $seenDefinitions[$definitionHash] = true;
-            $uniqueDefinitions[] = $definition;
-        }
-
-        return $uniqueDefinitions;
+        return $this->patrimonyStorage()->buildReadDefinitions(
+            $directoryEnvKey,
+            $publicPrefixEnvKey,
+            $defaultDirectory,
+            $defaultPublicPrefix,
+            [
+                [
+                    'directory' => $legacyDirectory,
+                    'public_prefix' => $legacyPublicPrefix,
+                    'directory_mode' => 'project',
+                ],
+            ]
+        );
     }
 
     /**
@@ -602,16 +574,18 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
      */
     private function resolveWritableUploadStorage(array $definitions, string $storageLabel): ?array
     {
-        if ($this->isStrictManagedUploadWriteModeEnabled()) {
+        $storage = $this->patrimonyStorage();
+
+        if ($storage->managedWriteModeEnabled()) {
             $primaryDefinition = $definitions[0] ?? null;
 
-            if (is_array($primaryDefinition) && $this->prepareWritableDirectory($primaryDefinition['directory'])) {
+            if (is_array($primaryDefinition) && $storage->prepareWritableDirectory($primaryDefinition['directory'])) {
                 return $primaryDefinition;
             }
 
             $this->logger->warning('Diretório principal de upload patrimonial indisponível para escrita.', [
                 'storage_label' => $storageLabel,
-                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+                'managed_storage_root' => $storage->resolveManagedStorageRoot(),
                 'primary_definition' => $primaryDefinition,
             ]);
 
@@ -627,7 +601,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
                 'public_prefix' => $definition['public_prefix'],
             ];
 
-            if ($this->prepareWritableDirectory($directory)) {
+            if ($storage->prepareWritableDirectory($directory)) {
                 return $definition;
             }
         }
@@ -640,116 +614,8 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         return null;
     }
 
-    private function isStrictManagedUploadWriteModeEnabled(): bool
+    private function patrimonyStorage(): ManagedUploadStorage
     {
-        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
-    }
-
-    private function prepareWritableDirectory(string $directory): bool
-    {
-        clearstatcache(true, $directory);
-
-        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-            return false;
-        }
-
-        if (!is_writable($directory)) {
-            @chmod($directory, 0775);
-            clearstatcache(true, $directory);
-        }
-
-        return is_writable($directory);
-    }
-
-    private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
-    {
-        $configuredPrefix = $this->resolveOptionalConfiguredUploadPublicPrefix($envKey);
-
-        if ($configuredPrefix !== null) {
-            return $configuredPrefix;
-        }
-
-        return $this->normalizePublicPrefix($defaultPrefix);
-    }
-
-    private function resolveOptionalConfiguredUploadDirectory(string $envKey): ?string
-    {
-        $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
-
-        if ($configuredDirectory === '') {
-            return null;
-        }
-
-        return $this->resolveManagedStorageDirectory($configuredDirectory);
-    }
-
-    private function resolveOptionalConfiguredUploadPublicPrefix(string $envKey): ?string
-    {
-        $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
-
-        if ($configuredPrefix === '') {
-            return null;
-        }
-
-        return $this->normalizePublicPrefix($configuredPrefix);
-    }
-
-    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
-    {
-        return $this->resolveManagedStorageDirectory($defaultDirectory);
-    }
-
-    private function resolveManagedStorageRoot(): ?string
-    {
-        return ManagedStorageRootResolver::resolve(
-            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
-            $this->resolveProjectRoot()
-        );
-    }
-
-    private function resolveManagedStorageDirectory(string $path): string
-    {
-        $normalizedPath = str_replace('\\', '/', trim($path));
-        while (str_starts_with($normalizedPath, './')) {
-            $normalizedPath = substr($normalizedPath, 2);
-        }
-
-        $managedStorageRoot = $this->resolveManagedStorageRoot();
-        $storagePrefix = 'var/storage/';
-        $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-        if (
-            $managedStorageRoot !== null
-            && !$this->isAbsolutePath($normalizedPath)
-            && str_starts_with($normalizedRelativePath, $storagePrefix)
-        ) {
-            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-
-            return $managedStorageRoot . '/' . $storageSuffix;
-        }
-
-        return $this->resolveDirectoryPath($normalizedPath);
-    }
-
-    private function resolveDirectoryPath(string $path): string
-    {
-        $normalizedPath = str_replace('\\', '/', $path);
-
-        if ($this->isAbsolutePath($normalizedPath)) {
-            return rtrim($normalizedPath, '/');
-        }
-
-        return $this->resolveProjectRoot() . '/' . ltrim($normalizedPath, '/');
-    }
-
-    private function normalizePublicPrefix(string $prefix): string
-    {
-        return trim(str_replace('\\', '/', $prefix), '/');
-    }
-
-    private function isAbsolutePath(string $path): bool
-    {
-        return str_starts_with($path, '/')
-            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+        return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
     }
 }
