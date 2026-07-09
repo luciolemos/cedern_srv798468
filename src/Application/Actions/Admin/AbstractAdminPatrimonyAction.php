@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Patrimony\PatrimonyRepository;
+use App\Support\ManagedMediaLocator;
 use App\Support\ManagedStorageRootResolver;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -495,19 +496,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     protected function resolveManagedPatrimonyAbsolutePath(?string $relativePath): ?string
     {
-        foreach ($this->resolvePatrimonyManagedStorageDefinitions() as $storage) {
-            $absolutePath = $this->resolveManagedAbsolutePath(
-                $relativePath,
-                $storage['public_prefix'],
-                $storage['directory']
-            );
-
-            if ($absolutePath !== null) {
-                return $absolutePath;
-            }
-        }
-
-        return null;
+        return ManagedMediaLocator::resolve($relativePath, $this->resolvePatrimonyManagedStorageDefinitions());
     }
 
     /**
@@ -580,6 +569,10 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
         $definitions[] = [
             'directory' => $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
+            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
+        ];
+        $definitions[] = [
+            'directory' => $this->resolveDirectoryPath($defaultDirectory),
             'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
         ];
         $definitions[] = [
@@ -752,30 +745,6 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
     private function normalizePublicPrefix(string $prefix): string
     {
         return trim(str_replace('\\', '/', $prefix), '/');
-    }
-
-    private function resolveManagedAbsolutePath(?string $relativePath, string $publicPrefix, string $directory): ?string
-    {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-
-        if (
-            $normalizedPath === ''
-            || $publicPrefix === ''
-            || !str_starts_with($normalizedPath, $publicPrefix . '/')
-        ) {
-            return null;
-        }
-
-        $relativeFilePath = ltrim(substr($normalizedPath, strlen($publicPrefix)), '/');
-        if (
-            $relativeFilePath === ''
-            || str_contains($relativeFilePath, '../')
-            || str_contains($relativeFilePath, '..\\')
-        ) {
-            return null;
-        }
-
-        return $directory . '/' . $relativeFilePath;
     }
 
     private function isAbsolutePath(string $path): bool

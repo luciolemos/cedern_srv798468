@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Bookshop\BookshopRepository;
+use App\Support\ManagedMediaLocator;
 use App\Support\ManagedStorageRootResolver;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
@@ -321,27 +322,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveManagedBookshopCoverAbsolutePath(?string $relativePath): ?string
     {
-        $fallbackPath = null;
-
-        foreach ($this->resolveBookshopManagedStorageDefinitions() as $storage) {
-            $absolutePath = $this->resolveManagedAbsolutePath(
-                $relativePath,
-                $storage['public_prefix'],
-                $storage['directory']
-            );
-
-            if ($absolutePath === null) {
-                continue;
-            }
-
-            if (is_file($absolutePath)) {
-                return $absolutePath;
-            }
-
-            $fallbackPath ??= $absolutePath;
-        }
-
-        return $fallbackPath;
+        return ManagedMediaLocator::resolve($relativePath, $this->resolveBookshopManagedStorageDefinitions());
     }
 
     private function normalizeBookshopLanguageKey(string $value): string
@@ -896,6 +877,10 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
             ],
             [
                 'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR),
+                'public_prefix' => trim(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
+            ],
+            [
+                'directory' => $this->resolveDirectoryPath(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR),
                 'public_prefix' => trim(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
             ],
             [

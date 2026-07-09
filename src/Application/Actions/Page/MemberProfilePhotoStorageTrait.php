@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Page;
 
+use App\Support\ManagedMediaLocator;
 use App\Support\ManagedStorageRootResolver;
 
 trait MemberProfilePhotoStorageTrait
@@ -81,33 +82,13 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-        $fallbackPath = null;
-
-        foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
-            $absolutePath = $this->resolveManagedAbsoluteMemberProfilePhotoPath(
-                $normalizedPath,
-                $definition['public_prefix'],
-                $definition['directory']
-            );
-
-            if ($absolutePath === null) {
-                continue;
-            }
-
-            if (is_file($absolutePath)) {
-                return $absolutePath;
-            }
-
-            $fallbackPath ??= $absolutePath;
-        }
-
-        $fileNameFallbackPath = $this->resolveManagedMemberProfilePhotoFallbackByFileName($normalizedPath);
-        if ($fileNameFallbackPath !== null) {
-            return $fileNameFallbackPath;
-        }
-
-        return $fallbackPath;
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolveMemberProfilePhotoStorageDefinitions(),
+            [
+                $this->resolveMemberProfilePhotoDirectoryPath(self::LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR),
+            ]
+        );
     }
 
     /**
@@ -133,6 +114,12 @@ trait MemberProfilePhotoStorageTrait
 
         $definitions[] = [
             'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
+            'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
+                self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
+            ),
+        ];
+        $definitions[] = [
+            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
             'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
                 self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
             ),
@@ -273,68 +260,6 @@ trait MemberProfilePhotoStorageTrait
     private function normalizeMemberProfilePhotoPublicPrefix(string $prefix): string
     {
         return trim(str_replace('\\', '/', $prefix), '/');
-    }
-
-    private function resolveManagedAbsoluteMemberProfilePhotoPath(
-        ?string $relativePath,
-        string $publicPrefix,
-        string $directory
-    ): ?string {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-
-        if (
-            $normalizedPath === ''
-            || $publicPrefix === ''
-            || !str_starts_with($normalizedPath, $publicPrefix . '/')
-        ) {
-            return null;
-        }
-
-        $relativeFilePath = ltrim(substr($normalizedPath, strlen($publicPrefix)), '/');
-        if (
-            $relativeFilePath === ''
-            || str_contains($relativeFilePath, '../')
-            || str_contains($relativeFilePath, '..\\')
-        ) {
-            return null;
-        }
-
-        return $directory . '/' . $relativeFilePath;
-    }
-
-    private function resolveManagedMemberProfilePhotoFallbackByFileName(string $normalizedPath): ?string
-    {
-        if ($normalizedPath === '') {
-            return null;
-        }
-
-        $fileName = basename(str_replace('\\', '/', $normalizedPath));
-        if (
-            $fileName === ''
-            || $fileName === '.'
-            || $fileName === '..'
-            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
-        ) {
-            return null;
-        }
-
-        foreach ($this->resolveMemberProfilePhotoStorageDefinitions() as $definition) {
-            $candidatePath = $definition['directory'] . '/' . $fileName;
-
-            if (is_file($candidatePath)) {
-                return $candidatePath;
-            }
-        }
-
-        $legacyGenericPath = $this->resolveMemberProfilePhotoDirectoryPath(
-            self::LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR
-        ) . '/' . $fileName;
-
-        if (is_file($legacyGenericPath)) {
-            return $legacyGenericPath;
-        }
-
-        return null;
     }
 
     private function resolveMemberProfilePhotoProjectRoot(): string

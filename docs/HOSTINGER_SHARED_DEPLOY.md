@@ -267,6 +267,8 @@ Como a producao nao tem SSH no seu fluxo atual, a copia fisica dos arquivos lega
 
 ### Validacao rapida
 
+Como contingencia, a aplicacao passou a procurar o mesmo basename tambem nos diretorios legados de membros, livraria, biblioteca e patrimonio. Isso reduz quebras quando o banco ja aponta para `media/...`, mas algum arquivo fisico ainda ficou no storage antigo. Ainda assim, o estado profissional e definitivo continua sendo manter banco e arquivos sincronizados no diretorio gerenciado atual.
+
 Teste pelo menos uma URL de cada tipo de arquivo gerenciado:
 
 ```bash

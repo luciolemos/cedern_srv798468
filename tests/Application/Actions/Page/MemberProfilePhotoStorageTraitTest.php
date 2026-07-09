@@ -165,6 +165,28 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
+    public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+        );
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+
+        $projectRoot = dirname(__DIR__, 4);
+        $fileName = 'member_test_project_storage_' . bin2hex(random_bytes(4)) . '.jpg';
+        $projectStoragePath = $projectRoot . '/var/storage/member-photos/' . $fileName;
+        file_put_contents($projectStoragePath, 'project-storage-photo');
+        $this->temporaryFiles[] = $projectStoragePath;
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $projectStoragePath,
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
+        );
+    }
+
     public function testUsesExistingAncestorManagedStorageRootWhenConfiguredWithBareRelativeName(): void
     {
         unset(

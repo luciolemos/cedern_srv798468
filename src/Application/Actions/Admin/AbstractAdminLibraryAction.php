@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Library\LibraryRepository;
+use App\Support\ManagedMediaLocator;
 use App\Support\ManagedStorageRootResolver;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
@@ -295,27 +296,7 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
      */
     private function resolveManagedLibraryScopedAbsolutePath(?string $relativePath, array $definitions): ?string
     {
-        $fallbackPath = null;
-
-        foreach ($definitions as $definition) {
-            $absolutePath = $this->resolveManagedAbsolutePath(
-                $relativePath,
-                $definition['public_prefix'],
-                $definition['directory']
-            );
-
-            if ($absolutePath === null) {
-                continue;
-            }
-
-            if (is_file($absolutePath)) {
-                return $absolutePath;
-            }
-
-            $fallbackPath ??= $absolutePath;
-        }
-
-        return $fallbackPath;
+        return ManagedMediaLocator::resolve($relativePath, $definitions);
     }
 
     /**
@@ -372,6 +353,10 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
 
         $definitions[] = [
             'directory' => $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
+            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
+        ];
+        $definitions[] = [
+            'directory' => $this->resolveDirectoryPath($defaultDirectory),
             'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
         ];
         $definitions[] = [
@@ -555,30 +540,6 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
     private function normalizePublicPrefix(string $prefix): string
     {
         return trim(str_replace('\\', '/', $prefix), '/');
-    }
-
-    private function resolveManagedAbsolutePath(?string $relativePath, string $publicPrefix, string $directory): ?string
-    {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-
-        if (
-            $normalizedPath === ''
-            || $publicPrefix === ''
-            || !str_starts_with($normalizedPath, $publicPrefix . '/')
-        ) {
-            return null;
-        }
-
-        $relativeFilePath = ltrim(substr($normalizedPath, strlen($publicPrefix)), '/');
-        if (
-            $relativeFilePath === ''
-            || str_contains($relativeFilePath, '../')
-            || str_contains($relativeFilePath, '..\\')
-        ) {
-            return null;
-        }
-
-        return $directory . '/' . $relativeFilePath;
     }
 
     private function isAbsolutePath(string $path): bool
