@@ -131,6 +131,8 @@ use App\Application\Settings\SettingsInterface;
 use App\Application\Actions\User\ListUsersAction;
 use App\Application\Actions\User\ViewUserAction;
 use App\Domain\User\UserRepository;
+use App\Support\OperationalReadinessReport;
+use App\Support\RuntimeSafety;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -166,16 +168,15 @@ return function (App $app) {
     };
 
     $diagnosticRoutesEnabled = static function (): bool {
-        $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
+        return RuntimeSafety::diagnosticsFeatureEnabled($_ENV);
+    };
 
-        if (in_array($appEnv, ['dev', 'development', 'local', 'test', 'testing', 'qa', 'homolog'], true)) {
-            return true;
+    $diagnosticAccessMiddleware = function (Request $request, RequestHandler $handler) use ($app): Response {
+        if (RuntimeSafety::diagnosticRequestAuthorized($request, $_ENV)) {
+            return $handler->handle($request);
         }
 
-        return filter_var(
-            trim((string) ($_ENV['APP_ENABLE_DIAGNOSTIC_ROUTES'] ?? 'false')),
-            FILTER_VALIDATE_BOOLEAN
-        );
+        return $app->getResponseFactory()->createResponse(404);
     };
 
     $memberHasPanelAccess = static function () use ($memberHasAnyRole, $memberHasMinimumRole): bool {
@@ -838,9 +839,8 @@ return function (App $app) {
             }
 
             $response->getBody()->write($json);
-
             return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
-        });
+        })->add($diagnosticAccessMiddleware);
 
         $app->get('/health/storage', function (Request $request, Response $response) {
             $queryParams = $request->getQueryParams();
@@ -860,9 +860,30 @@ return function (App $app) {
             }
 
             $response->getBody()->write($json);
-
             return $response->withHeader('Content-Type', 'application/json; charset=utf-8');
-        });
+        })->add($diagnosticAccessMiddleware);
+
+        $app->get('/health/readiness', function (Request $request, Response $response) use ($app) {
+            $report = new OperationalReadinessReport($app->getContainer(), dirname(__DIR__));
+            $payload = $report->build();
+            $status = (string) ($payload['status'] ?? 'error');
+            $statusCode = $status === 'ok' ? 200 : ($status === 'degraded' ? 206 : 503);
+
+            $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                $response->getBody()->write('{"error":"Falha ao serializar relatório."}');
+
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(500);
+            }
+
+            $response->getBody()->write($json);
+
+            return $response
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                ->withStatus($statusCode);
+        })->add($diagnosticAccessMiddleware);
 
         $app->get('/users', function (Request $request, Response $response) use ($app) {
             $twig = $app->getContainer()->get(Twig::class);
@@ -873,7 +894,7 @@ return function (App $app) {
             );
 
             return $twig->render($response, 'users.twig', ['users' => $users]);
-        });
+        })->add($diagnosticAccessMiddleware);
 
         $app->get('/health/render', function (Request $request, Response $response) use ($app) {
             $twigView = $app->getContainer()->get(Twig::class);
@@ -1051,7 +1072,7 @@ return function (App $app) {
             $response->getBody()->write((string) json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
             return $response->withHeader('Content-Type', 'application/json');
-        });
+        })->add($diagnosticAccessMiddleware);
 
         $app->get('/health/preview/admin-finance-sales', function (Request $request, Response $response) use ($app) {
             $twig = $app->getContainer()->get(Twig::class);
@@ -1100,7 +1121,7 @@ return function (App $app) {
                 'page_url' => 'https://cedern.org/painel/financas',
                 'page_description' => 'Prévia diagnóstica da tela financeira da livraria do CEDE.',
             ]);
-        });
+        })->add($diagnosticAccessMiddleware);
 
         $app->get('/health/db', function (Request $request, Response $response) use ($app) {
             try {
@@ -1133,12 +1154,12 @@ return function (App $app) {
                     ->withStatus(503)
                     ->withHeader('Content-Type', 'application/json');
             }
-        });
+        })->add($diagnosticAccessMiddleware);
 
         $app->group('/api/users', function (Group $group) {
             $group->get('', ListUsersAction::class);
             $group->get('/{id}', ViewUserAction::class);
-        });
+        })->add($diagnosticAccessMiddleware);
     } else {
         $disabledDiagnosticRoute = function (Request $request, Response $response): Response {
             return $response->withStatus(404);
@@ -1146,6 +1167,8 @@ return function (App $app) {
 
         $app->get('/users', $disabledDiagnosticRoute);
         $app->get('/health/logger', $disabledDiagnosticRoute);
+        $app->get('/health/storage', $disabledDiagnosticRoute);
+        $app->get('/health/readiness', $disabledDiagnosticRoute);
         $app->get('/health/render', $disabledDiagnosticRoute);
         $app->get('/health/preview/admin-finance-sales', $disabledDiagnosticRoute);
         $app->get('/health/db', $disabledDiagnosticRoute);

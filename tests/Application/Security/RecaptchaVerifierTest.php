@@ -52,6 +52,15 @@ class RecaptchaVerifierTest extends TestCase
         $this->assertSame([], $result['error_codes']);
     }
 
+    public function testVerifierUsesPointOneAsDefaultMinimumScore(): void
+    {
+        unset($_ENV['RECAPTCHA_MIN_SCORE']);
+
+        $verifier = new RecaptchaVerifier();
+
+        $this->assertSame(0.1, $verifier->getMinScore());
+    }
+
     public function testVerifierRejectsMissingTokenWhenEnabled(): void
     {
         $_ENV['RECAPTCHA_ENABLED'] = 'true';

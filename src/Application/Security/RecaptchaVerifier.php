@@ -36,7 +36,7 @@ class RecaptchaVerifier
 
     public function getMinScore(): float
     {
-        $score = (float) ($_ENV['RECAPTCHA_MIN_SCORE'] ?? 0.5);
+        $score = (float) ($_ENV['RECAPTCHA_MIN_SCORE'] ?? 0.1);
 
         if ($score < 0) {
             return 0.0;
