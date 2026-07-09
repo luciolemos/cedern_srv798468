@@ -57,6 +57,7 @@ APP_BASE=""
 APP_MANAGED_STORAGE_ROOT="/home/usuario/cedern-storage"
 APP_ENV_FILE="/home/usuario/.secrets/cedern.prod.env"
 APP_LOG_PATH="/home/usuario/logs/cedern-app.log"
+APP_ALLOW_REPOSITORY_FALLBACK="false"
 APP_ASSET_VERSION="1"
 APP_ENABLE_THEME_PALETTE="false"
 APP_ENABLE_DASHBOARD_THEME_PALETTE="true"
@@ -71,6 +72,7 @@ APP_ENV=production
 APP_BASE="/cedern"
 APP_MANAGED_STORAGE_ROOT="/home/usuario/cedern-storage"
 APP_LOG_PATH="/home/usuario/logs/cedern-app.log"
+APP_ALLOW_REPOSITORY_FALLBACK="false"
 APP_ASSET_VERSION="1"
 APP_ENABLE_THEME_PALETTE="false"
 APP_ENABLE_DASHBOARD_THEME_PALETTE="true"
@@ -313,6 +315,13 @@ composer2 install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 4. Envie a branch de deploy.
 5. Execute o install de dependencias no servidor, se o fluxo nao fizer isso automaticamente.
 6. Verifique home publica, login, painel e formularios com e-mail/recaptcha.
+7. Se diagnosticos estiverem habilitados, valide `/health/readiness` e confirme que nao ha repositorios em fallback nem patches pendentes inesperados.
+
+Observacao sobre reCAPTCHA:
+Se a producao retornar `Sua solicitacao nao passou na verificacao de seguranca. Tente novamente.`, o primeiro ajuste operacional atual e confirmar `RECAPTCHA_MIN_SCORE=0.1` no `.env` real e checar o log da aplicacao em busca de `reCAPTCHA score below threshold.`.
+
+Observacao sobre diagnosticos:
+Se for necessario habilitar `APP_ENABLE_DIAGNOSTIC_ROUTES=true` em producao, configure tambem `APP_DIAGNOSTIC_TOKEN` e use a rota `/health/readiness?token=...` como primeira verificacao consolidada.
 
 Observacao:
 Antes de aplicar patches de banco em producao, faca backup do banco real. O fluxo recomendado

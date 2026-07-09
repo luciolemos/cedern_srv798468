@@ -33,6 +33,7 @@ Organize o `.env` em blocos:
 - `APP_ENV`: define o perfil geral da aplicação. Aceitos: `production`, `development`, `test`, `local`, `dev`.
 - `APP_ENV_FILE`: opcional. Permite mandar o bootstrap carregar outro arquivo em vez do `.env` padrão.
 - `APP_LOG_PATH`: caminho absoluto do log da aplicação. Em Hostinger normalmente fica fora do projeto.
+- `APP_ALLOW_REPOSITORY_FALLBACK`: controla se a aplicação pode cair para repositórios fallback quando o MySQL falha. Em produção, o recomendado é `false`.
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
 - `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
 - `APP_MANAGED_STORAGE_ROOT`: opcional. Define uma raiz única para uploads gerenciados fora da pasta publicada/versionada, por exemplo `/home/usuario/cedern-storage`.
@@ -70,14 +71,22 @@ Comportamento atual:
 
 - `APP_AGENDA_PUBLIC_LIMIT`: quantidade máxima de eventos públicos exibidos.
 - `APP_ENABLE_DIAGNOSTIC_ROUTES`: libera rotas auxiliares de diagnóstico. Deve ficar `false` em produção.
+- `APP_DIAGNOSTIC_TOKEN`: token exigido para acessar rotas diagnósticas fora de ambientes de desenvolvimento.
 
 ### 5. reCAPTCHA
 
 - `RECAPTCHA_ENABLED`: ativa ou desativa a validação do reCAPTCHA.
 - `RECAPTCHA_SITE_KEY`: chave pública usada pelo frontend.
 - `RECAPTCHA_SECRET_KEY`: chave privada usada pelo backend.
-- `RECAPTCHA_MIN_SCORE`: nota mínima esperada do token.
+- `RECAPTCHA_MIN_SCORE`: nota mínima esperada do token. Baseline operacional atual do projeto para `reCAPTCHA v3`: `0.1`.
 - `RECAPTCHA_ALLOWED_HOSTNAME`: hostname que o token deve informar como origem válida.
+
+Regra prática atual:
+
+- `0.5` se mostrou agressivo demais para o tráfego real do CEDE em produção.
+- `0.1` é o valor de estabilização adotado após o incidente de julho de 2026.
+- Se a produção permanecer estável por alguns dias, a revisão deve ser gradual: `0.2`, depois `0.3`, nunca pular direto sem teste.
+- Se o fluxo crítico continuar sofrendo falso positivo, o caminho mais previsível é migrar login/cadastro para `reCAPTCHA v2` checkbox.
 
 ### 6. Banco de dados
 
@@ -146,7 +155,9 @@ Regra prática:
 - `APP_DEFAULT_THEME=amber`
 - `APP_DEFAULT_MODE=light`
 - `APP_DEFAULT_DARK_INTENSITY=neutral`
+- `APP_ALLOW_REPOSITORY_FALLBACK=false`
 - `APP_BASE=""` se o app roda na raiz do domínio
+- `RECAPTCHA_MIN_SCORE=0.1`
 - `ASAAS_ENVIRONMENT=production`
 - `ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION=false`
 
@@ -175,7 +186,43 @@ Não mantenha `APP_ENV=production` no ambiente de desenvolvimento só para simul
    - login público
    - login do painel
    - dashboard autenticado
+   - `/health/readiness?token=...` quando o diagnóstico estiver habilitado
 5. Em alterações de SMTP, teste contato, recuperação de senha e cadastros que disparam e-mail.
+
+## Política operacional de fallback
+
+- Em `development`, `local`, `test`, `qa` e `homolog`, o projeto pode usar repositórios fallback para não travar o ambiente de trabalho.
+- Em `production`, o padrão agora é estrito: se o repositório MySQL falhar ao inicializar, a aplicação registra erro crítico e falha alto.
+- Só ligue `APP_ALLOW_REPOSITORY_FALLBACK=true` em produção como medida temporária e consciente de contingência.
+
+## Checklist de encerramento do incidente de reCAPTCHA
+
+Quando a produção apresentar mensagens como `Sua solicitacao nao passou na verificacao de seguranca. Tente novamente.`, encerre o incidente apenas depois de validar:
+
+1. `RECAPTCHA_MIN_SCORE` real do servidor.
+2. `RECAPTCHA_ALLOWED_HOSTNAME` compatível com o domínio final.
+3. Login público funcionando com usuário real.
+4. Cadastro público funcionando.
+5. Recuperação de senha funcionando.
+6. Formulário de contato funcionando.
+7. Log sem novos registros recorrentes de `reCAPTCHA score below threshold.` após o ajuste.
+
+Se os itens 3 a 6 passarem e o log parar de acumular rejeições por score, o incidente pode ser considerado estabilizado.
+
+## Rota consolidada de prontidão
+
+Quando `APP_ENABLE_DIAGNOSTIC_ROUTES=true`, a aplicação expõe `GET /health/readiness`.
+
+O relatório consolida:
+
+- conectividade PDO;
+- classe real de cada repositório e detecção de fallback;
+- status dos patches SQL;
+- gravabilidade do logger;
+- prontidão dos diretórios de storage gerenciado;
+- proteções operacionais do ambiente.
+
+Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?token=...` ou header `X-Diagnostic-Token`.
 
 ## Arquivos relacionados
 

@@ -25,64 +25,85 @@ use App\Infrastructure\Persistence\Member\MySqlMemberAuthRepository;
 use App\Infrastructure\Persistence\Patrimony\FallbackPatrimonyRepository;
 use App\Infrastructure\Persistence\Patrimony\MySqlPatrimonyRepository;
 use App\Infrastructure\Persistence\User\InMemoryUserRepository;
+use App\Support\RepositoryInstantiationGuard;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 return function (ContainerBuilder $containerBuilder) {
-    // Here we map our UserRepository interface to its in memory implementation
     $containerBuilder->addDefinitions([
         AgendaRepository::class => function (ContainerInterface $c): AgendaRepository {
-            try {
-                return new MySqlAgendaRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackAgendaRepository();
-            }
+            /** @var AgendaRepository */
+            return RepositoryInstantiationGuard::resolve(
+                AgendaRepository::class,
+                static fn (): AgendaRepository => new MySqlAgendaRepository($c->get(\PDO::class)),
+                static fn (): AgendaRepository => new FallbackAgendaRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         MemberAuthRepository::class => function (ContainerInterface $c): MemberAuthRepository {
-            try {
-                return new MySqlMemberAuthRepository(
+            /** @var MemberAuthRepository */
+            return RepositoryInstantiationGuard::resolve(
+                MemberAuthRepository::class,
+                static fn (): MemberAuthRepository => new MySqlMemberAuthRepository(
                     $c->get(\PDO::class),
                     $c->get(LoggerInterface::class)
-                );
-            } catch (\Throwable $exception) {
-                return new FallbackMemberAuthRepository();
-            }
+                ),
+                static fn (): MemberAuthRepository => new FallbackMemberAuthRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         InstitutionalContentRepository::class => function (ContainerInterface $c): InstitutionalContentRepository {
-            try {
-                return new MySqlInstitutionalContentRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackInstitutionalContentRepository();
-            }
+            /** @var InstitutionalContentRepository */
+            return RepositoryInstantiationGuard::resolve(
+                InstitutionalContentRepository::class,
+                static fn (): InstitutionalContentRepository => new MySqlInstitutionalContentRepository($c->get(\PDO::class)),
+                static fn (): InstitutionalContentRepository => new FallbackInstitutionalContentRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         LibraryRepository::class => function (ContainerInterface $c): LibraryRepository {
-            try {
-                return new MySqlLibraryRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackLibraryRepository();
-            }
+            /** @var LibraryRepository */
+            return RepositoryInstantiationGuard::resolve(
+                LibraryRepository::class,
+                static fn (): LibraryRepository => new MySqlLibraryRepository($c->get(\PDO::class)),
+                static fn (): LibraryRepository => new FallbackLibraryRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         BookshopRepository::class => function (ContainerInterface $c): BookshopRepository {
-            try {
-                return new MySqlBookshopRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackBookshopRepository();
-            }
+            /** @var BookshopRepository */
+            return RepositoryInstantiationGuard::resolve(
+                BookshopRepository::class,
+                static fn (): BookshopRepository => new MySqlBookshopRepository($c->get(\PDO::class)),
+                static fn (): BookshopRepository => new FallbackBookshopRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         PatrimonyRepository::class => function (ContainerInterface $c): PatrimonyRepository {
-            try {
-                return new MySqlPatrimonyRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackPatrimonyRepository();
-            }
+            /** @var PatrimonyRepository */
+            return RepositoryInstantiationGuard::resolve(
+                PatrimonyRepository::class,
+                static fn (): PatrimonyRepository => new MySqlPatrimonyRepository($c->get(\PDO::class)),
+                static fn (): PatrimonyRepository => new FallbackPatrimonyRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         SiteVisitRepository::class => function (ContainerInterface $c): SiteVisitRepository {
-            try {
-                return new MySqlSiteVisitRepository($c->get(\PDO::class));
-            } catch (\Throwable $exception) {
-                return new FallbackSiteVisitRepository();
-            }
+            /** @var SiteVisitRepository */
+            return RepositoryInstantiationGuard::resolve(
+                SiteVisitRepository::class,
+                static fn (): SiteVisitRepository => new MySqlSiteVisitRepository($c->get(\PDO::class)),
+                static fn (): SiteVisitRepository => new FallbackSiteVisitRepository(),
+                $c->get(LoggerInterface::class),
+                $_ENV
+            );
         },
         UserRepository::class => \DI\autowire(InMemoryUserRepository::class),
     ]);
