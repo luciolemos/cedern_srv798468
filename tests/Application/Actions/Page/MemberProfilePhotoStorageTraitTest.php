@@ -32,6 +32,11 @@ final class TestableMemberProfilePhotoStorageHarness
     {
         return $this->resolveWritableMemberProfilePhotoStorage();
     }
+
+    public function exposedDeleteStoredMemberProfilePhotoIfManaged(?string $relativePath): void
+    {
+        $this->deleteStoredMemberProfilePhotoIfManaged($relativePath);
+    }
 }
 
 final class MemberProfilePhotoStorageTraitTest extends TestCase
@@ -254,6 +259,22 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
             '/srv/cede-managed-storage/member-photos/member_demo.png',
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/member_demo.png')
         );
+    }
+
+    public function testDeletesStoredManagedMemberProfilePhotoFile(): void
+    {
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+
+        $projectRoot = dirname(__DIR__, 4);
+        $fileName = 'member_test_delete_' . bin2hex(random_bytes(4)) . '.jpg';
+        $projectStoragePath = $projectRoot . '/var/storage/member-photos/' . $fileName;
+        file_put_contents($projectStoragePath, 'project-storage-photo');
+        $this->temporaryFiles[] = $projectStoragePath;
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+        $storage->exposedDeleteStoredMemberProfilePhotoIfManaged('media/membros/fotos/' . $fileName);
+
+        $this->assertFileDoesNotExist($projectStoragePath);
     }
 
     /**

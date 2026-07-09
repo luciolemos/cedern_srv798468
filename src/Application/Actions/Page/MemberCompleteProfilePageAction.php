@@ -166,6 +166,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
         if (strtoupper($request->getMethod()) === 'POST') {
             $body = (array) ($request->getParsedBody() ?? []);
             $redirectTo = $this->sanitizeRedirectTarget((string) ($body['redirect_to'] ?? $redirectTo));
+            $existingPhotoPath = trim((string) ($member['profile_photo_path'] ?? ''));
+            $newPhotoPath = '';
             $form['full_name'] = trim((string) ($body['full_name'] ?? ''));
             $form['phone_mobile'] = trim((string) ($body['phone_mobile'] ?? ''));
             $form['phone_landline'] = trim((string) ($body['phone_landline'] ?? ''));
@@ -350,6 +352,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     }
                 } elseif (!empty($uploadResult['path'])) {
                     $photoPath = (string) $uploadResult['path'];
+                    $newPhotoPath = $photoPath;
                 }
             }
 
@@ -370,7 +373,7 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                     : date('Y-m-d H:i:s');
 
                 try {
-                    $this->memberAuthRepository->updateProfile($memberId, [
+                    $updated = $this->memberAuthRepository->updateProfile($memberId, [
                         'full_name' => $form['full_name'],
                         'phone_mobile' => $form['phone_mobile'],
                         'phone_landline' => $form['phone_landline'],
@@ -395,7 +398,15 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'privacy_notice_accepted_at' => $acceptedNoticeAt,
                         'profile_completed' => 1,
                     ]);
+
+                    if ($updated !== true) {
+                        throw new \RuntimeException('Falha ao persistir atualização do perfil.');
+                    }
                 } catch (Throwable $exception) {
+                    if ($newPhotoPath !== '') {
+                        $this->deleteStoredMemberProfilePhotoIfManaged($newPhotoPath);
+                    }
+
                     $this->logger->error('Falha ao atualizar perfil de membro.', [
                         'member_id' => $memberId,
                         'exception' => $exception,
@@ -407,6 +418,10 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             }
 
             if (empty($errors)) {
+                if ($newPhotoPath !== '' && $existingPhotoPath !== '' && $existingPhotoPath !== $newPhotoPath) {
+                    $this->deleteStoredMemberProfilePhotoIfManaged($existingPhotoPath);
+                }
+
                 $form['profile_photo_path'] = $photoPath;
 
                 $_SESSION['member_name'] = $form['full_name'];
@@ -425,6 +440,10 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 ]);
 
                 return $response->withHeader('Location', $redirectTo)->withStatus(303);
+            }
+
+            if ($newPhotoPath !== '') {
+                $this->deleteStoredMemberProfilePhotoIfManaged($newPhotoPath);
             }
 
             $this->storeSessionFlash(self::FLASH_KEY, [
