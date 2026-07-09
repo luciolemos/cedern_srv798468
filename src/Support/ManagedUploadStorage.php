@@ -6,6 +6,8 @@ namespace App\Support;
 
 final class ManagedUploadStorage
 {
+    private const STORAGE_PREFIX = 'var/storage/';
+
     private string $projectRoot;
 
     /** @var array<string, mixed> */
@@ -84,6 +86,16 @@ final class ManagedUploadStorage
 
     public function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
     {
+        $managedStorageRoot = $this->resolveManagedStorageRoot();
+        if ($managedStorageRoot !== null) {
+            return $this->resolveManagedStorageDirectory($defaultDirectory);
+        }
+
+        $autoDetectedDirectory = $this->detectExistingSharedStorageDirectory($defaultDirectory);
+        if ($autoDetectedDirectory !== null) {
+            return $autoDetectedDirectory;
+        }
+
         return $this->resolveManagedStorageDirectory($defaultDirectory);
     }
 
@@ -95,15 +107,14 @@ final class ManagedUploadStorage
         }
 
         $managedStorageRoot = $this->resolveManagedStorageRoot();
-        $storagePrefix = 'var/storage/';
         $normalizedRelativePath = ltrim($normalizedPath, '/');
 
         if (
             $managedStorageRoot !== null
             && !$this->isAbsolutePath($normalizedPath)
-            && str_starts_with($normalizedRelativePath, $storagePrefix)
+            && str_starts_with($normalizedRelativePath, self::STORAGE_PREFIX)
         ) {
-            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
+            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen(self::STORAGE_PREFIX)), '/');
 
             return $managedStorageRoot . '/' . $storageSuffix;
         }
@@ -259,5 +270,77 @@ final class ManagedUploadStorage
     {
         return str_starts_with($path, '/')
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+    }
+
+    private function detectExistingSharedStorageDirectory(string $defaultDirectory): ?string
+    {
+        $normalizedDirectory = ltrim(str_replace('\\', '/', trim($defaultDirectory)), '/');
+
+        if (!str_starts_with($normalizedDirectory, self::STORAGE_PREFIX)) {
+            return null;
+        }
+
+        $storageSuffix = ltrim(substr($normalizedDirectory, strlen(self::STORAGE_PREFIX)), '/');
+        if ($storageSuffix === '') {
+            return null;
+        }
+
+        foreach ($this->buildAncestorBases() as $basePath) {
+            if (!is_dir($basePath) || !is_readable($basePath)) {
+                continue;
+            }
+
+            $entries = @scandir($basePath);
+            if (!is_array($entries)) {
+                continue;
+            }
+
+            foreach ($entries as $entry) {
+                if ($entry === '.' || $entry === '..') {
+                    continue;
+                }
+
+                $normalizedEntry = strtolower((string) $entry);
+                if (!str_contains($normalizedEntry, 'storage')) {
+                    continue;
+                }
+
+                $candidateRoot = rtrim($basePath, '/') . '/' . $entry;
+                if (!is_dir($candidateRoot)) {
+                    continue;
+                }
+
+                $candidateDirectory = $candidateRoot . '/' . $storageSuffix;
+                if (is_dir($candidateDirectory)) {
+                    return $candidateDirectory;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildAncestorBases(): array
+    {
+        $bases = [];
+        $seen = [];
+        $current = dirname($this->projectRoot);
+
+        while ($current !== '' && $current !== '.' && !isset($seen[$current])) {
+            $seen[$current] = true;
+            $bases[] = $current;
+
+            $next = dirname($current);
+            if ($next === $current) {
+                break;
+            }
+
+            $current = $next;
+        }
+
+        return $bases;
     }
 }

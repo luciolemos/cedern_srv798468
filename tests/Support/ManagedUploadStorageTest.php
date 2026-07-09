@@ -9,6 +9,22 @@ use PHPUnit\Framework\TestCase;
 
 final class ManagedUploadStorageTest extends TestCase
 {
+    /** @var list<string> */
+    private array $temporaryDirectories = [];
+
+    protected function tearDown(): void
+    {
+        rsort($this->temporaryDirectories);
+
+        foreach ($this->temporaryDirectories as $directoryPath) {
+            if (is_dir($directoryPath)) {
+                @rmdir($directoryPath);
+            }
+        }
+
+        parent::tearDown();
+    }
+
     public function testBuildReadDefinitionsIncludesManagedProjectAndLegacyCandidates(): void
     {
         $storage = new ManagedUploadStorage('/var/www/cedern', [
@@ -68,6 +84,35 @@ final class ManagedUploadStorageTest extends TestCase
         $this->assertSame(
             'media/membros/fotos/member_demo.png',
             $storage->buildRelativePath('member_demo.png', '/media/membros/fotos/')
+        );
+    }
+
+    public function testResolveManagedStorageDefaultDirectoryAutoDetectsExistingSharedStorageOutsidePublishedTree(): void
+    {
+        $baseDirectory = sys_get_temp_dir() . '/cedern-managed-upload-storage-' . bin2hex(random_bytes(4));
+        $projectRoot = $baseDirectory . '/domains/cedern.org/public_html';
+        $sharedRoot = $baseDirectory . '/_cedern_storage';
+        $sharedMemberDirectory = $sharedRoot . '/member-photos';
+
+        mkdir($projectRoot, 0775, true);
+        mkdir($sharedMemberDirectory, 0775, true);
+
+        $this->temporaryDirectories[] = $sharedMemberDirectory;
+        $this->temporaryDirectories[] = $sharedRoot;
+        $this->temporaryDirectories[] = $baseDirectory . '/domains/cedern.org';
+        $this->temporaryDirectories[] = $baseDirectory . '/domains';
+        $this->temporaryDirectories[] = $projectRoot;
+        $this->temporaryDirectories[] = $baseDirectory;
+
+        $storage = new ManagedUploadStorage($projectRoot, []);
+
+        $this->assertSame(
+            $sharedMemberDirectory,
+            $storage->resolveManagedStorageDefaultDirectory('var/storage/member-photos')
+        );
+        $this->assertSame(
+            $sharedMemberDirectory,
+            $storage->resolveUploadDirectory('MEMBER_PROFILE_PHOTO_UPLOAD_DIR', 'var/storage/member-photos')
         );
     }
 }
