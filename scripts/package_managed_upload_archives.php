@@ -77,6 +77,12 @@ foreach ($createdArchives as $archivePath) {
     echo sprintf("scp %s@%s:%s .\n", $remoteUser, $remoteHost, $archivePath);
 }
 
+if (!isset($options['host']) && hostMayBeLocallyScoped($remoteHost)) {
+    echo PHP_EOL;
+    echo "If this host does not resolve from your local machine, rerun with:\n";
+    echo "  php scripts/package_managed_upload_archives.php --host SEU_HOST_PUBLICO\n";
+}
+
 /**
  * @return array{user?: string, host?: string, output_dir?: string}
  */
@@ -277,9 +283,28 @@ function resolveProjectPath(string $projectRoot, string $path): string
 
 function detectHostName(): string
 {
+    $configuredHost = trim((string) ($_ENV['PACKAGE_DOWNLOAD_HOST'] ?? ''));
+    if ($configuredHost !== '') {
+        return $configuredHost;
+    }
+
+    $fqdn = trim((string) @shell_exec('hostname -f 2>/dev/null'));
+    if ($fqdn !== '' && !hostMayBeLocallyScoped($fqdn)) {
+        return $fqdn;
+    }
+
     $hostName = gethostname();
 
     return is_string($hostName) && $hostName !== '' ? $hostName : 'localhost';
+}
+
+function hostMayBeLocallyScoped(string $host): bool
+{
+    $normalizedHost = strtolower(trim($host));
+
+    return $normalizedHost === ''
+        || $normalizedHost === 'localhost'
+        || !str_contains($normalizedHost, '.');
 }
 
 function formatBytes(int $bytes): string
