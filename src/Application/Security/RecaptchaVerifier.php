@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace App\Application\Security;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+
 class RecaptchaVerifier
 {
     private const VERIFY_ENDPOINT = 'https://www.google.com/recaptcha/api/siteverify';
+    private LoggerInterface $logger;
+
+    public function __construct(?LoggerInterface $logger = null)
+    {
+        $this->logger = $logger ?? new NullLogger();
+    }
 
     public function isEnabled(): bool
     {
@@ -49,6 +58,17 @@ class RecaptchaVerifier
         ?string $requestHost = null,
         ?string $remoteIp = null
     ): array {
+        $requestHost = strtolower(trim((string) $requestHost));
+        $remoteIp = trim((string) $remoteIp);
+        $baseContext = [
+            'expected_action' => trim($expectedAction),
+            'request_host' => $requestHost,
+        ];
+
+        if ($remoteIp !== '') {
+            $baseContext['remote_ip'] = $remoteIp;
+        }
+
         if (!$this->isEnabled()) {
             return [
                 'ok' => true,
@@ -59,11 +79,18 @@ class RecaptchaVerifier
         }
 
         if (!$this->isReady()) {
+            $this->logger->warning('reCAPTCHA enabled but not fully configured.', $baseContext + [
+                'has_site_key' => $this->getSiteKey() !== '',
+                'has_secret_key' => $this->getSecretKey() !== '',
+            ]);
+
             return $this->buildFailure('A validacao anti-spam esta indisponivel no momento.');
         }
 
         $token = trim($token);
         if ($token === '') {
+            $this->logger->info('reCAPTCHA submission missing token.', $baseContext);
+
             return $this->buildFailure('Confirme a validacao anti-spam e tente novamente.');
         }
 
@@ -72,7 +99,6 @@ class RecaptchaVerifier
             'response' => $token,
         ];
 
-        $remoteIp = trim((string) $remoteIp);
         if ($remoteIp !== '') {
             $payload['remoteip'] = $remoteIp;
         }
@@ -80,6 +106,10 @@ class RecaptchaVerifier
         try {
             $result = $this->performVerificationRequest($payload);
         } catch (\Throwable $exception) {
+            $this->logger->error('reCAPTCHA verification request failed.', $baseContext + [
+                'exception_message' => $exception->getMessage(),
+            ]);
+
             return $this->buildFailure('Nao foi possivel validar a verificacao de seguranca. Tente novamente.');
         }
 
@@ -87,6 +117,11 @@ class RecaptchaVerifier
         $score = $this->parseScore($result['score'] ?? null);
 
         if ((bool) ($result['success'] ?? false) !== true) {
+            $this->logger->warning('reCAPTCHA verification rejected by upstream.', $baseContext + [
+                'score' => $score,
+                'error_codes' => $errorCodes,
+            ]);
+
             return $this->buildFailure(
                 'Nao foi possivel validar a verificacao de seguranca. Tente novamente.',
                 $score,
@@ -96,6 +131,12 @@ class RecaptchaVerifier
 
         $resolvedAction = trim((string) ($result['action'] ?? ''));
         if ($expectedAction !== '' && $resolvedAction !== $expectedAction) {
+            $this->logger->warning('reCAPTCHA action mismatch.', $baseContext + [
+                'score' => $score,
+                'error_codes' => $errorCodes,
+                'resolved_action' => $resolvedAction,
+            ]);
+
             return $this->buildFailure(
                 'A verificacao de seguranca expirou. Atualize a pagina e tente novamente.',
                 $score,
@@ -106,6 +147,13 @@ class RecaptchaVerifier
         $expectedHostname = $this->resolveExpectedHostname($requestHost);
         $receivedHostname = trim((string) ($result['hostname'] ?? ''));
         if ($expectedHostname !== '' && !$this->hostnameMatches($receivedHostname, $expectedHostname)) {
+            $this->logger->warning('reCAPTCHA hostname mismatch.', $baseContext + [
+                'score' => $score,
+                'error_codes' => $errorCodes,
+                'expected_hostname' => $expectedHostname,
+                'received_hostname' => $receivedHostname,
+            ]);
+
             return $this->buildFailure(
                 'A verificacao de seguranca foi rejeitada para este dominio.',
                 $score,
@@ -115,6 +163,14 @@ class RecaptchaVerifier
 
         $minimumScore = $this->getMinScore();
         if ($score !== null && $score < $minimumScore) {
+            $this->logger->warning('reCAPTCHA score below threshold.', $baseContext + [
+                'score' => $score,
+                'minimum_score' => $minimumScore,
+                'error_codes' => $errorCodes,
+                'resolved_action' => $resolvedAction,
+                'received_hostname' => $receivedHostname,
+            ]);
+
             return $this->buildFailure(
                 'Sua solicitacao nao passou na verificacao de seguranca. Tente novamente.',
                 $score,

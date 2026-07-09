@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Application\Security;
 
 use App\Application\Security\RecaptchaVerifier;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 class RecaptchaVerifierTest extends TestCase
@@ -125,6 +127,61 @@ class RecaptchaVerifierTest extends TestCase
             'Sua solicitacao nao passou na verificacao de seguranca. Tente novamente.',
             $result['message']
         );
+    }
+
+    public function testVerifierLogsLowScoreContext(): void
+    {
+        $_ENV['RECAPTCHA_ENABLED'] = 'true';
+        $_ENV['RECAPTCHA_SITE_KEY'] = 'site-key';
+        $_ENV['RECAPTCHA_SECRET_KEY'] = 'secret-key';
+        $_ENV['RECAPTCHA_MIN_SCORE'] = '0.5';
+        $_ENV['RECAPTCHA_ALLOWED_HOSTNAME'] = 'cedern.org';
+
+        $logger = new class () extends AbstractLogger {
+            /** @var list<array{level: string, message: string, context: array<string, mixed>}> */
+            public array $records = [];
+
+            /**
+             * @param mixed $level
+             * @param array<string, mixed> $context
+             */
+            public function log($level, $message, array $context = []): void
+            {
+                $this->records[] = ['level' => (string) $level, 'message' => (string) $message, 'context' => $context];
+            }
+        };
+
+        $verifier = new class ($logger) extends RecaptchaVerifier {
+            public function __construct(LoggerInterface $logger)
+            {
+                parent::__construct($logger);
+            }
+
+            /**
+             * @param array<string, string> $payload
+             * @return array<string, mixed>
+             */
+            protected function performVerificationRequest(array $payload): array
+            {
+                return [
+                    'success' => true,
+                    'score' => 0.2,
+                    'action' => 'member_login',
+                    'hostname' => 'cedern.org',
+                ];
+            }
+        };
+
+        $result = $verifier->verifySubmission('token-value', 'member_login', 'cedern.org', '127.0.0.1');
+
+        $this->assertFalse($result['ok']);
+        $this->assertCount(1, $logger->records);
+        $this->assertSame('warning', $logger->records[0]['level']);
+        $this->assertSame('reCAPTCHA score below threshold.', $logger->records[0]['message']);
+        $this->assertSame(0.2, $logger->records[0]['context']['score']);
+        $this->assertSame(0.5, $logger->records[0]['context']['minimum_score']);
+        $this->assertSame('member_login', $logger->records[0]['context']['expected_action']);
+        $this->assertSame('cedern.org', $logger->records[0]['context']['request_host']);
     }
 
     /**
