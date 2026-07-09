@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Page;
 
 use App\Support\ManagedMediaLocator;
-use App\Support\ManagedStorageRootResolver;
+use App\Support\ManagedUploadStorage;
 
 trait MemberProfilePhotoStorageTrait
 {
@@ -22,21 +22,23 @@ trait MemberProfilePhotoStorageTrait
      */
     protected function resolveWritableMemberProfilePhotoStorage(): ?array
     {
-        if ($this->isStrictManagedMemberPhotoWriteModeEnabled()) {
+        $storage = $this->memberProfilePhotoStorage();
+
+        if ($storage->managedWriteModeEnabled()) {
             $primaryDefinition = $this->resolvePrimaryMemberProfilePhotoStorageDefinition();
 
             if ($primaryDefinition === null) {
                 return null;
             }
 
-            if ($this->prepareWritableMemberProfilePhotoDirectory($primaryDefinition['directory'])) {
+            if ($storage->prepareWritableDirectory($primaryDefinition['directory'])) {
                 return $primaryDefinition;
             }
 
             $this->logger->warning('Diretório principal de foto de perfil indisponível para escrita.', [
                 'directory' => $primaryDefinition['directory'],
                 'public_prefix' => $primaryDefinition['public_prefix'],
-                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+                'managed_storage_root' => $storage->resolveManagedStorageRoot(),
             ]);
 
             return null;
@@ -51,7 +53,7 @@ trait MemberProfilePhotoStorageTrait
                 'public_prefix' => $definition['public_prefix'],
             ];
 
-            if ($this->prepareWritableMemberProfilePhotoDirectory($directory)) {
+            if ($storage->prepareWritableDirectory($directory)) {
                 return $definition;
             }
         }
@@ -75,9 +77,10 @@ trait MemberProfilePhotoStorageTrait
 
     protected function buildManagedMemberProfilePhotoRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        $normalizedPrefix = trim((string) ($publicPrefix ?? $this->resolveMemberProfilePhotoUploadPublicPrefix()), '/');
-
-        return $normalizedPrefix . '/' . ltrim($fileName, '/');
+        return $this->memberProfilePhotoStorage()->buildRelativePath(
+            $fileName,
+            (string) ($publicPrefix ?? $this->resolveMemberProfilePhotoUploadPublicPrefix())
+        );
     }
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
@@ -96,180 +99,41 @@ trait MemberProfilePhotoStorageTrait
      */
     protected function resolveMemberProfilePhotoStorageDefinitions(): array
     {
-        $definitions = [];
-        $configuredDirectory = $this->resolveOptionalConfiguredMemberProfilePhotoUploadDirectory();
-        $configuredPublicPrefix = $this->resolveOptionalConfiguredMemberProfilePhotoUploadPublicPrefix();
-
-        if ($configuredDirectory !== null || $configuredPublicPrefix !== null) {
-            $definitions[] = [
-                'directory' => $configuredDirectory ?? $this->resolveManagedStorageDefaultDirectory(
-                    self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR
-                ),
-                'public_prefix' => $configuredPublicPrefix
-                    ?? $this->normalizeMemberProfilePhotoPublicPrefix(
-                        self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
-                    ),
-            ];
-        }
-
-        $definitions[] = [
-            'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
-            'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
-                self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
-            ),
-        ];
-        $definitions[] = [
-            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
-            'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
-                self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
-            ),
-        ];
-        $definitions[] = [
-            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_DIR),
-            'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
-                self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
-            ),
-        ];
-        $definitions[] = [
-            'directory' => $this->resolveMemberProfilePhotoDirectoryPath(self::LEGACY_MEMBER_AVATAR_UPLOAD_DIR),
-            'public_prefix' => $this->normalizeMemberProfilePhotoPublicPrefix(
-                self::LEGACY_MEMBER_AVATAR_UPLOAD_PUBLIC_PREFIX
-            ),
-        ];
-
-        $uniqueDefinitions = [];
-        $seenDefinitions = [];
-
-        foreach ($definitions as $definition) {
-            $definitionHash = $definition['directory'] . '|' . $definition['public_prefix'];
-            if (isset($seenDefinitions[$definitionHash])) {
-                continue;
-            }
-
-            $seenDefinitions[$definitionHash] = true;
-            $uniqueDefinitions[] = $definition;
-        }
-
-        return $uniqueDefinitions;
+        return $this->memberProfilePhotoStorage()->buildReadDefinitions(
+            'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
+            'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR,
+            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX,
+            [
+                [
+                    'directory' => self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_DIR,
+                    'public_prefix' => self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX,
+                    'directory_mode' => 'project',
+                ],
+                [
+                    'directory' => self::LEGACY_MEMBER_AVATAR_UPLOAD_DIR,
+                    'public_prefix' => self::LEGACY_MEMBER_AVATAR_UPLOAD_PUBLIC_PREFIX,
+                    'directory_mode' => 'project',
+                ],
+            ]
+        );
     }
 
     protected function resolveMemberProfilePhotoUploadPublicPrefix(): string
     {
-        $configuredPrefix = $this->resolveOptionalConfiguredMemberProfilePhotoUploadPublicPrefix();
-
-        if ($configuredPrefix !== null) {
-            return $configuredPrefix;
-        }
-
-        return $this->normalizeMemberProfilePhotoPublicPrefix(
+        return $this->memberProfilePhotoStorage()->resolveUploadPublicPrefix(
+            'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
         );
     }
 
-    private function resolveOptionalConfiguredMemberProfilePhotoUploadDirectory(): ?string
-    {
-        $configuredDirectory = trim((string) ($_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'] ?? ''));
-
-        if ($configuredDirectory === '') {
-            return null;
-        }
-
-        return $this->resolveManagedStorageDirectory($configuredDirectory);
-    }
-
-    private function resolveOptionalConfiguredMemberProfilePhotoUploadPublicPrefix(): ?string
-    {
-        $configuredPrefix = trim((string) ($_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'] ?? ''));
-
-        if ($configuredPrefix === '') {
-            return null;
-        }
-
-        return $this->normalizeMemberProfilePhotoPublicPrefix($configuredPrefix);
-    }
-
-    private function isStrictManagedMemberPhotoWriteModeEnabled(): bool
-    {
-        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
-    }
-
-    private function prepareWritableMemberProfilePhotoDirectory(string $directory): bool
-    {
-        clearstatcache(true, $directory);
-
-        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-            return false;
-        }
-
-        if (!is_writable($directory)) {
-            @chmod($directory, 0775);
-            clearstatcache(true, $directory);
-        }
-
-        return is_writable($directory);
-    }
-
-    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
-    {
-        return $this->resolveManagedStorageDirectory($defaultDirectory);
-    }
-
-    private function resolveManagedStorageRoot(): ?string
-    {
-        return ManagedStorageRootResolver::resolve(
-            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
-            $this->resolveMemberProfilePhotoProjectRoot()
-        );
-    }
-
-    private function resolveManagedStorageDirectory(string $path): string
-    {
-        $normalizedPath = str_replace('\\', '/', trim($path));
-        while (str_starts_with($normalizedPath, './')) {
-            $normalizedPath = substr($normalizedPath, 2);
-        }
-
-        $managedStorageRoot = $this->resolveManagedStorageRoot();
-        $storagePrefix = 'var/storage/';
-        $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-        if (
-            $managedStorageRoot !== null
-            && !$this->isAbsoluteMemberProfilePhotoPath($normalizedPath)
-            && str_starts_with($normalizedRelativePath, $storagePrefix)
-        ) {
-            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-
-            return $managedStorageRoot . '/' . $storageSuffix;
-        }
-
-        return $this->resolveMemberProfilePhotoDirectoryPath($normalizedPath);
-    }
-
     private function resolveMemberProfilePhotoDirectoryPath(string $path): string
     {
-        $normalizedPath = str_replace('\\', '/', $path);
-
-        if ($this->isAbsoluteMemberProfilePhotoPath($normalizedPath)) {
-            return rtrim($normalizedPath, '/');
-        }
-
-        return $this->resolveMemberProfilePhotoProjectRoot() . '/' . ltrim($normalizedPath, '/');
+        return $this->memberProfilePhotoStorage()->resolveProjectPath($path);
     }
 
-    private function normalizeMemberProfilePhotoPublicPrefix(string $prefix): string
+    private function memberProfilePhotoStorage(): ManagedUploadStorage
     {
-        return trim(str_replace('\\', '/', $prefix), '/');
-    }
-
-    private function resolveMemberProfilePhotoProjectRoot(): string
-    {
-        return dirname(__DIR__, 4);
-    }
-
-    private function isAbsoluteMemberProfilePhotoPath(string $path): bool
-    {
-        return str_starts_with($path, '/')
-            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+        return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
     }
 }

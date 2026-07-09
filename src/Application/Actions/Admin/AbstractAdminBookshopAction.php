@@ -7,7 +7,7 @@ namespace App\Application\Actions\Admin;
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Bookshop\BookshopRepository;
 use App\Support\ManagedMediaLocator;
-use App\Support\ManagedStorageRootResolver;
+use App\Support\ManagedUploadStorage;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Views\Twig;
@@ -282,7 +282,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveBookshopCoverUploadDirectory(): string
     {
-        return $this->resolveConfiguredUploadDirectory(
+        return $this->bookshopStorage()->resolveUploadDirectory(
             'BOOKSHOP_COVER_UPLOAD_DIR',
             self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR
         );
@@ -290,7 +290,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveBookshopCoverUploadPublicPrefix(): string
     {
-        return $this->resolveConfiguredUploadPublicPrefix(
+        return $this->bookshopStorage()->resolveUploadPublicPrefix(
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX
         );
@@ -298,7 +298,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveBookshopCoverFallbackUploadDirectory(): string
     {
-        return $this->resolveDirectoryPath(self::FALLBACK_BOOKSHOP_COVER_UPLOAD_DIR);
+        return $this->bookshopStorage()->resolveProjectPath(self::FALLBACK_BOOKSHOP_COVER_UPLOAD_DIR);
     }
 
     protected function resolveBookshopCoverFallbackPublicPrefix(): string
@@ -315,9 +315,10 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function buildManagedBookshopCoverRelativePath(string $fileName, ?string $publicPrefix = null): string
     {
-        $resolvedPrefix = trim((string) ($publicPrefix ?? $this->resolveBookshopCoverUploadPublicPrefix()), '/');
-
-        return $resolvedPrefix . '/' . ltrim($fileName, '/');
+        return $this->bookshopStorage()->buildRelativePath(
+            $fileName,
+            (string) ($publicPrefix ?? $this->resolveBookshopCoverUploadPublicPrefix())
+        );
     }
 
     protected function resolveManagedBookshopCoverAbsolutePath(?string $relativePath): ?string
@@ -764,30 +765,26 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
         }
     }
 
-    private function resolveProjectRoot(): string
-    {
-        return dirname(__DIR__, 4);
-    }
-
     /**
      * @return array{directory: string, public_prefix: string}|null
      */
     private function resolveWritableBookshopCoverDestination(): ?array
     {
+        $storage = $this->bookshopStorage();
         $primaryCandidate = [
             'directory' => $this->resolveBookshopCoverUploadDirectory(),
             'public_prefix' => $this->resolveBookshopCoverUploadPublicPrefix(),
         ];
 
-        if ($this->isStrictManagedBookshopCoverWriteModeEnabled()) {
-            if ($this->ensureWritableDirectory($primaryCandidate['directory'])) {
+        if ($storage->managedWriteModeEnabled()) {
+            if ($storage->prepareWritableDirectory($primaryCandidate['directory'])) {
                 return $primaryCandidate;
             }
 
             $this->logger->warning('Diretório principal de capas da livraria indisponível para escrita.', [
                 'directory' => $primaryCandidate['directory'],
                 'public_prefix' => $primaryCandidate['public_prefix'],
-                'managed_storage_root' => trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')),
+                'managed_storage_root' => $storage->resolveManagedStorageRoot(),
             ]);
 
             return null;
@@ -805,11 +802,12 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
             ],
         ];
 
-        foreach ($candidates as $candidate) {
-            if ($this->ensureWritableDirectory($candidate['directory'])) {
-                return $candidate;
-            }
+        $writableCandidate = $storage->firstWritableDefinition($candidates);
+        if ($writableCandidate !== null) {
+            return $writableCandidate;
+        }
 
+        foreach ($candidates as $candidate) {
             $this->logger->warning('Diretório de capas da livraria indisponível para escrita.', [
                 'directory' => $candidate['directory'],
                 'public_prefix' => $candidate['public_prefix'],
@@ -819,39 +817,18 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
         return null;
     }
 
-    private function isStrictManagedBookshopCoverWriteModeEnabled(): bool
-    {
-        return trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? '')) !== '';
-    }
-
     protected function resolveManagedPrivateBookshopCoverAbsolutePath(?string $relativePath): ?string
     {
         $privatePublicPrefix = $this->resolveBookshopCoverFallbackPublicPrefix();
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
+        $definitions = array_map(
+            static fn (string $directory): array => [
+                'directory' => $directory,
+                'public_prefix' => $privatePublicPrefix,
+            ],
+            $this->resolveBookshopPrivateCoverDirectories()
+        );
 
-        if (
-            $normalizedPath === ''
-            || $privatePublicPrefix === ''
-            || !str_starts_with($normalizedPath, $privatePublicPrefix . '/')
-        ) {
-            return null;
-        }
-
-        foreach ($this->resolveBookshopPrivateCoverDirectories() as $directory) {
-            $absolutePath = $this->resolveManagedAbsolutePath($normalizedPath, $privatePublicPrefix, $directory);
-            if ($absolutePath !== null && is_file($absolutePath)) {
-                return $absolutePath;
-            }
-        }
-
-        foreach ($this->resolveBookshopPrivateCoverDirectories() as $directory) {
-            $absolutePath = $this->resolveManagedAbsolutePath($normalizedPath, $privatePublicPrefix, $directory);
-            if ($absolutePath !== null) {
-                return $absolutePath;
-            }
-        }
-
-        return null;
+        return ManagedMediaLocator::resolve($relativePath, $definitions);
     }
 
     /**
@@ -870,160 +847,31 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
      */
     private function resolveBookshopManagedStorageDefinitions(): array
     {
-        $definitions = [
+        return $this->bookshopStorage()->buildReadDefinitions(
+            'BOOKSHOP_COVER_UPLOAD_DIR',
+            'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR,
+            self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
             [
-                'directory' => $this->resolveBookshopCoverUploadDirectory(),
-                'public_prefix' => $this->resolveBookshopCoverUploadPublicPrefix(),
-            ],
-            [
-                'directory' => $this->resolveManagedStorageDefaultDirectory(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR),
-                'public_prefix' => trim(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
-            ],
-            [
-                'directory' => $this->resolveDirectoryPath(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR),
-                'public_prefix' => trim(self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
-            ],
-            [
-                'directory' => $this->resolveDirectoryPath(self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR),
-                'public_prefix' => trim(self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX, '/'),
-            ],
-            [
-                'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
-                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
-            ],
-            [
-                'directory' => $this->resolveBookshopCoverTemporaryUploadDirectory(),
-                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
-            ],
-        ];
-
-        $uniqueDefinitions = [];
-        $seenDefinitions = [];
-
-        foreach ($definitions as $definition) {
-            $definitionHash = $definition['directory'] . '|' . $definition['public_prefix'];
-            if (isset($seenDefinitions[$definitionHash])) {
-                continue;
-            }
-
-            $seenDefinitions[$definitionHash] = true;
-            $uniqueDefinitions[] = $definition;
-        }
-
-        return $uniqueDefinitions;
-    }
-
-    private function ensureWritableDirectory(string $directory): bool
-    {
-        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-            return false;
-        }
-
-        if (is_writable($directory)) {
-            return true;
-        }
-
-        @chmod($directory, 0775);
-        clearstatcache(true, $directory);
-
-        return is_writable($directory);
-    }
-
-    private function resolveConfiguredUploadDirectory(string $envKey, string $defaultDirectory): string
-    {
-        $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
-        if ($configuredDirectory === '') {
-            return $this->resolveManagedStorageDefaultDirectory($defaultDirectory);
-        }
-
-        return $this->resolveManagedStorageDirectory($configuredDirectory);
-    }
-
-    private function resolveConfiguredUploadPublicPrefix(string $envKey, string $defaultPrefix): string
-    {
-        $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
-        $normalizedPrefix = $configuredPrefix !== ''
-            ? $configuredPrefix
-            : $defaultPrefix;
-
-        return trim(str_replace('\\', '/', $normalizedPrefix), '/');
-    }
-
-    private function resolveManagedStorageDefaultDirectory(string $defaultDirectory): string
-    {
-        return $this->resolveManagedStorageDirectory($defaultDirectory);
-    }
-
-    private function resolveManagedStorageRoot(): ?string
-    {
-        return ManagedStorageRootResolver::resolve(
-            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
-            $this->resolveProjectRoot()
+                [
+                    'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
+                    'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
+                    'directory_mode' => 'project',
+                ],
+                [
+                    'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
+                    'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+                ],
+                [
+                    'directory' => $this->resolveBookshopCoverTemporaryUploadDirectory(),
+                    'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+                ],
+            ]
         );
     }
 
-    private function resolveManagedStorageDirectory(string $path): string
+    private function bookshopStorage(): ManagedUploadStorage
     {
-        $normalizedPath = str_replace('\\', '/', trim($path));
-        while (str_starts_with($normalizedPath, './')) {
-            $normalizedPath = substr($normalizedPath, 2);
-        }
-
-        $managedStorageRoot = $this->resolveManagedStorageRoot();
-        $storagePrefix = 'var/storage/';
-        $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-        if (
-            $managedStorageRoot !== null
-            && !$this->isAbsolutePath($normalizedPath)
-            && str_starts_with($normalizedRelativePath, $storagePrefix)
-        ) {
-            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-
-            return $managedStorageRoot . '/' . $storageSuffix;
-        }
-
-        return $this->resolveDirectoryPath($normalizedPath);
-    }
-
-    private function resolveDirectoryPath(string $path): string
-    {
-        $normalizedPath = str_replace('\\', '/', $path);
-
-        if ($this->isAbsolutePath($normalizedPath)) {
-            return rtrim($normalizedPath, '/');
-        }
-
-        return $this->resolveProjectRoot() . '/' . ltrim($normalizedPath, '/');
-    }
-
-    private function resolveManagedAbsolutePath(?string $relativePath, string $publicPrefix, string $directory): ?string
-    {
-        $normalizedPath = ltrim(trim((string) $relativePath), '/');
-
-        if (
-            $normalizedPath === ''
-            || $publicPrefix === ''
-            || !str_starts_with($normalizedPath, $publicPrefix . '/')
-        ) {
-            return null;
-        }
-
-        $relativeFilePath = ltrim(substr($normalizedPath, strlen($publicPrefix)), '/');
-        if (
-            $relativeFilePath === ''
-            || str_contains($relativeFilePath, '../')
-            || str_contains($relativeFilePath, '..\\')
-        ) {
-            return null;
-        }
-
-        return $directory . '/' . $relativeFilePath;
-    }
-
-    private function isAbsolutePath(string $path): bool
-    {
-        return str_starts_with($path, '/')
-            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+        return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
     }
 }

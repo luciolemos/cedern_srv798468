@@ -197,34 +197,29 @@ final class ManagedMediaPathReport
         string $defaultPublicPrefix,
         array $extraReadCandidates
     ): array {
-        $managedRoot = ManagedStorageRootResolver::resolve(
-            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
-            $this->projectRoot
-        );
-
+        $storage = new ManagedUploadStorage($this->projectRoot, $_ENV);
         $rawDirectory = trim((string) ($_ENV[$directoryEnvKey] ?? ''));
         $rawPublicPrefix = trim((string) ($_ENV[$publicPrefixEnvKey] ?? ''));
-        $configuredDirectory = $rawDirectory !== '' ? $rawDirectory : $defaultDirectory;
-        $configuredPublicPrefix = $this->normalizePrefix($rawPublicPrefix !== '' ? $rawPublicPrefix : $defaultPublicPrefix);
-        $resolvedDirectory = $this->resolveManagedDirectory($configuredDirectory, $managedRoot);
-        $defaultResolvedDirectory = $this->resolveManagedDirectory($defaultDirectory, $managedRoot);
-        $projectDefaultDirectory = $this->resolveProjectPath($defaultDirectory);
+        $configuredDirectory = $storage->resolveUploadDirectory($directoryEnvKey, $defaultDirectory);
+        $configuredPublicPrefix = $storage->resolveUploadPublicPrefix($publicPrefixEnvKey, $defaultPublicPrefix);
+        $defaultResolvedDirectory = $storage->resolveManagedStorageDefaultDirectory($defaultDirectory);
+        $projectDefaultDirectory = $storage->resolveProjectPath($defaultDirectory);
 
         $readCandidates = [
             [
                 'label' => 'configured',
-                'directory' => $resolvedDirectory,
+                'directory' => $configuredDirectory,
                 'public_prefix' => $configuredPublicPrefix,
             ],
             [
                 'label' => 'default_managed',
                 'directory' => $defaultResolvedDirectory,
-                'public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
+                'public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
             ],
             [
                 'label' => 'project_storage_default',
                 'directory' => $projectDefaultDirectory,
-                'public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
+                'public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
             ],
         ];
 
@@ -239,11 +234,11 @@ final class ManagedMediaPathReport
             'directory_env_raw' => $rawDirectory,
             'public_prefix_env_key' => $publicPrefixEnvKey,
             'public_prefix_env_raw' => $rawPublicPrefix,
-            'configured_directory' => $this->describePath($resolvedDirectory, true),
+            'configured_directory' => $this->describePath($configuredDirectory, true),
             'configured_public_prefix' => $configuredPublicPrefix,
             'default_managed_directory' => $this->describePath($defaultResolvedDirectory, true),
             'project_storage_default_directory' => $this->describePath($projectDefaultDirectory, true),
-            'default_public_prefix' => $this->normalizePrefix($defaultPublicPrefix),
+            'default_public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
             'read_candidates' => array_map(
                 fn (array $candidate): array => $this->describeCandidate($candidate),
                 $readCandidates
@@ -397,29 +392,6 @@ final class ManagedMediaPathReport
         ];
     }
 
-    private function resolveManagedDirectory(string $path, ?string $managedRoot): string
-    {
-        $normalizedPath = str_replace('\\', '/', trim($path));
-        while (str_starts_with($normalizedPath, './')) {
-            $normalizedPath = substr($normalizedPath, 2);
-        }
-
-        $storagePrefix = 'var/storage/';
-        $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-        if (
-            $managedRoot !== null
-            && !$this->isAbsolutePath($normalizedPath)
-            && str_starts_with($normalizedRelativePath, $storagePrefix)
-        ) {
-            $storageSuffix = ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-
-            return rtrim($managedRoot, '/') . '/' . $storageSuffix;
-        }
-
-        return $this->resolveProjectPath($normalizedPath);
-    }
-
     private function resolveProjectPath(string $path): string
     {
         $normalizedPath = str_replace('\\', '/', trim($path));
@@ -429,11 +401,6 @@ final class ManagedMediaPathReport
         }
 
         return $this->projectRoot . '/' . ltrim($normalizedPath, '/');
-    }
-
-    private function normalizePrefix(string $prefix): string
-    {
-        return trim(str_replace('\\', '/', $prefix), '/');
     }
 
     private function isAbsolutePath(string $path): bool
