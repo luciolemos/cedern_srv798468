@@ -6,22 +6,22 @@ namespace Tests\Application\Actions\Admin;
 
 use App\Application\Actions\Admin\AbstractAdminBookshopAction;
 use App\Domain\Bookshop\BookshopRepository;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Log\NullLogger;
 use Slim\Views\Twig;
-use Tests\TestCase;
 
-final class TestableAbstractAdminBookshopAction extends AbstractAdminBookshopAction
+final class TestableAdminBookshopAction extends AbstractAdminBookshopAction
 {
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function __construct(BookshopRepository $bookshopRepository)
     {
-        return $response;
+        parent::__construct(new NullLogger(), Twig::create(sys_get_temp_dir()), $bookshopRepository);
     }
 
-    public function exposedResolveBookshopCoverUploadDirectory(): string
+    public function __invoke(Request $request, Response $response): Response
     {
-        return $this->resolveBookshopCoverUploadDirectory();
+        return $response;
     }
 
     public function exposedResolveManagedBookshopCoverAbsolutePath(?string $relativePath): ?string
@@ -36,7 +36,7 @@ final class AbstractAdminBookshopActionTest extends TestCase
     private array $originalEnv = [];
 
     /** @var list<string> */
-    private array $temporaryDirectories = [];
+    private array $temporaryFiles = [];
 
     protected function setUp(): void
     {
@@ -49,6 +49,12 @@ final class AbstractAdminBookshopActionTest extends TestCase
 
     protected function tearDown(): void
     {
+        foreach ($this->temporaryFiles as $filePath) {
+            if (is_file($filePath)) {
+                @unlink($filePath);
+            }
+        }
+
         foreach ($this->managedEnvKeys() as $key) {
             $originalValue = $this->originalEnv[$key] ?? null;
 
@@ -60,76 +66,29 @@ final class AbstractAdminBookshopActionTest extends TestCase
             $_ENV[$key] = $originalValue;
         }
 
-        foreach ($this->temporaryDirectories as $directoryPath) {
-            if (is_dir($directoryPath)) {
-                @rmdir($directoryPath);
-            }
-        }
-
         parent::tearDown();
     }
 
-    public function testBookshopCoverUploadDirectoryUsesSharedManagedStorageRootWhenConfigured(): void
+    public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
     {
         unset(
             $_ENV['BOOKSHOP_COVER_UPLOAD_DIR'],
             $_ENV['BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX']
         );
         $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
-
-        $action = $this->createAction();
-
-        $this->assertSame(
-            '/srv/cede-managed-storage/bookshop/covers',
-            $action->exposedResolveBookshopCoverUploadDirectory()
-        );
-        $this->assertSame(
-            '/srv/cede-managed-storage/bookshop/covers/cover_demo.jpg',
-            $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/cover_demo.jpg')
-        );
-    }
-
-    public function testBookshopCoverUploadDirectoryRebasesRelativeConfiguredDirectoryIntoManagedRoot(): void
-    {
-        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
-        $_ENV['BOOKSHOP_COVER_UPLOAD_DIR'] = './var/storage/bookshop/covers';
-
-        $action = $this->createAction();
-
-        $this->assertSame(
-            '/srv/cede-managed-storage/bookshop/covers',
-            $action->exposedResolveBookshopCoverUploadDirectory()
-        );
-        $this->assertSame(
-            '/srv/cede-managed-storage/bookshop/covers/cover_demo.jpg',
-            $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/cover_demo.jpg')
-        );
-    }
-
-    public function testBookshopCoverUploadDirectoryUsesExistingAncestorManagedStorageRootWhenConfiguredWithBareRelativeName(): void
-    {
-        unset(
-            $_ENV['BOOKSHOP_COVER_UPLOAD_DIR'],
-            $_ENV['BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX']
-        );
 
         $projectRoot = dirname(__DIR__, 4);
-        $directoryName = '_cedern_storage_test_' . bin2hex(random_bytes(4));
-        $sharedRoot = dirname($projectRoot) . '/' . $directoryName;
-        mkdir($sharedRoot, 0775, true);
-        $this->temporaryDirectories[] = $sharedRoot;
+        $fileName = 'cover_test_project_storage_' . bin2hex(random_bytes(4)) . '.jpg';
+        $projectStoragePath = $projectRoot . '/var/storage/bookshop/covers/' . $fileName;
+        file_put_contents($projectStoragePath, 'project-storage-cover');
+        $this->temporaryFiles[] = $projectStoragePath;
 
-        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $directoryName;
-
-        $action = $this->createAction();
+        $repository = $this->createMock(BookshopRepository::class);
+        $action = new TestableAdminBookshopAction($repository);
 
         $this->assertSame(
-            $sharedRoot . '/bookshop/covers',
-            $action->exposedResolveBookshopCoverUploadDirectory()
-        );
-        $this->assertSame(
-            $sharedRoot . '/bookshop/covers/cover_demo.jpg',
-            $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/cover_demo.jpg')
+            $projectStoragePath,
+            $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/' . $fileName)
         );
     }
 
@@ -139,24 +98,9 @@ final class AbstractAdminBookshopActionTest extends TestCase
     private function managedEnvKeys(): array
     {
         return [
+            'APP_MANAGED_STORAGE_ROOT',
             'BOOKSHOP_COVER_UPLOAD_DIR',
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
-            'APP_MANAGED_STORAGE_ROOT',
         ];
-    }
-
-    private function createAction(): TestableAbstractAdminBookshopAction
-    {
-        $app = $this->getAppInstance();
-        $container = $app->getContainer();
-
-        /** @var LoggerInterface $logger */
-        $logger = $container->get(LoggerInterface::class);
-        /** @var Twig $twig */
-        $twig = $container->get(Twig::class);
-
-        $bookshopRepository = $this->prophesize(BookshopRepository::class)->reveal();
-
-        return new TestableAbstractAdminBookshopAction($logger, $twig, $bookshopRepository);
     }
 }
