@@ -84,7 +84,7 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolveMemberProfilePhotoStorageDefinitions());
+        return ManagedMediaLocator::resolve($relativePath, $this->resolveMemberProfilePhotoStorageDefinitions(), false);
     }
 
     protected function deleteStoredMemberProfilePhotoIfManaged(?string $relativePath): void
