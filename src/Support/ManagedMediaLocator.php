@@ -8,12 +8,10 @@ final class ManagedMediaLocator
 {
     /**
      * @param array<int, array{directory: string, public_prefix: string}> $definitions
-     * @param array<int, string> $additionalFileNameDirectories
      */
     public static function resolve(
         ?string $relativePath,
-        array $definitions,
-        array $additionalFileNameDirectories = []
+        array $definitions
     ): ?string {
         $normalizedPath = ltrim(trim((string) $relativePath), '/');
         $fallbackPath = null;
@@ -36,74 +34,7 @@ final class ManagedMediaLocator
             $fallbackPath ??= $absolutePath;
         }
 
-        $fileNameFallbackPath = self::resolveByFileName(
-            $normalizedPath,
-            $definitions,
-            $additionalFileNameDirectories
-        );
-
-        if ($fileNameFallbackPath !== null) {
-            return $fileNameFallbackPath;
-        }
-
         return $fallbackPath;
-    }
-
-    /**
-     * @param array<int, array{directory: string, public_prefix: string}> $definitions
-     * @param array<int, string> $additionalDirectories
-     */
-    private static function resolveByFileName(
-        string $normalizedPath,
-        array $definitions,
-        array $additionalDirectories
-    ): ?string {
-        if ($normalizedPath === '') {
-            return null;
-        }
-
-        $fileName = basename(str_replace('\\', '/', $normalizedPath));
-        if (
-            $fileName === ''
-            || $fileName === '.'
-            || $fileName === '..'
-            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
-        ) {
-            return null;
-        }
-
-        $directories = [];
-        $seenDirectories = [];
-
-        foreach ($definitions as $definition) {
-            $directory = rtrim($definition['directory'], '/');
-            if ($directory === '' || isset($seenDirectories[$directory])) {
-                continue;
-            }
-
-            $seenDirectories[$directory] = true;
-            $directories[] = $directory;
-        }
-
-        foreach ($additionalDirectories as $directory) {
-            $normalizedDirectory = rtrim((string) $directory, '/');
-            if ($normalizedDirectory === '' || isset($seenDirectories[$normalizedDirectory])) {
-                continue;
-            }
-
-            $seenDirectories[$normalizedDirectory] = true;
-            $directories[] = $normalizedDirectory;
-        }
-
-        foreach ($directories as $directory) {
-            $candidatePath = $directory . '/' . $fileName;
-
-            if (is_file($candidatePath)) {
-                return $candidatePath;
-            }
-        }
-
-        return null;
     }
 
     private static function resolveScopedAbsolutePath(

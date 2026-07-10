@@ -15,7 +15,6 @@ trait MemberProfilePhotoStorageTrait
     private const LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX = 'assets/img/member-photos';
     private const LEGACY_MEMBER_AVATAR_UPLOAD_DIR = 'public/assets/img/avatar';
     private const LEGACY_MEMBER_AVATAR_UPLOAD_PUBLIC_PREFIX = 'assets/img/avatar';
-    private const LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR = 'public/assets/img';
 
     /**
      * @return array{directory: string, public_prefix: string}|null
@@ -85,13 +84,7 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve(
-            $relativePath,
-            $this->resolveMemberProfilePhotoStorageDefinitions(),
-            [
-                $this->resolveMemberProfilePhotoDirectoryPath(self::LEGACY_MEMBER_GENERIC_IMAGE_UPLOAD_DIR),
-            ]
-        );
+        return ManagedMediaLocator::resolve($relativePath, $this->resolveMemberProfilePhotoStorageDefinitions());
     }
 
     protected function deleteStoredMemberProfilePhotoIfManaged(?string $relativePath): void
@@ -136,11 +129,6 @@ trait MemberProfilePhotoStorageTrait
             'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
         );
-    }
-
-    private function resolveMemberProfilePhotoDirectoryPath(string $path): string
-    {
-        return $this->memberProfilePhotoStorage()->resolveProjectPath($path);
     }
 
     private function memberProfilePhotoStorage(): ManagedUploadStorage
