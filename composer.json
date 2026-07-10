@@ -63,6 +63,7 @@
     "scripts": {
         "db:migrate": "php scripts/migrate.php",
         "storage:audit": "php scripts/audit_managed_uploads.php",
+        "storage:probe": "php scripts/probe_managed_media.php",
         "storage:package": "bash scripts/package_managed_upload_archives.sh",
         "billing:contributions:run": "php scripts/process_contribution_billing_cycle.php",
         "import:bookshop:csv": "php scripts/import_bookshop_csv.php",

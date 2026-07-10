@@ -138,6 +138,8 @@ Regra prática:
 ### 10. Uploads e armazenamento público
 
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver definido, qualquer diretório relativo iniciado por `var/storage/` passa a ser rebaseado para essa raiz compartilhada. Diretórios absolutos continuam respeitados exatamente como informados.
+- Quando `APP_MANAGED_STORAGE_ROOT` estiver vazio ou comentado, os buckets padrão continuam em `var/storage/...` dentro do projeto.
+- O contrato funcional completo de banco, URL pública, storage físico e deploy de mídia gerenciada está em [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md).
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
 - `LIBRARY_COVER_UPLOAD_DIR`: diretório físico das capas da biblioteca.
@@ -230,3 +232,4 @@ Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?toke
 - Resolução de tema: [ThemeConfig.php](/var/www/cedern/src/Support/ThemeConfig.php)
 - Injeção de variáveis no Twig: [dependencies.php](/var/www/cedern/app/dependencies.php)
 - Bootstrap do `.env`: [index.php](/var/www/cedern/public/index.php)
+- Padrão de mídia gerenciada: [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md)
