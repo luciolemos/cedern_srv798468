@@ -3,6 +3,11 @@
 Este projeto pode ser publicado em hospedagem compartilhada da Hostinger sem Docker.
 O fluxo abaixo assume Git deploy ou upload do repositório para o diretório publicado.
 
+Se a meta for uma primeira publicacao totalmente limpa, sem banco real anterior e
+sem storage anterior, siga primeiro o runbook fechado:
+
+- [HOSTINGER_FIRST_PRODUCTION_DEPLOY.md](/var/www/cedern/docs/HOSTINGER_FIRST_PRODUCTION_DEPLOY.md)
+
 ## Checklist de compatibilidade
 
 - PHP configurado na Hostinger: `8.4`
