@@ -847,26 +847,32 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
      */
     private function resolveBookshopManagedStorageDefinitions(): array
     {
-        return $this->bookshopStorage()->buildReadDefinitions(
+        $storage = $this->bookshopStorage();
+        $additionalDefinitions = [
+            [
+                'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
+                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+            ],
+            [
+                'directory' => $this->resolveBookshopCoverTemporaryUploadDirectory(),
+                'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
+            ],
+        ];
+
+        if ($storage->legacyReadFallbackEnabled()) {
+            array_unshift($additionalDefinitions, [
+                'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
+                'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
+                'directory_mode' => 'project',
+            ]);
+        }
+
+        return $storage->buildReadDefinitions(
             'BOOKSHOP_COVER_UPLOAD_DIR',
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR,
             self::DEFAULT_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
-            [
-                [
-                    'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
-                    'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
-                    'directory_mode' => 'project',
-                ],
-                [
-                    'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
-                    'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
-                ],
-                [
-                    'directory' => $this->resolveBookshopCoverTemporaryUploadDirectory(),
-                    'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
-                ],
-            ]
+            $additionalDefinitions
         );
     }
 

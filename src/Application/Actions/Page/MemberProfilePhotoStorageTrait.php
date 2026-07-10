@@ -103,12 +103,11 @@ trait MemberProfilePhotoStorageTrait
      */
     protected function resolveMemberProfilePhotoStorageDefinitions(): array
     {
-        return $this->memberProfilePhotoStorage()->buildReadDefinitions(
-            'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
-            'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
-            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR,
-            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX,
-            [
+        $storage = $this->memberProfilePhotoStorage();
+        $additionalDefinitions = [];
+
+        if ($storage->legacyReadFallbackEnabled()) {
+            $additionalDefinitions = [
                 [
                     'directory' => self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_DIR,
                     'public_prefix' => self::LEGACY_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX,
@@ -119,7 +118,15 @@ trait MemberProfilePhotoStorageTrait
                     'public_prefix' => self::LEGACY_MEMBER_AVATAR_UPLOAD_PUBLIC_PREFIX,
                     'directory_mode' => 'project',
                 ],
-            ]
+            ];
+        }
+
+        return $storage->buildReadDefinitions(
+            'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
+            'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
+            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_DIR,
+            self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX,
+            $additionalDefinitions
         );
     }
 

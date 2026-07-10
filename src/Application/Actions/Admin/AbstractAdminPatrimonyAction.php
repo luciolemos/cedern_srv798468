@@ -553,18 +553,23 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
         string $legacyDirectory,
         string $legacyPublicPrefix
     ): array {
-        return $this->patrimonyStorage()->buildReadDefinitions(
+        $storage = $this->patrimonyStorage();
+        $additionalDefinitions = [];
+
+        if ($storage->legacyReadFallbackEnabled()) {
+            $additionalDefinitions[] = [
+                'directory' => $legacyDirectory,
+                'public_prefix' => $legacyPublicPrefix,
+                'directory_mode' => 'project',
+            ];
+        }
+
+        return $storage->buildReadDefinitions(
             $directoryEnvKey,
             $publicPrefixEnvKey,
             $defaultDirectory,
             $defaultPublicPrefix,
-            [
-                [
-                    'directory' => $legacyDirectory,
-                    'public_prefix' => $legacyPublicPrefix,
-                    'directory_mode' => 'project',
-                ],
-            ]
+            $additionalDefinitions
         );
     }
 
