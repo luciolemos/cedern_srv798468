@@ -92,6 +92,18 @@ final class AbstractAdminBookshopActionTest extends TestCase
         );
     }
 
+    public function testResolvesLegacyBookshopCoverPathByDefault(): void
+    {
+        $repository = $this->createMock(BookshopRepository::class);
+        $action = new TestableAdminBookshopAction($repository);
+        $projectRoot = dirname(__DIR__, 4);
+
+        $this->assertSame(
+            $projectRoot . '/public/assets/img/bookshop-covers/demo.jpg',
+            $action->exposedResolveManagedBookshopCoverAbsolutePath('assets/img/bookshop-covers/demo.jpg')
+        );
+    }
+
     /**
      * @return list<string>
      */
@@ -99,7 +111,6 @@ final class AbstractAdminBookshopActionTest extends TestCase
     {
         return [
             'APP_MANAGED_STORAGE_ROOT',
-            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
             'BOOKSHOP_COVER_UPLOAD_DIR',
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
         ];

@@ -847,8 +847,12 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
      */
     private function resolveBookshopManagedStorageDefinitions(): array
     {
-        $storage = $this->bookshopStorage();
         $additionalDefinitions = [
+            [
+                'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
+                'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
+                'directory_mode' => 'project',
+            ],
             [
                 'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),
                 'public_prefix' => $this->resolveBookshopCoverFallbackPublicPrefix(),
@@ -859,15 +863,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
             ],
         ];
 
-        if ($storage->legacyReadFallbackEnabled()) {
-            array_unshift($additionalDefinitions, [
-                'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
-                'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
-                'directory_mode' => 'project',
-            ]);
-        }
-
-        return $storage->buildReadDefinitions(
+        return $this->bookshopStorage()->buildReadDefinitions(
             'BOOKSHOP_COVER_UPLOAD_DIR',
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_BOOKSHOP_COVER_UPLOAD_DIR,

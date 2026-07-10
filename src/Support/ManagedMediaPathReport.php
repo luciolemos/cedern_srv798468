@@ -117,90 +117,76 @@ final class ManagedMediaPathReport
                 'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
                 self::BOOKSHOP_COVER_DEFAULT_DIR,
                 self::BOOKSHOP_COVER_DEFAULT_PREFIX,
-                array_merge(
-                    $legacyReadFallbackEnabled
-                        ? [
-                            [
-                                'label' => 'legacy_bookshop_covers',
-                                'directory' => $this->resolveProjectPath(self::BOOKSHOP_COVER_LEGACY_DIR),
-                                'public_prefix' => self::BOOKSHOP_COVER_LEGACY_PREFIX,
-                            ],
-                        ]
-                        : [],
+                [
                     [
-                        [
-                            'label' => 'bookshop_fallback_cache',
-                            'directory' => $this->resolveProjectPath(self::BOOKSHOP_COVER_FALLBACK_DIR),
-                            'public_prefix' => self::BOOKSHOP_COVER_DEFAULT_PREFIX,
-                        ],
-                        [
-                            'label' => 'bookshop_temporary_cache',
-                            'directory' => rtrim(str_replace('\\', '/', sys_get_temp_dir()), '/')
-                                . '/natalcode/bookshop-covers',
-                            'public_prefix' => self::BOOKSHOP_COVER_DEFAULT_PREFIX,
-                        ],
-                    ]
-                )
+                        'label' => 'legacy_bookshop_covers',
+                        'directory' => $this->resolveProjectPath(self::BOOKSHOP_COVER_LEGACY_DIR),
+                        'public_prefix' => self::BOOKSHOP_COVER_LEGACY_PREFIX,
+                    ],
+                    [
+                        'label' => 'bookshop_fallback_cache',
+                        'directory' => $this->resolveProjectPath(self::BOOKSHOP_COVER_FALLBACK_DIR),
+                        'public_prefix' => self::BOOKSHOP_COVER_DEFAULT_PREFIX,
+                    ],
+                    [
+                        'label' => 'bookshop_temporary_cache',
+                        'directory' => rtrim(str_replace('\\', '/', sys_get_temp_dir()), '/')
+                            . '/natalcode/bookshop-covers',
+                        'public_prefix' => self::BOOKSHOP_COVER_DEFAULT_PREFIX,
+                    ],
+                ]
             ),
             'library_docs' => $this->buildTargetReport(
                 'LIBRARY_UPLOAD_DIR',
                 'LIBRARY_UPLOAD_PUBLIC_PREFIX',
                 self::LIBRARY_DOC_DEFAULT_DIR,
                 self::LIBRARY_DOC_DEFAULT_PREFIX,
-                $legacyReadFallbackEnabled
-                    ? [
-                        [
-                            'label' => 'legacy_library_docs',
-                            'directory' => $this->resolveProjectPath(self::LIBRARY_DOC_LEGACY_DIR),
-                            'public_prefix' => self::LIBRARY_DOC_LEGACY_PREFIX,
-                        ],
-                    ]
-                    : []
+                [
+                    [
+                        'label' => 'legacy_library_docs',
+                        'directory' => $this->resolveProjectPath(self::LIBRARY_DOC_LEGACY_DIR),
+                        'public_prefix' => self::LIBRARY_DOC_LEGACY_PREFIX,
+                    ],
+                ]
             ),
             'library_covers' => $this->buildTargetReport(
                 'LIBRARY_COVER_UPLOAD_DIR',
                 'LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX',
                 self::LIBRARY_COVER_DEFAULT_DIR,
                 self::LIBRARY_COVER_DEFAULT_PREFIX,
-                $legacyReadFallbackEnabled
-                    ? [
-                        [
-                            'label' => 'legacy_library_covers',
-                            'directory' => $this->resolveProjectPath(self::LIBRARY_COVER_LEGACY_DIR),
-                            'public_prefix' => self::LIBRARY_COVER_LEGACY_PREFIX,
-                        ],
-                    ]
-                    : []
+                [
+                    [
+                        'label' => 'legacy_library_covers',
+                        'directory' => $this->resolveProjectPath(self::LIBRARY_COVER_LEGACY_DIR),
+                        'public_prefix' => self::LIBRARY_COVER_LEGACY_PREFIX,
+                    ],
+                ]
             ),
             'patrimony_docs' => $this->buildTargetReport(
                 'PATRIMONY_DOCUMENT_UPLOAD_DIR',
                 'PATRIMONY_DOCUMENT_UPLOAD_PUBLIC_PREFIX',
                 self::PATRIMONY_DOC_DEFAULT_DIR,
                 self::PATRIMONY_DOC_DEFAULT_PREFIX,
-                $legacyReadFallbackEnabled
-                    ? [
-                        [
-                            'label' => 'legacy_patrimony_docs',
-                            'directory' => $this->resolveProjectPath(self::PATRIMONY_DOC_LEGACY_DIR),
-                            'public_prefix' => self::PATRIMONY_DOC_LEGACY_PREFIX,
-                        ],
-                    ]
-                    : []
+                [
+                    [
+                        'label' => 'legacy_patrimony_docs',
+                        'directory' => $this->resolveProjectPath(self::PATRIMONY_DOC_LEGACY_DIR),
+                        'public_prefix' => self::PATRIMONY_DOC_LEGACY_PREFIX,
+                    ],
+                ]
             ),
             'patrimony_images' => $this->buildTargetReport(
                 'PATRIMONY_IMAGE_UPLOAD_DIR',
                 'PATRIMONY_IMAGE_UPLOAD_PUBLIC_PREFIX',
                 self::PATRIMONY_IMAGE_DEFAULT_DIR,
                 self::PATRIMONY_IMAGE_DEFAULT_PREFIX,
-                $legacyReadFallbackEnabled
-                    ? [
-                        [
-                            'label' => 'legacy_patrimony_images',
-                            'directory' => $this->resolveProjectPath(self::PATRIMONY_IMAGE_LEGACY_DIR),
-                            'public_prefix' => self::PATRIMONY_IMAGE_LEGACY_PREFIX,
-                        ],
-                    ]
-                    : []
+                [
+                    [
+                        'label' => 'legacy_patrimony_images',
+                        'directory' => $this->resolveProjectPath(self::PATRIMONY_IMAGE_LEGACY_DIR),
+                        'public_prefix' => self::PATRIMONY_IMAGE_LEGACY_PREFIX,
+                    ],
+                ]
             ),
         ];
     }
