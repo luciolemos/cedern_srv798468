@@ -33,6 +33,11 @@ final class ManagedUploadStorage
         );
     }
 
+    public function legacyReadFallbackEnabled(): bool
+    {
+        return $this->readBool('APP_ENABLE_LEGACY_MEDIA_FALLBACK');
+    }
+
     public function buildRelativePath(string $fileName, string $publicPrefix): string
     {
         return $this->normalizePublicPrefix($publicPrefix) . '/' . ltrim($fileName, '/');
@@ -253,6 +258,13 @@ final class ManagedUploadStorage
         }
 
         return '';
+    }
+
+    private function readBool(string $key): bool
+    {
+        $value = strtolower($this->readString($key));
+
+        return in_array($value, ['1', 'true', 'yes', 'on'], true);
     }
 
     private function isAbsolutePath(string $path): bool

@@ -163,11 +163,6 @@ class AbstractAdminLibraryActionTest extends TestCase
             '/srv/cede-storage/library-pdfs/book_demo.pdf',
             $action->exposedResolveManagedLibraryPdfAbsolutePath('media/biblioteca/book_demo.pdf')
         );
-        $projectRoot = dirname(__DIR__, 4);
-        $this->assertSame(
-            $projectRoot . '/public/assets/docs/library/book_demo.pdf',
-            $action->exposedResolveManagedLibraryPdfAbsolutePath('assets/docs/library/book_demo.pdf')
-        );
         $this->assertSame(
             '/srv/cede-storage/library-covers',
             $action->exposedResolveLibraryCoverUploadDirectory()
@@ -184,8 +179,27 @@ class AbstractAdminLibraryActionTest extends TestCase
             '/srv/cede-storage/library-covers/cover_demo.webp',
             $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.webp')
         );
+        $this->assertNull($action->exposedResolveManagedLibraryPdfAbsolutePath('assets/docs/library/book_demo.pdf'));
+        $this->assertNull($action->exposedResolveManagedLibraryCoverAbsolutePath('assets/img/library-covers/cover_demo.webp'));
+    }
+
+    public function testLibraryUploadStorageCanReadLegacyPathsWhenExplicitlyEnabled(): void
+    {
+        $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK'] = 'true';
+        $_ENV['LIBRARY_UPLOAD_DIR'] = '/srv/cede-storage/library-pdfs';
+        $_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'] = 'media/biblioteca';
+        $_ENV['LIBRARY_COVER_UPLOAD_DIR'] = '/srv/cede-storage/library-covers';
+        $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX'] = 'media/biblioteca/capas';
+
+        $action = $this->createAction();
+        $projectRoot = dirname(__DIR__, 4);
+
         $this->assertSame(
-            dirname(__DIR__, 4) . '/public/assets/img/library-covers/cover_demo.webp',
+            $projectRoot . '/public/assets/docs/library/book_demo.pdf',
+            $action->exposedResolveManagedLibraryPdfAbsolutePath('assets/docs/library/book_demo.pdf')
+        );
+        $this->assertSame(
+            $projectRoot . '/public/assets/img/library-covers/cover_demo.webp',
             $action->exposedResolveManagedLibraryCoverAbsolutePath('assets/img/library-covers/cover_demo.webp')
         );
     }
@@ -278,6 +292,7 @@ class AbstractAdminLibraryActionTest extends TestCase
             'LIBRARY_COVER_UPLOAD_DIR',
             'LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX',
             'APP_MANAGED_STORAGE_ROOT',
+            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
         ];
     }
 

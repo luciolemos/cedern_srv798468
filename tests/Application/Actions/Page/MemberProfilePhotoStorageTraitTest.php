@@ -170,6 +170,44 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
+    public function testDoesNotResolveLegacyAssetsPathWhenLegacyFallbackIsDisabled(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['APP_MANAGED_STORAGE_ROOT'],
+            $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK']
+        );
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertNull(
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath(
+                'assets/img/member-photos/member_demo.png'
+            )
+        );
+    }
+
+    public function testResolvesLegacyAssetsPathWhenLegacyFallbackIsEnabled(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['APP_MANAGED_STORAGE_ROOT']
+        );
+        $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK'] = 'true';
+
+        $projectRoot = dirname(__DIR__, 4);
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $projectRoot . '/public/assets/img/member-photos/member_demo.png',
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath(
+                'assets/img/member-photos/member_demo.png'
+            )
+        );
+    }
+
     public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
     {
         unset(
@@ -286,6 +324,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
             'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
             'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
             'APP_MANAGED_STORAGE_ROOT',
+            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
         ];
     }
 }

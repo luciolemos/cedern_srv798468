@@ -23,6 +23,11 @@ O estado correto do sistema é:
 Fallback legado pode existir como contingência, mas não deve ser a base de uma
 implementação nova.
 
+Quando um ambiente antigo ainda precisar ler `public/assets/...` durante uma
+janela de migração, isso deve ser ativado explicitamente por
+`APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`. O padrão profissional para ambientes
+novos e estáveis é manter essa flag desligada.
+
 ## Contrato de banco
 
 Para cada arquivo gerenciado, use este trio de colunas:

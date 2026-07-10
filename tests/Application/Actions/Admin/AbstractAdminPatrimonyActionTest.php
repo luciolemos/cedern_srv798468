@@ -99,6 +99,7 @@ final class AbstractAdminPatrimonyActionTest extends TestCase
     {
         return [
             'APP_MANAGED_STORAGE_ROOT',
+            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
             'PATRIMONY_IMAGE_UPLOAD_DIR',
             'PATRIMONY_IMAGE_UPLOAD_PUBLIC_PREFIX',
         ];

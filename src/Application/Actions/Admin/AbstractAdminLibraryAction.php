@@ -318,18 +318,23 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
         string $legacyDirectory,
         string $legacyPublicPrefix
     ): array {
-        return $this->libraryStorage()->buildReadDefinitions(
+        $storage = $this->libraryStorage();
+        $additionalDefinitions = [];
+
+        if ($storage->legacyReadFallbackEnabled()) {
+            $additionalDefinitions[] = [
+                'directory' => $legacyDirectory,
+                'public_prefix' => $legacyPublicPrefix,
+                'directory_mode' => 'project',
+            ];
+        }
+
+        return $storage->buildReadDefinitions(
             $directoryEnvKey,
             $publicPrefixEnvKey,
             $defaultDirectory,
             $defaultPublicPrefix,
-            [
-                [
-                    'directory' => $legacyDirectory,
-                    'public_prefix' => $legacyPublicPrefix,
-                    'directory_mode' => 'project',
-                ],
-            ]
+            $additionalDefinitions
         );
     }
 
