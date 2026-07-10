@@ -323,7 +323,13 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
 
     protected function resolveManagedBookshopCoverAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolveBookshopManagedStorageDefinitions());
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolveBookshopManagedStorageDefinitions(),
+            true,
+            [],
+            $this->resolveBookshopRecursiveSearchRoots()
+        );
     }
 
     private function normalizeBookshopLanguageKey(string $value): string
@@ -828,7 +834,13 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
             $this->resolveBookshopPrivateCoverDirectories()
         );
 
-        return ManagedMediaLocator::resolve($relativePath, $definitions);
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $definitions,
+            true,
+            [],
+            $this->resolveBookshopRecursiveSearchRoots()
+        );
     }
 
     /**
@@ -875,5 +887,15 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
     private function bookshopStorage(): ManagedUploadStorage
     {
         return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolveBookshopRecursiveSearchRoots(): array
+    {
+        $managedStorageRoot = $this->bookshopStorage()->resolveManagedStorageRoot();
+
+        return $managedStorageRoot !== null ? [$managedStorageRoot] : [];
     }
 }

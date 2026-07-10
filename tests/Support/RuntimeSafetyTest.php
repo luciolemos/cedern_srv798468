@@ -45,6 +45,22 @@ final class RuntimeSafetyTest extends TestCase
         ]));
     }
 
+    public function testDiagnosticsBecomeAvailableWhenTokenIsConfiguredWithoutExplicitFeatureFlag(): void
+    {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', '/health/storage?token=segredo')
+            ->withQueryParams(['token' => 'segredo']);
+
+        $this->assertTrue(RuntimeSafety::diagnosticsFeatureEnabled([
+            'APP_ENV' => 'production',
+            'APP_DIAGNOSTIC_TOKEN' => 'segredo',
+        ]));
+        $this->assertTrue(RuntimeSafety::diagnosticRequestAuthorized($request, [
+            'APP_ENV' => 'production',
+            'APP_DIAGNOSTIC_TOKEN' => 'segredo',
+        ]));
+    }
+
     public function testDiagnosticsAreDeniedWithoutTokenInProduction(): void
     {
         $request = (new ServerRequestFactory())->createServerRequest('GET', '/health/readiness');

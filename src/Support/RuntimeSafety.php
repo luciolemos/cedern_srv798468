@@ -40,7 +40,11 @@ final class RuntimeSafety
             return true;
         }
 
-        return self::readBool('APP_ENABLE_DIAGNOSTIC_ROUTES', $env, false);
+        if (self::readBool('APP_ENABLE_DIAGNOSTIC_ROUTES', $env, false)) {
+            return true;
+        }
+
+        return self::readString('APP_DIAGNOSTIC_TOKEN', $env) !== '';
     }
 
     /**

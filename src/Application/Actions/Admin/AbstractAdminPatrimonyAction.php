@@ -498,7 +498,13 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
 
     protected function resolveManagedPatrimonyAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolvePatrimonyManagedStorageDefinitions());
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolvePatrimonyManagedStorageDefinitions(),
+            true,
+            [],
+            $this->resolvePatrimonyRecursiveSearchRoots()
+        );
     }
 
     /**
@@ -617,5 +623,15 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
     private function patrimonyStorage(): ManagedUploadStorage
     {
         return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolvePatrimonyRecursiveSearchRoots(): array
+    {
+        $managedStorageRoot = $this->patrimonyStorage()->resolveManagedStorageRoot();
+
+        return $managedStorageRoot !== null ? [$managedStorageRoot] : [];
     }
 }

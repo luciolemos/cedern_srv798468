@@ -160,4 +160,34 @@ final class ManagedMediaLocatorTest extends TestCase
             ])
         );
     }
+
+    public function testResolvesByFileNameRecursivelyInsideManagedRootWhenDirectCandidatesMiss(): void
+    {
+        $managedRoot = sys_get_temp_dir() . '/cedern-managed-root-' . bin2hex(random_bytes(4));
+        $nestedDirectory = $managedRoot . '/imported/library-covers';
+        mkdir($nestedDirectory, 0775, true);
+        $this->temporaryDirectories[] = $nestedDirectory;
+        $this->temporaryDirectories[] = dirname($nestedDirectory);
+        $this->temporaryDirectories[] = $managedRoot;
+
+        $filePath = $nestedDirectory . '/cover_test_recursive.png';
+        file_put_contents($filePath, 'recursive-cover');
+        $this->temporaryFiles[] = $filePath;
+
+        $this->assertSame(
+            $filePath,
+            ManagedMediaLocator::resolve(
+                'media/biblioteca/capas/cover_test_recursive.png',
+                [
+                    [
+                        'directory' => $managedRoot . '/library/covers',
+                        'public_prefix' => 'media/biblioteca/capas',
+                    ],
+                ],
+                true,
+                [],
+                [$managedRoot]
+            )
+        );
+    }
 }

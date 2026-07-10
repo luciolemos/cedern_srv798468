@@ -286,6 +286,34 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         $this->assertNull($storage->exposedResolveWritableMemberProfilePhotoStorage());
     }
 
+    public function testResolvesMemberPhotoFromManagedStorageRootWhenImportedOutsideCanonicalBucket(): void
+    {
+        unset(
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
+            $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX']
+        );
+
+        $managedRoot = sys_get_temp_dir() . '/cedern-member-photo-root-' . bin2hex(random_bytes(4));
+        $importDirectory = $managedRoot . '/imported-files';
+        mkdir($importDirectory, 0775, true);
+        $this->temporaryDirectories[] = $importDirectory;
+        $this->temporaryDirectories[] = $managedRoot;
+
+        $fileName = 'member_test_recursive_' . bin2hex(random_bytes(4)) . '.jpg';
+        $filePath = $importDirectory . '/' . $fileName;
+        file_put_contents($filePath, 'member-photo');
+        $this->temporaryFiles[] = $filePath;
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $managedRoot;
+
+        $storage = new TestableMemberProfilePhotoStorageHarness();
+
+        $this->assertSame(
+            $filePath,
+            $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
+        );
+    }
+
     public function testRebasesRelativeConfiguredMemberPhotoDirectoryIntoManagedRoot(): void
     {
         $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';

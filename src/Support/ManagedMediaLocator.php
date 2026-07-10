@@ -9,12 +9,14 @@ final class ManagedMediaLocator
     /**
      * @param array<int, array{directory: string, public_prefix: string}> $definitions
      * @param array<int, string> $additionalFileNameDirectories
+     * @param array<int, string> $recursiveFileNameRoots
      */
     public static function resolve(
         ?string $relativePath,
         array $definitions,
         bool $allowFileNameFallback = true,
-        array $additionalFileNameDirectories = []
+        array $additionalFileNameDirectories = [],
+        array $recursiveFileNameRoots = []
     ): ?string {
         $normalizedPath = ltrim(trim((string) $relativePath), '/');
         $fallbackPath = null;
@@ -47,6 +49,11 @@ final class ManagedMediaLocator
             if ($fileNameFallbackPath !== null) {
                 return $fileNameFallbackPath;
             }
+        }
+
+        $recursiveFallbackPath = self::resolveRecursivelyByFileName($normalizedPath, $recursiveFileNameRoots);
+        if ($recursiveFallbackPath !== null) {
+            return $recursiveFallbackPath;
         }
 
         return $fallbackPath;
@@ -103,6 +110,62 @@ final class ManagedMediaLocator
 
             if (is_file($candidatePath)) {
                 return $candidatePath;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int, string> $roots
+     */
+    private static function resolveRecursivelyByFileName(string $normalizedPath, array $roots): ?string
+    {
+        if ($normalizedPath === '') {
+            return null;
+        }
+
+        $fileName = basename(str_replace('\\', '/', $normalizedPath));
+        if (
+            $fileName === ''
+            || $fileName === '.'
+            || $fileName === '..'
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
+        ) {
+            return null;
+        }
+
+        $seenRoots = [];
+
+        foreach ($roots as $root) {
+            $normalizedRoot = rtrim(str_replace('\\', '/', (string) $root), '/');
+            if ($normalizedRoot === '' || isset($seenRoots[$normalizedRoot]) || !is_dir($normalizedRoot)) {
+                continue;
+            }
+
+            $seenRoots[$normalizedRoot] = true;
+
+            try {
+                $directoryIterator = new \RecursiveDirectoryIterator(
+                    $normalizedRoot,
+                    \FilesystemIterator::SKIP_DOTS
+                );
+                $iterator = new \RecursiveIteratorIterator($directoryIterator);
+
+                foreach ($iterator as $fileInfo) {
+                    if (
+                        !$fileInfo instanceof \SplFileInfo
+                        || $iterator->getDepth() > 4
+                        || !$fileInfo->isFile()
+                        || $fileInfo->getFilename() !== $fileName
+                    ) {
+                        continue;
+                    }
+
+                    return str_replace('\\', '/', $fileInfo->getPathname());
+                }
+            } catch (\Throwable) {
+                continue;
             }
         }
 

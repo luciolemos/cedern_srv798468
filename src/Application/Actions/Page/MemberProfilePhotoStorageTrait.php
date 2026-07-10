@@ -84,7 +84,13 @@ trait MemberProfilePhotoStorageTrait
 
     protected function resolveManagedMemberProfilePhotoAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolveMemberProfilePhotoStorageDefinitions(), false);
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolveMemberProfilePhotoStorageDefinitions(),
+            false,
+            [],
+            $this->resolveManagedMemberProfilePhotoRecursiveSearchRoots()
+        );
     }
 
     protected function deleteStoredMemberProfilePhotoIfManaged(?string $relativePath): void
@@ -136,6 +142,16 @@ trait MemberProfilePhotoStorageTrait
             'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
             self::DEFAULT_MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX
         );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolveManagedMemberProfilePhotoRecursiveSearchRoots(): array
+    {
+        $managedStorageRoot = $this->memberProfilePhotoStorage()->resolveManagedStorageRoot();
+
+        return $managedStorageRoot !== null ? [$managedStorageRoot] : [];
     }
 
     private function memberProfilePhotoStorage(): ManagedUploadStorage
