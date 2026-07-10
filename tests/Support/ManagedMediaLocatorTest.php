@@ -81,7 +81,38 @@ final class ManagedMediaLocatorTest extends TestCase
         );
     }
 
-    public function testDoesNotCrossResolveByFileNameAcrossDifferentPrefixes(): void
+    public function testFallsBackAcrossDifferentPrefixesByFileNameWhenEnabled(): void
+    {
+        $managedDirectory = sys_get_temp_dir() . '/cedern-managed-media-managed-' . bin2hex(random_bytes(4));
+        $legacyDirectory = sys_get_temp_dir() . '/cedern-managed-media-legacy-' . bin2hex(random_bytes(4));
+        mkdir($managedDirectory, 0775, true);
+        mkdir($legacyDirectory, 0775, true);
+        $this->temporaryDirectories[] = $managedDirectory;
+        $this->temporaryDirectories[] = $legacyDirectory;
+
+        $filePath = $legacyDirectory . '/member_test_generic.jpg';
+        file_put_contents($filePath, 'member-photo');
+        $this->temporaryFiles[] = $filePath;
+
+        $this->assertSame(
+            $filePath,
+            ManagedMediaLocator::resolve(
+                'media/membros/fotos/member_test_generic.jpg',
+                [
+                    [
+                        'directory' => $managedDirectory,
+                        'public_prefix' => 'media/membros/fotos',
+                    ],
+                    [
+                        'directory' => $legacyDirectory,
+                        'public_prefix' => 'assets/img/member-photos',
+                    ],
+                ]
+            )
+        );
+    }
+
+    public function testDoesNotCrossResolveByFileNameAcrossDifferentPrefixesWhenDisabled(): void
     {
         $managedDirectory = sys_get_temp_dir() . '/cedern-managed-media-managed-' . bin2hex(random_bytes(4));
         $legacyDirectory = sys_get_temp_dir() . '/cedern-managed-media-legacy-' . bin2hex(random_bytes(4));
@@ -107,7 +138,8 @@ final class ManagedMediaLocatorTest extends TestCase
                         'directory' => $legacyDirectory,
                         'public_prefix' => 'assets/img/member-photos',
                     ],
-                ]
+                ],
+                false
             )
         );
     }
