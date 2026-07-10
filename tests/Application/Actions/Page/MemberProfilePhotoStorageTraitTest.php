@@ -120,6 +120,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
 
         $projectRoot = dirname(__DIR__, 4);
         $fileName = 'member_test_legacy_fallback_' . bin2hex(random_bytes(4)) . '.jpg';
+        $this->ensureDirectoryExists($projectRoot . '/public/assets/img/member-photos');
         $legacyPath = $projectRoot . '/public/assets/img/member-photos/' . $fileName;
         file_put_contents($legacyPath, 'legacy-image');
         $this->temporaryFiles[] = $legacyPath;
@@ -326,5 +327,15 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
             'APP_MANAGED_STORAGE_ROOT',
             'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
         ];
+    }
+
+    private function ensureDirectoryExists(string $directoryPath): void
+    {
+        if (is_dir($directoryPath)) {
+            return;
+        }
+
+        mkdir($directoryPath, 0775, true);
+        $this->temporaryDirectories[] = $directoryPath;
     }
 }
