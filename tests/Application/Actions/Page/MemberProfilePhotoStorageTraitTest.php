@@ -110,7 +110,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
-    public function testFallsBackToLegacyMemberPhotoDirectoryUsingOnlyFileName(): void
+    public function testDoesNotFallBackToLegacyMemberPhotoDirectoryUsingOnlyFileName(): void
     {
         unset(
             $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
@@ -127,12 +127,12 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         $storage = new TestableMemberProfilePhotoStorageHarness();
 
         $this->assertSame(
-            $legacyPath,
+            $projectRoot . '/var/storage/member-photos/' . $fileName,
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
         );
     }
 
-    public function testFallsBackToLegacyGenericImageDirectoryUsingOnlyFileName(): void
+    public function testDoesNotFallBackToLegacyGenericImageDirectoryUsingOnlyFileName(): void
     {
         unset(
             $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
@@ -149,7 +149,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         $storage = new TestableMemberProfilePhotoStorageHarness();
 
         $this->assertSame(
-            $legacyPath,
+            $projectRoot . '/var/storage/member-photos/' . $fileName,
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
         );
     }

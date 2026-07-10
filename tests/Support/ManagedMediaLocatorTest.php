@@ -53,7 +53,7 @@ final class ManagedMediaLocatorTest extends TestCase
         );
     }
 
-    public function testFallsBackToLegacyDirectoryByFileNameWhenPublicPrefixWasNormalized(): void
+    public function testResolvesLegacyDirectoryWhenLegacyPrefixMatches(): void
     {
         $managedDirectory = sys_get_temp_dir() . '/cedern-managed-media-managed-' . bin2hex(random_bytes(4));
         $legacyDirectory = sys_get_temp_dir() . '/cedern-managed-media-legacy-' . bin2hex(random_bytes(4));
@@ -68,7 +68,7 @@ final class ManagedMediaLocatorTest extends TestCase
 
         $this->assertSame(
             $filePath,
-            ManagedMediaLocator::resolve('media/livraria/capas/cover_test_legacy.jpg', [
+            ManagedMediaLocator::resolve('assets/img/bookshop-covers/cover_test_legacy.jpg', [
                 [
                     'directory' => $managedDirectory,
                     'public_prefix' => 'media/livraria/capas',
@@ -81,21 +81,21 @@ final class ManagedMediaLocatorTest extends TestCase
         );
     }
 
-    public function testFallsBackToAdditionalDirectoryByFileName(): void
+    public function testDoesNotCrossResolveByFileNameAcrossDifferentPrefixes(): void
     {
         $managedDirectory = sys_get_temp_dir() . '/cedern-managed-media-managed-' . bin2hex(random_bytes(4));
-        $genericDirectory = sys_get_temp_dir() . '/cedern-managed-media-generic-' . bin2hex(random_bytes(4));
+        $legacyDirectory = sys_get_temp_dir() . '/cedern-managed-media-legacy-' . bin2hex(random_bytes(4));
         mkdir($managedDirectory, 0775, true);
-        mkdir($genericDirectory, 0775, true);
+        mkdir($legacyDirectory, 0775, true);
         $this->temporaryDirectories[] = $managedDirectory;
-        $this->temporaryDirectories[] = $genericDirectory;
+        $this->temporaryDirectories[] = $legacyDirectory;
 
-        $filePath = $genericDirectory . '/member_test_generic.jpg';
+        $filePath = $legacyDirectory . '/member_test_generic.jpg';
         file_put_contents($filePath, 'member-photo');
         $this->temporaryFiles[] = $filePath;
 
         $this->assertSame(
-            $filePath,
+            $managedDirectory . '/member_test_generic.jpg',
             ManagedMediaLocator::resolve(
                 'media/membros/fotos/member_test_generic.jpg',
                 [
@@ -103,8 +103,11 @@ final class ManagedMediaLocatorTest extends TestCase
                         'directory' => $managedDirectory,
                         'public_prefix' => 'media/membros/fotos',
                     ],
-                ],
-                [$genericDirectory]
+                    [
+                        'directory' => $legacyDirectory,
+                        'public_prefix' => 'assets/img/member-photos',
+                    ],
+                ]
             )
         );
     }
