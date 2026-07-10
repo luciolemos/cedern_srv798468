@@ -66,6 +66,9 @@ class AbstractAdminLibraryActionTest extends TestCase
     private array $originalEnv = [];
 
     /** @var list<string> */
+    private array $temporaryFiles = [];
+
+    /** @var list<string> */
     private array $temporaryDirectories = [];
 
     protected function setUp(): void
@@ -79,6 +82,12 @@ class AbstractAdminLibraryActionTest extends TestCase
 
     protected function tearDown(): void
     {
+        foreach ($this->temporaryFiles as $filePath) {
+            if (is_file($filePath)) {
+                @unlink($filePath);
+            }
+        }
+
         foreach ($this->getManagedEnvKeys() as $key) {
             $originalValue = $this->originalEnv[$key] ?? null;
 
@@ -217,6 +226,35 @@ class AbstractAdminLibraryActionTest extends TestCase
         );
         $this->assertSame(
             '/srv/cede-managed-storage/library/covers/cover_demo.jpg',
+            $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.jpg')
+        );
+    }
+
+    public function testLibraryCoverResolvesFromManagedStorageRootWhenImportedIntoArchiveStyleDirectory(): void
+    {
+        unset(
+            $_ENV['LIBRARY_UPLOAD_DIR'],
+            $_ENV['LIBRARY_UPLOAD_PUBLIC_PREFIX'],
+            $_ENV['LIBRARY_COVER_UPLOAD_DIR'],
+            $_ENV['LIBRARY_COVER_UPLOAD_PUBLIC_PREFIX']
+        );
+
+        $managedRoot = sys_get_temp_dir() . '/cedern-library-root-' . bin2hex(random_bytes(4));
+        $importDirectory = $managedRoot . '/library-covers';
+        mkdir($importDirectory, 0775, true);
+        $this->temporaryDirectories[] = $importDirectory;
+        $this->temporaryDirectories[] = $managedRoot;
+
+        $filePath = $importDirectory . '/cover_demo.jpg';
+        file_put_contents($filePath, 'cover');
+        $this->temporaryFiles[] = $filePath;
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $managedRoot;
+
+        $action = $this->createAction();
+
+        $this->assertSame(
+            $filePath,
             $action->exposedResolveManagedLibraryCoverAbsolutePath('media/biblioteca/capas/cover_demo.jpg')
         );
     }

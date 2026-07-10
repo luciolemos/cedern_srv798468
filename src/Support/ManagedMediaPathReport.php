@@ -324,6 +324,9 @@ final class ManagedMediaPathReport
             'app_env' => trim((string) ($_ENV['APP_ENV'] ?? '')),
             'app_enable_legacy_media_fallback' => (new ManagedUploadStorage($this->projectRoot, $_ENV))
                 ->legacyReadFallbackEnabled(),
+            'app_enable_diagnostic_routes' => RuntimeSafety::readBool('APP_ENABLE_DIAGNOSTIC_ROUTES', $_ENV, false),
+            'app_diagnostic_token_configured' => RuntimeSafety::readString('APP_DIAGNOSTIC_TOKEN', $_ENV) !== '',
+            'diagnostics_feature_enabled' => RuntimeSafety::diagnosticsFeatureEnabled($_ENV),
             'app_env_file_getenv' => $appEnvFileFromGetenv !== false ? trim((string) $appEnvFileFromGetenv) : null,
             'app_env_file_server' => isset($_SERVER['APP_ENV_FILE']) ? trim((string) $_SERVER['APP_ENV_FILE']) : null,
             'app_env_file_env' => isset($_ENV['APP_ENV_FILE']) ? trim((string) $_ENV['APP_ENV_FILE']) : null,
@@ -331,6 +334,7 @@ final class ManagedMediaPathReport
             'bootstrap_resolved_env_file_exists' => $resolvedEnvFilePath !== null && is_file($resolvedEnvFilePath),
             'project_env_path' => $this->projectRoot . '/.env',
             'project_env_exists' => is_file($this->projectRoot . '/.env'),
+            'php_open_basedir' => ini_get('open_basedir') !== false ? (string) ini_get('open_basedir') : '',
         ];
     }
 

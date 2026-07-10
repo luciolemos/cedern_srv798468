@@ -247,12 +247,24 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
 
     protected function resolveManagedLibraryPdfAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolveLibraryPdfStorageDefinitions());
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolveLibraryPdfStorageDefinitions(),
+            true,
+            [],
+            $this->resolveLibraryRecursiveSearchRoots()
+        );
     }
 
     protected function resolveManagedLibraryCoverAbsolutePath(?string $relativePath): ?string
     {
-        return ManagedMediaLocator::resolve($relativePath, $this->resolveLibraryCoverStorageDefinitions());
+        return ManagedMediaLocator::resolve(
+            $relativePath,
+            $this->resolveLibraryCoverStorageDefinitions(),
+            true,
+            [],
+            $this->resolveLibraryRecursiveSearchRoots()
+        );
     }
 
     /**
@@ -382,5 +394,15 @@ abstract class AbstractAdminLibraryAction extends AbstractPageAction
     private function libraryStorage(): ManagedUploadStorage
     {
         return new ManagedUploadStorage(dirname(__DIR__, 4), $_ENV);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolveLibraryRecursiveSearchRoots(): array
+    {
+        $managedStorageRoot = $this->libraryStorage()->resolveManagedStorageRoot();
+
+        return $managedStorageRoot !== null ? [$managedStorageRoot] : [];
     }
 }
