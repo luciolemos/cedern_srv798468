@@ -37,6 +37,7 @@ Organize o `.env` em blocos:
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
 - `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
 - `APP_MANAGED_STORAGE_ROOT`: opcional. Define uma raiz única para uploads gerenciados fora da pasta publicada/versionada, por exemplo `/home/usuario/cedern-storage`.
+- `APP_ENABLE_LEGACY_MEDIA_FALLBACK`: opcional. Quando `true`, libera leitura temporária de arquivos antigos ainda presos em `public/assets/...`. Em ambientes novos ou estabilizados, o padrão correto é `false` ou ausente.
 - `APP_ASSET_VERSION`: versão manual usada para trocar o namespace dos caches públicos e internos. Além de quebrar cache de CSS, JS, ícones e marcação renderizada, o projeto também usa esse valor para mudar o diretório do container compilado e do cache do Twig. Em produção, quando um deploy alterar definições do container, templates ou bootstrap, incremente esse valor.
 
 ### 2. Aparência e seletor de tema
@@ -139,6 +140,7 @@ Regra prática:
 
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver definido, qualquer diretório relativo iniciado por `var/storage/` passa a ser rebaseado para essa raiz compartilhada. Diretórios absolutos continuam respeitados exatamente como informados.
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver vazio ou comentado, os buckets padrão continuam em `var/storage/...` dentro do projeto.
+- Quando `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`, a leitura pode consultar `public/assets/...` como contingência. Isso nao deve ser a regra normal de produção.
 - O contrato funcional completo de banco, URL pública, storage físico e deploy de mídia gerenciada está em [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md).
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
