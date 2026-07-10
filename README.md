@@ -230,6 +230,7 @@ Guias práticos:
 - deploy em Hostinger: [docs/HOSTINGER_SHARED_DEPLOY.md](/var/www/cedern/docs/HOSTINGER_SHARED_DEPLOY.md)
 - patches de banco: [docs/DB_SQL_PATCHES.md](/var/www/cedern/docs/DB_SQL_PATCHES.md)
 - configuração de ambiente: [docs/ENVIRONMENT_CONFIGURATION.md](/var/www/cedern/docs/ENVIRONMENT_CONFIGURATION.md)
+- padrão de mídia gerenciada: [docs/MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md)
 
 ## Acesso administrativo via membros
 

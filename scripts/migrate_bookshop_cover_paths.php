@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Support\ManagedUploadStorage;
 use Dotenv\Dotenv;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -338,80 +339,38 @@ function summarizeStorage(array $storage): array
 
 function resolveManagedDirectory(string $projectRoot, string $envKey, string $defaultDirectory): string
 {
-    $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
-
-    if ($configuredDirectory !== '') {
-        return resolveConfiguredManagedDirectory($projectRoot, $configuredDirectory);
-    }
-
-    return resolveManagedStorageDefaultDirectory($projectRoot, $defaultDirectory);
+    return managedUploadStorage($projectRoot)->resolveUploadDirectory($envKey, $defaultDirectory);
 }
 
 function resolveManagedPublicPrefix(string $envKey, string $defaultPublicPrefix): string
 {
-    $configuredPrefix = trim((string) ($_ENV[$envKey] ?? ''));
-
-    if ($configuredPrefix !== '') {
-        return trim(str_replace('\\', '/', $configuredPrefix), '/');
-    }
-
-    return trim(str_replace('\\', '/', $defaultPublicPrefix), '/');
+    return managedUploadStorage(dirname(__DIR__))->resolveUploadPublicPrefix($envKey, $defaultPublicPrefix);
 }
 
 function resolveManagedStorageDefaultDirectory(string $projectRoot, string $defaultDirectory): string
 {
-    $managedStorageRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-    if ($managedStorageRoot === '') {
-        return resolveProjectPath($projectRoot, $defaultDirectory);
-    }
-
-    $resolvedRoot = resolveProjectPath($projectRoot, $managedStorageRoot);
-    $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
-    $storagePrefix = 'var/storage/';
-
-    if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
-        return resolveProjectPath($projectRoot, $defaultDirectory);
-    }
-
-    return $resolvedRoot . '/' . ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
+    return managedUploadStorage($projectRoot)->resolveManagedStorageDefaultDirectory($defaultDirectory);
 }
 
 function resolveConfiguredManagedDirectory(string $projectRoot, string $path): string
 {
-    $normalizedPath = str_replace('\\', '/', trim($path));
-    while (str_starts_with($normalizedPath, './')) {
-        $normalizedPath = substr($normalizedPath, 2);
-    }
-
-    $managedStorageRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-    $storagePrefix = 'var/storage/';
-    $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-    if (
-        $managedStorageRoot !== ''
-        && !isAbsolutePath($normalizedPath)
-        && str_starts_with($normalizedRelativePath, $storagePrefix)
-    ) {
-        $resolvedRoot = resolveProjectPath($projectRoot, $managedStorageRoot);
-
-        return $resolvedRoot . '/' . ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-    }
-
-    return resolveProjectPath($projectRoot, $normalizedPath);
+    return managedUploadStorage($projectRoot)->resolveManagedStorageDirectory($path);
 }
 
 function resolveProjectPath(string $projectRoot, string $path): string
 {
-    $normalizedPath = str_replace('\\', '/', trim($path));
-    if ($normalizedPath === '') {
-        return $projectRoot;
+    return managedUploadStorage($projectRoot)->resolveProjectPath($path);
+}
+
+function managedUploadStorage(string $projectRoot): ManagedUploadStorage
+{
+    static $instances = [];
+
+    if (!isset($instances[$projectRoot])) {
+        $instances[$projectRoot] = new ManagedUploadStorage($projectRoot, $_ENV);
     }
 
-    if (isAbsolutePath($normalizedPath)) {
-        return rtrim($normalizedPath, '/');
-    }
-
-    return rtrim($projectRoot . '/' . ltrim($normalizedPath, '/'), '/');
+    return $instances[$projectRoot];
 }
 
 function ensureWritableDirectory(string $directory): bool

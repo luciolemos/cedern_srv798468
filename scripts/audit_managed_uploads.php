@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Support\ManagedUploadStorage;
 use Dotenv\Dotenv;
 
 $projectRoot = dirname(__DIR__);
@@ -53,70 +54,38 @@ $pdo = new PDO(
 
 function resolveProjectPath(string $projectRoot, string $path): string
 {
-    $normalizedPath = str_replace('\\', '/', trim($path));
-    if ($normalizedPath === '') {
-        return $projectRoot;
-    }
-
-    if (str_starts_with($normalizedPath, '/') || preg_match('/^[A-Za-z]:[\\\\\\/]/', $normalizedPath) === 1) {
-        return rtrim($normalizedPath, '/');
-    }
-
-    return rtrim($projectRoot . '/' . ltrim($normalizedPath, '/'), '/');
+    return managedUploadStorage($projectRoot)->resolveProjectPath($path);
 }
 
 function resolveManagedStorageDefaultDirectory(string $projectRoot, string $defaultDirectory): string
 {
-    $managedStorageRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-    if ($managedStorageRoot === '') {
-        return resolveProjectPath($projectRoot, $defaultDirectory);
-    }
-
-    $resolvedRoot = resolveProjectPath($projectRoot, $managedStorageRoot);
-    $normalizedDefaultDirectory = ltrim(str_replace('\\', '/', $defaultDirectory), '/');
-    $storagePrefix = 'var/storage/';
-
-    if (!str_starts_with($normalizedDefaultDirectory, $storagePrefix)) {
-        return resolveProjectPath($projectRoot, $defaultDirectory);
-    }
-
-    return $resolvedRoot . '/' . ltrim(substr($normalizedDefaultDirectory, strlen($storagePrefix)), '/');
+    return managedUploadStorage($projectRoot)->resolveManagedStorageDefaultDirectory($defaultDirectory);
 }
 
 function resolveManagedDirectory(string $projectRoot, string $envKey, string $defaultDirectory): string
 {
-    $configuredDirectory = trim((string) ($_ENV[$envKey] ?? ''));
-
-    if ($configuredDirectory !== '') {
-        return resolveConfiguredManagedDirectory($projectRoot, $configuredDirectory);
-    }
-
-    return resolveManagedStorageDefaultDirectory($projectRoot, $defaultDirectory);
+    return managedUploadStorage($projectRoot)->resolveUploadDirectory($envKey, $defaultDirectory);
 }
 
 function resolveConfiguredManagedDirectory(string $projectRoot, string $path): string
 {
-    $normalizedPath = str_replace('\\', '/', trim($path));
-    while (str_starts_with($normalizedPath, './')) {
-        $normalizedPath = substr($normalizedPath, 2);
+    return managedUploadStorage($projectRoot)->resolveManagedStorageDirectory($path);
+}
+
+function resolveManagedStorageRoot(string $projectRoot): ?string
+{
+    return managedUploadStorage($projectRoot)->resolveManagedStorageRoot();
+}
+
+function managedUploadStorage(string $projectRoot): ManagedUploadStorage
+{
+    static $instances = [];
+
+    if (!isset($instances[$projectRoot])) {
+        $instances[$projectRoot] = new ManagedUploadStorage($projectRoot, $_ENV);
     }
 
-    $managedStorageRoot = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
-    $storagePrefix = 'var/storage/';
-    $normalizedRelativePath = ltrim($normalizedPath, '/');
-
-    if (
-        $managedStorageRoot !== ''
-        && !str_starts_with($normalizedPath, '/')
-        && preg_match('/^[A-Za-z]:[\\\\\\/]/', $normalizedPath) !== 1
-        && str_starts_with($normalizedRelativePath, $storagePrefix)
-    ) {
-        $resolvedRoot = resolveProjectPath($projectRoot, $managedStorageRoot);
-
-        return $resolvedRoot . '/' . ltrim(substr($normalizedRelativePath, strlen($storagePrefix)), '/');
-    }
-
-    return resolveProjectPath($projectRoot, $normalizedPath);
+    return $instances[$projectRoot];
 }
 
 /**
@@ -183,6 +152,13 @@ function managedStorageChecks(string $projectRoot): array
 }
 
 $exitCode = 0;
+$managedStorageRootRaw = trim((string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''));
+$managedStorageRootResolved = resolveManagedStorageRoot($projectRoot);
+
+echo 'APP_MANAGED_STORAGE_ROOT bruto: '
+    . ($managedStorageRootRaw !== '' ? $managedStorageRootRaw : '(vazio)') . PHP_EOL;
+echo 'APP_MANAGED_STORAGE_ROOT resolvido: '
+    . ($managedStorageRootResolved !== null ? $managedStorageRootResolved : '(desativado)') . PHP_EOL;
 
 foreach (managedStorageChecks($projectRoot) as $check) {
     echo PHP_EOL . '== ' . $check['label'] . ' ==' . PHP_EOL;
