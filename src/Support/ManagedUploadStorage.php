@@ -38,6 +38,11 @@ final class ManagedUploadStorage
         return $this->readBool('APP_ENABLE_LEGACY_MEDIA_FALLBACK');
     }
 
+    public function projectStorageReadFallbackEnabled(): bool
+    {
+        return !$this->managedWriteModeEnabled();
+    }
+
     public function buildRelativePath(string $fileName, string $publicPrefix): string
     {
         return $this->normalizePublicPrefix($publicPrefix) . '/' . ltrim($fileName, '/');
@@ -189,10 +194,13 @@ final class ManagedUploadStorage
             'directory' => $this->resolveManagedStorageDefaultDirectory($defaultDirectory),
             'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
         ];
-        $definitions[] = [
-            'directory' => $this->resolveProjectPath($defaultDirectory),
-            'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
-        ];
+
+        if ($this->projectStorageReadFallbackEnabled()) {
+            $definitions[] = [
+                'directory' => $this->resolveProjectPath($defaultDirectory),
+                'public_prefix' => $this->normalizePublicPrefix($defaultPublicPrefix),
+            ];
+        }
 
         foreach ($additionalDefinitions as $definition) {
             $definitions[] = [
