@@ -4,6 +4,10 @@ Documento principal de operacao:
 
 - [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
 
+Se voce for introduzir um ambiente intermediario antes da producao:
+
+- [HOMOLOGATION_ENVIRONMENT_RUNBOOK.md](/var/www/cedern/docs/HOMOLOGATION_ENVIRONMENT_RUNBOOK.md)
+
 Este projeto pode ser publicado em hospedagem compartilhada da Hostinger sem Docker.
 O fluxo abaixo assume Git deploy ou upload do repositório para o diretório publicado.
 
