@@ -8,6 +8,7 @@ use App\Application\Security\CsrfToken;
 use App\Domain\Agenda\AgendaRepository;
 use App\Domain\Analytics\SiteVisitRepository;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\DeploymentEnvironment;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
@@ -198,17 +199,7 @@ return function (App $app) {
     $app->add(function (Request $request, RequestHandler $handler) use ($app, $stripBasePath, $appBasePath) {
         $twig = $app->getContainer()->get(Twig::class);
         $twigEnvironment = $twig->getEnvironment();
-        $appEnv = strtolower(trim((string) ($_ENV['APP_ENV'] ?? 'production')));
-        $dashboardEnvLabel = 'Produção';
-        $dashboardEnvTone = 'prod';
-
-        if (in_array($appEnv, ['dev', 'development', 'local'], true)) {
-            $dashboardEnvLabel = 'Desenvolvimento';
-            $dashboardEnvTone = 'dev';
-        } elseif (in_array($appEnv, ['test', 'testing', 'qa', 'homolog'], true)) {
-            $dashboardEnvLabel = 'Homologação';
-            $dashboardEnvTone = 'test';
-        }
+        $deploymentEnvironment = DeploymentEnvironment::resolve($_ENV);
 
         $dashboardRoleWeights = [
             'member' => 10,
@@ -290,8 +281,8 @@ return function (App $app) {
             'member_profile_photo_path',
             (string) ($_SESSION['member_profile_photo_path'] ?? '')
         );
-        $twigEnvironment->addGlobal('dashboard_env_label', $dashboardEnvLabel);
-        $twigEnvironment->addGlobal('dashboard_env_tone', $dashboardEnvTone);
+        $twigEnvironment->addGlobal('dashboard_env_label', $deploymentEnvironment['label']);
+        $twigEnvironment->addGlobal('dashboard_env_tone', $deploymentEnvironment['tone']);
         $twigEnvironment->addGlobal('dashboard_admin_notifications', $dashboardAdminNotifications);
         $twigEnvironment->addGlobal('dashboard_admin_pending_users', $dashboardPendingUsers);
         $twigEnvironment->addGlobal('dashboard_admin_notification_count', $dashboardNotificationCount);

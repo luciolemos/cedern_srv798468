@@ -7,6 +7,7 @@ use App\Application\Security\RecaptchaVerifier;
 use App\Domain\Billing\ContributionBillingGateway;
 use App\Infrastructure\Billing\AsaasContributionBillingGateway;
 use App\Infrastructure\Billing\NullContributionBillingGateway;
+use App\Support\DeploymentEnvironment;
 use App\Support\ManagedPublicMediaPath;
 use App\Support\ThemeConfig;
 use DI\ContainerBuilder;
@@ -121,6 +122,7 @@ return function (ContainerBuilder $containerBuilder) {
             $recaptchaVerifier = $c->get(RecaptchaVerifier::class);
             $appRecaptchaEnabled = $recaptchaVerifier->isReady();
             $appRecaptchaSiteKey = $recaptchaVerifier->getSiteKey();
+            $deploymentEnvironment = DeploymentEnvironment::resolve($_ENV);
             $themeConfig = ThemeConfig::resolve($_ENV);
 
             if ($appDefaultPageTitle === '') {
@@ -268,6 +270,10 @@ return function (ContainerBuilder $containerBuilder) {
             $twig->getEnvironment()->addGlobal('app_default_twitter_site', $appDefaultTwitterSite);
             $twig->getEnvironment()->addGlobal('app_asset_version', $appAssetVersion);
             $twig->getEnvironment()->addGlobal('app_env', $appEnv);
+            $twig->getEnvironment()->addGlobal('app_deploy_stage', $deploymentEnvironment['stage']);
+            $twig->getEnvironment()->addGlobal('app_environment_label', $deploymentEnvironment['label']);
+            $twig->getEnvironment()->addGlobal('app_environment_tone', $deploymentEnvironment['tone']);
+            $twig->getEnvironment()->addGlobal('app_environment_title_prefix', $deploymentEnvironment['title_prefix']);
             $twig->getEnvironment()->addGlobal('app_theme_palette_enabled', $themeConfig['theme_palette_enabled']);
             $twig->getEnvironment()->addGlobal('app_dashboard_theme_palette_enabled', $themeConfig['dashboard_theme_palette_enabled']);
             $twig->getEnvironment()->addGlobal('app_theme_allowed_themes', $themeConfig['allowed_themes']);

@@ -5045,6 +5045,7 @@ code {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-pill);
   padding: 0.2rem 0.65rem;
@@ -5053,6 +5054,14 @@ code {
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
+}
+
+.nc-dashboard-env-badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: currentColor;
+  flex: 0 0 auto;
 }
 
 .nc-dashboard-env-badge-prod {

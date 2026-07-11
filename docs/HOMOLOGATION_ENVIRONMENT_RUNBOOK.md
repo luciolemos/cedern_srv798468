@@ -261,6 +261,7 @@ Valores minimos recomendados:
 
 ```dotenv
 APP_ENV=production
+APP_DEPLOY_STAGE="homolog"
 APP_BASE=""
 APP_DEFAULT_PAGE_URL="https://homolog.cedern.org/"
 APP_LOG_PATH="/home/u429418010/logs/cedern-homolog.log"
@@ -365,6 +366,7 @@ Se homologacao roda na raiz do subdominio:
 
 ```dotenv
 APP_ENV=production
+APP_DEPLOY_STAGE="homolog"
 APP_BASE=""
 APP_LOG_PATH="/home/usuario/logs/cedern-homolog.log"
 APP_ALLOW_REPOSITORY_FALLBACK="false"

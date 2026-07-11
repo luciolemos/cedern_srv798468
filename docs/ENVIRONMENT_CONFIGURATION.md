@@ -31,6 +31,8 @@ Organize o `.env` em blocos:
 ### 1. Bootstrap e runtime
 
 - `APP_ENV`: define o perfil geral da aplicação. Aceitos operacionalmente pelo projeto: `production`, `development`, `test`, `local`, `dev`, `qa`, `homolog`.
+- `APP_DEPLOY_STAGE`: define o ambiente implantado exibido no painel administrativo. Aceitos: `development`, `homolog`, `production`. Use essa variável para separar a etiqueta visual do ambiente do modo técnico de runtime.
+- `APP_DEPLOY_STAGE_LABEL`: opcional. Permite sobrescrever o texto exibido no indicador visual do ambiente.
 - `APP_ENV_FILE`: opcional. Permite mandar o bootstrap carregar outro arquivo em vez do `.env` padrão.
 - `APP_LOG_PATH`: caminho absoluto do log da aplicação. Em Hostinger normalmente fica fora do projeto.
 - `APP_ALLOW_REPOSITORY_FALLBACK`: controla se a aplicação pode cair para repositórios fallback quando o MySQL falha. Em produção, o recomendado é `false`.
@@ -190,6 +192,7 @@ Se o objetivo da homologacao for espelhar producao e barrar problemas antes do
 go-live, o recomendado e:
 
 - `APP_ENV=production`
+- `APP_DEPLOY_STAGE=homolog`
 - `APP_BASE=""` se roda em subdominio proprio
 - `APP_ALLOW_REPOSITORY_FALLBACK=false`
 - `APP_ENABLE_DIAGNOSTIC_ROUTES=false`
