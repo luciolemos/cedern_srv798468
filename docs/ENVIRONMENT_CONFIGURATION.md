@@ -258,6 +258,7 @@ Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?toke
 ## Arquivos relacionados
 
 - Template versionado: [.env.example](/var/www/cedern/.env.example)
+- Template versionado de homologacao: [.env.homolog.example](/var/www/cedern/.env.homolog.example)
 - Resolução de tema: [ThemeConfig.php](/var/www/cedern/src/Support/ThemeConfig.php)
 - Injeção de variáveis no Twig: [dependencies.php](/var/www/cedern/app/dependencies.php)
 - Bootstrap do `.env`: [index.php](/var/www/cedern/public/index.php)
