@@ -92,8 +92,20 @@ final class AbstractAdminPatrimonyActionTest extends TestCase
         );
     }
 
-    public function testResolvesLegacyPatrimonyImagePathByDefault(): void
+    public function testDoesNotResolveLegacyPatrimonyImagePathByDefault(): void
     {
+        $repository = $this->createMock(PatrimonyRepository::class);
+        $action = new TestableAdminPatrimonyAction($repository);
+
+        $this->assertNull(
+            $action->exposedResolveManagedPatrimonyAbsolutePath('assets/img/patrimony/demo.webp')
+        );
+    }
+
+    public function testResolvesLegacyPatrimonyImagePathWhenLegacyFallbackIsEnabled(): void
+    {
+        $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK'] = 'true';
+
         $repository = $this->createMock(PatrimonyRepository::class);
         $action = new TestableAdminPatrimonyAction($repository);
         $projectRoot = dirname(__DIR__, 4);
@@ -111,6 +123,7 @@ final class AbstractAdminPatrimonyActionTest extends TestCase
     {
         return [
             'APP_MANAGED_STORAGE_ROOT',
+            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
             'PATRIMONY_IMAGE_UPLOAD_DIR',
             'PATRIMONY_IMAGE_UPLOAD_PUBLIC_PREFIX',
         ];

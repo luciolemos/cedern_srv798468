@@ -169,7 +169,12 @@ final class ManagedUploadStorage
     }
 
     /**
-     * @param array<int, array{directory: string, public_prefix: string, directory_mode?: string}> $additionalDefinitions
+     * @param array<int, array{
+     *     directory: string,
+     *     public_prefix: string,
+     *     directory_mode?: string,
+     *     requires_legacy_fallback?: bool
+     * }> $additionalDefinitions
      * @return array<int, array{directory: string, public_prefix: string}>
      */
     public function buildReadDefinitions(
@@ -203,6 +208,13 @@ final class ManagedUploadStorage
         }
 
         foreach ($additionalDefinitions as $definition) {
+            if (
+                (($definition['requires_legacy_fallback'] ?? false) === true)
+                && !$this->legacyReadFallbackEnabled()
+            ) {
+                continue;
+            }
+
             $definitions[] = [
                 'directory' => $this->resolveDefinitionDirectory($definition),
                 'public_prefix' => $this->normalizePublicPrefix($definition['public_prefix']),
@@ -235,7 +247,12 @@ final class ManagedUploadStorage
     }
 
     /**
-     * @param array{directory: string, public_prefix: string, directory_mode?: string} $definition
+     * @param array{
+     *     directory: string,
+     *     public_prefix: string,
+     *     directory_mode?: string,
+     *     requires_legacy_fallback?: bool
+     * } $definition
      */
     private function resolveDefinitionDirectory(array $definition): string
     {

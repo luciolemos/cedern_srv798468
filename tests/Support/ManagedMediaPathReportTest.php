@@ -23,6 +23,7 @@ final class ManagedMediaPathReportTest extends TestCase
         foreach (
             [
                 'APP_MANAGED_STORAGE_ROOT',
+                'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
                 'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
                 'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
             ] as $key
@@ -106,5 +107,47 @@ final class ManagedMediaPathReportTest extends TestCase
         );
         $candidateLabels = array_column((array) ($report['targets']['member_photos']['read_candidates'] ?? []), 'label');
         $this->assertSame(['configured'], $candidateLabels);
+    }
+
+    public function testBookshopLegacyCandidatesAreHiddenWhenLegacyFallbackIsDisabled(): void
+    {
+        $projectRoot = sys_get_temp_dir() . '/cedern-report-project-' . bin2hex(random_bytes(4));
+        mkdir($projectRoot . '/var/storage/bookshop/covers', 0775, true);
+
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage/bookshop/covers';
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage/bookshop';
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage';
+        $this->temporaryDirectories[] = $projectRoot . '/var';
+        $this->temporaryDirectories[] = $projectRoot;
+
+        unset($_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK']);
+
+        $report = (new ManagedMediaPathReport($projectRoot))->build('bookshop_covers', 'cover_demo.jpg');
+        $candidateLabels = array_column((array) ($report['targets']['bookshop_covers']['read_candidates'] ?? []), 'label');
+        $recursiveRoots = (array) ($report['probe']['recursive_search_roots'] ?? []);
+
+        $this->assertNotContains('legacy_bookshop_covers', $candidateLabels);
+        $this->assertNotContains($projectRoot . '/public/assets', $recursiveRoots);
+    }
+
+    public function testBookshopLegacyCandidatesAppearWhenLegacyFallbackIsEnabled(): void
+    {
+        $projectRoot = sys_get_temp_dir() . '/cedern-report-project-' . bin2hex(random_bytes(4));
+        mkdir($projectRoot . '/var/storage/bookshop/covers', 0775, true);
+
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage/bookshop/covers';
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage/bookshop';
+        $this->temporaryDirectories[] = $projectRoot . '/var/storage';
+        $this->temporaryDirectories[] = $projectRoot . '/var';
+        $this->temporaryDirectories[] = $projectRoot;
+
+        $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK'] = 'true';
+
+        $report = (new ManagedMediaPathReport($projectRoot))->build('bookshop_covers', 'cover_demo.jpg');
+        $candidateLabels = array_column((array) ($report['targets']['bookshop_covers']['read_candidates'] ?? []), 'label');
+        $recursiveRoots = (array) ($report['probe']['recursive_search_roots'] ?? []);
+
+        $this->assertContains('legacy_bookshop_covers', $candidateLabels);
+        $this->assertContains($projectRoot . '/public/assets', $recursiveRoots);
     }
 }

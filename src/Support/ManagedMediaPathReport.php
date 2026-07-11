@@ -84,33 +84,32 @@ final class ManagedMediaPathReport
     private function buildTargets(): array
     {
         $storage = new ManagedUploadStorage($this->projectRoot, $_ENV);
-        $legacyReadFallbackEnabled = $storage->legacyReadFallbackEnabled();
-
         return [
             'member_photos' => $this->buildTargetReport(
                 'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
                 'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
                 self::MEMBER_PHOTO_DEFAULT_DIR,
                 self::MEMBER_PHOTO_DEFAULT_PREFIX,
-                $legacyReadFallbackEnabled
-                    ? [
-                        [
-                            'label' => 'legacy_member_photos',
-                            'directory' => $this->resolveProjectPath(self::MEMBER_PHOTO_LEGACY_DIR),
-                            'public_prefix' => self::MEMBER_PHOTO_LEGACY_PREFIX,
-                        ],
-                        [
-                            'label' => 'legacy_member_avatar',
-                            'directory' => $this->resolveProjectPath(self::MEMBER_AVATAR_LEGACY_DIR),
-                            'public_prefix' => self::MEMBER_AVATAR_LEGACY_PREFIX,
-                        ],
-                        [
-                            'label' => 'legacy_generic_assets_img',
-                            'directory' => $this->resolveProjectPath(self::MEMBER_GENERIC_LEGACY_DIR),
-                            'public_prefix' => null,
-                        ],
-                    ]
-                    : []
+                [
+                    [
+                        'label' => 'legacy_member_photos',
+                        'directory' => $this->resolveProjectPath(self::MEMBER_PHOTO_LEGACY_DIR),
+                        'public_prefix' => self::MEMBER_PHOTO_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
+                    ],
+                    [
+                        'label' => 'legacy_member_avatar',
+                        'directory' => $this->resolveProjectPath(self::MEMBER_AVATAR_LEGACY_DIR),
+                        'public_prefix' => self::MEMBER_AVATAR_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
+                    ],
+                    [
+                        'label' => 'legacy_generic_assets_img',
+                        'directory' => $this->resolveProjectPath(self::MEMBER_GENERIC_LEGACY_DIR),
+                        'public_prefix' => null,
+                        'requires_legacy_fallback' => true,
+                    ],
+                ]
             ),
             'bookshop_covers' => $this->buildTargetReport(
                 'BOOKSHOP_COVER_UPLOAD_DIR',
@@ -122,6 +121,7 @@ final class ManagedMediaPathReport
                         'label' => 'legacy_bookshop_covers',
                         'directory' => $this->resolveProjectPath(self::BOOKSHOP_COVER_LEGACY_DIR),
                         'public_prefix' => self::BOOKSHOP_COVER_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
                     ],
                     [
                         'label' => 'bookshop_fallback_cache',
@@ -146,6 +146,7 @@ final class ManagedMediaPathReport
                         'label' => 'legacy_library_docs',
                         'directory' => $this->resolveProjectPath(self::LIBRARY_DOC_LEGACY_DIR),
                         'public_prefix' => self::LIBRARY_DOC_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
                     ],
                 ]
             ),
@@ -159,6 +160,7 @@ final class ManagedMediaPathReport
                         'label' => 'legacy_library_covers',
                         'directory' => $this->resolveProjectPath(self::LIBRARY_COVER_LEGACY_DIR),
                         'public_prefix' => self::LIBRARY_COVER_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
                     ],
                 ]
             ),
@@ -172,6 +174,7 @@ final class ManagedMediaPathReport
                         'label' => 'legacy_patrimony_docs',
                         'directory' => $this->resolveProjectPath(self::PATRIMONY_DOC_LEGACY_DIR),
                         'public_prefix' => self::PATRIMONY_DOC_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
                     ],
                 ]
             ),
@@ -185,6 +188,7 @@ final class ManagedMediaPathReport
                         'label' => 'legacy_patrimony_images',
                         'directory' => $this->resolveProjectPath(self::PATRIMONY_IMAGE_LEGACY_DIR),
                         'public_prefix' => self::PATRIMONY_IMAGE_LEGACY_PREFIX,
+                        'requires_legacy_fallback' => true,
                     ],
                 ]
             ),
@@ -192,7 +196,12 @@ final class ManagedMediaPathReport
     }
 
     /**
-     * @param array<int, array{label: string, directory: string, public_prefix: string|null}> $extraReadCandidates
+     * @param array<int, array{
+     *     label: string,
+     *     directory: string,
+     *     public_prefix: string|null,
+     *     requires_legacy_fallback?: bool
+     * }> $extraReadCandidates
      * @return array<string, mixed>
      */
     private function buildTargetReport(
@@ -210,6 +219,7 @@ final class ManagedMediaPathReport
         $defaultResolvedDirectory = $storage->resolveManagedStorageDefaultDirectory($defaultDirectory);
         $projectDefaultDirectory = $storage->resolveProjectPath($defaultDirectory);
         $includeProjectStorageDefault = $storage->projectStorageReadFallbackEnabled();
+        $legacyReadFallbackEnabled = $storage->legacyReadFallbackEnabled();
 
         $readCandidates = [
             [
@@ -233,6 +243,13 @@ final class ManagedMediaPathReport
         }
 
         foreach ($extraReadCandidates as $candidate) {
+            if (
+                (($candidate['requires_legacy_fallback'] ?? false) === true)
+                && !$legacyReadFallbackEnabled
+            ) {
+                continue;
+            }
+
             $readCandidates[] = $candidate;
         }
 
@@ -278,7 +295,9 @@ final class ManagedMediaPathReport
             'recursive_search_roots' => array_values(array_filter([
                 $managedStorageRoot,
                 $this->projectRoot . '/var/storage',
-                $this->projectRoot . '/public/assets',
+                (new ManagedUploadStorage($this->projectRoot, $_ENV))->legacyReadFallbackEnabled()
+                    ? $this->projectRoot . '/public/assets'
+                    : null,
             ])),
             'recursive_matches' => [],
         ];

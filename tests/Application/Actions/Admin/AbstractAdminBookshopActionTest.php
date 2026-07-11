@@ -92,8 +92,20 @@ final class AbstractAdminBookshopActionTest extends TestCase
         );
     }
 
-    public function testResolvesLegacyBookshopCoverPathByDefault(): void
+    public function testDoesNotResolveLegacyBookshopCoverPathByDefault(): void
     {
+        $repository = $this->createMock(BookshopRepository::class);
+        $action = new TestableAdminBookshopAction($repository);
+
+        $this->assertNull(
+            $action->exposedResolveManagedBookshopCoverAbsolutePath('assets/img/bookshop-covers/demo.jpg')
+        );
+    }
+
+    public function testResolvesLegacyBookshopCoverPathWhenLegacyFallbackIsEnabled(): void
+    {
+        $_ENV['APP_ENABLE_LEGACY_MEDIA_FALLBACK'] = 'true';
+
         $repository = $this->createMock(BookshopRepository::class);
         $action = new TestableAdminBookshopAction($repository);
         $projectRoot = dirname(__DIR__, 4);
@@ -111,6 +123,7 @@ final class AbstractAdminBookshopActionTest extends TestCase
     {
         return [
             'APP_MANAGED_STORAGE_ROOT',
+            'APP_ENABLE_LEGACY_MEDIA_FALLBACK',
             'BOOKSHOP_COVER_UPLOAD_DIR',
             'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
         ];
