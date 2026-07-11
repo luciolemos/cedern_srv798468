@@ -1,5 +1,9 @@
 # Patches SQL e Deploy de Banco
 
+Documento principal de operacao:
+
+- [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
+
 Este projeto agora possui um fluxo simples de migrations baseado em patches SQL versionados.
 Ele foi pensado para o cenário atual do CEDE:
 

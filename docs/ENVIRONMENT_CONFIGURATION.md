@@ -37,6 +37,7 @@ Organize o `.env` em blocos:
 - `docker`: opcional. Quando verdadeiro, o logger pode preferir `stdout`.
 - `APP_BASE`: subdiretório de instalação. Use vazio quando o site roda na raiz do domínio; use `/cedern` quando roda em `https://host/cedern/`. Quando o valor fica vazio, o bootstrap tenta autodetectar o subdiretório a partir de `SCRIPT_NAME` e remove o sufixo `/public` de instalações reescritas, mas produção ainda deve preferir valor explícito.
 - `APP_MANAGED_STORAGE_ROOT`: opcional. Define uma raiz única para uploads gerenciados fora da pasta publicada/versionada, por exemplo `/home/usuario/cedern-storage`.
+- `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR`: opcional. Fixa a origem dos `.zip` usados por `/health/storage/import`. Quando definida, o importador deixa de fazer descoberta automática e passa a procurar os arquivos somente nesse diretório.
 - `APP_ENABLE_LEGACY_MEDIA_FALLBACK`: opcional. Quando `true`, libera leitura temporária de fotos de membros ainda presas em `public/assets/...`. Livraria, biblioteca e patrimônio continuam com compatibilidade legada de leitura enquanto a migração completa desses buckets não for auditada.
 - `APP_ASSET_VERSION`: versão manual usada para trocar o namespace dos caches públicos e internos. Além de quebrar cache de CSS, JS, ícones e marcação renderizada, o projeto também usa esse valor para mudar o diretório do container compilado e do cache do Twig. Em produção, quando um deploy alterar definições do container, templates ou bootstrap, incremente esse valor.
 
@@ -140,8 +141,10 @@ Regra prática:
 
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver definido, qualquer diretório relativo iniciado por `var/storage/` passa a ser rebaseado para essa raiz compartilhada. Diretórios absolutos continuam respeitados exatamente como informados.
 - Com `APP_MANAGED_STORAGE_ROOT` ativo, a aplicação deixa de usar `var/storage/...` do release atual como fallback implícito de leitura; o ambiente precisa estar consistente no storage compartilhado.
+- Quando `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` estiver definido, `/health/storage/import` usa apenas esse diretório como origem dos `.zip`; os fallbacks automáticos em `var/imports/...` e `var/exports/...` deixam de participar da seleção.
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver vazio ou comentado, os buckets padrão continuam em `var/storage/...` dentro do projeto.
 - Quando `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`, fotos de membros também podem aceitar paths legados diretos `assets/...` durante uma janela de migração.
+- O fluxo operacional principal de producao esta em [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md).
 - O contrato funcional completo de banco, URL pública, storage físico e deploy de mídia gerenciada está em [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md).
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
@@ -235,4 +238,5 @@ Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?toke
 - Resolução de tema: [ThemeConfig.php](/var/www/cedern/src/Support/ThemeConfig.php)
 - Injeção de variáveis no Twig: [dependencies.php](/var/www/cedern/app/dependencies.php)
 - Bootstrap do `.env`: [index.php](/var/www/cedern/public/index.php)
+- Runbook principal de producao: [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
 - Padrão de mídia gerenciada: [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md)

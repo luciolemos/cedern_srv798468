@@ -6,6 +6,9 @@ namespace App\Support;
 
 final class ManagedStorageArchiveImporter
 {
+    private const ARCHIVE_SOURCE_DIRECTORY_ENV_KEY = 'APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR';
+    private const SNAPSHOT_SAMPLE_LIMIT = 10;
+
     private string $projectRoot;
 
     /** @var array<string, mixed> */
@@ -33,6 +36,7 @@ final class ManagedStorageArchiveImporter
             'requested_kind' => $kind !== null ? trim($kind) : null,
             'zip_archive_available' => class_exists(\ZipArchive::class),
             'managed_storage_root' => $this->describePath($this->storage()->resolveManagedStorageRoot(), true),
+            'archive_source' => $this->describeArchiveSourceConfiguration(),
             'packages' => $packages,
         ];
     }
@@ -85,7 +89,30 @@ final class ManagedStorageArchiveImporter
             'delete_after' => $deleteAfter,
             'zip_archive_available' => true,
             'managed_storage_root' => $this->describePath($this->storage()->resolveManagedStorageRoot(), true),
+            'archive_source' => $this->describeArchiveSourceConfiguration(),
             'results' => $results,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function describeArchiveSourceConfiguration(): array
+    {
+        $configuredDirectory = $this->resolveConfiguredArchiveSourceDirectory();
+        $searchRoots = $this->archiveSearchRoots();
+
+        return [
+            'mode' => $configuredDirectory !== null ? 'explicit_env' : 'auto_discovery',
+            'env_key' => self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY,
+            'raw' => RuntimeSafety::readString(self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY, $this->env),
+            'configured_directory' => $configuredDirectory !== null
+                ? $this->describePath($configuredDirectory, true)
+                : null,
+            'search_roots' => array_map(
+                fn (string $root): array => $this->describePath($root, true),
+                $searchRoots
+            ),
         ];
     }
 
@@ -184,6 +211,88 @@ final class ManagedStorageArchiveImporter
             'imported_files' => (int) ($extraction['imported_files'] ?? 0),
             'imported_bytes' => (int) ($extraction['imported_bytes'] ?? 0),
             'deleted_archive' => $deletedArchive,
+            'post_import_snapshot' => $this->buildPostImportSnapshot(
+                $targetDirectory,
+                (array) ($validation['entries'] ?? [])
+            ),
+        ];
+    }
+
+    /**
+     * @param array<int, array{entry_name: string, file_name: string}> $expectedEntries
+     * @return array<string, mixed>
+     */
+    private function buildPostImportSnapshot(string $targetDirectory, array $expectedEntries): array
+    {
+        $directoryDescription = $this->describePath($targetDirectory, true);
+        $fileCount = 0;
+        $totalSizeBytes = 0;
+        $sampleEntries = [];
+
+        if (
+            ($directoryDescription['exists'] ?? false) === true
+            && ($directoryDescription['readable'] ?? false) === true
+        ) {
+            $directoryEntries = @scandir($targetDirectory);
+            if (is_array($directoryEntries)) {
+                foreach ($directoryEntries as $entryName) {
+                    if ($entryName === '.' || $entryName === '..') {
+                        continue;
+                    }
+
+                    $entryPath = rtrim($targetDirectory, '/') . '/' . $entryName;
+                    if (!is_file($entryPath)) {
+                        continue;
+                    }
+
+                    $entryDescription = $this->describePath($entryPath, false);
+                    $fileCount++;
+                    $totalSizeBytes += (int) ($entryDescription['size_bytes'] ?? 0);
+
+                    if (count($sampleEntries) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                        $sampleEntries[] = ['file_name' => $entryName] + $entryDescription;
+                    }
+                }
+            }
+        }
+
+        $expectedFileCount = 0;
+        $visibleExpectedFileCount = 0;
+        $expectedFileSample = [];
+        $missingExpectedFileSample = [];
+
+        foreach ($expectedEntries as $entry) {
+            $fileName = trim($entry['file_name']);
+            if ($fileName === '') {
+                continue;
+            }
+
+            $expectedFileCount++;
+            $entryPath = rtrim($targetDirectory, '/') . '/' . $fileName;
+            $entryDescription = ['file_name' => $fileName] + $this->describePath($entryPath, false);
+
+            if (($entryDescription['exists'] ?? false) === true) {
+                $visibleExpectedFileCount++;
+            } elseif (count($missingExpectedFileSample) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                $missingExpectedFileSample[] = $fileName;
+            }
+
+            if (count($expectedFileSample) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                $expectedFileSample[] = $entryDescription;
+            }
+        }
+
+        return [
+            'sample_limit' => self::SNAPSHOT_SAMPLE_LIMIT,
+            'directory' => $directoryDescription,
+            'file_count' => $fileCount,
+            'total_size_bytes' => $totalSizeBytes,
+            'sample_entries' => $sampleEntries,
+            'expected_file_count' => $expectedFileCount,
+            'visible_expected_file_count' => $visibleExpectedFileCount,
+            'missing_expected_file_count' => max(0, $expectedFileCount - $visibleExpectedFileCount),
+            'expected_file_sample' => $expectedFileSample,
+            'missing_expected_file_sample' => $missingExpectedFileSample,
         ];
     }
 
@@ -403,6 +512,11 @@ final class ManagedStorageArchiveImporter
      */
     private function archiveSearchRoots(): array
     {
+        $configuredDirectory = $this->resolveConfiguredArchiveSourceDirectory();
+        if ($configuredDirectory !== null) {
+            return [$configuredDirectory];
+        }
+
         $roots = [];
         $managedRoot = $this->storage()->resolveManagedStorageRoot();
 
@@ -416,6 +530,21 @@ final class ManagedStorageArchiveImporter
         $roots[] = $this->projectRoot . '/var/exports/managed-storage-zips';
 
         return array_values(array_unique($roots));
+    }
+
+    private function resolveConfiguredArchiveSourceDirectory(): ?string
+    {
+        $configuredDirectory = RuntimeSafety::readString(self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY, $this->env);
+        if ($configuredDirectory === '') {
+            return null;
+        }
+
+        $normalizedDirectory = str_replace('\\', '/', trim($configuredDirectory));
+        while (str_starts_with($normalizedDirectory, './')) {
+            $normalizedDirectory = substr($normalizedDirectory, 2);
+        }
+
+        return $this->storage()->resolveProjectPath($normalizedDirectory);
     }
 
     /**

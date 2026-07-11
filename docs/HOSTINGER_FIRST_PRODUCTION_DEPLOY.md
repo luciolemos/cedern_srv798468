@@ -1,5 +1,9 @@
 # Primeira Publicacao em Producao na Hostinger
 
+Documento principal de operacao:
+
+- [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
+
 Este runbook define um unico procedimento para a primeira publicacao do CEDE
 em producao, assumindo:
 
@@ -118,6 +122,7 @@ APP_LOG_PATH="/home/u429418010/logs/cedern-app.log"
 APP_ALLOW_REPOSITORY_FALLBACK="false"
 APP_ASSET_VERSION="1"
 APP_MANAGED_STORAGE_ROOT="/home/u429418010/_cedern_storage"
+APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR="/home/u429418010/_cedern_storage/imports/managed-storage-zips"
 APP_DIAGNOSTIC_TOKEN="troque_este_token"
 
 LIBRARY_UPLOAD_DIR="var/storage/library/docs"
@@ -138,6 +143,8 @@ Observacao operacional:
 
 - `APP_ENABLE_DIAGNOSTIC_ROUTES` pode ficar `false`;
 - com `APP_DIAGNOSTIC_TOKEN` definido, `/health/...` fica acessivel com token.
+- com `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` definido, `/health/storage/import`
+  deixa de cair para origens alternativas como `var/exports/...`.
 
 ## 7. Criar o storage fisico de producao
 
@@ -186,6 +193,19 @@ Resultado esperado no relatorio:
 
 - cada bucket deve mostrar `selected_archive` apontando para o `.zip` correto;
 - `target_directory` deve apontar para o bucket final em `/home/u429418010/_cedern_storage/...`.
+- `selected_archive` e a fonte real que o PHP vai usar naquela execucao.
+
+Observacao importante sobre origem dos `.zip`:
+
+- com `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` definido, o importador procura
+  os arquivos somente nesse diretorio;
+- sem essa variavel, o importador procura os arquivos em mais de uma pasta;
+- se o runtime do PHP nao enxergar os `.zip` em
+  `/home/u429418010/_cedern_storage/imports/managed-storage-zips`,
+  ele ainda pode selecionar arquivos em
+  `/home/u429418010/domains/cedern.org/public_html/var/exports/managed-storage-zips`;
+- por isso, a verdade operacional nao e a pasta onde o upload foi feito no File Manager;
+  a verdade operacional e o valor de `selected_archive` no relatorio.
 
 Se o relatorio estiver correto, execute a importacao real:
 
@@ -199,6 +219,17 @@ Opcional:
 Se quiser apagar o `.zip` apos uma importacao bem-sucedida:
 
 - `https://cedern.org/health/storage/import?token=SEU_TOKEN&execute=1&kind=all&delete_after=1`
+
+Depois da execucao, confira tambem:
+
+- `post_import_snapshot.directory`
+- `post_import_snapshot.file_count`
+- `post_import_snapshot.visible_expected_file_count`
+- `post_import_snapshot.missing_expected_file_count`
+
+Resultado esperado:
+
+- `missing_expected_file_count=0` em todos os buckets importados.
 
 ## 10. Validar a instalacao antes de abrir o site
 
@@ -218,6 +249,12 @@ Resultado esperado:
 - `health/storage/import`: deve mostrar `selected_archive` e `target_directory` coerentes antes da execucao;
 - `health/storage`: deve listar `existing_matches`;
 - URLs `/media/...`: `200` para arquivos existentes.
+
+Limpeza apos a importacao:
+
+- remova os `.zip` do diretorio que apareceu em `selected_archive`;
+- se houver copias redundantes em staging alternativo, remova essas copias tambem;
+- mantenha as pastas `imports/` e `imports/managed-storage-zips` vazias para uso futuro.
 
 Depois disso, confira no navegador:
 
