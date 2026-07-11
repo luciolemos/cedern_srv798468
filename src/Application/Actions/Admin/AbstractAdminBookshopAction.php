@@ -864,6 +864,7 @@ abstract class AbstractAdminBookshopAction extends AbstractPageAction
                 'directory' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_DIR,
                 'public_prefix' => self::LEGACY_BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX,
                 'directory_mode' => 'project',
+                'requires_legacy_fallback' => true,
             ],
             [
                 'directory' => $this->resolveBookshopCoverFallbackUploadDirectory(),

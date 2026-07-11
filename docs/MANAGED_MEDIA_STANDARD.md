@@ -32,6 +32,10 @@ janela de migração, isso deve ser ativado explicitamente por
 `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`. O padrão profissional para ambientes
 novos e estáveis é manter essa flag desligada.
 
+Essa flag vale para todos os buckets gerenciados do projeto. Sem ela, a
+aplicacao nao deve depender de `public/assets/...` para membros, livraria,
+biblioteca ou patrimonio.
+
 ## Contrato de banco
 
 Para cada arquivo gerenciado, use este trio de colunas:

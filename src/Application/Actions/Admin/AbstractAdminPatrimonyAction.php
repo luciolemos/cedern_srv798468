@@ -569,6 +569,7 @@ abstract class AbstractAdminPatrimonyAction extends AbstractPageAction
                     'directory' => $legacyDirectory,
                     'public_prefix' => $legacyPublicPrefix,
                     'directory_mode' => 'project',
+                    'requires_legacy_fallback' => true,
                 ],
             ]
         );

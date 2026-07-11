@@ -47,6 +47,7 @@ final class ManagedUploadStorageTest extends TestCase
                     'directory' => 'public/assets/img/bookshop-covers',
                     'public_prefix' => 'assets/img/bookshop-covers',
                     'directory_mode' => 'project',
+                    'requires_legacy_fallback' => true,
                 ],
             ]
         );
@@ -59,6 +60,35 @@ final class ManagedUploadStorageTest extends TestCase
             [
                 'directory' => '/var/www/cedern/public/assets/img/bookshop-covers',
                 'public_prefix' => 'assets/img/bookshop-covers',
+            ],
+        ], $definitions);
+    }
+
+    public function testBuildReadDefinitionsSkipsLegacyCandidatesWhenFlagIsDisabled(): void
+    {
+        $storage = new ManagedUploadStorage('/var/www/cedern', [
+            'APP_MANAGED_STORAGE_ROOT' => '/var/www/_cedern_storage',
+        ]);
+
+        $definitions = $storage->buildReadDefinitions(
+            'BOOKSHOP_COVER_UPLOAD_DIR',
+            'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
+            'var/storage/bookshop/covers',
+            'media/livraria/capas',
+            [
+                [
+                    'directory' => 'public/assets/img/bookshop-covers',
+                    'public_prefix' => 'assets/img/bookshop-covers',
+                    'directory_mode' => 'project',
+                    'requires_legacy_fallback' => true,
+                ],
+            ]
+        );
+
+        $this->assertSame([
+            [
+                'directory' => '/var/www/_cedern_storage/bookshop/covers',
+                'public_prefix' => 'media/livraria/capas',
             ],
         ], $definitions);
     }

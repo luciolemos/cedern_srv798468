@@ -276,7 +276,7 @@ Como a producao nao tem SSH no seu fluxo atual, a copia fisica dos arquivos lega
 
 ### Validacao rapida
 
-Como contingencia, a aplicacao passou a procurar o mesmo basename tambem nos diretorios legados de membros, livraria, biblioteca e patrimonio. Isso reduz quebras quando o banco ja aponta para `media/...`, mas algum arquivo fisico ainda ficou no storage antigo. Ainda assim, o estado profissional e definitivo continua sendo manter banco e arquivos sincronizados no diretorio gerenciado atual.
+Como contingencia controlada, a aplicacao so procura o mesmo basename nos diretorios legados de membros, livraria, biblioteca e patrimonio quando `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`. Com a flag desligada, o runtime deixa de consultar `public/assets/...` para esses buckets. Ainda assim, o estado profissional e definitivo continua sendo manter banco e arquivos sincronizados no diretorio gerenciado atual.
 
 Teste pelo menos uma URL de cada tipo de arquivo gerenciado:
 
@@ -291,9 +291,9 @@ Resposta esperada:
 - `200 OK` para arquivos existentes
 - `404` apenas para arquivos realmente inexistentes
 
-### Contorno temporario para fotos de membros
+### Contorno temporario para midia legada
 
-Se a producao estiver com URLs `media/membros/fotos/...` no banco, mas voce so tiver os arquivos em `public/assets/img/member-photos`, a aplicacao agora tenta localizar o mesmo nome de arquivo no storage legado. Isso ajuda como contingencia, mas o correto continua sendo manter a producao com os arquivos no diretorio gerenciado atual do ambiente.
+Se a producao estiver com URLs `media/...` no banco, mas voce ainda tiver arquivos apenas em `public/assets/...`, ligue temporariamente `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true` para a janela de migracao. Isso vale para fotos de membros, capas da livraria, PDFs e capas da biblioteca e arquivos de patrimonio. Desligue a flag depois que os arquivos canonicos estiverem confirmados no storage gerenciado.
 
 ## O que nao fazer
 
