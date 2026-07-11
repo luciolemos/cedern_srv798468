@@ -3,6 +3,8 @@
 .env
 .env.*
 !.env.example
+!.env.production.example
+!.env.homolog.example
 !tests/visual/.env.visual
 /coverage/
 /vendor/

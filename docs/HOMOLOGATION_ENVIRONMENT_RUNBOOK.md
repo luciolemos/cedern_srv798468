@@ -244,6 +244,10 @@ Importante:
 
 Use um arquivo de ambiente proprio da homologacao.
 
+Template completo versionado:
+
+- [.env.homolog.example](/var/www/cedern/.env.homolog.example)
+
 Exemplo de referencia:
 
 ```apache
@@ -270,6 +274,9 @@ RECAPTCHA_ALLOWED_HOSTNAME="homolog.cedern.org"
 ASAAS_ENVIRONMENT="sandbox"
 ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION="false"
 ```
+
+Para um template completo pronto para revisar e adaptar, use
+[.env.homolog.example](/var/www/cedern/.env.homolog.example).
 
 ### 3. Banco proprio
 
