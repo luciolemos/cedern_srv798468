@@ -257,11 +257,21 @@ final class ManagedMediaPathReport
      */
     private function buildProbe(string $kind, string $fileName, array $target): array
     {
+        $managedStorageRoot = ManagedStorageRootResolver::resolve(
+            (string) ($_ENV['APP_MANAGED_STORAGE_ROOT'] ?? ''),
+            $this->projectRoot
+        );
         $probe = [
             'kind' => $kind,
             'file' => $fileName,
             'candidates' => [],
             'existing_matches' => [],
+            'recursive_search_roots' => array_values(array_filter([
+                $managedStorageRoot,
+                $this->projectRoot . '/var/storage',
+                $this->projectRoot . '/public/assets',
+            ])),
+            'recursive_matches' => [],
         ];
 
         if ($fileName === '' || $fileName === '.' || $fileName === '..') {
@@ -298,6 +308,11 @@ final class ManagedMediaPathReport
                 $probe['existing_matches'][] = $entry;
             }
         }
+
+        $probe['recursive_matches'] = $this->findRecursiveMatches(
+            $fileName,
+            (array) $probe['recursive_search_roots']
+        );
 
         return $probe;
     }
@@ -348,6 +363,7 @@ final class ManagedMediaPathReport
             'label' => $candidate['label'],
             'directory' => $candidate['directory'],
             'public_prefix' => $candidate['public_prefix'],
+            'parent_directory' => $this->describePath(dirname($candidate['directory']), true),
         ] + $this->describePath($candidate['directory'], true);
     }
 
@@ -387,12 +403,15 @@ final class ManagedMediaPathReport
                 'readable' => false,
                 'writable' => false,
                 'permissions' => null,
+                'realpath' => null,
+                'sample_entries' => [],
             ];
         }
 
         $exists = $directory ? is_dir($normalizedPath) : file_exists($normalizedPath);
         $readable = $exists && is_readable($normalizedPath);
         $writable = $exists && is_writable($normalizedPath);
+        $realPath = $exists ? realpath($normalizedPath) : false;
 
         return [
             'path' => $normalizedPath,
@@ -400,7 +419,107 @@ final class ManagedMediaPathReport
             'readable' => $readable,
             'writable' => $writable,
             'permissions' => $exists ? substr(sprintf('%o', (int) @fileperms($normalizedPath)), -4) : null,
+            'realpath' => is_string($realPath) ? str_replace('\\', '/', $realPath) : null,
+            'sample_entries' => $directory && $exists && $readable
+                ? $this->sampleDirectoryEntries($normalizedPath)
+                : [],
         ];
+    }
+
+    /**
+     * @return array<int, array{name: string, type: string}>
+     */
+    private function sampleDirectoryEntries(string $directory, int $limit = 10): array
+    {
+        if (!is_dir($directory) || !is_readable($directory)) {
+            return [];
+        }
+
+        $entries = @scandir($directory);
+        if (!is_array($entries)) {
+            return [];
+        }
+
+        $sample = [];
+
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $entryPath = rtrim($directory, '/') . '/' . $entry;
+            $sample[] = [
+                'name' => $entry,
+                'type' => is_dir($entryPath) ? 'dir' : 'file',
+            ];
+
+            if (count($sample) >= $limit) {
+                break;
+            }
+        }
+
+        return $sample;
+    }
+
+    /**
+     * @param array<int, string> $roots
+     * @return array<int, array{root: string, path: string, readable: bool}>
+     */
+    private function findRecursiveMatches(string $fileName, array $roots, int $limit = 20): array
+    {
+        if (
+            $fileName === ''
+            || $fileName === '.'
+            || $fileName === '..'
+            || preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $fileName) !== 1
+        ) {
+            return [];
+        }
+
+        $matches = [];
+        $seenRoots = [];
+
+        foreach ($roots as $root) {
+            $normalizedRoot = rtrim(str_replace('\\', '/', trim((string) $root)), '/');
+            if ($normalizedRoot === '' || isset($seenRoots[$normalizedRoot]) || !is_dir($normalizedRoot)) {
+                continue;
+            }
+
+            $seenRoots[$normalizedRoot] = true;
+
+            try {
+                $directoryIterator = new \RecursiveDirectoryIterator(
+                    $normalizedRoot,
+                    \FilesystemIterator::SKIP_DOTS
+                );
+                $iterator = new \RecursiveIteratorIterator($directoryIterator);
+
+                foreach ($iterator as $fileInfo) {
+                    if (
+                        !$fileInfo instanceof \SplFileInfo
+                        || $iterator->getDepth() > 5
+                        || !$fileInfo->isFile()
+                        || $fileInfo->getFilename() !== $fileName
+                    ) {
+                        continue;
+                    }
+
+                    $matches[] = [
+                        'root' => $normalizedRoot,
+                        'path' => str_replace('\\', '/', $fileInfo->getPathname()),
+                        'readable' => $fileInfo->isReadable(),
+                    ];
+
+                    if (count($matches) >= $limit) {
+                        return $matches;
+                    }
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return $matches;
     }
 
     private function resolveProjectPath(string $path): string

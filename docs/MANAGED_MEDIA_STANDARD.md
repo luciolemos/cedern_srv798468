@@ -193,6 +193,7 @@ diferente.
 
 ## Referências
 
+- Primeira publicacao em producao: [HOSTINGER_FIRST_PRODUCTION_DEPLOY.md](/var/www/cedern/docs/HOSTINGER_FIRST_PRODUCTION_DEPLOY.md)
 - Deploy e storage compartilhado: [HOSTINGER_SHARED_DEPLOY.md](/var/www/cedern/docs/HOSTINGER_SHARED_DEPLOY.md)
 - Configuração de ambiente: [ENVIRONMENT_CONFIGURATION.md](/var/www/cedern/docs/ENVIRONMENT_CONFIGURATION.md)
 - Bootstrap e resolução de env: [public/index.php](/var/www/cedern/public/index.php)
