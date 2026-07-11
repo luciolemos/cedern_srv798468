@@ -6,6 +6,7 @@ namespace App\Support;
 
 final class ManagedStorageArchiveImporter
 {
+    private const ARCHIVE_SOURCE_DIRECTORY_ENV_KEY = 'APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR';
     private const SNAPSHOT_SAMPLE_LIMIT = 10;
 
     private string $projectRoot;
@@ -35,6 +36,7 @@ final class ManagedStorageArchiveImporter
             'requested_kind' => $kind !== null ? trim($kind) : null,
             'zip_archive_available' => class_exists(\ZipArchive::class),
             'managed_storage_root' => $this->describePath($this->storage()->resolveManagedStorageRoot(), true),
+            'archive_source' => $this->describeArchiveSourceConfiguration(),
             'packages' => $packages,
         ];
     }
@@ -87,7 +89,30 @@ final class ManagedStorageArchiveImporter
             'delete_after' => $deleteAfter,
             'zip_archive_available' => true,
             'managed_storage_root' => $this->describePath($this->storage()->resolveManagedStorageRoot(), true),
+            'archive_source' => $this->describeArchiveSourceConfiguration(),
             'results' => $results,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function describeArchiveSourceConfiguration(): array
+    {
+        $configuredDirectory = $this->resolveConfiguredArchiveSourceDirectory();
+        $searchRoots = $this->archiveSearchRoots();
+
+        return [
+            'mode' => $configuredDirectory !== null ? 'explicit_env' : 'auto_discovery',
+            'env_key' => self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY,
+            'raw' => RuntimeSafety::readString(self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY, $this->env),
+            'configured_directory' => $configuredDirectory !== null
+                ? $this->describePath($configuredDirectory, true)
+                : null,
+            'search_roots' => array_map(
+                fn (string $root): array => $this->describePath($root, true),
+                $searchRoots
+            ),
         ];
     }
 
@@ -487,6 +512,11 @@ final class ManagedStorageArchiveImporter
      */
     private function archiveSearchRoots(): array
     {
+        $configuredDirectory = $this->resolveConfiguredArchiveSourceDirectory();
+        if ($configuredDirectory !== null) {
+            return [$configuredDirectory];
+        }
+
         $roots = [];
         $managedRoot = $this->storage()->resolveManagedStorageRoot();
 
@@ -500,6 +530,21 @@ final class ManagedStorageArchiveImporter
         $roots[] = $this->projectRoot . '/var/exports/managed-storage-zips';
 
         return array_values(array_unique($roots));
+    }
+
+    private function resolveConfiguredArchiveSourceDirectory(): ?string
+    {
+        $configuredDirectory = RuntimeSafety::readString(self::ARCHIVE_SOURCE_DIRECTORY_ENV_KEY, $this->env);
+        if ($configuredDirectory === '') {
+            return null;
+        }
+
+        $normalizedDirectory = str_replace('\\', '/', trim($configuredDirectory));
+        while (str_starts_with($normalizedDirectory, './')) {
+            $normalizedDirectory = substr($normalizedDirectory, 2);
+        }
+
+        return $this->storage()->resolveProjectPath($normalizedDirectory);
     }
 
     /**

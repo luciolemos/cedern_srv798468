@@ -20,6 +20,12 @@ final class ManagedStorageArchiveImporterTest extends TestCase
         $this->originalEnv['APP_MANAGED_STORAGE_ROOT'] = array_key_exists('APP_MANAGED_STORAGE_ROOT', $_ENV)
             ? (string) $_ENV['APP_MANAGED_STORAGE_ROOT']
             : null;
+        $this->originalEnv['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR'] = array_key_exists(
+            'APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR',
+            $_ENV
+        )
+            ? (string) $_ENV['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR']
+            : null;
     }
 
     protected function tearDown(): void
@@ -40,6 +46,13 @@ final class ManagedStorageArchiveImporterTest extends TestCase
             unset($_ENV['APP_MANAGED_STORAGE_ROOT']);
         } else {
             $_ENV['APP_MANAGED_STORAGE_ROOT'] = $originalManagedRoot;
+        }
+
+        $originalArchiveDirectory = $this->originalEnv['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR'];
+        if ($originalArchiveDirectory === null) {
+            unset($_ENV['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR']);
+        } else {
+            $_ENV['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR'] = $originalArchiveDirectory;
         }
     }
 
@@ -76,6 +89,7 @@ final class ManagedStorageArchiveImporterTest extends TestCase
             $archivePath,
             $report['packages']['bookshop_covers']['selected_archive']['path'] ?? null
         );
+        $this->assertSame('auto_discovery', $report['archive_source']['mode'] ?? null);
 
         $result = $importer->import('bookshop_covers');
         $targetPath = $managedRoot . '/bookshop/covers/cover_demo.jpg';
@@ -85,6 +99,7 @@ final class ManagedStorageArchiveImporterTest extends TestCase
         $this->trackPath($managedRoot . '/bookshop');
 
         $this->assertSame('ok', $result['status'] ?? null);
+        $this->assertSame('auto_discovery', $result['archive_source']['mode'] ?? null);
         $this->assertSame('ok', $result['results']['bookshop_covers']['status'] ?? null);
         $this->assertSame(1, $result['results']['bookshop_covers']['imported_files'] ?? null);
         $this->assertSame(
@@ -152,6 +167,76 @@ final class ManagedStorageArchiveImporterTest extends TestCase
         $this->assertSame('error', $result['results']['bookshop_covers']['status'] ?? null);
         $this->assertNotEmpty($result['results']['bookshop_covers']['invalid_entries'] ?? []);
         $this->assertFileDoesNotExist($targetPath);
+    }
+
+    public function testExplicitArchiveSourceDirectoryOverridesAutomaticFallbackRoots(): void
+    {
+        if (!class_exists(\ZipArchive::class)) {
+            $this->markTestSkipped('ZipArchive indisponível.');
+        }
+
+        $projectRoot = sys_get_temp_dir() . '/cedern-import-project-' . bin2hex(random_bytes(4));
+        $managedRoot = sys_get_temp_dir() . '/cedern-import-managed-' . bin2hex(random_bytes(4));
+        $explicitArchiveDirectory = $managedRoot . '/custom-import-source';
+        $fallbackArchiveDirectory = $projectRoot . '/var/exports/managed-storage-zips';
+        $explicitArchivePath = $explicitArchiveDirectory . '/bookshop-covers.zip';
+        $fallbackArchivePath = $fallbackArchiveDirectory . '/bookshop-covers.zip';
+
+        mkdir($projectRoot, 0775, true);
+        mkdir($explicitArchiveDirectory, 0775, true);
+        mkdir($fallbackArchiveDirectory, 0775, true);
+
+        $this->trackPath($explicitArchivePath);
+        $this->trackPath($fallbackArchivePath);
+        $this->trackPath($explicitArchiveDirectory);
+        $this->trackPath($fallbackArchiveDirectory);
+        $this->trackPath($projectRoot . '/var/exports');
+        $this->trackPath($projectRoot . '/var');
+        $this->trackPath($managedRoot);
+        $this->trackPath($projectRoot);
+
+        $this->createZipArchive($explicitArchivePath, [
+            'cover_explicit.jpg' => 'explicit-cover',
+        ]);
+        $this->createZipArchive($fallbackArchivePath, [
+            'cover_fallback.jpg' => 'fallback-cover',
+        ]);
+
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $managedRoot;
+        $_ENV['APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR'] = $explicitArchiveDirectory;
+
+        $importer = new ManagedStorageArchiveImporter($projectRoot, $_ENV);
+        $report = $importer->report('bookshop_covers');
+        $result = $importer->import('bookshop_covers');
+
+        $explicitTargetPath = $managedRoot . '/bookshop/covers/cover_explicit.jpg';
+        $fallbackTargetPath = $managedRoot . '/bookshop/covers/cover_fallback.jpg';
+
+        $this->trackPath($explicitTargetPath);
+        $this->trackPath($fallbackTargetPath);
+        $this->trackPath($managedRoot . '/bookshop/covers');
+        $this->trackPath($managedRoot . '/bookshop');
+
+        $this->assertSame('explicit_env', $report['archive_source']['mode'] ?? null);
+        $this->assertSame(
+            'APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR',
+            $report['archive_source']['env_key'] ?? null
+        );
+        $this->assertSame(
+            $explicitArchiveDirectory,
+            $report['archive_source']['configured_directory']['path'] ?? null
+        );
+        $this->assertCount(1, $report['archive_source']['search_roots'] ?? []);
+        $this->assertSame(
+            $explicitArchivePath,
+            $report['packages']['bookshop_covers']['selected_archive']['path'] ?? null
+        );
+
+        $this->assertSame('ok', $result['status'] ?? null);
+        $this->assertSame('explicit_env', $result['archive_source']['mode'] ?? null);
+        $this->assertFileExists($explicitTargetPath);
+        $this->assertSame('explicit-cover', file_get_contents($explicitTargetPath));
+        $this->assertFileDoesNotExist($fallbackTargetPath);
     }
 
     /**

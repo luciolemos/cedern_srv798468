@@ -105,12 +105,15 @@ APP_BASE=""
 APP_LOG_PATH="/home/u429418010/logs/cedern-app.log"
 APP_ALLOW_REPOSITORY_FALLBACK="false"
 APP_MANAGED_STORAGE_ROOT="/home/u429418010/_cedern_storage"
+APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR="/home/u429418010/_cedern_storage/imports/managed-storage-zips"
 APP_DIAGNOSTIC_TOKEN="troque_este_token"
 ```
 
 Mantenha os buckets com prefixos publicos `media/...` e paths relativos
 `var/storage/...` no `.env`. Com `APP_MANAGED_STORAGE_ROOT` ativo, o runtime
 rebate esses caminhos para `/_cedern_storage/...`.
+Em producao, o recomendado agora e explicitar tambem
+`APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` para fixar a origem dos `.zip`.
 
 ### 6. Criar o storage fisico
 
@@ -153,6 +156,12 @@ Regra operacional:
 
 - a verdade nao e a pasta vista no File Manager;
 - a verdade e o `selected_archive` que o PHP informa.
+
+Se `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` estiver definido:
+
+- o modo do relatorio vira `archive_source.mode=explicit_env`;
+- o importador usa apenas esse diretorio;
+- a ordem automatica abaixo deixa de valer.
 
 Ordem atual de busca:
 

@@ -122,6 +122,7 @@ APP_LOG_PATH="/home/u429418010/logs/cedern-app.log"
 APP_ALLOW_REPOSITORY_FALLBACK="false"
 APP_ASSET_VERSION="1"
 APP_MANAGED_STORAGE_ROOT="/home/u429418010/_cedern_storage"
+APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR="/home/u429418010/_cedern_storage/imports/managed-storage-zips"
 APP_DIAGNOSTIC_TOKEN="troque_este_token"
 
 LIBRARY_UPLOAD_DIR="var/storage/library/docs"
@@ -142,6 +143,8 @@ Observacao operacional:
 
 - `APP_ENABLE_DIAGNOSTIC_ROUTES` pode ficar `false`;
 - com `APP_DIAGNOSTIC_TOKEN` definido, `/health/...` fica acessivel com token.
+- com `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` definido, `/health/storage/import`
+  deixa de cair para origens alternativas como `var/exports/...`.
 
 ## 7. Criar o storage fisico de producao
 
@@ -194,7 +197,9 @@ Resultado esperado no relatorio:
 
 Observacao importante sobre origem dos `.zip`:
 
-- o importador procura os arquivos em mais de uma pasta;
+- com `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` definido, o importador procura
+  os arquivos somente nesse diretorio;
+- sem essa variavel, o importador procura os arquivos em mais de uma pasta;
 - se o runtime do PHP nao enxergar os `.zip` em
   `/home/u429418010/_cedern_storage/imports/managed-storage-zips`,
   ele ainda pode selecionar arquivos em

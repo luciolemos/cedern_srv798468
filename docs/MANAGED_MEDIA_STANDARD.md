@@ -108,12 +108,16 @@ baseline de arquivos deve entrar pelo proprio PHP da aplicacao.
 Fluxo padrao:
 
 - gerar os pacotes com `composer storage:package` no ambiente de origem;
+- definir `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` no ambiente de destino quando
+  a operacao precisar ter uma origem unica e explicita dos `.zip`;
 - enviar os `.zip` para `<APP_MANAGED_STORAGE_ROOT>/imports/managed-storage-zips`;
 - validar a descoberta em `/health/storage/import?token=...`;
 - executar a importacao real em `/health/storage/import?token=...&execute=1&kind=all`.
 
 Resolucao de origem dos `.zip`:
 
+- se `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` estiver definido, ele vira a
+  origem exclusiva dos `.zip`;
 - o importador nao depende de uma unica pasta fixa;
 - ele procura os arquivos nesta ordem:
   `1.` `<APP_MANAGED_STORAGE_ROOT>/imports/managed-storage-zips`
