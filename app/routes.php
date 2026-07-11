@@ -906,6 +906,57 @@ return function (App $app) {
                 ->withStatus($statusCode);
         })->add($diagnosticAccessMiddleware);
 
+        $app->map(['GET', 'POST'], '/health/migrations', function (Request $request, Response $response) use ($app) {
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(0);
+            }
+
+            $parsedBody = $request->getParsedBody();
+            $bodyParams = is_array($parsedBody) ? $parsedBody : [];
+            $params = array_merge($request->getQueryParams(), $bodyParams);
+            $execute = filter_var($params['execute'] ?? false, FILTER_VALIDATE_BOOL);
+
+            try {
+                /** @var \PDO $pdo */
+                $pdo = $app->getContainer()->get(\PDO::class);
+                $diagnostics = new \App\Support\SqlPatchMigrationDiagnostics(
+                    $pdo,
+                    dirname(__DIR__) . '/database/patches'
+                );
+                $payload = $execute ? $diagnostics->applyPending() : $diagnostics->report();
+            } catch (\Throwable $exception) {
+                $payload = [
+                    'status' => 'error',
+                    'mode' => $execute ? 'apply' : 'report',
+                    'error' => $exception->getMessage(),
+                ];
+            }
+
+            $status = (string) ($payload['status'] ?? 'error');
+            $statusCode = 200;
+
+            if ($status === 'degraded') {
+                $statusCode = 206;
+            } elseif ($status === 'error') {
+                $statusCode = $execute ? 422 : 500;
+            }
+
+            $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if ($json === false) {
+                $response->getBody()->write('{"error":"Falha ao serializar relatório."}');
+
+                return $response
+                    ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                    ->withStatus(500);
+            }
+
+            $response->getBody()->write($json);
+
+            return $response
+                ->withHeader('Content-Type', 'application/json; charset=utf-8')
+                ->withStatus($statusCode);
+        })->add($diagnosticAccessMiddleware);
+
         $app->get('/health/readiness', function (Request $request, Response $response) use ($app) {
             $report = new OperationalReadinessReport($app->getContainer(), dirname(__DIR__));
             $payload = $report->build();
@@ -1212,6 +1263,7 @@ return function (App $app) {
         $app->get('/health/logger', $disabledDiagnosticRoute);
         $app->get('/health/storage', $disabledDiagnosticRoute);
         $app->map(['GET', 'POST'], '/health/storage/import', $disabledDiagnosticRoute);
+        $app->map(['GET', 'POST'], '/health/migrations', $disabledDiagnosticRoute);
         $app->get('/health/readiness', $disabledDiagnosticRoute);
         $app->get('/health/render', $disabledDiagnosticRoute);
         $app->get('/health/preview/admin-finance-sales', $disabledDiagnosticRoute);

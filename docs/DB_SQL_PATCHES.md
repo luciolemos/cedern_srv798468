@@ -194,9 +194,10 @@ No seu fluxo atual, o equivalente prático é:
 1. manter o patch `.sql` versionado em `database/patches/`;
 2. testar esse patch no desenvolvimento;
 3. fazer backup do banco de produção no phpMyAdmin;
-4. executar manualmente o mesmo patch no phpMyAdmin da produção;
-5. publicar o código pela branch `main`;
-6. validar o resultado.
+4. publicar o código pela branch `main`;
+5. validar o status em `https://cedern.org/health/migrations?token=SEU_TOKEN`;
+6. aplicar os patches pendentes em `https://cedern.org/health/migrations?token=SEU_TOKEN&execute=1`;
+7. validar o resultado.
 
 Se a release não tiver mudança de banco, pule apenas a etapa do patch.
 
