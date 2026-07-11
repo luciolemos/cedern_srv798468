@@ -96,6 +96,23 @@ Exemplo:
 Se o ambiente exigir mais previsibilidade, o bucket pode ser configurado com
 caminho absoluto direto no `.env`.
 
+## Importação baseline por ZIP
+
+Quando a producao nascer vazia e a administracao do servidor nao tiver SSH, o
+baseline de arquivos deve entrar pelo proprio PHP da aplicacao.
+
+Fluxo padrao:
+
+- gerar os pacotes com `composer storage:package` no ambiente de origem;
+- enviar os `.zip` para `<APP_MANAGED_STORAGE_ROOT>/imports/managed-storage-zips`;
+- validar a descoberta em `/health/storage/import?token=...`;
+- executar a importacao real em `/health/storage/import?token=...&execute=1&kind=all`.
+
+Regra importante:
+
+- o `.zip` deve conter os arquivos diretamente na raiz do bucket;
+- o importador rejeita entradas com subpastas extras para evitar layouts como `bookshop-covers/bookshop-covers/...`.
+
 ## Convenção de variáveis de ambiente
 
 Cada bucket novo deve expor:
@@ -177,6 +194,7 @@ root físico está realmente ativo.
 Regra prática:
 
 - `APP_MANAGED_STORAGE_ROOT` definido: `var/storage/...` é rebaseado para o root compartilhado.
+- `APP_MANAGED_STORAGE_ROOT` definido: a leitura canônica também passa a ocorrer nesse root compartilhado; `var/storage/...` dentro do release deixa de ser fallback implícito.
 - `APP_MANAGED_STORAGE_ROOT` vazio ou comentado: a aplicação lê de `var/storage/...` dentro do projeto.
 
 Se um ambiente funcionar com a variável comentada e falhar com ela ativa, isso

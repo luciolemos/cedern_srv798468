@@ -69,7 +69,7 @@ final class AbstractAdminBookshopActionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
+    public function testPrefersManagedStoragePathWhenManagedRootIsActive(): void
     {
         unset(
             $_ENV['BOOKSHOP_COVER_UPLOAD_DIR'],
@@ -87,7 +87,7 @@ final class AbstractAdminBookshopActionTest extends TestCase
         $action = new TestableAdminBookshopAction($repository);
 
         $this->assertSame(
-            $projectStoragePath,
+            '/srv/cede-managed-storage/bookshop/covers/' . $fileName,
             $action->exposedResolveManagedBookshopCoverAbsolutePath('media/livraria/capas/' . $fileName)
         );
     }

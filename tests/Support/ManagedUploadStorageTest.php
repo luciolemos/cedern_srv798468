@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ManagedUploadStorageTest extends TestCase
 {
-    public function testBuildReadDefinitionsIncludesManagedAndProjectCandidatesByDefault(): void
+    public function testBuildReadDefinitionsSkipsProjectStorageFallbackWhenManagedRootIsActive(): void
     {
         $storage = new ManagedUploadStorage('/var/www/cedern', [
             'APP_MANAGED_STORAGE_ROOT' => '/var/www/_cedern_storage',
@@ -25,10 +25,6 @@ final class ManagedUploadStorageTest extends TestCase
         $this->assertSame([
             [
                 'directory' => '/var/www/_cedern_storage/bookshop/covers',
-                'public_prefix' => 'media/livraria/capas',
-            ],
-            [
-                'directory' => '/var/www/cedern/var/storage/bookshop/covers',
                 'public_prefix' => 'media/livraria/capas',
             ],
         ], $definitions);
@@ -61,12 +57,27 @@ final class ManagedUploadStorageTest extends TestCase
                 'public_prefix' => 'media/livraria/capas',
             ],
             [
-                'directory' => '/var/www/cedern/var/storage/bookshop/covers',
-                'public_prefix' => 'media/livraria/capas',
-            ],
-            [
                 'directory' => '/var/www/cedern/public/assets/img/bookshop-covers',
                 'public_prefix' => 'assets/img/bookshop-covers',
+            ],
+        ], $definitions);
+    }
+
+    public function testBuildReadDefinitionsIncludesProjectStorageFallbackWithoutManagedRoot(): void
+    {
+        $storage = new ManagedUploadStorage('/var/www/cedern');
+
+        $definitions = $storage->buildReadDefinitions(
+            'BOOKSHOP_COVER_UPLOAD_DIR',
+            'BOOKSHOP_COVER_UPLOAD_PUBLIC_PREFIX',
+            'var/storage/bookshop/covers',
+            'media/livraria/capas'
+        );
+
+        $this->assertSame([
+            [
+                'directory' => '/var/www/cedern/var/storage/bookshop/covers',
+                'public_prefix' => 'media/livraria/capas',
             ],
         ], $definitions);
     }

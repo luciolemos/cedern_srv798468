@@ -139,6 +139,7 @@ Regra prática:
 ### 10. Uploads e armazenamento público
 
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver definido, qualquer diretório relativo iniciado por `var/storage/` passa a ser rebaseado para essa raiz compartilhada. Diretórios absolutos continuam respeitados exatamente como informados.
+- Com `APP_MANAGED_STORAGE_ROOT` ativo, a aplicação deixa de usar `var/storage/...` do release atual como fallback implícito de leitura; o ambiente precisa estar consistente no storage compartilhado.
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver vazio ou comentado, os buckets padrão continuam em `var/storage/...` dentro do projeto.
 - Quando `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`, fotos de membros também podem aceitar paths legados diretos `assets/...` durante uma janela de migração.
 - O contrato funcional completo de banco, URL pública, storage físico e deploy de mídia gerenciada está em [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md).

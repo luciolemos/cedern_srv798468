@@ -209,7 +209,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         );
     }
 
-    public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
+    public function testPrefersManagedStoragePathWhenManagedRootIsActive(): void
     {
         unset(
             $_ENV['MEMBER_PROFILE_PHOTO_UPLOAD_DIR'],
@@ -226,7 +226,7 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
         $storage = new TestableMemberProfilePhotoStorageHarness();
 
         $this->assertSame(
-            $projectStoragePath,
+            '/srv/cede-managed-storage/member-photos/' . $fileName,
             $storage->exposedResolveManagedMemberProfilePhotoAbsolutePath('media/membros/fotos/' . $fileName)
         );
     }
@@ -330,18 +330,23 @@ final class MemberProfilePhotoStorageTraitTest extends TestCase
 
     public function testDeletesStoredManagedMemberProfilePhotoFile(): void
     {
-        $_ENV['APP_MANAGED_STORAGE_ROOT'] = '/srv/cede-managed-storage';
+        $managedRoot = sys_get_temp_dir() . '/cedern-member-photo-delete-' . bin2hex(random_bytes(4));
+        $managedDirectory = $managedRoot . '/member-photos';
+        mkdir($managedDirectory, 0775, true);
+        $this->temporaryDirectories[] = $managedDirectory;
+        $this->temporaryDirectories[] = $managedRoot;
 
-        $projectRoot = dirname(__DIR__, 4);
+        $_ENV['APP_MANAGED_STORAGE_ROOT'] = $managedRoot;
+
         $fileName = 'member_test_delete_' . bin2hex(random_bytes(4)) . '.jpg';
-        $projectStoragePath = $projectRoot . '/var/storage/member-photos/' . $fileName;
-        file_put_contents($projectStoragePath, 'project-storage-photo');
-        $this->temporaryFiles[] = $projectStoragePath;
+        $managedStoragePath = $managedDirectory . '/' . $fileName;
+        file_put_contents($managedStoragePath, 'managed-storage-photo');
+        $this->temporaryFiles[] = $managedStoragePath;
 
         $storage = new TestableMemberProfilePhotoStorageHarness();
         $storage->exposedDeleteStoredMemberProfilePhotoIfManaged('media/membros/fotos/' . $fileName);
 
-        $this->assertFileDoesNotExist($projectStoragePath);
+        $this->assertFileDoesNotExist($managedStoragePath);
     }
 
     /**

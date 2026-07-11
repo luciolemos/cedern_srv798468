@@ -163,28 +163,49 @@ No phpMyAdmin da producao:
 3. confirme que as tabelas foram criadas;
 4. confirme que os caminhos salvos continuam em `media/...`.
 
-## 9. Enviar os zips para os buckets corretos e extrair no lugar final
+## 9. Enviar os zips para a area de importacao e deixar o PHP popular os buckets
 
-Mapeamento obrigatorio:
+No File Manager da Hostinger, envie os arquivos:
 
-- `bookshop-covers.zip` -> `/home/u429418010/_cedern_storage/bookshop/covers`
-- `library-docs.zip` -> `/home/u429418010/_cedern_storage/library/docs`
-- `library-covers.zip` -> `/home/u429418010/_cedern_storage/library/covers`
-- `member-photos.zip` -> `/home/u429418010/_cedern_storage/member-photos`
-- `patrimony-docs.zip` -> `/home/u429418010/_cedern_storage/patrimony/docs`
-- `patrimony-img.zip` -> `/home/u429418010/_cedern_storage/patrimony/img`
+- `bookshop-covers.zip`
+- `library-docs.zip`
+- `library-covers.zip`
+- `member-photos.zip`
+- `patrimony-docs.zip`
+- `patrimony-img.zip`
 
-Regra de extracao:
+para esta pasta:
 
-- os arquivos finais devem ficar diretamente dentro do bucket;
-- nao crie subpastas extras como `library-covers/library-covers/...`;
-- apague os `.zip` depois da extracao.
+- `/home/u429418010/_cedern_storage/imports/managed-storage-zips`
+
+Depois execute no navegador:
+
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN`
+
+Resultado esperado no relatorio:
+
+- cada bucket deve mostrar `selected_archive` apontando para o `.zip` correto;
+- `target_directory` deve apontar para o bucket final em `/home/u429418010/_cedern_storage/...`.
+
+Se o relatorio estiver correto, execute a importacao real:
+
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN&execute=1&kind=all`
+
+Opcional:
+
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN&execute=1&kind=bookshop_covers`
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN&execute=1&kind=member_photos`
+
+Se quiser apagar o `.zip` apos uma importacao bem-sucedida:
+
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN&execute=1&kind=all&delete_after=1`
 
 ## 10. Validar a instalacao antes de abrir o site
 
 Teste estas URLs em producao:
 
 - `https://cedern.org/health/readiness?token=SEU_TOKEN`
+- `https://cedern.org/health/storage/import?token=SEU_TOKEN`
 - `https://cedern.org/health/storage?token=SEU_TOKEN&kind=member_photos&file=ARQUIVO_REAL.jpg`
 - `https://cedern.org/health/storage?token=SEU_TOKEN&kind=library_covers&file=ARQUIVO_REAL.png`
 - `https://cedern.org/media/membros/fotos/ARQUIVO_REAL.jpg`
@@ -194,6 +215,7 @@ Teste estas URLs em producao:
 Resultado esperado:
 
 - `health/readiness`: `200` ou `206`, nunca `404`;
+- `health/storage/import`: deve mostrar `selected_archive` e `target_directory` coerentes antes da execucao;
 - `health/storage`: deve listar `existing_matches`;
 - URLs `/media/...`: `200` para arquivos existentes.
 

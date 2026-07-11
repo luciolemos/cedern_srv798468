@@ -209,6 +209,7 @@ final class ManagedMediaPathReport
         $configuredPublicPrefix = $storage->resolveUploadPublicPrefix($publicPrefixEnvKey, $defaultPublicPrefix);
         $defaultResolvedDirectory = $storage->resolveManagedStorageDefaultDirectory($defaultDirectory);
         $projectDefaultDirectory = $storage->resolveProjectPath($defaultDirectory);
+        $includeProjectStorageDefault = $storage->projectStorageReadFallbackEnabled();
 
         $readCandidates = [
             [
@@ -221,12 +222,15 @@ final class ManagedMediaPathReport
                 'directory' => $defaultResolvedDirectory,
                 'public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
             ],
-            [
+        ];
+
+        if ($includeProjectStorageDefault) {
+            $readCandidates[] = [
                 'label' => 'project_storage_default',
                 'directory' => $projectDefaultDirectory,
                 'public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
-            ],
-        ];
+            ];
+        }
 
         foreach ($extraReadCandidates as $candidate) {
             $readCandidates[] = $candidate;
@@ -234,7 +238,7 @@ final class ManagedMediaPathReport
 
         $readCandidates = $this->uniqueCandidates($readCandidates);
 
-        return [
+        $report = [
             'directory_env_key' => $directoryEnvKey,
             'directory_env_raw' => $rawDirectory,
             'public_prefix_env_key' => $publicPrefixEnvKey,
@@ -242,13 +246,18 @@ final class ManagedMediaPathReport
             'configured_directory' => $this->describePath($configuredDirectory, true),
             'configured_public_prefix' => $configuredPublicPrefix,
             'default_managed_directory' => $this->describePath($defaultResolvedDirectory, true),
-            'project_storage_default_directory' => $this->describePath($projectDefaultDirectory, true),
             'default_public_prefix' => $storage->normalizePublicPrefix($defaultPublicPrefix),
             'read_candidates' => array_map(
                 fn (array $candidate): array => $this->describeCandidate($candidate),
                 $readCandidates
             ),
         ];
+
+        if ($includeProjectStorageDefault) {
+            $report['project_storage_default_directory'] = $this->describePath($projectDefaultDirectory, true);
+        }
+
+        return $report;
     }
 
     /**

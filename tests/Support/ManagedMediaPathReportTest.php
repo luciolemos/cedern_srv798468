@@ -100,5 +100,11 @@ final class ManagedMediaPathReportTest extends TestCase
             $nestedDirectory . '/recursive_member.jpg',
             $probe['recursive_matches'][0]['path'] ?? null
         );
+        $this->assertArrayNotHasKey(
+            'project_storage_default_directory',
+            $report['targets']['member_photos'] ?? []
+        );
+        $candidateLabels = array_column((array) ($report['targets']['member_photos']['read_candidates'] ?? []), 'label');
+        $this->assertSame(['configured'], $candidateLabels);
     }
 }

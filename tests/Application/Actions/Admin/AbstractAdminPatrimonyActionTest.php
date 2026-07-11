@@ -69,7 +69,7 @@ final class AbstractAdminPatrimonyActionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testFallsBackToProjectStorageDirectoryWhenManagedRootWasIntroducedLater(): void
+    public function testPrefersManagedStoragePathWhenManagedRootIsActive(): void
     {
         unset(
             $_ENV['PATRIMONY_IMAGE_UPLOAD_DIR'],
@@ -87,7 +87,7 @@ final class AbstractAdminPatrimonyActionTest extends TestCase
         $action = new TestableAdminPatrimonyAction($repository);
 
         $this->assertSame(
-            $projectStoragePath,
+            '/srv/cede-managed-storage/patrimony/img/' . $fileName,
             $action->exposedResolveManagedPatrimonyAbsolutePath('media/patrimonio/img/' . $fileName)
         );
     }
