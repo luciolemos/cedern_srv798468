@@ -75,7 +75,31 @@ final class SqlPatchMigratorTest extends TestCase
         $this->assertSame('2026-07-01-999-orphaned', $status['orphaned'][0]['key']);
     }
 
-    public function testApplyPendingExecutesEachPatchAndRegistersIt(): void
+    public function testApplyPendingExecutesTransactionalPatchInsideTransaction(): void
+    {
+        $this->createPatch(
+            '2026-07-06-001-normalize-courses.sql',
+            <<<SQL
+                UPDATE courses SET title = 'Normalized' WHERE id = 1;
+                INSERT INTO audit_log (event_name) VALUES ('normalized');
+            SQL
+        );
+
+        $pdo = new MigrationFakePdo();
+        $migrator = new SqlPatchMigrator($pdo, $this->patchDirectory, new SqlStatementSplitter());
+
+        $summary = $migrator->applyPending();
+
+        $this->assertSame(1, $summary['applied_count']);
+        $this->assertCount(2, $pdo->executedStatements);
+        $this->assertSame(1, $pdo->beginTransactionCount);
+        $this->assertSame(1, $pdo->commitCount);
+        $this->assertSame(0, $pdo->rollBackCount);
+        $this->assertCount(1, $pdo->appliedRows);
+        $this->assertSame('transactional', $summary['applied'][0]['transaction_strategy'] ?? null);
+    }
+
+    public function testApplyPendingExecutesDdlPatchWithoutTransaction(): void
     {
         $this->createPatch(
             '2026-07-06-001-create-courses.sql',
@@ -96,10 +120,11 @@ final class SqlPatchMigratorTest extends TestCase
 
         $this->assertSame(2, $summary['applied_count']);
         $this->assertCount(3, $pdo->executedStatements);
-        $this->assertSame(2, $pdo->beginTransactionCount);
-        $this->assertSame(2, $pdo->commitCount);
+        $this->assertSame(0, $pdo->beginTransactionCount);
+        $this->assertSame(0, $pdo->commitCount);
         $this->assertSame(0, $pdo->rollBackCount);
         $this->assertCount(2, $pdo->appliedRows);
+        $this->assertSame('non_transactional', $summary['applied'][0]['transaction_strategy'] ?? null);
     }
 
     public function testApplyPendingFailsWhenAppliedChecksumDiffersFromFile(): void

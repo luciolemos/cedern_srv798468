@@ -45,6 +45,7 @@ Use nomes ordenáveis:
 2. Se precisar corrigir algo, crie um novo patch.
 3. Faça backup do banco de produção antes de aplicar qualquer patch.
 4. Se a feature depende do novo schema, aplique o patch antes do deploy do código.
+5. Patches com DDL como `ALTER TABLE`, `CREATE TABLE`, `DROP` e similares podem disparar commit implícito em MySQL/MariaDB; o migrator do projeto trata esses casos como execuções não transacionais.
 
 ## Comandos
 

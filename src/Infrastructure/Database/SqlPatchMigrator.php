@@ -124,9 +124,12 @@ final class SqlPatchMigrator
         foreach ($status['pending'] as $migration) {
             $key = (string) ($migration['key'] ?? '');
             $statements = (array) ($migration['statements'] ?? []);
+            $requiresNonTransactionalExecution = $this->requiresNonTransactionalExecution($statements);
 
             try {
-                $this->pdo->beginTransaction();
+                if (!$requiresNonTransactionalExecution) {
+                    $this->pdo->beginTransaction();
+                }
 
                 foreach ($statements as $statement) {
                     $normalizedStatement = trim((string) $statement);
@@ -147,20 +150,28 @@ final class SqlPatchMigrator
                     'checksum_sha256' => (string) ($migration['checksum_sha256'] ?? ''),
                 ]);
 
-                $this->pdo->commit();
+                if (!$requiresNonTransactionalExecution && $this->pdo->inTransaction()) {
+                    $this->pdo->commit();
+                }
             } catch (Throwable $exception) {
-                if ($this->pdo->inTransaction()) {
+                if (!$requiresNonTransactionalExecution && $this->pdo->inTransaction()) {
                     $this->pdo->rollBack();
                 }
 
                 throw new RuntimeException(
-                    'Falha ao aplicar o patch "' . $key . '": ' . $exception->getMessage(),
+                    'Falha ao aplicar o patch "' . $key . '": ' . $exception->getMessage()
+                    . ($requiresNonTransactionalExecution
+                        ? ' O patch pode ter sido aplicado parcialmente e deve ser revisado no banco.'
+                        : ''),
                     0,
                     $exception
                 );
             }
 
             $migration['applied_at'] = date('Y-m-d H:i:s');
+            $migration['transaction_strategy'] = $requiresNonTransactionalExecution
+                ? 'non_transactional'
+                : 'transactional';
             $appliedNow[] = $migration;
         }
 
@@ -170,6 +181,27 @@ final class SqlPatchMigrator
             'pending_count_before' => count($status['pending']),
             'orphaned_count' => count($status['orphaned']),
         ];
+    }
+
+    /**
+     * @param array<int, string> $statements
+     */
+    private function requiresNonTransactionalExecution(array $statements): bool
+    {
+        foreach ($statements as $statement) {
+            $normalizedStatement = ltrim((string) $statement);
+
+            if (
+                preg_match(
+                    '/^(ALTER|CREATE|DROP|TRUNCATE|RENAME|GRANT|REVOKE|ANALYZE|OPTIMIZE|REPAIR|FLUSH|LOCK|UNLOCK)\b/i',
+                    $normalizedStatement
+                ) === 1
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function ensureMigrationsTable(): void
