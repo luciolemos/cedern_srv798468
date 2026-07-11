@@ -2,6 +2,10 @@
 
 Este e o ponto de entrada oficial para operar o CEDE em producao.
 
+Se a release agora vai passar antes por um terceiro ambiente, use tambem:
+
+- [HOMOLOGATION_ENVIRONMENT_RUNBOOK.md](/var/www/cedern/docs/HOMOLOGATION_ENVIRONMENT_RUNBOOK.md)
+
 Use este documento para quatro cenarios:
 
 - primeira publicacao totalmente limpa;

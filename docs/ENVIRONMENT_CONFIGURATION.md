@@ -30,7 +30,7 @@ Organize o `.env` em blocos:
 
 ### 1. Bootstrap e runtime
 
-- `APP_ENV`: define o perfil geral da aplicação. Aceitos: `production`, `development`, `test`, `local`, `dev`.
+- `APP_ENV`: define o perfil geral da aplicação. Aceitos operacionalmente pelo projeto: `production`, `development`, `test`, `local`, `dev`, `qa`, `homolog`.
 - `APP_ENV_FILE`: opcional. Permite mandar o bootstrap carregar outro arquivo em vez do `.env` padrão.
 - `APP_LOG_PATH`: caminho absoluto do log da aplicação. Em Hostinger normalmente fica fora do projeto.
 - `APP_ALLOW_REPOSITORY_FALLBACK`: controla se a aplicação pode cair para repositórios fallback quando o MySQL falha. Em produção, o recomendado é `false`.
@@ -184,6 +184,29 @@ Se a produção estiver acessível na raiz `https://cedern.org/`, `APP_BASE="/ce
 Observação:
 Não mantenha `APP_ENV=production` no ambiente de desenvolvimento só para simular produção. Para aparência e comportamento público, ajuste as flags específicas; para cobrança, a combinação segura continua sendo desenvolvimento com Asaas sandbox.
 
+### Homologacao dedicada
+
+Se o objetivo da homologacao for espelhar producao e barrar problemas antes do
+go-live, o recomendado e:
+
+- `APP_ENV=production`
+- `APP_BASE=""` se roda em subdominio proprio
+- `APP_ALLOW_REPOSITORY_FALLBACK=false`
+- `APP_ENABLE_DIAGNOSTIC_ROUTES=false`
+- `APP_DIAGNOSTIC_TOKEN` obrigatorio
+- `APP_MANAGED_STORAGE_ROOT` proprio da homologacao
+- `APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR` proprio da homologacao
+- `APP_ENABLE_LEGACY_MEDIA_FALLBACK=false`
+- `RECAPTCHA_ALLOWED_HOSTNAME` igual ao hostname da homologacao
+- `ASAAS_ENVIRONMENT=sandbox`
+
+Motivo:
+
+- `APP_ENV=homolog` hoje e tratado pelo runtime como development-like;
+- isso libera diagnosticos automaticamente;
+- isso tambem permite fallback de repositorio por padrao;
+- portanto, para homologacao pre-producao, `APP_ENV=production` e mais fiel.
+
 ## Procedimento seguro ao editar o `.env`
 
 1. Ajuste as variáveis no servidor correto.
@@ -239,4 +262,5 @@ Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?toke
 - Injeção de variáveis no Twig: [dependencies.php](/var/www/cedern/app/dependencies.php)
 - Bootstrap do `.env`: [index.php](/var/www/cedern/public/index.php)
 - Runbook principal de producao: [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
+- Runbook de homologacao: [HOMOLOGATION_ENVIRONMENT_RUNBOOK.md](/var/www/cedern/docs/HOMOLOGATION_ENVIRONMENT_RUNBOOK.md)
 - Padrão de mídia gerenciada: [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md)
