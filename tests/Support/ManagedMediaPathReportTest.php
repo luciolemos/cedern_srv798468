@@ -20,11 +20,13 @@ final class ManagedMediaPathReportTest extends TestCase
 
     protected function setUp(): void
     {
-        foreach ([
-            'APP_MANAGED_STORAGE_ROOT',
-            'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
-            'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
-        ] as $key) {
+        foreach (
+            [
+                'APP_MANAGED_STORAGE_ROOT',
+                'MEMBER_PROFILE_PHOTO_UPLOAD_DIR',
+                'MEMBER_PROFILE_PHOTO_UPLOAD_PUBLIC_PREFIX',
+            ] as $key
+        ) {
             $this->originalEnv[$key] = array_key_exists($key, $_ENV) ? (string) $_ENV[$key] : null;
         }
     }
