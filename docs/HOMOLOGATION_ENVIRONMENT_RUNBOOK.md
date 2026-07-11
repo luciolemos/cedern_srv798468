@@ -155,6 +155,181 @@ Vantagem:
 
 - o mesmo estado testado em homologacao e o que segue para producao.
 
+## Fluxo exato de merge
+
+### Etapa 1: promover `cedern` para `homolog`
+
+Quando uma release estiver pronta no desenvolvimento:
+
+```bash
+git switch cedern
+git pull --ff-only origin cedern
+gh pr create --base homolog --head cedern --fill
+```
+
+Depois de revisar e aprovar o PR:
+
+```bash
+gh pr merge --merge
+git fetch origin
+git switch homolog
+git pull --ff-only origin homolog
+```
+
+Resultado esperado:
+
+- `origin/homolog` passa a conter a release candidata;
+- `homolog.cedern.org` pode receber exatamente esse estado;
+- `main` continua intacta.
+
+### Etapa 2: validar a homologacao
+
+Somente depois do deploy e da validacao funcional completa em
+`homolog.cedern.org`, a release pode seguir adiante.
+
+### Etapa 3: promover `homolog` para `main`
+
+Quando a homologacao estiver aprovada:
+
+```bash
+git switch homolog
+git pull --ff-only origin homolog
+gh pr create --base main --head homolog --fill
+```
+
+Depois de revisar e aprovar o PR:
+
+```bash
+gh pr merge --merge
+git fetch origin
+git switch main
+git pull --ff-only origin main
+```
+
+Regra:
+
+- nao abrir PR direto de `cedern` para `main` quando a release ainda nao passou
+  pela homologacao.
+
+## Deploy do subdominio na Hostinger
+
+Para o cenario atual, o mapeamento esperado e este:
+
+- URL: `https://homolog.cedern.org/`
+- document root: `/home/u429418010/domains/cedern.org/public_html/homolog`
+- branch de deploy: `homolog`
+
+### 1. Publicacao do codigo
+
+O diretorio do subdominio deve conter uma copia propria do projeto publicada a
+partir da branch `homolog`.
+
+Estrutura esperada dentro de
+`/home/u429418010/domains/cedern.org/public_html/homolog`:
+
+- `.htaccess`
+- `public/`
+- `app/`
+- `src/`
+- `templates/`
+- `vendor/`
+
+Importante:
+
+- o `.htaccess` da raiz dessa copia reescreve para `public/`;
+- portanto o subdominio deve apontar para a pasta do projeto da homologacao,
+  nao para `public/` diretamente, a menos que voce mude o modelo de deploy.
+
+### 2. Ambiente da homologacao
+
+Use um arquivo de ambiente proprio da homologacao.
+
+Template completo versionado:
+
+- [.env.homolog.example](/var/www/cedern/.env.homolog.example)
+
+Exemplo de referencia:
+
+```apache
+SetEnv APP_ENV_FILE "/home/u429418010/.secrets/cedern.homolog.env"
+```
+
+Se nao houver esse modelo no painel, mantenha o `.env` apenas dentro da copia
+da homologacao e nunca compartilhe com a producao.
+
+Valores minimos recomendados:
+
+```dotenv
+APP_ENV=production
+APP_BASE=""
+APP_DEFAULT_PAGE_URL="https://homolog.cedern.org/"
+APP_LOG_PATH="/home/u429418010/logs/cedern-homolog.log"
+APP_ALLOW_REPOSITORY_FALLBACK="false"
+APP_ENABLE_DIAGNOSTIC_ROUTES="false"
+APP_DIAGNOSTIC_TOKEN="troque_este_token"
+APP_MANAGED_STORAGE_ROOT="/home/u429418010/_cedern_storage_homolog"
+APP_MANAGED_STORAGE_IMPORT_ARCHIVE_DIR="/home/u429418010/_cedern_storage_homolog/imports/managed-storage-zips"
+APP_ENABLE_LEGACY_MEDIA_FALLBACK="false"
+RECAPTCHA_ALLOWED_HOSTNAME="homolog.cedern.org"
+ASAAS_ENVIRONMENT="sandbox"
+ASAAS_ALLOW_PRODUCTION_IN_NON_PRODUCTION="false"
+```
+
+Para um template completo pronto para revisar e adaptar, use
+[.env.homolog.example](/var/www/cedern/.env.homolog.example).
+
+### 3. Banco proprio
+
+Crie um banco de homologacao separado.
+
+Regra:
+
+- `homolog.cedern.org` nao deve usar o banco da producao.
+
+### 4. Storage proprio
+
+Crie o storage dedicado:
+
+- `/home/u429418010/_cedern_storage_homolog/bookshop/covers`
+- `/home/u429418010/_cedern_storage_homolog/library/docs`
+- `/home/u429418010/_cedern_storage_homolog/library/covers`
+- `/home/u429418010/_cedern_storage_homolog/member-photos`
+- `/home/u429418010/_cedern_storage_homolog/patrimony/docs`
+- `/home/u429418010/_cedern_storage_homolog/patrimony/img`
+- `/home/u429418010/_cedern_storage_homolog/imports/managed-storage-zips`
+
+### 5. Baseline inicial
+
+Depois do codigo publicado:
+
+1. importar o banco baseline no banco da homologacao;
+2. enviar os `.zip` de midia para
+   `/home/u429418010/_cedern_storage_homolog/imports/managed-storage-zips`;
+3. executar `/health/storage/import?token=SEU_TOKEN`;
+4. executar `/health/storage/import?token=SEU_TOKEN&execute=1&kind=all`;
+5. executar `/health/migrations?token=SEU_TOKEN&execute=1`;
+6. executar `/health/readiness?token=SEU_TOKEN`.
+
+### 6. Smoke check da homologacao
+
+Validar no navegador:
+
+- `https://homolog.cedern.org/`
+- login publico
+- painel administrativo
+- listagem de membros com foto
+- livraria com capas
+- base de conhecimento com capas e PDFs
+- patrimonio com imagem e documento
+
+### 7. So depois disso vem a producao
+
+Somente depois de `homolog.cedern.org` aprovada:
+
+- abrir PR `homolog -> main`
+- fazer merge
+- publicar `main` em `cedern.org`
+
 ## Isolamento minimo obrigatorio
 
 Homologacao precisa ter:
