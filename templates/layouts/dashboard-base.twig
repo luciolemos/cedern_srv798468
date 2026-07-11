@@ -9,7 +9,7 @@
   {% set page_image = page_image|default(app_default_page_image|default('https://cedern.org/assets/img/cedern/cede1_1600_1000.png')) %}
   {% set site_name = site_name|default(app_default_site_name|default('CEDE')) %}
   {% set twitter_site = twitter_site|default(app_default_twitter_site|default('@cedeoficialrn')) %}
-  <title>{{ page_title }}</title>
+  <title>{{ app_environment_title_prefix|default('') }}{{ page_title }}</title>
   <meta name="description" content="{{ page_description }}">
   <meta property="og:title" content="{{ page_title }}">
   <meta property="og:description" content="{{ page_description }}">
@@ -108,7 +108,7 @@
   <script src="/assets/js/cedern-theme.js?v={{ asset_version }}" defer></script>
   {% block head %}{% endblock %}
 </head>
-<body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}" data-theme-palette="{{ app_dashboard_theme_palette_enabled|default(true) ? 'enabled' : 'disabled' }}">
+<body data-default-theme="{{ default_theme|default('amber') }}" data-default-mode="{{ default_mode|default('light') }}" data-default-dark-intensity="{{ default_dark_intensity|default('neutral') }}" data-theme-palette="{{ app_dashboard_theme_palette_enabled|default(true) ? 'enabled' : 'disabled' }}" data-app-environment="{{ app_deploy_stage|default('production') }}">
   {% block content %}{% endblock %}
   {% include 'components/theme-palette.twig' with { theme_palette_enabled: app_dashboard_theme_palette_enabled|default(true) } %}
 </body>

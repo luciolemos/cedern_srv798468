@@ -22,8 +22,9 @@
       </div>
 
       <div class="nc-dashboard-topbar-right">
-        <span class="nc-dashboard-env-badge nc-dashboard-env-badge-{{ dashboard_env_tone|default('prod') }}">
-          {{ dashboard_env_label|default('Produção') }}
+        <span class="nc-dashboard-env-badge nc-dashboard-env-badge-{{ dashboard_env_tone|default('prod') }}" aria-label="Ambiente atual: {{ dashboard_env_label|default('Produção') }}" title="Ambiente atual: {{ dashboard_env_label|default('Produção') }}">
+          <span class="nc-dashboard-env-badge-dot" aria-hidden="true"></span>
+          <span>{{ dashboard_env_label|default('Produção') }}</span>
         </span>
         <span id="nc-dashboard-theme-badge" class="nc-dashboard-theme-badge" aria-live="polite">Tema: padrão</span>
         {% set dashboard_notification_count = dashboard_admin_notification_count|default(0) %}
