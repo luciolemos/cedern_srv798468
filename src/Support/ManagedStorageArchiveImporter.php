@@ -6,6 +6,8 @@ namespace App\Support;
 
 final class ManagedStorageArchiveImporter
 {
+    private const SNAPSHOT_SAMPLE_LIMIT = 10;
+
     private string $projectRoot;
 
     /** @var array<string, mixed> */
@@ -184,6 +186,88 @@ final class ManagedStorageArchiveImporter
             'imported_files' => (int) ($extraction['imported_files'] ?? 0),
             'imported_bytes' => (int) ($extraction['imported_bytes'] ?? 0),
             'deleted_archive' => $deletedArchive,
+            'post_import_snapshot' => $this->buildPostImportSnapshot(
+                $targetDirectory,
+                (array) ($validation['entries'] ?? [])
+            ),
+        ];
+    }
+
+    /**
+     * @param array<int, array{entry_name: string, file_name: string}> $expectedEntries
+     * @return array<string, mixed>
+     */
+    private function buildPostImportSnapshot(string $targetDirectory, array $expectedEntries): array
+    {
+        $directoryDescription = $this->describePath($targetDirectory, true);
+        $fileCount = 0;
+        $totalSizeBytes = 0;
+        $sampleEntries = [];
+
+        if (
+            ($directoryDescription['exists'] ?? false) === true
+            && ($directoryDescription['readable'] ?? false) === true
+        ) {
+            $directoryEntries = @scandir($targetDirectory);
+            if (is_array($directoryEntries)) {
+                foreach ($directoryEntries as $entryName) {
+                    if ($entryName === '.' || $entryName === '..') {
+                        continue;
+                    }
+
+                    $entryPath = rtrim($targetDirectory, '/') . '/' . $entryName;
+                    if (!is_file($entryPath)) {
+                        continue;
+                    }
+
+                    $entryDescription = $this->describePath($entryPath, false);
+                    $fileCount++;
+                    $totalSizeBytes += (int) ($entryDescription['size_bytes'] ?? 0);
+
+                    if (count($sampleEntries) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                        $sampleEntries[] = ['file_name' => $entryName] + $entryDescription;
+                    }
+                }
+            }
+        }
+
+        $expectedFileCount = 0;
+        $visibleExpectedFileCount = 0;
+        $expectedFileSample = [];
+        $missingExpectedFileSample = [];
+
+        foreach ($expectedEntries as $entry) {
+            $fileName = trim($entry['file_name']);
+            if ($fileName === '') {
+                continue;
+            }
+
+            $expectedFileCount++;
+            $entryPath = rtrim($targetDirectory, '/') . '/' . $fileName;
+            $entryDescription = ['file_name' => $fileName] + $this->describePath($entryPath, false);
+
+            if (($entryDescription['exists'] ?? false) === true) {
+                $visibleExpectedFileCount++;
+            } elseif (count($missingExpectedFileSample) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                $missingExpectedFileSample[] = $fileName;
+            }
+
+            if (count($expectedFileSample) < self::SNAPSHOT_SAMPLE_LIMIT) {
+                $expectedFileSample[] = $entryDescription;
+            }
+        }
+
+        return [
+            'sample_limit' => self::SNAPSHOT_SAMPLE_LIMIT,
+            'directory' => $directoryDescription,
+            'file_count' => $fileCount,
+            'total_size_bytes' => $totalSizeBytes,
+            'sample_entries' => $sampleEntries,
+            'expected_file_count' => $expectedFileCount,
+            'visible_expected_file_count' => $visibleExpectedFileCount,
+            'missing_expected_file_count' => max(0, $expectedFileCount - $visibleExpectedFileCount),
+            'expected_file_sample' => $expectedFileSample,
+            'missing_expected_file_sample' => $missingExpectedFileSample,
         ];
     }
 

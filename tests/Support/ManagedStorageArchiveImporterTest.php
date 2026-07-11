@@ -87,6 +87,30 @@ final class ManagedStorageArchiveImporterTest extends TestCase
         $this->assertSame('ok', $result['status'] ?? null);
         $this->assertSame('ok', $result['results']['bookshop_covers']['status'] ?? null);
         $this->assertSame(1, $result['results']['bookshop_covers']['imported_files'] ?? null);
+        $this->assertSame(
+            $managedRoot . '/bookshop/covers',
+            $result['results']['bookshop_covers']['post_import_snapshot']['directory']['path'] ?? null
+        );
+        $this->assertTrue(
+            (bool) ($result['results']['bookshop_covers']['post_import_snapshot']['directory']['exists'] ?? false)
+        );
+        $this->assertSame(1, $result['results']['bookshop_covers']['post_import_snapshot']['file_count'] ?? null);
+        $this->assertSame(
+            1,
+            $result['results']['bookshop_covers']['post_import_snapshot']['expected_file_count'] ?? null
+        );
+        $this->assertSame(
+            1,
+            $result['results']['bookshop_covers']['post_import_snapshot']['visible_expected_file_count'] ?? null
+        );
+        $this->assertSame(
+            0,
+            $result['results']['bookshop_covers']['post_import_snapshot']['missing_expected_file_count'] ?? null
+        );
+        $this->assertSame(
+            'cover_demo.jpg',
+            $result['results']['bookshop_covers']['post_import_snapshot']['sample_entries'][0]['file_name'] ?? null
+        );
         $this->assertFileExists($targetPath);
         $this->assertSame('demo-cover', file_get_contents($targetPath));
     }

@@ -1,5 +1,9 @@
 # Padrão de Mídia Gerenciada do CEDE
 
+Documento principal de operacao:
+
+- [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
+
 Este documento fixa o padrão para qualquer implementação nova que envolva banco,
 upload, URL pública e storage físico de arquivos no projeto.
 
@@ -107,6 +111,28 @@ Fluxo padrao:
 - enviar os `.zip` para `<APP_MANAGED_STORAGE_ROOT>/imports/managed-storage-zips`;
 - validar a descoberta em `/health/storage/import?token=...`;
 - executar a importacao real em `/health/storage/import?token=...&execute=1&kind=all`.
+
+Resolucao de origem dos `.zip`:
+
+- o importador nao depende de uma unica pasta fixa;
+- ele procura os arquivos nesta ordem:
+  `1.` `<APP_MANAGED_STORAGE_ROOT>/imports/managed-storage-zips`
+  `2.` `<APP_MANAGED_STORAGE_ROOT>/imports`
+  `3.` `<project_root>/var/imports/managed-storage-zips`
+  `4.` `<project_root>/var/imports`
+  `5.` `<project_root>/var/exports/managed-storage-zips`
+- a fonte real usada em cada execucao e a que aparece em `selected_archive` no
+  JSON de `/health/storage/import`.
+
+Regra operacional:
+
+- antes de executar a importacao, sempre confira `selected_archive`;
+- se o runtime do PHP nao enxergar os `.zip` em `<APP_MANAGED_STORAGE_ROOT>/imports/...`,
+  ele pode cair para `var/exports/managed-storage-zips` dentro do projeto;
+- limpeza posterior deve remover os `.zip` do local que apareceu em `selected_archive`,
+  e nao apenas do staging presumido.
+- depois da importacao, o JSON de execucao devolve `post_import_snapshot` para
+  confirmar que o mesmo runtime do PHP enxerga o bucket e os arquivos esperados.
 
 Regra importante:
 

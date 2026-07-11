@@ -142,6 +142,7 @@ Regra prática:
 - Com `APP_MANAGED_STORAGE_ROOT` ativo, a aplicação deixa de usar `var/storage/...` do release atual como fallback implícito de leitura; o ambiente precisa estar consistente no storage compartilhado.
 - Quando `APP_MANAGED_STORAGE_ROOT` estiver vazio ou comentado, os buckets padrão continuam em `var/storage/...` dentro do projeto.
 - Quando `APP_ENABLE_LEGACY_MEDIA_FALLBACK=true`, fotos de membros também podem aceitar paths legados diretos `assets/...` durante uma janela de migração.
+- O fluxo operacional principal de producao esta em [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md).
 - O contrato funcional completo de banco, URL pública, storage físico e deploy de mídia gerenciada está em [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md).
 - `LIBRARY_UPLOAD_DIR`: diretório físico dos documentos da biblioteca.
 - `LIBRARY_UPLOAD_PUBLIC_PREFIX`: prefixo público desses documentos.
@@ -235,4 +236,5 @@ Em produção, a rota exige `APP_DIAGNOSTIC_TOKEN` e deve ser chamada com `?toke
 - Resolução de tema: [ThemeConfig.php](/var/www/cedern/src/Support/ThemeConfig.php)
 - Injeção de variáveis no Twig: [dependencies.php](/var/www/cedern/app/dependencies.php)
 - Bootstrap do `.env`: [index.php](/var/www/cedern/public/index.php)
+- Runbook principal de producao: [PRODUCTION_OPERATIONS_RUNBOOK.md](/var/www/cedern/docs/PRODUCTION_OPERATIONS_RUNBOOK.md)
 - Padrão de mídia gerenciada: [MANAGED_MEDIA_STANDARD.md](/var/www/cedern/docs/MANAGED_MEDIA_STANDARD.md)
