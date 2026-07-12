@@ -247,7 +247,6 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                         'yes' => $contributorState === 1,
                         'no' => $contributorState === 0,
                         'undeclared' => $contributorState === null,
-                        default => true,
                     };
                 }
             ));

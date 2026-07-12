@@ -544,39 +544,6 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             : MemberHomePageAction::FLASH_KEY;
     }
 
-    private function normalizeCurrencyInput(string $value): ?string
-    {
-        $normalized = preg_replace('/\s+/', '', trim($value)) ?? '';
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
-            $lastComma = strrpos($normalized, ',');
-            $lastDot = strrpos($normalized, '.');
-            if ($lastComma !== false && $lastDot !== false && $lastComma > $lastDot) {
-                $normalized = str_replace('.', '', $normalized);
-                $normalized = str_replace(',', '.', $normalized);
-            } else {
-                $normalized = str_replace(',', '', $normalized);
-            }
-        } elseif (str_contains($normalized, ',')) {
-            $normalized = str_replace('.', '', $normalized);
-            $normalized = str_replace(',', '.', $normalized);
-        }
-
-        if (!is_numeric($normalized)) {
-            return null;
-        }
-
-        $amount = (float) $normalized;
-        if ($amount <= 0) {
-            return null;
-        }
-
-        return number_format($amount, 2, '.', '');
-    }
-
     private function formatCurrencyInput(string $value): string
     {
         $normalized = trim($value);
