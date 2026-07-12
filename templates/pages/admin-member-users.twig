@@ -98,7 +98,7 @@
       {
         label: 'Contribuintes',
         value: summary.contributor_count|default(0),
-        description: summary.non_contributor_count|default(0) ~ ' sem contribuição ativa no recorte.',
+        description: summary.non_contributor_count|default(0) ~ ' não participam e ' ~ summary.undeclared_contributor_count|default(0) ~ ' não declararam no recorte.',
         icon_svg: '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5.25V18.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15.5 8.25C15.5 6.86929 13.9325 5.75 12 5.75C10.0675 5.75 8.5 6.86929 8.5 8.25C8.5 9.63071 10.0675 10.75 12 10.75C13.9325 10.75 15.5 11.8693 15.5 13.25C15.5 14.6307 13.9325 15.75 12 15.75C10.0675 15.75 8.5 14.6307 8.5 13.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
       },
       {
@@ -153,7 +153,7 @@
             {% endfor %}
           </select>
           <select name="contributor_filter" aria-label="Filtrar por contribuição">
-            <option value="">Contribui ou não</option>
+            <option value="">Participa, não participa ou não declarou</option>
             {% for contributor_value, contributor_label in contributor_filter_options %}
               <option value="{{ contributor_value }}"{% if selected_contributor_filter == contributor_value %} selected{% endif %}>{{ contributor_label }}</option>
             {% endfor %}
@@ -204,7 +204,7 @@
             {% endfor %}
           </select>
           <select name="contributor_filter" aria-label="Filtrar por contribuição">
-            <option value="">Contribui ou não</option>
+            <option value="">Participa, não participa ou não declarou</option>
             {% for contributor_value, contributor_label in contributor_filter_options %}
               <option value="{{ contributor_value }}"{% if selected_contributor_filter == contributor_value %} selected{% endif %}>{{ contributor_label }}</option>
             {% endfor %}
@@ -347,7 +347,7 @@
                   <strong>{{ user.association_status_label|default('Solicitante') }}</strong>
                   <small class="nc-admin-user-email-inline nc-admin-email-inline">{{ user.member_type_label|default('Não definido') }}</small>
                 </td>
-                <td data-label="Contribui?">{{ user.contributor_label|default('Não') }}</td>
+                <td data-label="Contribui?">{{ user.contributor_label|default('Não declarou') }}</td>
                 <td data-label="Função CEDE">{{ user.institutional_role|default('Sem função definida') }}</td>
                 <td data-label="Perfil SISCEDE">{{ user.role_name_display|default(user.role_name|default('-')) }}</td>
                 <td data-label="Acesso ao SISCEDE">

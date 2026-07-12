@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -59,8 +60,9 @@ class AdminMemberUsersPageAction extends AbstractPageAction
     ];
 
     private const CONTRIBUTOR_FILTER_OPTIONS = [
-        'yes' => 'Contribui',
-        'no' => 'Não contribui',
+        'yes' => 'Participa',
+        'no' => 'Não participa',
+        'undeclared' => 'Não declarou',
     ];
 
     private MemberAuthRepository $memberAuthRepository;
@@ -148,8 +150,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'former' => 'Desligado',
                 default => 'Solicitante',
             };
-            $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
-            $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+            $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+            $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
             $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
 
             return $user;
@@ -238,8 +240,16 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         if ($selectedContributorFilter !== '') {
             $users = array_values(array_filter(
                 $users,
-                static fn (array $user): bool =>
-                    ((int) $user['is_contributor'] === 1) === ($selectedContributorFilter === 'yes')
+                static function (array $user) use ($selectedContributorFilter): bool {
+                    $contributorState = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+
+                    return match ($selectedContributorFilter) {
+                        'yes' => $contributorState === 1,
+                        'no' => $contributorState === 0,
+                        'undeclared' => $contributorState === null,
+                        default => true,
+                    };
+                }
             ));
         }
 
@@ -660,6 +670,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             'blocked_count' => 0,
             'contributor_count' => 0,
             'non_contributor_count' => 0,
+            'undeclared_contributor_count' => 0,
             'institutional_role_count' => 0,
             'without_institutional_role_count' => 0,
         ];
@@ -683,10 +694,13 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 $summary['pending_count']++;
             }
 
-            if ((int) ($user['is_contributor'] ?? 0) === 1) {
+            $contributorState = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+            if ($contributorState === 1) {
                 $summary['contributor_count']++;
-            } else {
+            } elseif ($contributorState === 0) {
                 $summary['non_contributor_count']++;
+            } else {
+                $summary['undeclared_contributor_count']++;
             }
 
             if (trim((string) ($user['institutional_role'] ?? '')) !== '') {

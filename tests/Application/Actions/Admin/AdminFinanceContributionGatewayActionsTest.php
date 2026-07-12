@@ -347,7 +347,7 @@ final class AdminFinanceContributionGatewayActionsTest extends TestCase
             'billing_whatsapp_opt_in' => 1,
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
         $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
         return $memberAuthRepository;

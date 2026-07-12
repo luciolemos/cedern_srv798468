@@ -8,6 +8,7 @@ use App\Application\Actions\Page\AbstractPageAction;
 use App\Application\Support\InstitutionalEmailTemplate;
 use App\Application\Support\SmtpSettings;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -101,8 +102,11 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $isContributor = match ($isContributorInput) {
             '1' => true,
             '0' => false,
+            ContributionParticipation::FORM_VALUE_UNDECLARED => null,
             default => null,
         };
+        $contributionAmountInput = trim((string) ($body['contribution_amount'] ?? ''));
+        $contributionPlanLabelInput = trim((string) ($body['contribution_plan_label'] ?? ''));
 
         if ($id <= 0) {
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-role');
@@ -124,7 +128,10 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-account-status');
         }
 
-        if ($hasContributorInput && $isContributor === null) {
+        if (
+            $hasContributorInput
+            && !in_array($isContributorInput, ['1', '0', ContributionParticipation::FORM_VALUE_UNDECLARED], true)
+        ) {
             return $this->redirectWithStatus($response, $redirectTarget, 'invalid-contributor-choice');
         }
 
@@ -159,8 +166,8 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             }
         }
 
-        if ($isContributor === null) {
-            $isContributor = (int) ($currentUser['is_contributor'] ?? 0) === 1;
+        if (!$hasContributorInput) {
+            $isContributor = ContributionParticipation::toNullableBool($currentUser['is_contributor'] ?? null);
         }
 
         if ($memberType === null) {
@@ -179,6 +186,37 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $associationStatus = $normalizedState['association_status'];
         $isContributor = $normalizedState['is_contributor'];
         $accountStatus = $normalizedState['status'];
+        $financeConfigurationEnabled = $associationStatus === 'member' && $isContributor === true;
+        $normalizedContributionAmount = $financeConfigurationEnabled
+            ? $this->normalizeCurrencyInput($contributionAmountInput)
+            : null;
+        $normalizedContributionPlanLabel = $financeConfigurationEnabled
+            ? $this->nullableText($contributionPlanLabelInput)
+            : null;
+
+        if ($financeConfigurationEnabled && $contributionAmountInput !== '' && $normalizedContributionAmount === null) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-financial-config', [
+                'error_message' => 'Informe um valor de contribuição válido.',
+                'contribution_amount' => $contributionAmountInput,
+                'contribution_plan_label' => $contributionPlanLabelInput,
+            ]);
+        }
+
+        if ($financeConfigurationEnabled && $normalizedContributionAmount === null) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-financial-config', [
+                'error_message' => 'Informe o valor da contribuição para associados contribuintes.',
+                'contribution_amount' => $contributionAmountInput,
+                'contribution_plan_label' => $contributionPlanLabelInput,
+            ]);
+        }
+
+        if ($financeConfigurationEnabled && $normalizedContributionPlanLabel !== null && mb_strlen($normalizedContributionPlanLabel) > 120) {
+            return $this->redirectWithStatus($response, $redirectTarget, 'invalid-financial-config', [
+                'error_message' => 'O plano de associado deve ter no máximo 120 caracteres.',
+                'contribution_amount' => $contributionAmountInput,
+                'contribution_plan_label' => $contributionPlanLabelInput,
+            ]);
+        }
 
         $shouldSendApprovalEmail = strtolower(trim((string) ($currentUser['status'] ?? ''))) === 'pending'
             && $associationStatus === 'member'
@@ -256,6 +294,44 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             return $this->redirectWithStatus($response, $redirectTarget, 'assign-error');
         }
 
+        try {
+            $financialConfigurationUpdated = $this->memberAuthRepository->updateProfile(
+                $id,
+                $this->buildAdministrativeProfileUpdatePayload(
+                    $currentUser,
+                    $normalizedContributionAmount,
+                    $normalizedContributionPlanLabel
+                )
+            );
+        } catch (Throwable $exception) {
+            $this->logger->error('Falha ao persistir configuracao financeira administrativa do usuario.', [
+                'user_id' => $id,
+                'contribution_amount' => $normalizedContributionAmount,
+                'contribution_plan_label' => $normalizedContributionPlanLabel,
+                'exception' => $exception,
+            ]);
+
+            return $this->redirectWithStatus($response, $redirectTarget, 'finance-save-error', [
+                'error_message' => 'A situação administrativa foi salva, mas houve falha ao persistir a configuração financeira.',
+                'contribution_amount' => $contributionAmountInput,
+                'contribution_plan_label' => $contributionPlanLabelInput,
+            ]);
+        }
+
+        if (!$financialConfigurationUpdated) {
+            $this->logger->warning('Configuracao financeira administrativa do usuario nao foi persistida.', [
+                'user_id' => $id,
+                'contribution_amount' => $normalizedContributionAmount,
+                'contribution_plan_label' => $normalizedContributionPlanLabel,
+            ]);
+
+            return $this->redirectWithStatus($response, $redirectTarget, 'finance-save-error', [
+                'error_message' => 'A situação administrativa foi salva, mas houve falha ao persistir a configuração financeira.',
+                'contribution_amount' => $contributionAmountInput,
+                'contribution_plan_label' => $contributionPlanLabelInput,
+            ]);
+        }
+
         if ($shouldSendApprovalEmail) {
             try {
                 $this->sendApprovalEmail(
@@ -287,7 +363,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         ?string $roleName,
         ?string $institutionalRole,
         ?string $memberType,
-        bool $isContributor
+        ?bool $isContributor
     ): void {
         $smtpHost = trim((string) ($_ENV['MAIL_HOST'] ?? 'smtp.hostinger.com'));
         $smtpPort = (int) ($_ENV['MAIL_PORT'] ?? 465);
@@ -331,8 +407,9 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
                 . htmlspecialchars($memberTypeLabel, ENT_QUOTES, 'UTF-8') . '</p>';
         }
 
+        $contributionLabel = ContributionParticipation::label($isContributor);
         $detailLines[] = '<p style="margin:0 0 8px;"><strong>Contribuição mensal:</strong> '
-            . htmlspecialchars($isContributor ? 'Participa da rotina financeira' : 'Sem contribuição vinculada', ENT_QUOTES, 'UTF-8') . '</p>';
+            . htmlspecialchars($contributionLabel, ENT_QUOTES, 'UTF-8') . '</p>';
 
         $detailLines[] = '<p style="margin:0;"><strong>Função CEDE:</strong> '
             . htmlspecialchars($normalizedInstitutionalRole ?? 'Não definida', ENT_QUOTES, 'UTF-8') . '</p>';
@@ -392,7 +469,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             . "E-mail de acesso: {$normalizedEmail}\n"
             . "Perfil liberado: {$resolvedRoleName}\n"
             . ($memberTypeLabel !== null ? "Tipo de sócio: {$memberTypeLabel}\n" : '')
-            . 'Contribuição mensal: ' . ($isContributor ? 'Participa da rotina financeira' : 'Sem contribuição vinculada') . "\n"
+            . 'Contribuição mensal: ' . $contributionLabel . "\n"
             . "Função CEDE: " . ($normalizedInstitutionalRole ?? 'Não definida') . "\n\n"
             . "Entre usando o mesmo e-mail e a senha cadastrados.\n"
             . "Área do membro: {$memberLoginUrl}\n"
@@ -496,12 +573,69 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         return $normalized === '' ? null : $normalized;
     }
 
+    private function normalizeCurrencyInput(string $value): ?string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $normalized = str_replace(['R$', ' '], '', $normalized);
+
+        if (str_contains($normalized, ',')) {
+            $normalized = str_replace('.', '', $normalized);
+            $normalized = str_replace(',', '.', $normalized);
+        }
+
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+
+        return number_format((float) $normalized, 2, '.', '');
+    }
+
+    /**
+     * @param array<string, mixed> $currentUser
+     * @return array<string, mixed>
+     */
+    private function buildAdministrativeProfileUpdatePayload(
+        array $currentUser,
+        ?string $contributionAmount,
+        ?string $contributionPlanLabel
+    ): array {
+        return [
+            'full_name' => (string) ($currentUser['full_name'] ?? ''),
+            'phone_mobile' => $currentUser['phone_mobile'] ?? null,
+            'phone_landline' => $currentUser['phone_landline'] ?? null,
+            'birth_date' => $currentUser['birth_date'] ?? null,
+            'birth_place' => $currentUser['birth_place'] ?? null,
+            'cpf' => $currentUser['cpf'] ?? null,
+            'postal_code' => $currentUser['postal_code'] ?? null,
+            'street_address' => $currentUser['street_address'] ?? null,
+            'address_number' => $currentUser['address_number'] ?? null,
+            'address_complement' => $currentUser['address_complement'] ?? null,
+            'neighborhood' => $currentUser['neighborhood'] ?? null,
+            'address_city' => $currentUser['address_city'] ?? null,
+            'address_state' => $currentUser['address_state'] ?? null,
+            'preferred_due_day' => $currentUser['preferred_due_day'] ?? null,
+            'contribution_amount' => $contributionAmount,
+            'contribution_plan_label' => $contributionPlanLabel,
+            'preferred_payment_method' => $currentUser['preferred_payment_method'] ?? null,
+            'billing_email_opt_in' => (int) ($currentUser['billing_email_opt_in'] ?? 0),
+            'billing_whatsapp_opt_in' => (int) ($currentUser['billing_whatsapp_opt_in'] ?? 0),
+            'profile_photo_path' => $currentUser['profile_photo_path'] ?? null,
+            'privacy_notice_version' => $currentUser['privacy_notice_version'] ?? null,
+            'privacy_notice_accepted_at' => $currentUser['privacy_notice_accepted_at'] ?? null,
+            'profile_completed' => (int) ($currentUser['profile_completed'] ?? 0),
+        ];
+    }
+
     /**
      * @return array{
      *     member_type: ?string,
      *     institutional_role: ?string,
      *     association_status: string,
-     *     is_contributor: bool,
+     *     is_contributor: ?bool,
      *     status: string
      * }
      */
@@ -524,17 +658,14 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
             $normalizedAccountStatus = 'active';
         }
 
-        $normalizedContributor = $isContributor;
-        if ($normalizedContributor === null) {
-            $normalizedContributor = $normalizedMemberType !== null;
-        }
+        $normalizedContributor = ContributionParticipation::toNullableBool($isContributor);
 
         if ($normalizedAssociationStatus === 'applicant') {
             return [
                 'member_type' => null,
                 'institutional_role' => null,
                 'association_status' => 'applicant',
-                'is_contributor' => false,
+                'is_contributor' => null,
                 'status' => 'pending',
             ];
         }

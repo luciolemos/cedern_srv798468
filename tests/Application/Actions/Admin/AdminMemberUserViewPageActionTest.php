@@ -132,6 +132,8 @@ final class AdminMemberUserViewPageActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('pages/admin-member-user-view.twig', $action->capturedTemplate);
+        $this->assertStringContainsString('Dados do cadastro', $html);
+        $this->assertStringContainsString('Essas informações ficam associadas à conta de membro.', $html);
         $this->assertStringContainsString('Acesso ao SISCEDE', $html);
         $this->assertStringContainsString('Perfil no SISCEDE', $html);
         $this->assertStringContainsString('Marina Silva', $html);
@@ -140,9 +142,13 @@ final class AdminMemberUserViewPageActionTest extends TestCase
         $this->assertStringContainsString('(84) 3322-1100', $html);
         $this->assertStringContainsString('12/08/1990', $html);
         $this->assertStringContainsString('529.982.247-25', $html);
+        $this->assertStringContainsString('Endereço', $html);
+        $this->assertStringContainsString('Informações de localização vinculadas a este cadastro.', $html);
         $this->assertStringContainsString('59000-000', $html);
         $this->assertStringContainsString('Rua das Flores, 123 - Apto 12', $html);
-        $this->assertStringContainsString('Centro - Parnamirim/RN - CEP 59000-000', $html);
+        $this->assertStringContainsString('Centro', $html);
+        $this->assertStringContainsString('Parnamirim / RN', $html);
+        $this->assertStringContainsString('Configuração financeira', $html);
         $this->assertStringContainsString('Dia 10', $html);
         $this->assertStringContainsString('R$ 65,50', $html);
         $this->assertStringContainsString('Plano associado efetivo', $html);
@@ -153,8 +159,17 @@ final class AdminMemberUserViewPageActionTest extends TestCase
         $this->assertStringContainsString('Sem perfil ativo', $html);
         $this->assertStringContainsString('Histórico administrativo', $html);
         $this->assertStringContainsString('Cadastro criado como solicitante com acesso pendente.', $html);
-        $this->assertStringContainsString('Situação administrativa atualizada: acesso bloqueado, vínculo desligado, contribuinte não.', $html);
+        $this->assertStringContainsString(
+            'Situação administrativa atualizada: acesso bloqueado, vínculo desligado, contribuinte não participa.',
+            $html
+        );
         $this->assertStringContainsString('Gestor CEDE', $html);
         $this->assertStringContainsString('Sistema', $html);
+        $this->assertTrue(strpos($html, '<dt>Perfil no SISCEDE</dt>') < strpos($html, '<dt>Tipo de Sócio</dt>'));
+        $this->assertTrue(strpos($html, '<dt>Tipo de Sócio</dt>') < strpos($html, '<dt>E-mail</dt>'));
+        $this->assertTrue(strpos($html, '<dt>E-mail</dt>') < strpos($html, '<dt>Celular</dt>'));
+        $this->assertTrue(strpos($html, '<dt>Telefone</dt>') < strpos($html, '<dt>Data de nascimento</dt>'));
+        $this->assertTrue(strpos($html, '<dt>Data de nascimento</dt>') < strpos($html, '<dt>Naturalidade</dt>'));
+        $this->assertTrue(strpos($html, '<dt>Naturalidade</dt>') < strpos($html, '<dt>CPF</dt>'));
     }
 }

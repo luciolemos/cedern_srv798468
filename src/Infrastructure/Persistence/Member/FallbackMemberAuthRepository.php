@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Member;
 
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 
 class FallbackMemberAuthRepository implements MemberAuthRepository
 {
@@ -91,8 +92,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'member_type_label' => 'Não definido',
             'association_status' => 'applicant',
             'association_status_label' => 'Solicitante',
-            'is_contributor' => 0,
-            'contributor_label' => 'Não',
+            'is_contributor' => null,
+            'contributor_label' => 'Não declarou',
             'profile_photo_path' => null,
             'privacy_notice_version' => null,
             'privacy_notice_accepted_at' => null,
@@ -429,7 +430,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $this->users[$id]['association_status'] = $normalizedState['association_status'];
         $this->users[$id]['association_status_label'] = $this->resolveAssociationStatusLabel($normalizedState['association_status']);
         $this->users[$id]['is_contributor'] = $normalizedState['is_contributor'];
-        $this->users[$id]['contributor_label'] = $normalizedState['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $this->users[$id]['contributor_label'] = ContributionParticipation::label($normalizedState['is_contributor']);
         $this->users[$id]['status'] = $normalizedState['status'];
         $this->users[$id]['updated_at'] = date('Y-m-d H:i:s');
 
@@ -524,7 +525,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 continue;
             }
 
-            if ((int) ($user['is_contributor'] ?? 0) !== 1) {
+            if (!ContributionParticipation::isParticipating($user['is_contributor'] ?? null)) {
                 continue;
             }
 
@@ -610,7 +611,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 continue;
             }
 
-            if ((int) ($user['is_contributor'] ?? 0) !== 1) {
+            if (!ContributionParticipation::isParticipating($user['is_contributor'] ?? null)) {
                 continue;
             }
 
@@ -923,8 +924,8 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             $user['role_name'] = '';
         }
         $user['association_status_label'] = $this->resolveAssociationStatusLabel((string) $user['association_status']);
-        $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
-        $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+        $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
         $user['privacy_notice_version'] = $user['privacy_notice_version'] ?? null;
         $user['privacy_notice_accepted_at'] = $user['privacy_notice_accepted_at'] ?? null;
 
@@ -990,7 +991,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
      *         member_type: ?string,
      *         institutional_role: ?string,
      *         association_status: string,
-     *         is_contributor: int,
+     *         is_contributor: int|null,
      *         status: string
      *     },
      *     1: array<int, string>
@@ -1016,11 +1017,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             $normalizedAccountStatus = 'active';
         }
 
-        $normalizedContributor = $isContributor;
-        if ($normalizedContributor === null) {
-            $normalizedContributor = $normalizedMemberType !== null;
-            $rulesApplied[] = 'contributor_defaulted_from_member_type';
-        }
+        $normalizedContributor = ContributionParticipation::normalize($isContributor);
 
         if ($normalizedAssociationStatus === 'applicant') {
             $rulesApplied[] = 'applicant_pending_access';
@@ -1030,7 +1027,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 'member_type' => null,
                 'institutional_role' => null,
                 'association_status' => 'applicant',
-                'is_contributor' => 0,
+                'is_contributor' => null,
                 'status' => 'pending',
             ], $rulesApplied];
         }
@@ -1062,7 +1059,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'member_type' => $normalizedMemberType,
             'institutional_role' => $normalizedInstitutionalRole,
             'association_status' => 'member',
-            'is_contributor' => $normalizedContributor ? 1 : 0,
+            'is_contributor' => $normalizedContributor,
             'status' => $normalizedAccountStatus,
         ], $rulesApplied];
     }
@@ -1090,7 +1087,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
             'member_type' => $this->nullableText($user['member_type'] ?? null),
             'association_status' => $associationStatus,
-            'is_contributor' => (int) ($user['is_contributor'] ?? 0) === 1 ? 1 : 0,
+            'is_contributor' => ContributionParticipation::normalize($user['is_contributor'] ?? null),
             'status' => $status,
         ];
     }
@@ -1104,7 +1101,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'Situação administrativa atualizada: acesso %s, vínculo %s, contribuinte %s.',
             strtolower($this->resolveAccountStatusLabel((string) ($snapshot['status'] ?? 'pending'))),
             strtolower($this->resolveAssociationStatusLabel((string) ($snapshot['association_status'] ?? 'applicant'))),
-            ((int) ($snapshot['is_contributor'] ?? 0) === 1) ? 'sim' : 'não'
+            mb_strtolower(ContributionParticipation::label($snapshot['is_contributor'] ?? null), 'UTF-8')
         );
     }
 

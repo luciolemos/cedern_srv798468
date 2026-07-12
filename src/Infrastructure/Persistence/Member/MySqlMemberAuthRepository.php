@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Persistence\Member;
 
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -46,7 +47,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                     :password_hash,
                     'pending',
                     'applicant',
-                    0,
+                    NULL,
                     0
                 )
             SQL;
@@ -72,7 +73,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         :password_hash,
                         'pending',
                         'applicant',
-                        0,
+                        NULL,
                         0
                     )
                 SQL;
@@ -116,7 +117,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                             'institutional_role' => null,
                             'member_type' => null,
                             'association_status' => 'applicant',
-                            'is_contributor' => 0,
+                            'is_contributor' => null,
                             'status' => 'pending',
                         ]),
                         'rules_applied' => ['new_signup_defaults'],
@@ -243,7 +244,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         u.profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -289,7 +290,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         NULL AS profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -405,7 +406,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         u.profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -451,7 +452,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         NULL AS profile_photo_path,
                         NULL AS privacy_notice_version,
                         NULL AS privacy_notice_accepted_at,
@@ -965,7 +966,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         u.profile_photo_path,
                         u.profile_completed,
                         u.created_at,
@@ -1008,7 +1009,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                         NULL AS institutional_role,
                         NULL AS member_type,
                         NULL AS association_status,
-                        0 AS is_contributor,
+                        NULL AS is_contributor,
                         NULL AS profile_photo_path,
                         0 AS profile_completed,
                         NULL AS created_at,
@@ -1847,8 +1848,8 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
         $row['association_status'] = $associationStatus;
         $row['association_status_label'] = $this->resolveAssociationStatusLabel((string) ($row['association_status'] ?? ''));
-        $row['is_contributor'] = (int) ($row['is_contributor'] ?? 0);
-        $row['contributor_label'] = (int) ($row['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não';
+        $row['is_contributor'] = ContributionParticipation::normalize($row['is_contributor'] ?? null);
+        $row['contributor_label'] = ContributionParticipation::label($row['is_contributor']);
         $row['profile_photo_path'] = $row['profile_photo_path'] ?? null;
         $row['privacy_notice_version'] = $row['privacy_notice_version'] ?? null;
         $row['privacy_notice_accepted_at'] = $row['privacy_notice_accepted_at'] ?? null;
@@ -2016,7 +2017,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 institutional_role VARCHAR(120) NULL,
                 member_type VARCHAR(20) NULL,
                 association_status VARCHAR(20) NOT NULL DEFAULT 'applicant',
-                is_contributor TINYINT(1) NOT NULL DEFAULT 0,
+                is_contributor TINYINT(1) NULL DEFAULT NULL,
                 profile_photo_path VARCHAR(255) NULL,
                 privacy_notice_version VARCHAR(40) NULL,
                 privacy_notice_accepted_at DATETIME NULL,
@@ -2287,8 +2288,9 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $this->ensureColumn(
             'member_users',
             'is_contributor',
-            'ALTER TABLE member_users ADD COLUMN is_contributor TINYINT(1) NOT NULL DEFAULT 0'
+            'ALTER TABLE member_users ADD COLUMN is_contributor TINYINT(1) NULL DEFAULT NULL'
         );
+        $this->ensureMemberUsersContributorColumnCompatibility();
         $this->ensureColumn(
             'member_users',
             'profile_photo_path',
@@ -2809,7 +2811,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
      *     member_type: ?string,
      *     institutional_role: ?string,
      *     association_status: string,
-     *     is_contributor: int,
+     *     is_contributor: int|null,
      *     status: string
      * } $normalizedState
      * @param array<int, string> $rulesApplied
@@ -2940,7 +2942,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
      *     member_type: ?string,
      *     institutional_role: ?string,
      *     association_status: string,
-     *     is_contributor: int,
+     *     is_contributor: int|null,
      *     status: string
      * } $normalizedState
      */
@@ -2991,7 +2993,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
      *         member_type: ?string,
      *         institutional_role: ?string,
      *         association_status: string,
-     *         is_contributor: int,
+     *         is_contributor: int|null,
      *         status: string
      *     },
      *     1: array<int, string>
@@ -3017,11 +3019,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             $normalizedAccountStatus = 'active';
         }
 
-        $normalizedContributor = $isContributor;
-        if ($normalizedContributor === null) {
-            $normalizedContributor = $normalizedMemberType !== null;
-            $rulesApplied[] = 'contributor_defaulted_from_member_type';
-        }
+        $normalizedContributor = ContributionParticipation::normalize($isContributor);
 
         if ($normalizedAssociationStatus === 'applicant') {
             $rulesApplied[] = 'applicant_pending_access';
@@ -3031,7 +3029,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 'member_type' => null,
                 'institutional_role' => null,
                 'association_status' => 'applicant',
-                'is_contributor' => 0,
+                'is_contributor' => null,
                 'status' => 'pending',
             ], $rulesApplied];
         }
@@ -3063,7 +3061,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'member_type' => $normalizedMemberType,
             'institutional_role' => $normalizedInstitutionalRole,
             'association_status' => 'member',
-            'is_contributor' => $normalizedContributor ? 1 : 0,
+            'is_contributor' => $normalizedContributor,
             'status' => $normalizedAccountStatus,
         ], $rulesApplied];
     }
@@ -3091,7 +3089,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
             'member_type' => $this->nullableText($user['member_type'] ?? null),
             'association_status' => $associationStatus,
-            'is_contributor' => (int) ($user['is_contributor'] ?? 0) === 1 ? 1 : 0,
+            'is_contributor' => ContributionParticipation::normalize($user['is_contributor'] ?? null),
             'status' => $status,
         ];
     }
@@ -3105,7 +3103,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'Situação administrativa atualizada: acesso %s, vínculo %s, contribuinte %s.',
             strtolower($this->resolveAccountStatusLabel((string) ($snapshot['status'] ?? 'pending'))),
             strtolower($this->resolveAssociationStatusLabel((string) ($snapshot['association_status'] ?? 'applicant'))),
-            ((int) ($snapshot['is_contributor'] ?? 0) === 1) ? 'sim' : 'não'
+            mb_strtolower(ContributionParticipation::label($snapshot['is_contributor'] ?? null), 'UTF-8')
         );
     }
 
@@ -3345,6 +3343,31 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         );
     }
 
+    private function ensureMemberUsersContributorColumnCompatibility(): void
+    {
+        $metadata = $this->findColumnMetadata('member_users', 'is_contributor');
+        if ($metadata === null) {
+            return;
+        }
+
+        $dataType = strtolower(trim((string) ($metadata['data_type'] ?? '')));
+        $columnType = strtolower(trim((string) ($metadata['column_type'] ?? '')));
+        $isNullable = strtoupper(trim((string) ($metadata['is_nullable'] ?? '')));
+        $columnDefault = $metadata['column_default'] ?? null;
+
+        $isCompatible = ($dataType === 'tinyint' || $columnType === 'tinyint(1)')
+            && $isNullable === 'YES'
+            && $columnDefault === null;
+
+        if ($isCompatible) {
+            return;
+        }
+
+        $this->pdo->exec(
+            'ALTER TABLE member_users MODIFY COLUMN is_contributor TINYINT(1) NULL DEFAULT NULL'
+        );
+    }
+
     private function ensureIndex(string $tableName, string $indexName, string $alterSql): void
     {
         $statement = $this->pdo->prepare(
@@ -3396,11 +3419,11 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $this->pdo->exec(<<<SQL
             UPDATE member_users
             SET is_contributor = CASE
+                WHEN association_status = 'applicant' THEN NULL
                 WHEN association_status <> 'member' THEN 0
                 WHEN is_contributor = 1 THEN 1
-                WHEN member_type IS NOT NULL AND TRIM(member_type) <> '' THEN 1
-                WHEN contribution_amount IS NOT NULL AND contribution_amount > 0 THEN 1
-                ELSE 0
+                WHEN is_contributor = 0 THEN 0
+                ELSE NULL
             END
         SQL);
 
@@ -3411,7 +3434,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
                 role_id = NULL,
                 member_type = NULL,
                 institutional_role = NULL,
-                is_contributor = 0
+                is_contributor = NULL
             WHERE association_status = 'applicant'
         SQL);
 

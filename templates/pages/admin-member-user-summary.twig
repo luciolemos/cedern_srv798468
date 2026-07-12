@@ -31,6 +31,12 @@
     {% elseif summary_status == 'invalid-contributor-choice' %}
       {% set toast_message = 'Selecione uma situação de contribuição válida para continuar.' %}
       {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'invalid-financial-config' %}
+      {% set toast_message = summary_error_message|default('Revise a configuração financeira administrativa antes de salvar.') %}
+      {% set toast_tone = 'error' %}
+    {% elseif summary_status == 'finance-save-error' %}
+      {% set toast_message = summary_error_message|default('A situação administrativa foi salva, mas houve falha ao persistir a configuração financeira.') %}
+      {% set toast_tone = 'error' %}
     {% elseif summary_status == 'invalid-contributor-state' %}
       {% set toast_message = 'Somente associados podem ficar marcados como contribuintes.' %}
       {% set toast_tone = 'error' %}
@@ -63,6 +69,7 @@
       {% set summary_association_status_options = summary_association_status_options|default([]) %}
       {% set summary_account_status_options = summary_account_status_options|default([]) %}
       {% set summary_institutional_role_options = summary_institutional_role_options|default([]) %}
+      {% set summary_finance_is_enabled = summary_user.association_status|default('applicant') == 'member' and summary_user.is_contributor is same as(1) %}
       {% set summary_system_state_note = summary_user.association_status|default('applicant') == 'member'
         ? 'Com vínculo Associado na CEDE, este cadastro pode receber perfil e acesso no SISCEDE.'
         : (
@@ -86,7 +93,11 @@
           </div>
         </div>
 
-        <dl class="nc-member-grid">
+        <dl class="nc-member-grid nc-member-grid-cadastro-summary-inline">
+          <div>
+            <dt>Nome completo</dt>
+            <dd>{{ summary_user.full_name|default(summary_user.email|default('Usuário')) }}</dd>
+          </div>
           <div>
             <dt>Acesso ao SISCEDE</dt>
             <dd>{{ summary_user.status_label|default('Pendente') }}</dd>
@@ -97,7 +108,7 @@
           </div>
           <div>
             <dt>Contribuinte</dt>
-            <dd>{{ summary_user.contributor_label|default('Não') }}</dd>
+            <dd>{{ summary_user.contributor_label|default('Não declarou') }}</dd>
           </div>
           <div>
             <dt>Perfil no SISCEDE</dt>
@@ -128,8 +139,40 @@
             <dd>{{ summary_user.birth_place|default('-') }}</dd>
           </div>
           <div>
+            <dt>CPF</dt>
+            <dd>{{ summary_user.cpf_display|default('-') }}</dd>
+          </div>
+          <div>
             <dt>Função no CEDE</dt>
             <dd>{{ summary_user.institutional_role|default('Sem função definida') }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="nc-card nc-member-panel" data-aos="fade-up" data-aos-delay="82">
+        <div class="nc-member-header">
+          <div class="nc-member-header-text">
+            <h3>Endereço</h3>
+            <p>Informações de localização vinculadas a este cadastro.</p>
+          </div>
+        </div>
+
+        <dl class="nc-member-grid nc-member-grid-address-summary-inline">
+          <div>
+            <dt>CEP</dt>
+            <dd>{{ summary_user.postal_code_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Endereço</dt>
+            <dd>{{ summary_user.address_line_one_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Bairro</dt>
+            <dd>{{ summary_user.address_neighborhood_display|default('-') }}</dd>
+          </div>
+          <div>
+            <dt>Cidade / UF</dt>
+            <dd>{{ summary_user.address_city_state_display|default('-') }}</dd>
           </div>
         </dl>
       </article>
@@ -142,7 +185,7 @@
           </div>
         </div>
 
-        <dl class="nc-member-grid nc-member-grid-finance-summary">
+        <dl class="nc-member-grid nc-member-grid-finance-summary nc-member-grid-finance-summary-inline">
           <div>
             <dt>Dia do vencimento da cobrança</dt>
             <dd>{{ summary_user.preferred_due_day_display|default('Não definido') }}</dd>
@@ -155,6 +198,10 @@
             <dt>Valor da contribuição</dt>
             <dd>{{ summary_user.contribution_amount_display|default('Não definido') }}</dd>
           </div>
+          <div>
+            <dt>Plano de Associado</dt>
+            <dd>{{ summary_user.contribution_plan_label_display|default('Não definido') }}</dd>
+          </div>
         </dl>
       </article>
 
@@ -164,7 +211,7 @@
 
         <form class="nc-admin-login-form" method="post" action="/painel/usuarios/{{ summary_user.id }}/atribuir-papel">
           {% include 'components/csrf-field.twig' %}
-          <input type="hidden" name="redirect_to" value="/painel/usuarios">
+          <input type="hidden" name="redirect_to" value="/painel/usuarios/{{ summary_user.id }}/resumo">
 
           <div class="nc-member-admin-groups">
             <section class="nc-member-admin-group" aria-labelledby="nc-summary-cede-title">
@@ -233,8 +280,9 @@
                 <div class="nc-admin-login-field">
                   <label class="nc-admin-login-label" for="nc-summary-is-contributor">Contribuição mensal</label>
                   <select class="nc-admin-login-input" id="nc-summary-is-contributor" name="is_contributor">
-                    <option value="0"{% if summary_user.is_contributor|default(0) != 1 %} selected{% endif %}>Não participa</option>
-                    <option value="1"{% if summary_user.is_contributor|default(0) == 1 %} selected{% endif %}>Participa</option>
+                    <option value="1"{% if summary_user.is_contributor is same as(1) %} selected{% endif %}>Participa</option>
+                    <option value="0"{% if summary_user.is_contributor is same as(0) %} selected{% endif %}>Não participa</option>
+                    <option value="undeclared"{% if summary_user.is_contributor is null %} selected{% endif %}>Não declarou</option>
                   </select>
                 </div>
 
@@ -261,6 +309,84 @@
                       <option value="{{ institutional_role_option }}"{% if summary_user.institutional_role|default('') == institutional_role_option %} selected{% endif %}>{{ institutional_role_option }}</option>
                     {% endfor %}
                   </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="nc-member-admin-group" aria-labelledby="nc-summary-finance-title">
+              <div class="nc-member-admin-group-header">
+                <h4 class="nc-member-admin-group-title" id="nc-summary-finance-title">Configuração financeira</h4>
+                <p class="nc-member-admin-group-description">Defina aqui os dados financeiros administrativos exibidos ao membro em modo leitura. Vencimento e forma preferida continuam sendo preferências do próprio associado.</p>
+              </div>
+
+              <p class="nc-member-profile-help nc-member-admin-group-note" data-summary-finance-note>
+                {% if summary_finance_is_enabled %}
+                  Como este cadastro participa da contribuição mensal, defina aqui o valor e, se necessário, o plano administrativo exibido ao membro.
+                {% elseif summary_user.association_status|default('applicant') != 'member' %}
+                  Você pode preencher esses campos agora, mas eles só serão mantidos quando o vínculo estiver como Associado.
+                {% elseif summary_user.is_contributor is same as(0) %}
+                  Você pode ajustar esses campos, mas eles só serão mantidos quando a contribuição mensal estiver como Participa.
+                {% else %}
+                  Você pode antecipar o preenchimento, mas o valor e o plano só serão mantidos quando a contribuição mensal for marcada como Participa.
+                {% endif %}
+              </p>
+
+              <div class="nc-member-admin-group-fields">
+                <div class="nc-admin-login-field">
+                  <div class="nc-admin-login-label-row">
+                    <label class="nc-admin-login-label" for="nc-summary-contribution-amount">Valor da contribuição</label>
+                    <span class="nc-admin-help-tooltip">
+                      <button
+                        class="nc-admin-help-tooltip-trigger"
+                        type="button"
+                        aria-label="Entender o valor da contribuição"
+                        aria-describedby="nc-summary-contribution-amount-help"
+                      >i</button>
+                      <span class="nc-admin-help-tooltip-content" id="nc-summary-contribution-amount-help" role="tooltip">
+                        <span class="nc-admin-help-tooltip-title">Valor da contribuição</span>
+                        <span>Esse valor é definido administrativamente e fica visível ao membro apenas em modo leitura.</span>
+                        <span>Quando a contribuição mensal estiver como Participa, esse campo passa a ser obrigatório para permitir cobrança normal.</span>
+                      </span>
+                    </span>
+                  </div>
+                  <input
+                    class="nc-admin-login-input"
+                    id="nc-summary-contribution-amount"
+                    name="contribution_amount"
+                    type="text"
+                    value="{{ summary_user.contribution_amount_form_value|default('') }}"
+                    inputmode="decimal"
+                    placeholder="Ex: 65,50"
+                    data-summary-finance-field
+                  >
+                </div>
+
+                <div class="nc-admin-login-field">
+                  <div class="nc-admin-login-label-row">
+                    <label class="nc-admin-login-label" for="nc-summary-contribution-plan-label">Plano de Associado</label>
+                    <span class="nc-admin-help-tooltip">
+                      <button
+                        class="nc-admin-help-tooltip-trigger"
+                        type="button"
+                        aria-label="Entender o plano de associado"
+                        aria-describedby="nc-summary-contribution-plan-help"
+                      >i</button>
+                      <span class="nc-admin-help-tooltip-content" id="nc-summary-contribution-plan-help" role="tooltip">
+                        <span class="nc-admin-help-tooltip-title">Plano de Associado</span>
+                        <span>Use esse campo para registrar o enquadramento administrativo da contribuição quando houver.</span>
+                        <span>Ele também aparece ao membro apenas como referência, sem possibilidade de edição.</span>
+                      </span>
+                    </span>
+                  </div>
+                  <input
+                    class="nc-admin-login-input"
+                    id="nc-summary-contribution-plan-label"
+                    name="contribution_plan_label"
+                    type="text"
+                    value="{{ summary_user.contribution_plan_label_form_value|default('') }}"
+                    placeholder="Ex: Plano diretoria 2026"
+                    data-summary-finance-field
+                  >
                 </div>
               </div>
             </section>
@@ -340,18 +466,20 @@
       <script>
         (function () {
           var associationSelect = document.querySelector('[data-summary-association-status]');
+          var contributorSelect = document.getElementById('nc-summary-is-contributor');
           var roleSelect = document.querySelector('[data-summary-system-role]');
           var accessSelect = document.querySelector('[data-summary-system-access]');
           var roleHelp = document.querySelector('[data-summary-role-help]');
           var accessHelp = document.querySelector('[data-summary-access-help]');
           var systemNote = document.querySelector('[data-summary-system-note]');
+          var financeNote = document.querySelector('[data-summary-finance-note]');
           var pendingAccessOption = accessSelect.querySelector('[data-summary-pending-option]');
           var rememberedRoleValue = roleSelect.value || '';
           var rememberedAccessValue = accessSelect.value && accessSelect.value !== 'pending'
             ? accessSelect.value
             : 'active';
 
-          if (!associationSelect || !roleSelect || !accessSelect) {
+          if (!associationSelect || !contributorSelect || !roleSelect || !accessSelect) {
             return;
           }
 
@@ -433,10 +561,40 @@
             }
           }
 
+          function updateFinanceFields() {
+            var association = String(associationSelect.value || '').toLowerCase();
+            var contributor = String(contributorSelect.value || '').toLowerCase();
+            if (!financeNote) {
+              return;
+            }
+
+            if (association !== 'member') {
+              financeNote.textContent = 'Voce pode preencher esses campos agora, mas eles so serao mantidos quando o vinculo estiver como Associado.';
+              return;
+            }
+
+            if (contributor === '1') {
+              financeNote.textContent = 'Como este cadastro participa da contribuicao mensal, defina aqui o valor e, se necessario, o plano administrativo exibido ao membro.';
+              return;
+            }
+
+            if (contributor === '0') {
+              financeNote.textContent = 'Voce pode ajustar esses campos, mas eles so serao mantidos quando a contribuicao mensal estiver como Participa.';
+              return;
+            }
+
+            financeNote.textContent = 'Voce pode antecipar o preenchimento, mas o valor e o plano so serao mantidos quando a contribuicao mensal for marcada como Participa.';
+          }
+
           roleSelect.addEventListener('change', rememberManualSystemValues);
           accessSelect.addEventListener('change', rememberManualSystemValues);
-          associationSelect.addEventListener('change', updateSystemFields);
+          associationSelect.addEventListener('change', function () {
+            updateSystemFields();
+            updateFinanceFields();
+          });
+          contributorSelect.addEventListener('change', updateFinanceFields);
           updateSystemFields();
+          updateFinanceFields();
         })();
       </script>
     {% endif %}

@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -131,8 +132,8 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
             ? $associationStatus
             : ($statusKey === 'pending' ? 'applicant' : 'member');
         $user['association_status_label'] = self::ASSOCIATION_STATUS_OPTIONS[$user['association_status']];
-        $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
-        $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+        $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
         $user['role_name_display'] = $this->resolveRoleNameDisplay($user, $roleName);
         $user['institutional_role_display'] = $institutionalRole !== '' ? $institutionalRole : 'Sem função definida';
         $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
@@ -140,6 +141,12 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $user['birth_date_display'] = $this->formatDate((string) ($user['birth_date'] ?? ''));
         $user['cpf_display'] = $this->formatCpf((string) ($user['cpf'] ?? ''));
         $user['postal_code_display'] = $this->formatPostalCode((string) ($user['postal_code'] ?? ''));
+        $user['address_line_one_display'] = $this->formatAddressLineOne($user);
+        $user['address_neighborhood_display'] = $this->formatSimpleText((string) ($user['neighborhood'] ?? ''));
+        $user['address_city_state_display'] = $this->formatCityState(
+            (string) ($user['address_city'] ?? ''),
+            (string) ($user['address_state'] ?? '')
+        );
         $user['address_display'] = $this->formatAddress($user);
         $user['preferred_due_day_display'] = $this->formatDueDay($user['preferred_due_day'] ?? null);
         $user['contribution_amount_display'] = $this->formatCurrency((string) ($user['contribution_amount'] ?? ''));
@@ -230,7 +237,7 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         $parts = [
             'Acesso ' . (self::STATUS_LABELS[$status] ?? 'Pendente'),
             'vínculo ' . (self::ASSOCIATION_STATUS_OPTIONS[$associationStatus] ?? 'Solicitante'),
-            'contribuinte ' . ((int) ($snapshot['is_contributor'] ?? 0) === 1 ? 'Sim' : 'Não'),
+            'contribuição ' . ContributionParticipation::label($snapshot['is_contributor'] ?? null),
         ];
 
         if (array_key_exists($memberType, self::MEMBER_TYPE_OPTIONS)) {
@@ -331,6 +338,39 @@ class AdminMemberUserViewPageAction extends AbstractPageAction
         }
 
         return sprintf('%s-%s', substr($digits, 0, 5), substr($digits, 5, 3));
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function formatAddressLineOne(array $user): string
+    {
+        $street = trim((string) ($user['street_address'] ?? ''));
+        $number = trim((string) ($user['address_number'] ?? ''));
+        $complement = trim((string) ($user['address_complement'] ?? ''));
+
+        $line = trim(implode(', ', array_filter([$street, $number], static fn (string $part): bool => $part !== '')));
+        if ($complement !== '') {
+            $line = trim($line . ' - ' . $complement);
+        }
+
+        return $line !== '' ? $line : '-';
+    }
+
+    private function formatCityState(string $city, string $state): string
+    {
+        $city = trim($city);
+        $state = strtoupper(trim($state));
+        $value = trim(implode(' / ', array_filter([$city, $state], static fn (string $part): bool => $part !== '')));
+
+        return $value !== '' ? $value : '-';
+    }
+
+    private function formatSimpleText(string $value): string
+    {
+        $normalized = trim($value);
+
+        return $normalized !== '' ? $normalized : '-';
     }
 
     /**
