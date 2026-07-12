@@ -6026,6 +6026,16 @@ code {
   transform: translateY(0);
 }
 
+.nc-admin-help-tooltip.is-align-right .nc-admin-help-tooltip-content {
+  left: auto;
+  right: 0;
+}
+
+.nc-admin-help-tooltip.is-align-right .nc-admin-help-tooltip-content::before {
+  left: auto;
+  right: 0.9rem;
+}
+
 .nc-admin-login-label {
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
@@ -6956,6 +6966,43 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.nc-member-grid-finance-summary-inline {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.72rem;
+  align-items: stretch;
+}
+
+.nc-member-grid-finance-summary-inline > div {
+  padding: 0.52rem 0.62rem;
+}
+
+.nc-member-grid-finance-summary-inline dd {
+  font-size: 0.97rem;
+}
+
+.nc-member-grid-cadastro-summary-inline,
+.nc-member-grid-address-summary-inline {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.72rem;
+  align-items: stretch;
+}
+
+.nc-member-grid-cadastro-summary-inline > div,
+.nc-member-grid-address-summary-inline > div {
+  padding: 0.52rem 0.62rem;
+}
+
+@media (max-width: 980px) {
+  .nc-member-grid-cadastro-summary-inline,
+  .nc-member-grid-address-summary-inline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nc-member-grid-finance-summary-inline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .nc-member-grid div {
   padding: 0.56rem 0.66rem;
   border: 1px solid var(--surface-border);
@@ -7817,6 +7864,15 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
   align-items: start;
 }
 
+.nc-member-profile-contribution-row-overview {
+  grid-template-columns: minmax(180px, 1fr) minmax(200px, 0.88fr) minmax(240px, 0.96fr);
+}
+
+.nc-member-profile-contribution-row-overview .nc-admin-login-label-row {
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+
 .nc-member-profile-field-name,
 .nc-member-profile-field-birth-date,
 .nc-member-profile-field-email {
@@ -7991,6 +8047,10 @@ input[type='file'].nc-admin-form-input:focus-visible::file-selector-button {
 
   .nc-member-profile-contribution-row {
     grid-template-columns: minmax(180px, 1.05fr) minmax(240px, 1.3fr) minmax(220px, 0.9fr);
+  }
+
+  .nc-member-profile-contribution-row-overview {
+    grid-template-columns: minmax(180px, 1fr) minmax(200px, 0.88fr) minmax(240px, 0.96fr);
   }
 
   .nc-member-photo-field {

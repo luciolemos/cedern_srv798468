@@ -40,12 +40,21 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
             'password_hash' => 'hash',
         ]);
 
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Coordenador', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Coordenador', 'efetivo', 'member', true, 'active');
         $memberAuthRepository->updateProfile($userId, [
             'full_name' => 'Alice Financeira',
             'birth_date' => '1990-08-12',
+            'cpf' => '52998224725',
+            'postal_code' => '59000000',
+            'street_address' => 'Rua das Flores',
+            'address_number' => '123',
+            'address_complement' => 'Apto 12',
+            'neighborhood' => 'Centro',
+            'address_city' => 'Parnamirim',
+            'address_state' => 'RN',
             'preferred_due_day' => 10,
             'contribution_amount' => '65.50',
+            'contribution_plan_label' => 'Plano associado efetivo',
             'preferred_payment_method' => 'pix',
         ]);
 
@@ -109,6 +118,8 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         $this->assertSame('pages/admin-member-user-summary.twig', $action->capturedTemplate);
         $this->assertStringContainsString('Configuração CEDE', $html);
         $this->assertStringContainsString('Configuração SISCEDE', $html);
+        $this->assertStringContainsString('Nome completo', $html);
+        $this->assertStringContainsString('Alice Financeira', $html);
         $this->assertStringContainsString('Perfil no SISCEDE', $html);
         $this->assertStringContainsString('Acesso ao SISCEDE', $html);
         $this->assertStringContainsString('Operador Financeiro', $html);
@@ -125,14 +136,28 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         $this->assertStringContainsString('Definições do Estatuto do CEDE', $html);
         $this->assertStringContainsString('Fundador: associado que participou da Assembleia de fundação do CEDE.', $html);
         $this->assertStringContainsString('Efetivo: associado cuja proposta de admissão foi aprovada pela Diretoria, conforme o Estatuto.', $html);
+        $this->assertStringContainsString('Endereço', $html);
+        $this->assertStringContainsString('Informações de localização vinculadas a este cadastro.', $html);
+        $this->assertStringContainsString('59000-000', $html);
+        $this->assertStringContainsString('Rua das Flores, 123 - Apto 12', $html);
+        $this->assertStringContainsString('Centro', $html);
+        $this->assertStringContainsString('Parnamirim / RN', $html);
         $this->assertStringContainsString('Configuração financeira', $html);
+        $this->assertStringContainsString('name="redirect_to" value="/painel/usuarios/' . $userId . '/resumo"', $html);
         $this->assertStringContainsString('12/08/1990', $html);
+        $this->assertStringContainsString('CPF', $html);
+        $this->assertStringContainsString('529.982.247-25', $html);
         $this->assertStringContainsString('Dia do vencimento da cobrança', $html);
         $this->assertStringContainsString('Dia 10', $html);
         $this->assertStringContainsString('Forma definida de pagamento', $html);
         $this->assertStringContainsString('Pix', $html);
         $this->assertStringContainsString('Valor da contribuição', $html);
         $this->assertStringContainsString('R$ 65,50', $html);
+        $this->assertStringContainsString('Plano de Associado', $html);
+        $this->assertStringContainsString('Plano associado efetivo', $html);
+        $this->assertStringContainsString('name="contribution_amount"', $html);
+        $this->assertStringContainsString('name="contribution_plan_label"', $html);
+        $this->assertStringContainsString('Esse valor é definido administrativamente e fica visível ao membro apenas em modo leitura.', $html);
     }
 
     public function testExplainsDerivedSiscedeStateForApplicant(): void
@@ -211,5 +236,11 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         $this->assertStringContainsString('Enquanto o vínculo na CEDE for Solicitante, o SISCEDE mantém esta conta sem perfil liberado.', $html);
         $this->assertStringContainsString('Enquanto o vínculo na CEDE for Solicitante, o SISCEDE mantém esta conta com acesso pendente.', $html);
         $this->assertMatchesRegularExpression('/<option\s+value="pending"[^>]*selected[^>]*data-summary-pending-option[^>]*>Pendente<\/option>/', $html);
+        $this->assertSame(0, preg_match('/id="nc-summary-contribution-amount"[\s\S]*?\sdisabled(?:\s|>)/', $html));
+        $this->assertSame(0, preg_match('/id="nc-summary-contribution-plan-label"[\s\S]*?\sdisabled(?:\s|>)/', $html));
+        $this->assertStringContainsString(
+            'Você pode preencher esses campos agora, mas eles só serão mantidos quando o vínculo estiver como Associado.',
+            $html
+        );
     }
 }

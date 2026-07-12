@@ -118,6 +118,18 @@ final class MySqlMemberAuthRepositoryTest extends TestCase
         $this->assertArrayNotHasKey('account_status_for_approval', $execution['params']);
         $this->assertStringContainsString(':should_set_approved_at = 1', $execution['query']);
     }
+
+    public function testSchemaBackfillDoesNotInferContributorFromMemberTypeOrAmount(): void
+    {
+        $pdo = new MemberRepositoryFakePdo([]);
+        $repository = new MySqlMemberAuthRepository($pdo);
+
+        $repository->findAllRoles();
+
+        $this->assertTrue($pdo->hasExecutedStatementContaining('UPDATE member_users'));
+        $this->assertFalse($pdo->hasExecutedStatementContaining('WHEN member_type IS NOT NULL AND TRIM(member_type) <> \'\' THEN 1'));
+        $this->assertFalse($pdo->hasExecutedStatementContaining('WHEN contribution_amount IS NOT NULL AND contribution_amount > 0 THEN 1'));
+    }
 }
 
 final class MemberRepositoryFakePdo extends PDO

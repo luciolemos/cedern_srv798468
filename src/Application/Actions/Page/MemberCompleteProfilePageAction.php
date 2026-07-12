@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Page;
 
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -82,8 +83,19 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                 ? 'applicant'
                 : 'member';
         }
-        $isContributor = (int) ($member['is_contributor'] ?? 0) === 1;
+        $isContributor = ContributionParticipation::isParticipating($member['is_contributor'] ?? null);
+        $contributorLabel = ContributionParticipation::label($member['is_contributor'] ?? null);
         $requiresContributionConfiguration = $associationStatus === 'member' && $isContributor;
+        $existingPreferredDueDay = ($member['preferred_due_day'] ?? null) !== null
+            ? (int) $member['preferred_due_day']
+            : null;
+        $existingContributionAmount = ($member['contribution_amount'] ?? null) !== null
+            ? (string) $member['contribution_amount']
+            : null;
+        $existingContributionPlanLabel = trim((string) ($member['contribution_plan_label'] ?? ''));
+        $existingPreferredPaymentMethod = trim((string) ($member['preferred_payment_method'] ?? ''));
+        $existingBillingEmailOptIn = (int) ($member['billing_email_opt_in'] ?? 0) === 1 ? '1' : '';
+        $existingBillingWhatsappOptIn = (int) ($member['billing_whatsapp_opt_in'] ?? 0) === 1 ? '1' : '';
 
         $existingBirthPlace = trim((string) ($member['birth_place'] ?? ''));
         $existingBirthState = '';
@@ -112,12 +124,12 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'neighborhood' => (string) ($member['neighborhood'] ?? ''),
             'address_city' => (string) ($member['address_city'] ?? ''),
             'address_state' => (string) ($member['address_state'] ?? ''),
-            'preferred_due_day' => (string) ($member['preferred_due_day'] ?? ''),
-            'contribution_amount' => $this->formatCurrencyInput((string) ($member['contribution_amount'] ?? '')),
-            'contribution_plan_label' => (string) ($member['contribution_plan_label'] ?? ''),
-            'preferred_payment_method' => (string) ($member['preferred_payment_method'] ?? ''),
-            'billing_email_opt_in' => (int) ($member['billing_email_opt_in'] ?? 0) === 1 ? '1' : '',
-            'billing_whatsapp_opt_in' => (int) ($member['billing_whatsapp_opt_in'] ?? 0) === 1 ? '1' : '',
+            'preferred_due_day' => $existingPreferredDueDay !== null ? (string) $existingPreferredDueDay : '',
+            'contribution_amount' => $this->formatCurrencyInput((string) ($existingContributionAmount ?? '')),
+            'contribution_plan_label' => $existingContributionPlanLabel,
+            'preferred_payment_method' => $existingPreferredPaymentMethod,
+            'billing_email_opt_in' => $existingBillingEmailOptIn,
+            'billing_whatsapp_opt_in' => $existingBillingWhatsappOptIn,
             'privacy_notice_acknowledged' => $privacyNoticeAlreadyAccepted ? '1' : '',
         ];
 
@@ -183,12 +195,20 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             $form['neighborhood'] = trim((string) ($body['neighborhood'] ?? ''));
             $form['address_city'] = trim((string) ($body['address_city'] ?? ''));
             $form['address_state'] = strtoupper(trim((string) ($body['address_state'] ?? '')));
-            $form['preferred_due_day'] = trim((string) ($body['preferred_due_day'] ?? ''));
-            $form['contribution_amount'] = trim((string) ($body['contribution_amount'] ?? ''));
-            $form['contribution_plan_label'] = trim((string) ($body['contribution_plan_label'] ?? ''));
-            $form['preferred_payment_method'] = trim((string) ($body['preferred_payment_method'] ?? ''));
-            $form['billing_email_opt_in'] = (($body['billing_email_opt_in'] ?? '') === '1') ? '1' : '';
-            $form['billing_whatsapp_opt_in'] = (($body['billing_whatsapp_opt_in'] ?? '') === '1') ? '1' : '';
+            if ($requiresContributionConfiguration) {
+                $form['preferred_due_day'] = trim((string) ($body['preferred_due_day'] ?? ''));
+                $form['preferred_payment_method'] = trim((string) ($body['preferred_payment_method'] ?? ''));
+            } else {
+                $form['preferred_due_day'] = $existingPreferredDueDay !== null ? (string) $existingPreferredDueDay : '';
+                $form['preferred_payment_method'] = $existingPreferredPaymentMethod;
+            }
+            if ($requiresContributionConfiguration) {
+                $form['billing_email_opt_in'] = (($body['billing_email_opt_in'] ?? '') === '1') ? '1' : '';
+                $form['billing_whatsapp_opt_in'] = (($body['billing_whatsapp_opt_in'] ?? '') === '1') ? '1' : '';
+            } else {
+                $form['billing_email_opt_in'] = $existingBillingEmailOptIn;
+                $form['billing_whatsapp_opt_in'] = $existingBillingWhatsappOptIn;
+            }
             $form['privacy_notice_acknowledged'] = (($body['privacy_notice_acknowledged'] ?? '') === '1') ? '1' : '';
 
             if ($form['full_name'] === '') {
@@ -301,22 +321,10 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
 
             $preferredDueDayRaw = trim($form['preferred_due_day']);
             $preferredDueDay = $preferredDueDayRaw === '' ? null : (int) $preferredDueDayRaw;
-            $normalizedContributionAmount = $this->normalizeCurrencyInput($form['contribution_amount']);
-            if ($form['contribution_amount'] !== '' && $normalizedContributionAmount === null) {
-                $errors[] = 'Informe um valor de contribuição válido.';
-            }
-
-            if ($form['contribution_plan_label'] !== '' && mb_strlen($form['contribution_plan_label']) > 120) {
-                $errors[] = 'O vínculo com plano deve ter no máximo 120 caracteres.';
-            }
 
             if ($requiresContributionConfiguration) {
                 if ($preferredDueDay === null || $preferredDueDay < 1 || $preferredDueDay > 28) {
                     $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28.';
-                }
-
-                if ($normalizedContributionAmount === null && $form['contribution_plan_label'] === '') {
-                    $errors[] = 'Informe o valor da contribuição ou o plano definido pela diretoria.';
                 }
             } elseif ($preferredDueDay !== null && ($preferredDueDay < 1 || $preferredDueDay > 28)) {
                 $errors[] = 'Selecione um dia de vencimento preferido entre 1 e 28 ou deixe em branco.';
@@ -389,8 +397,8 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
                         'address_city' => $form['address_city'],
                         'address_state' => $form['address_state'],
                         'preferred_due_day' => $preferredDueDay,
-                        'contribution_amount' => $normalizedContributionAmount,
-                        'contribution_plan_label' => $form['contribution_plan_label'],
+                        'contribution_amount' => $existingContributionAmount,
+                        'contribution_plan_label' => $existingContributionPlanLabel,
                         'preferred_payment_method' => $preferredPaymentMethod,
                         'billing_email_opt_in' => $form['billing_email_opt_in'] === '1' ? 1 : 0,
                         'billing_whatsapp_opt_in' => $form['billing_whatsapp_opt_in'] === '1' ? 1 : 0,
@@ -496,7 +504,10 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
             'member_profile_association_status' => $associationStatus,
             'member_profile_association_status_label' => $this->resolveAssociationStatusLabel($associationStatus),
             'member_profile_is_contributor' => $isContributor,
+            'member_profile_contributor_label' => $contributorLabel,
             'member_profile_requires_contribution' => $requiresContributionConfiguration,
+            'member_profile_contribution_amount_display' => $form['contribution_amount'] !== '' ? $form['contribution_amount'] : 'Não definido',
+            'member_profile_contribution_plan_label_display' => $form['contribution_plan_label'] !== '' ? $form['contribution_plan_label'] : 'Não definido',
             'member_profile_privacy_notice_required' => !$privacyNoticeAlreadyAccepted,
             'member_profile_privacy_notice_version' => self::PRIVACY_NOTICE_VERSION,
             'member_profile_privacy_notice_acknowledged_at' => $privacyNoticeAcceptedAt,
@@ -531,39 +542,6 @@ class MemberCompleteProfilePageAction extends AbstractMemberGuardedPageAction
         return str_starts_with($redirectTo, '/agenda/')
             ? AgendaDetailPageAction::FLASH_KEY
             : MemberHomePageAction::FLASH_KEY;
-    }
-
-    private function normalizeCurrencyInput(string $value): ?string
-    {
-        $normalized = preg_replace('/\s+/', '', trim($value)) ?? '';
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
-            $lastComma = strrpos($normalized, ',');
-            $lastDot = strrpos($normalized, '.');
-            if ($lastComma !== false && $lastDot !== false && $lastComma > $lastDot) {
-                $normalized = str_replace('.', '', $normalized);
-                $normalized = str_replace(',', '.', $normalized);
-            } else {
-                $normalized = str_replace(',', '', $normalized);
-            }
-        } elseif (str_contains($normalized, ',')) {
-            $normalized = str_replace('.', '', $normalized);
-            $normalized = str_replace(',', '.', $normalized);
-        }
-
-        if (!is_numeric($normalized)) {
-            return null;
-        }
-
-        $amount = (float) $normalized;
-        if ($amount <= 0) {
-            return null;
-        }
-
-        return number_format($amount, 2, '.', '');
     }
 
     private function formatCurrencyInput(string $value): string

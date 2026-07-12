@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -69,6 +70,7 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
         $flash = $this->consumeSessionFlash($this->resolveFlashKey($userId));
         $status = trim((string) ($flash['status'] ?? ''));
         $institutionalRoleConflict = trim((string) ($flash['institutional_role'] ?? ''));
+        $statusErrorMessage = trim((string) ($flash['error_message'] ?? ''));
         $user = null;
         $roles = [];
         $loadError = '';
@@ -166,9 +168,10 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
             ? strtolower(trim((string) ($user['status'] ?? '')))
             : 'pending';
         $user['status_label'] = self::ACCOUNT_STATUS_OPTIONS[$user['status']];
-        $user['is_contributor'] = (int) ($user['is_contributor'] ?? 0);
-        $user['contributor_label'] = $user['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
+        $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
         $user['birth_date_display'] = $this->formatDate((string) ($user['birth_date'] ?? ''));
+        $user['cpf_display'] = $this->formatCpf((string) ($user['cpf'] ?? ''));
         $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
 
         $institutionalRoleOptions = self::INSTITUTIONAL_ROLE_OPTIONS;
@@ -184,9 +187,12 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
             $loadError = 'Já existe um usuário ativo com a função "'
                 . $roleLabel
                 . '". Remova ou altere a função atual antes de prosseguir.';
+        } elseif ($statusErrorMessage !== '') {
+            $loadError = $statusErrorMessage;
         }
 
-        $user = $this->normalizeFinancialSummary($user);
+        $user = $this->normalizeFinancialSummary($user, $flash);
+        $user = $this->normalizeAddressSummary($user);
 
         $displayName = trim((string) ($user['full_name'] ?? ''));
         if ($displayName === '') {
@@ -262,15 +268,110 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
      * @param array<string, mixed> $user
      * @return array<string, mixed>
      */
-    private function normalizeFinancialSummary(array $user): array
+    private function normalizeFinancialSummary(array $user, array $flash = []): array
     {
         $user['preferred_due_day_display'] = $this->formatDueDay($user['preferred_due_day'] ?? null);
         $user['contribution_amount_display'] = $this->formatCurrency((string) ($user['contribution_amount'] ?? ''));
+        $user['contribution_plan_label_display'] = trim((string) ($user['contribution_plan_label'] ?? '')) !== ''
+            ? trim((string) $user['contribution_plan_label'])
+            : 'Não definido';
 
         $preferredPaymentMethod = strtolower(trim((string) ($user['preferred_payment_method'] ?? '')));
         $user['preferred_payment_method_display'] = self::PAYMENT_METHOD_LABELS[$preferredPaymentMethod] ?? 'Não definido';
+        $user['contribution_amount_form_value'] = array_key_exists('contribution_amount', $flash)
+            ? trim((string) ($flash['contribution_amount'] ?? ''))
+            : $this->formatCurrencyInput((string) ($user['contribution_amount'] ?? ''));
+        $user['contribution_plan_label_form_value'] = array_key_exists('contribution_plan_label', $flash)
+            ? trim((string) ($flash['contribution_plan_label'] ?? ''))
+            : trim((string) ($user['contribution_plan_label'] ?? ''));
 
         return $user;
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     * @return array<string, mixed>
+     */
+    private function normalizeAddressSummary(array $user): array
+    {
+        $user['postal_code_display'] = $this->formatPostalCode((string) ($user['postal_code'] ?? ''));
+        $user['address_line_one_display'] = $this->formatAddressLineOne($user);
+        $user['address_neighborhood_display'] = $this->formatSimpleText((string) ($user['neighborhood'] ?? ''));
+        $user['address_city_state_display'] = $this->formatCityState(
+            (string) ($user['address_city'] ?? ''),
+            (string) ($user['address_state'] ?? '')
+        );
+
+        return $user;
+    }
+
+    private function formatCurrencyInput(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '' || !is_numeric($normalized)) {
+            return $normalized;
+        }
+
+        return number_format((float) $normalized, 2, ',', '.');
+    }
+
+    private function formatPostalCode(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        if (strlen($digits) !== 8) {
+            return trim($value) !== '' ? $value : '-';
+        }
+
+        return sprintf('%s-%s', substr($digits, 0, 5), substr($digits, 5, 3));
+    }
+
+    private function formatCpf(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+        if (strlen($digits) !== 11) {
+            return trim($value) !== '' ? $value : '-';
+        }
+
+        return sprintf(
+            '%s.%s.%s-%s',
+            substr($digits, 0, 3),
+            substr($digits, 3, 3),
+            substr($digits, 6, 3),
+            substr($digits, 9, 2)
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $user
+     */
+    private function formatAddressLineOne(array $user): string
+    {
+        $street = trim((string) ($user['street_address'] ?? ''));
+        $number = trim((string) ($user['address_number'] ?? ''));
+        $complement = trim((string) ($user['address_complement'] ?? ''));
+
+        $line = trim(implode(', ', array_filter([$street, $number], static fn (string $part): bool => $part !== '')));
+        if ($complement !== '') {
+            $line = trim($line . ' - ' . $complement);
+        }
+
+        return $line !== '' ? $line : '-';
+    }
+
+    private function formatCityState(string $city, string $state): string
+    {
+        $city = trim($city);
+        $state = strtoupper(trim($state));
+        $value = trim(implode(' / ', array_filter([$city, $state], static fn (string $part): bool => $part !== '')));
+
+        return $value !== '' ? $value : '-';
+    }
+
+    private function formatSimpleText(string $value): string
+    {
+        $normalized = trim($value);
+
+        return $normalized !== '' ? $normalized : '-';
     }
 
     private function formatDueDay(mixed $value): string

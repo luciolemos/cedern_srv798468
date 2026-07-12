@@ -176,7 +176,7 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         $bairroPosition = strpos($addressHtml, 'Bairro');
         $complementoPosition = strpos($addressHtml, 'Complemento');
         $privacidadePosition = strpos($financeHtml, 'Ciência da privacidade');
-        $planoPosition = strpos($financeHtml, 'Plano definido pela diretoria');
+        $planoPosition = strpos($financeHtml, 'Plano de Associado');
 
         $this->assertNotFalse($cepPosition);
         $this->assertNotFalse($ufPosition);

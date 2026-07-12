@@ -6,6 +6,7 @@ namespace App\Application\Actions\Page;
 
 use App\Domain\Agenda\AgendaRepository;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -585,8 +586,8 @@ class MemberHomePageAction extends AbstractMemberGuardedPageAction
             'former' => 'Desligado',
             default => 'Solicitante',
         };
-        $member['is_contributor'] = (int) ($member['is_contributor'] ?? 0);
-        $member['contributor_label'] = $member['is_contributor'] === 1 ? 'Sim' : 'Não';
+        $member['is_contributor'] = ContributionParticipation::normalize($member['is_contributor'] ?? null);
+        $member['contributor_label'] = ContributionParticipation::label($member['is_contributor']);
 
         return $member;
     }

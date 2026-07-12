@@ -131,7 +131,7 @@ final class ContributionBillingCycleRunnerTest extends TestCase
             'billing_whatsapp_opt_in' => 1,
             'profile_completed' => 1,
         ], $overrides));
-        $repository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $repository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
 
         return $userId;
     }

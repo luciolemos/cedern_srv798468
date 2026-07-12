@@ -7,16 +7,20 @@
         {% set member_role_summary = member_role_display_name|default(member_data.role_name|default(member_role_name|default('Membro'))) %}
         {% set member_association_summary = member_data.association_status_label|default('Associado') %}
         {% set member_type_summary = member_data.member_type_label|default(member_data.member_type|default('Não definido')) %}
-        {% set member_contribution_summary = member_data.contributor_label|default('Não') %}
+        {% set member_contribution_summary = member_data.contributor_label|default('Não declarou') %}
         {% set member_contribution_summary_normalized = member_contribution_summary|lower|replace({'ã': 'a'}) %}
-        {% set member_contribution_display = member_contribution_summary_normalized == 'sim' ? 'Ativa' : (member_contribution_summary_normalized == 'nao' ? 'Não ativa' : member_contribution_summary) %}
+        {% set member_contribution_display = member_contribution_summary_normalized == 'participa'
+          ? 'Ativa'
+          : (member_contribution_summary_normalized == 'nao participa' ? 'Não ativa' : member_contribution_summary) %}
         {% set member_institutional_role_summary = member_data.institutional_role|default('Sem função definida') %}
         {% set member_due_day_summary = member_data.preferred_due_day_display|default('Não definido') %}
         {% set member_contribution_amount_summary = member_data.contribution_amount_display|default('Não definido') %}
         {% set member_payment_method_summary = member_data.preferred_payment_method_display|default('Não definido') %}
-        {% set member_contribution_status_note = member_contribution_summary_normalized == 'sim'
+        {% set member_contribution_status_note = member_contribution_summary_normalized == 'participa'
           ? 'Sua contribuição já está configurada no cadastro e pode ser acompanhada por aqui.'
-          : 'No momento, não existe uma contribuição ativa vinculada ao seu cadastro.' %}
+          : (member_contribution_summary_normalized == 'nao declarou'
+            ? 'Sua participação financeira ainda não foi declarada no cadastro.'
+            : 'No momento, não existe uma contribuição ativa vinculada ao seu cadastro.') %}
 
         <div class="nc-member-home-header">
           {% include 'components/section-header.twig' with {
@@ -103,7 +107,7 @@
                 <p class="nc-member-subtitle">O mesmo conjunto que você encontra em completar perfil: situação da contribuição, vencimento, valor e forma preferida.</p>
               </div>
 
-              <div class="nc-member-account-contribution-state {{ member_contribution_summary_normalized == 'sim' ? 'is-active' : 'is-muted' }}">
+              <div class="nc-member-account-contribution-state {{ member_contribution_summary_normalized == 'participa' ? 'is-active' : 'is-muted' }}">
                 <span class="nc-member-account-contribution-label">Contribuição</span>
                 <strong>{{ member_contribution_display }}</strong>
                 <p>{{ member_contribution_status_note }}</p>

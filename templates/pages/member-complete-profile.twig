@@ -11,6 +11,7 @@
         {% set member_profile_requires_contribution = member_profile_requires_contribution|default(false) %}
         {% set member_profile_is_contributor = member_profile_is_contributor|default(false) %}
         {% set member_profile_association_status_label = member_profile_association_status_label|default('Solicitante') %}
+        {% set member_profile_contributor_label = member_profile_contributor_label|default('Não declarou') %}
         <div class="nc-member-profile-header">
           {% include 'components/section-header.twig' with {
             kicker: 'Área do Membro',
@@ -25,9 +26,9 @@
           <ul class="nc-member-profile-notice-list">
             <li><span>Obrigatórios:</span> foto de perfil, celular, data de nascimento, CPF e endereço.</li>
             {% if member_profile_requires_contribution %}
-              <li><span>Contribuição:</span> seu cadastro está como associado contribuinte. Dia de vencimento, forma de pagamento e valor ou plano ficam obrigatórios nesta etapa.</li>
+              <li><span>Contribuição:</span> seu cadastro está como associado contribuinte. Nesta etapa você informa vencimento e forma preferida; valor e plano são definidos pela diretoria.</li>
             {% else %}
-              <li><span>Contribuição:</span> seu vínculo atual é {{ member_profile_association_status_label|lower }}{% if not member_profile_is_contributor %} sem participação financeira{% endif %}. Os campos financeiros abaixo podem ser preenchidos depois, se necessário.</li>
+              <li><span>Contribuição:</span> seu vínculo atual é {{ member_profile_association_status_label|lower }} e a situação informada é {{ member_profile_contributor_label|lower }}. As preferências de cobrança só serão liberadas quando a administração ativar a contribuição deste cadastro.</li>
             {% endif %}
             <li><span>Opcional:</span> telefone fixo, complemento do endereço e autorizações de lembrete.</li>
             <li class="nc-member-profile-notice-line"><span>Transparência:</span> o tratamento segue a <a class="nc-link" href="{{ base_url ?? '' }}/politica-de-privacidade">Política de Privacidade</a> do CEDE.</li>
@@ -192,89 +193,161 @@
                   <h3 id="member-profile-finance-title">Contribuição e cobrança</h3>
                   <p class="nc-member-subtitle">
                     {% if member_profile_requires_contribution %}
-                      Aqui ficam o vencimento, o valor e a forma preferida para organizar cobranças e lembretes do associado contribuinte.
+                      Aqui você informa apenas suas preferências de cobrança. Valor e plano são definidos pela diretoria.
                     {% else %}
-                      Estes dados só são necessários quando a administração marcar seu cadastro como contribuinte. Você pode deixá-los em branco por enquanto.
+                      A situação de contribuição é definida pela administração. Quando seu cadastro estiver como contribuinte, esta área liberará as preferências de cobrança.
                     {% endif %}
                   </p>
                 </div>
 
                 <div class="nc-member-profile-group-grid">
-                  <div class="nc-member-profile-contribution-row nc-member-profile-field-full">
+                  <div class="nc-member-profile-contribution-row nc-member-profile-contribution-row-overview nc-member-profile-field-full">
                     <div class="nc-admin-login-field">
-                      <label class="nc-admin-login-label" for="preferred_due_day">
-                        VENCIMENTO
-                        <span class="nc-member-profile-tag {{ member_profile_requires_contribution ? 'is-required' : 'is-optional' }}">{{ member_profile_requires_contribution ? 'Obrigatório' : 'Opcional' }}</span>
-                      </label>
-                      <select class="nc-admin-login-input" id="preferred_due_day" name="preferred_due_day"{% if member_profile_requires_contribution %} required{% endif %}>
-                        <option value="">Selecione o dia</option>
-                        {% for day in 1..28 %}
-                          {% set day_value = day ~ '' %}
-                          <option value="{{ day_value }}"{% if member_profile_form.preferred_due_day|default('') == day_value %} selected{% endif %}>Dia {{ '%02d'|format(day) }}</option>
-                        {% endfor %}
-                      </select>
-                      <small class="nc-member-profile-help">Limitamos até o dia 28 para evitar inconsistências em meses menores.</small>
+                      <div class="nc-admin-login-label-row">
+                        <label class="nc-admin-login-label" for="contribution_status_display">Status da contribuição</label>
+                        <span class="nc-member-profile-tag is-optional">Administrativo</span>
+                        <span class="nc-admin-help-tooltip">
+                          <button
+                            class="nc-admin-help-tooltip-trigger"
+                            type="button"
+                            aria-label="Entender o status da contribuição"
+                            aria-describedby="member-profile-contribution-status-help"
+                          >i</button>
+                          <span class="nc-admin-help-tooltip-content" id="member-profile-contribution-status-help" role="tooltip">
+                            <span class="nc-admin-help-tooltip-title">Status da contribuição</span>
+                            <span>Esse status é definido pela administração do CEDE.</span>
+                            <span>Ele indica se o cadastro participa, não participa ou ainda não declarou contribuição mensal.</span>
+                          </span>
+                        </span>
+                      </div>
+                      <input class="nc-admin-login-input" id="contribution_status_display" type="text" value="{{ member_profile_contributor_label|default('Não declarou') }}" disabled>
                     </div>
 
                     <div class="nc-admin-login-field">
-                      <label class="nc-admin-login-label" for="contribution_amount">
-                        Valor da contribuição
-                        <span class="nc-member-profile-tag {{ member_profile_requires_contribution ? 'is-required' : 'is-optional' }}">{{ member_profile_requires_contribution ? 'Obrigatório ou plano' : 'Opcional' }}</span>
-                      </label>
-                      <input class="nc-admin-login-input" id="contribution_amount" name="contribution_amount" type="text" value="{{ member_profile_form.contribution_amount|default('') }}" inputmode="decimal" placeholder="Ex: 50,00">
-                      <small class="nc-member-profile-help">
-                        {% if member_profile_requires_contribution %}
-                          O valor da cobrança mensal é definido aqui. "Plano definido pela diretoria" pode complementar o enquadramento administrativo.
+                      <div class="nc-admin-login-label-row">
+                        <label class="nc-admin-login-label" for="contribution_amount_display">Valor da contribuição</label>
+                        <span class="nc-member-profile-tag is-optional">Somente leitura</span>
+                        <span class="nc-admin-help-tooltip is-align-right">
+                          <button
+                            class="nc-admin-help-tooltip-trigger"
+                            type="button"
+                            aria-label="Entender o valor da contribuição"
+                            aria-describedby="member-profile-contribution-amount-help"
+                          >i</button>
+                          <span class="nc-admin-help-tooltip-content" id="member-profile-contribution-amount-help" role="tooltip">
+                            <span class="nc-admin-help-tooltip-title">Valor da contribuição</span>
+                            <span>O valor mensal é definido administrativamente e aparece aqui apenas para consulta.</span>
+                            <span>Esse campo não pode ser alterado pelo membro nesta etapa.</span>
+                          </span>
+                        </span>
+                      </div>
+                      <input class="nc-admin-login-input" id="contribution_amount_display" type="text" value="{{ member_profile_contribution_amount_display|default('Não definido') }}" disabled>
+                    </div>
+
+                    <div class="nc-admin-login-field">
+                      <div class="nc-admin-login-label-row">
+                        <label class="nc-admin-login-label" for="contribution_plan_label_display">Plano de Associado</label>
+                        <span class="nc-member-profile-tag is-optional">Somente leitura</span>
+                        <span class="nc-admin-help-tooltip is-align-right">
+                          <button
+                            class="nc-admin-help-tooltip-trigger"
+                            type="button"
+                            aria-label="Entender o plano de associado"
+                            aria-describedby="member-profile-contribution-plan-help"
+                          >i</button>
+                          <span class="nc-admin-help-tooltip-content" id="member-profile-contribution-plan-help" role="tooltip">
+                            <span class="nc-admin-help-tooltip-title">Plano de Associado</span>
+                            <span>Quando existir um enquadramento administrativo para a contribuição, ele aparece aqui.</span>
+                            <span>O campo é somente leitura e serve apenas como referência para o membro.</span>
+                          </span>
+                        </span>
+                      </div>
+                      <input class="nc-admin-login-input" id="contribution_plan_label_display" type="text" value="{{ member_profile_contribution_plan_label_display|default('Não definido') }}" disabled>
+                    </div>
+                  </div>
+
+                  {% if member_profile_requires_contribution %}
+                    <div class="nc-member-profile-contribution-row nc-member-profile-field-full">
+                      <div class="nc-admin-login-field">
+                        <label class="nc-admin-login-label" for="preferred_due_day">
+                          VENCIMENTO
+                          <span class="nc-member-profile-tag is-required">Obrigatório</span>
+                        </label>
+                        <select class="nc-admin-login-input" id="preferred_due_day" name="preferred_due_day" required>
+                          <option value="">Selecione o dia</option>
+                          {% for day in 1..28 %}
+                            {% set day_value = day ~ '' %}
+                            <option value="{{ day_value }}"{% if member_profile_form.preferred_due_day|default('') == day_value %} selected{% endif %}>Dia {{ '%02d'|format(day) }}</option>
+                          {% endfor %}
+                        </select>
+                        <small class="nc-member-profile-help">Limitamos até o dia 28 para evitar inconsistências em meses menores.</small>
+                      </div>
+
+                      <div class="nc-admin-login-field">
+                        <label class="nc-admin-login-label" for="preferred_payment_method">
+                          Forma preferida
+                          <span class="nc-member-profile-tag is-required">Obrigatório</span>
+                        </label>
+                        <select class="nc-admin-login-input" id="preferred_payment_method" name="preferred_payment_method" required>
+                          <option value="">Selecione a forma</option>
+                          {% for payment_value, payment_label in member_profile_payment_method_options|default({}) %}
+                            <option value="{{ payment_value }}"{% if member_profile_form.preferred_payment_method|default('') == payment_value %} selected{% endif %}>{{ payment_label }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                  {% else %}
+                    <div class="nc-admin-login-field nc-member-profile-field-full">
+                      <div class="nc-member-profile-consent-status" role="status">
+                        {% if member_profile_contributor_label|default('') == 'Não declarou' %}
+                          A contribuição mensal ainda não foi declarada para este cadastro. Quando a administração definir sua situação, as preferências de cobrança serão liberadas aqui.
                         {% else %}
-                          Preencha apenas se a diretoria já tiver definido sua participação financeira.
+                          Como este cadastro não participa da contribuição mensal, vencimento e forma de cobrança não precisam ser informados agora.
                         {% endif %}
-                      </small>
+                      </div>
                     </div>
-
-                    <div class="nc-admin-login-field">
-                      <label class="nc-admin-login-label" for="preferred_payment_method">
-                        Forma preferida
-                        <span class="nc-member-profile-tag {{ member_profile_requires_contribution ? 'is-required' : 'is-optional' }}">{{ member_profile_requires_contribution ? 'Obrigatório' : 'Opcional' }}</span>
-                      </label>
-                      <select class="nc-admin-login-input" id="preferred_payment_method" name="preferred_payment_method"{% if member_profile_requires_contribution %} required{% endif %}>
-                        <option value="">Selecione a forma</option>
-                        {% for payment_value, payment_label in member_profile_payment_method_options|default({}) %}
-                          <option value="{{ payment_value }}"{% if member_profile_form.preferred_payment_method|default('') == payment_value %} selected{% endif %}>{{ payment_label }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="nc-admin-login-field nc-member-profile-field-full">
-                    <label class="nc-admin-login-label" for="contribution_plan_label">
-                      Plano definido pela diretoria
-                      <span class="nc-member-profile-tag {{ member_profile_requires_contribution ? 'is-required' : 'is-optional' }}">{{ member_profile_requires_contribution ? 'Pode substituir o valor' : 'Opcional' }}</span>
-                    </label>
-                    <input class="nc-admin-login-input" id="contribution_plan_label" name="contribution_plan_label" type="text" value="{{ member_profile_form.contribution_plan_label|default('') }}" placeholder="Ex: Plano associado efetivo 2026">
-                  </div>
+                  {% endif %}
                 </div>
               </section>
 
               <section class="nc-member-profile-group" aria-labelledby="member-profile-consents-title">
                 <div class="nc-member-profile-group-header">
                   <h3 id="member-profile-consents-title">Autorizações</h3>
-                  <p class="nc-member-subtitle">Defina como o CEDE pode encaminhar cobranças, lembretes e registrar a ciência do aviso de privacidade.</p>
+                  <p class="nc-member-subtitle">
+                    {% if member_profile_requires_contribution %}
+                      Defina como o CEDE pode encaminhar cobranças, lembretes e registrar a ciência do aviso de privacidade.
+                    {% else %}
+                      A ciência de privacidade continua obrigatória. As autorizações de cobrança aparecem quando a contribuição estiver ativa neste cadastro.
+                    {% endif %}
+                  </p>
                 </div>
 
                 <div class="nc-member-profile-group-grid nc-member-profile-group-grid-single">
-                  <div class="nc-admin-login-field nc-member-profile-field-full">
-                    <label class="nc-member-profile-consent" for="billing_email_opt_in">
-                      <input id="billing_email_opt_in" name="billing_email_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_email_opt_in|default('') == '1' %} checked{% endif %}>
-                      <span>Autorizo o CEDE a enviar cobranças e segunda via por e-mail.</span>
-                    </label>
-                  </div>
+                  {% if member_profile_requires_contribution %}
+                    <div class="nc-admin-login-field nc-member-profile-field-full">
+                      <label class="nc-member-profile-consent" for="billing_email_opt_in">
+                        <input id="billing_email_opt_in" name="billing_email_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_email_opt_in|default('') == '1' %} checked{% endif %}>
+                        <span>Autorizo o CEDE a enviar cobranças e segunda via por e-mail.</span>
+                      </label>
+                    </div>
 
-                  <div class="nc-admin-login-field nc-member-profile-field-full">
-                    <label class="nc-member-profile-consent" for="billing_whatsapp_opt_in">
-                      <input id="billing_whatsapp_opt_in" name="billing_whatsapp_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_whatsapp_opt_in|default('') == '1' %} checked{% endif %}>
-                      <span>Autorizo o CEDE a enviar lembretes de contribuição por WhatsApp.</span>
-                    </label>
-                  </div>
+                    <div class="nc-admin-login-field nc-member-profile-field-full">
+                      <label class="nc-member-profile-consent" for="billing_whatsapp_opt_in">
+                        <input id="billing_whatsapp_opt_in" name="billing_whatsapp_opt_in" type="checkbox" value="1"{% if member_profile_form.billing_whatsapp_opt_in|default('') == '1' %} checked{% endif %}>
+                        <span>Autorizo o CEDE a enviar lembretes de contribuição por WhatsApp.</span>
+                      </label>
+                    </div>
+                  {% else %}
+                    <div class="nc-admin-login-field nc-member-profile-field-full">
+                      <div class="nc-member-profile-consent-status" role="status">
+                        {% if member_profile_contributor_label|default('') == 'Não declarou' %}
+                          A administração ainda não definiu se este cadastro participa da contribuição mensal. Por isso, as autorizações de cobrança ficam indisponíveis por enquanto.
+                        {% else %}
+                          Como este cadastro não participa da contribuição mensal, o sistema não precisa de autorizações de cobrança neste momento.
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endif %}
 
                   <div class="nc-admin-login-field nc-member-profile-field-full">
                     {% if member_profile_privacy_notice_required %}

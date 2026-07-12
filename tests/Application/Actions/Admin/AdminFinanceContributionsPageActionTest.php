@@ -52,7 +52,15 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             'billing_whatsapp_opt_in' => 1,
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($paidCandidateId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole(
+            $paidCandidateId,
+            1,
+            'Atendimento fraterno',
+            'efetivo',
+            'member',
+            true,
+            'active'
+        );
 
         $pendingProfileId = $memberAuthRepository->createPendingUser([
             'full_name' => 'Carlos Pereira',
@@ -64,7 +72,15 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             'cpf' => '12345678909',
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($pendingProfileId, 1, 'Mediunidade', 'fundador');
+        $memberAuthRepository->approveAndAssignRole(
+            $pendingProfileId,
+            1,
+            'Mediunidade',
+            'fundador',
+            'member',
+            true,
+            'active'
+        );
 
         $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
@@ -381,7 +397,7 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             'billing_email_opt_in' => 1,
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
         $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
         $app = $this->getAppInstance();
@@ -444,7 +460,7 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             'billing_whatsapp_opt_in' => 1,
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
         $memberAuthRepository->generateContributionCharges('2026-06', 7);
         $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
@@ -481,7 +497,7 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
             'billing_whatsapp_opt_in' => 1,
             'profile_completed' => 1,
         ]);
-        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+        $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
         $memberAuthRepository->generateContributionCharges('2026-06', 7);
         $memberAuthRepository->generateContributionCharges('2026-07', 7);
 
@@ -527,7 +543,7 @@ final class AdminFinanceContributionsPageActionTest extends TestCase
                 'billing_email_opt_in' => 1,
                 'profile_completed' => 1,
             ]);
-            $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo');
+            $memberAuthRepository->approveAndAssignRole($userId, 1, 'Atendimento fraterno', 'efetivo', 'member', true, 'active');
         }
 
         $memberAuthRepository->generateContributionCharges('2026-07', 7);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Page;
 
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\ContributionParticipation;
 use DateTimeImmutable;
 use DateTimeZone;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -188,7 +189,7 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
         $associationStatusLabel = $this->resolveAssociationStatusLabel($associationStatus);
         $memberTypeLabel = $this->resolveMemberTypeLabel((string) ($member['member_type_label'] ?? ''), (string) ($member['member_type'] ?? ''));
         $institutionalRole = trim((string) ($member['institutional_role'] ?? ''));
-        $isContributor = (int) ($member['is_contributor'] ?? 0) === 1;
+        $contributorLabel = ContributionParticipation::label($member['is_contributor'] ?? null);
         $privacyAccepted = $usingSubmittedPreview
             ? (($submittedData['privacy_notice_acknowledged'] ?? '') === '1')
             : trim((string) ($member['privacy_notice_accepted_at'] ?? '')) !== '';
@@ -214,7 +215,7 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
             ],
             [
                 'label' => 'Contribui',
-                'value' => $isContributor ? 'Sim' : 'Não',
+                'value' => $contributorLabel,
             ],
             [
                 'label' => 'Função no CEDE',
@@ -277,7 +278,7 @@ class MemberCompleteProfilePdfAction extends AbstractMemberGuardedPageAction
                         ['label' => 'Autoriza envio por e-mail', 'value' => $billingEmailOptIn ? 'Sim' : 'Não'],
                         ['label' => 'Autoriza envio por WhatsApp', 'value' => $billingWhatsappOptIn ? 'Sim' : 'Não'],
                         ['label' => 'Ciência da privacidade', 'value' => $privacyAccepted ? 'Registrada' : 'Pendente'],
-                        ['label' => 'Plano definido pela diretoria', 'value' => $this->displayValue($contributionPlanLabel), 'wide' => true],
+                        ['label' => 'Plano de Associado', 'value' => $this->displayValue($contributionPlanLabel), 'wide' => true],
                     ],
                 ],
             ],

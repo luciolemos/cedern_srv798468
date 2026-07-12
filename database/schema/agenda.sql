@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS member_users (
     institutional_role VARCHAR(120) NULL,
     member_type VARCHAR(20) NULL,
     association_status VARCHAR(20) NOT NULL DEFAULT 'applicant',
-    is_contributor TINYINT(1) NOT NULL DEFAULT 0,
+    is_contributor TINYINT(1) NULL DEFAULT NULL,
     profile_photo_path VARCHAR(255) NULL,
     privacy_notice_version VARCHAR(40) NULL,
     privacy_notice_accepted_at DATETIME NULL,
