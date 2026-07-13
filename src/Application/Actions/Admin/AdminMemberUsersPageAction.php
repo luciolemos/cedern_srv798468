@@ -7,6 +7,7 @@ namespace App\Application\Actions\Admin;
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
 use App\Support\ContributionParticipation;
+use App\Support\InstitutionalRole;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -29,7 +30,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
     private const INSTITUTIONAL_ROLE_OPTIONS = [
         'Presidente CEDE',
         'Vice-presidente CEDE',
-        'Secretário',
+        '1º Secretário',
+        '2º Secretário',
         'Diretor de Finanças',
         'Diretor de Eventos',
         'Diretor de Patrimônio',
@@ -86,7 +88,9 @@ class AdminMemberUsersPageAction extends AbstractPageAction
         $selectedStatusFilter = strtolower(trim((string) ($queryParams['status_filter'] ?? '')));
         $selectedAssociationStatusFilter = strtolower(trim((string) ($queryParams['association_status_filter'] ?? '')));
         $selectedContributorFilter = strtolower(trim((string) ($queryParams['contributor_filter'] ?? '')));
-        $selectedInstitutionalRoleFilter = trim((string) ($queryParams['institutional_role_filter'] ?? ''));
+        $selectedInstitutionalRoleFilter = InstitutionalRole::normalize(
+            trim((string) ($queryParams['institutional_role_filter'] ?? ''))
+        ) ?? '';
 
         $users = [];
         $roles = [];
@@ -150,6 +154,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                 'former' => 'Desligado',
                 default => 'Solicitante',
             };
+            $user['institutional_role'] = InstitutionalRole::normalize((string) ($user['institutional_role'] ?? '')) ?? '';
             $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
             $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
             $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
@@ -159,7 +164,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
 
         $institutionalRoleFilterOptions = self::INSTITUTIONAL_ROLE_OPTIONS;
         foreach ($users as $user) {
-            $role = trim((string) ($user['institutional_role'] ?? ''));
+            $role = trim((string) $user['institutional_role']);
             if ($role !== '' && !in_array($role, $institutionalRoleFilterOptions, true)) {
                 $institutionalRoleFilterOptions[] = $role;
             }
@@ -256,7 +261,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    trim((string) ($user['institutional_role'] ?? '')) === $selectedInstitutionalRoleFilter
+                    trim((string) $user['institutional_role']) === $selectedInstitutionalRoleFilter
             ));
         }
 
@@ -278,7 +283,7 @@ class AdminMemberUsersPageAction extends AbstractPageAction
                         (string) ($user['email'] ?? ''),
                         (string) ($user['status'] ?? ''),
                         (string) $user['role_name_display'],
-                        (string) ($user['institutional_role'] ?? ''),
+                        (string) $user['institutional_role'],
                         (string) $user['member_type_label'],
                         (string) $user['association_status_label'],
                         (string) $user['contributor_label'],
@@ -318,8 +323,8 @@ class AdminMemberUsersPageAction extends AbstractPageAction
             $user['phone_mobile_display'] = $this->formatMobilePhone((string) ($user['phone_mobile'] ?? ''));
             $user['phone_landline_display'] = $this->formatLandlinePhone((string) ($user['phone_landline'] ?? ''));
             $user['status_label'] = $this->resolveAccessStatusLabel((string) ($user['status'] ?? ''));
-            $user['institutional_role_display'] = trim((string) ($user['institutional_role'] ?? '')) !== ''
-                ? trim((string) ($user['institutional_role'] ?? ''))
+            $user['institutional_role_display'] = trim((string) $user['institutional_role']) !== ''
+                ? trim((string) $user['institutional_role'])
                 : '-';
 
             return $user;

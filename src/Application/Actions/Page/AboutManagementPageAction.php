@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Page;
 
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\InstitutionalRole;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -16,7 +17,8 @@ class AboutManagementPageAction extends AbstractPageAction
     private const ROLE_DISPLAY_ORDER = [
         'Presidente CEDE',
         'Vice-presidente CEDE',
-        'Secretário',
+        '1º Secretário',
+        '2º Secretário',
         'Diretor de Finanças',
         'Diretor de Eventos',
         'Diretor de Patrimônio',
@@ -32,6 +34,7 @@ class AboutManagementPageAction extends AbstractPageAction
         'Vice presidente CEDE' => 'Vice-presidente CEDE',
         'Vice Presidente CEDE' => 'Vice-presidente CEDE',
         'Vice-Presidente CEDE' => 'Vice-presidente CEDE',
+        'Secretário' => '1º Secretário',
     ];
 
     private const ROLE_RESPONSIBILITIES = [
@@ -41,9 +44,12 @@ class AboutManagementPageAction extends AbstractPageAction
         'Vice-presidente CEDE' =>
             'Apoia a presidência na coordenação geral, acompanha frentes prioritárias '
             . 'e substitui a presidência quando necessário.',
-        'Secretário' =>
+        '1º Secretário' =>
             'Organiza registros administrativos, atas e comunicações internas '
             . 'para dar suporte à governança institucional.',
+        '2º Secretário' =>
+            'Apoia o 1º Secretário na organização administrativa, no acompanhamento de registros '
+            . 'e na continuidade das comunicações internas da instituição.',
         'Diretor de Finanças' =>
             'Planeja e acompanha orçamento, receitas e despesas, promovendo '
             . 'uso responsável dos recursos da instituição.',
@@ -148,7 +154,7 @@ class AboutManagementPageAction extends AbstractPageAction
     {
         $normalizedRole = trim((string) preg_replace('/\s+/', ' ', trim($role)));
 
-        return self::ROLE_ALIASES[$normalizedRole] ?? $normalizedRole;
+        return self::ROLE_ALIASES[$normalizedRole] ?? InstitutionalRole::normalize($normalizedRole) ?? $normalizedRole;
     }
 
     private static function resolveRoleDisplayPosition(string $role): int

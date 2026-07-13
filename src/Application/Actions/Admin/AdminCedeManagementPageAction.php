@@ -6,6 +6,7 @@ namespace App\Application\Actions\Admin;
 
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
+use App\Support\InstitutionalRole;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -42,7 +43,9 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         $queryParams = $request->getQueryParams();
         $exportFormat = strtolower(trim((string) ($queryParams['export'] ?? '')));
         $searchTerm = trim((string) ($queryParams['q'] ?? ''));
-        $selectedInstitutionalRole = trim((string) ($queryParams['institutional_role'] ?? ''));
+        $selectedInstitutionalRole = InstitutionalRole::normalize(
+            trim((string) ($queryParams['institutional_role'] ?? ''))
+        ) ?? '';
         $selectedStatus = trim((string) ($queryParams['status_filter'] ?? ''));
         $status = (string) ($queryParams['status'] ?? '');
 
@@ -66,6 +69,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                 ? $memberType
                 : '';
             $user['member_type_label'] = self::MEMBER_TYPE_OPTIONS[$user['member_type']] ?? 'Não definido';
+            $user['institutional_role'] = InstitutionalRole::normalize((string) ($user['institutional_role'] ?? '')) ?? '';
             $associationStatus = strtolower(trim((string) ($user['association_status'] ?? '')));
             $user['association_status'] = in_array($associationStatus, ['applicant', 'member', 'former'], true)
                 ? $associationStatus
@@ -78,12 +82,12 @@ class AdminCedeManagementPageAction extends AbstractPageAction
         $users = array_values(array_filter(
             $users,
             static fn (array $user): bool =>
-                trim((string) ($user['institutional_role'] ?? '')) !== ''
+                trim((string) $user['institutional_role']) !== ''
                 && strtolower(trim((string) $user['association_status'])) === 'member'
         ));
 
         $institutionalRoleOptions = array_values(array_unique(array_map(
-            static fn (array $user): string => trim((string) ($user['institutional_role'] ?? '')),
+            static fn (array $user): string => trim((string) $user['institutional_role']),
             $users
         )));
         $institutionalRoleOptions = array_values(array_filter(
@@ -100,7 +104,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
             $users = array_values(array_filter(
                 $users,
                 static fn (array $user): bool =>
-                    (string) ($user['institutional_role'] ?? '') === $selectedInstitutionalRole
+                    (string) $user['institutional_role'] === $selectedInstitutionalRole
             ));
         } else {
             $selectedInstitutionalRole = '';
@@ -125,7 +129,7 @@ class AdminCedeManagementPageAction extends AbstractPageAction
                     $haystack = implode(' ', [
                         (string) ($user['full_name'] ?? ''),
                         (string) ($user['email'] ?? ''),
-                        (string) ($user['institutional_role'] ?? ''),
+                        (string) $user['institutional_role'],
                         (string) $user['member_type_label'],
                         (string) $user['association_status'],
                         (string) $user['role_name_display'],

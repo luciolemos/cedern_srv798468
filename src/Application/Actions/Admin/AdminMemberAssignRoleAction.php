@@ -9,6 +9,7 @@ use App\Application\Support\InstitutionalEmailTemplate;
 use App\Application\Support\SmtpSettings;
 use App\Domain\Member\MemberAuthRepository;
 use App\Support\ContributionParticipation;
+use App\Support\InstitutionalRole;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -22,7 +23,8 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
     private const EXCLUSIVE_INSTITUTIONAL_ROLES = [
         'Presidente CEDE',
         'Vice-presidente CEDE',
-        'Secretário',
+        '1º Secretário',
+        '2º Secretário',
         'Diretor de Finanças',
         'Diretor de Eventos',
         'Diretor de Patrimônio',
@@ -34,7 +36,8 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
     private const INSTITUTIONAL_ROLE_OPTIONS = [
         'Presidente CEDE',
         'Vice-presidente CEDE',
-        'Secretário',
+        '1º Secretário',
+        '2º Secretário',
         'Diretor de Finanças',
         'Diretor de Eventos',
         'Diretor de Patrimônio',
@@ -79,8 +82,10 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $roleId = (int) ($body['role_id'] ?? 0);
         $institutionalRoleInput = trim((string) ($body['institutional_role'] ?? ''));
         $hasInstitutionalRoleInput = $institutionalRoleInput !== '';
-        $institutionalRole = in_array($institutionalRoleInput, self::INSTITUTIONAL_ROLE_OPTIONS, true)
-            ? $institutionalRoleInput
+        $normalizedInstitutionalRoleInput = InstitutionalRole::normalize($institutionalRoleInput);
+        $institutionalRole = $normalizedInstitutionalRoleInput !== null
+            && in_array($normalizedInstitutionalRoleInput, self::INSTITUTIONAL_ROLE_OPTIONS, true)
+            ? $normalizedInstitutionalRoleInput
             : null;
         $memberTypeInput = strtolower(trim((string) ($body['member_type'] ?? '')));
         $hasMemberTypeInput = $memberTypeInput !== '';
@@ -395,7 +400,7 @@ class AdminMemberAssignRoleAction extends AbstractPageAction
         $safeEmail = htmlspecialchars($normalizedEmail, ENT_QUOTES, 'UTF-8');
         $safeRoleName = htmlspecialchars($resolvedRoleName, ENT_QUOTES, 'UTF-8');
         $memberTypeLabel = $this->resolveMemberTypeLabel($memberType);
-        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedInstitutionalRole = InstitutionalRole::normalize($this->nullableText($institutionalRole));
         $detailLines = [
             '<p style="margin:0 0 8px;"><strong>Nome:</strong> ' . $safeFullName . '</p>',
             '<p style="margin:0 0 8px;"><strong>E-mail de acesso:</strong> ' . $safeEmail . '</p>',
