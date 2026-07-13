@@ -21,6 +21,7 @@ use App\Application\Actions\Admin\AdminBookshopBookExportCsvAction;
 use App\Application\Actions\Admin\AdminBookshopBookFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookListPageAction;
 use App\Application\Actions\Admin\AdminBookshopBookLotsPageAction;
+use App\Application\Actions\Admin\AdminBookshopBookPdfAction;
 use App\Application\Actions\Admin\AdminBookshopBookViewPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionFormPageAction;
 use App\Application\Actions\Admin\AdminBookshopCollectionListPageAction;
@@ -426,6 +427,8 @@ return function (App $app) {
         $group->map(['GET', 'POST'], '/livraria/acervo/novo', AdminBookshopBookFormPageAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->get('/livraria/acervo/{id}/lotes', AdminBookshopBookLotsPageAction::class)
+            ->add($panelBookshopAccessMiddleware);
+        $group->get('/livraria/acervo/{id}/pdf', AdminBookshopBookPdfAction::class)
             ->add($panelBookshopAccessMiddleware);
         $group->get('/livraria/acervo/{id}', AdminBookshopBookViewPageAction::class)
             ->add($panelBookshopAccessMiddleware);

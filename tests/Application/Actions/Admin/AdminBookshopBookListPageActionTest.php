@@ -133,6 +133,49 @@ class AdminBookshopBookListPageActionTest extends TestCase
         $this->assertStringContainsString('category_filter=Doutrina', $exportUrl);
     }
 
+    public function testRendersPdfActionLinkForEachBookRow(): void
+    {
+        $books = [
+            $this->buildBook(1, 'Livro A', 'A-1', 2),
+        ];
+
+        $action = $this->createAction($books, [], []);
+        $request = $this->createRequest('GET', '/painel/livraria/acervo');
+
+        $response = $action($request, new Response());
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $html = $twig->fetch($action->capturedTemplate, array_merge($action->capturedData, [
+            'base_url' => '',
+            'current_path' => '/painel/livraria/acervo',
+            'csrf_token' => 'test-token',
+            'csrf_field_name' => '_csrf',
+            'dashboard_user' => 'Administrador de Teste',
+            'dashboard_user_photo_path' => '',
+            'dashboard_is_authenticated' => true,
+            'dashboard_is_admin_session' => true,
+            'dashboard_env_label' => 'Homologação',
+            'dashboard_env_tone' => 'test',
+            'dashboard_admin_notifications' => [],
+            'dashboard_admin_pending_users' => [],
+            'dashboard_admin_notification_count' => 0,
+            'member_is_authenticated' => true,
+            'member_name' => 'Administrador de Teste',
+            'member_role_key' => 'admin',
+            'member_role_name' => 'Administrador',
+            'member_profile_photo_path' => '',
+        ]));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('/painel/livraria/acervo/1/pdf', $html);
+        $this->assertStringContainsString('Abrir PDF do livro', $html);
+    }
+
     /**
      * @param array<int, array<string, mixed>> $books
      * @param array<int, array<string, mixed>> $categories
