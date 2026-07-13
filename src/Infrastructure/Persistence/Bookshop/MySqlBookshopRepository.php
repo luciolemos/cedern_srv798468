@@ -87,6 +87,32 @@ class MySqlBookshopRepository implements BookshopRepository
         return $this->withSchemaRetry($operation);
     }
 
+    public function findCatalogBookBySlug(string $slug): ?array
+    {
+        $normalizedSlug = trim($slug);
+        if ($normalizedSlug === '') {
+            return null;
+        }
+
+        $operation = function () use ($normalizedSlug): ?array {
+            $statement = $this->pdo->prepare(
+                $this->buildBookSelect() . " WHERE b.status = 'active' AND b.slug = :slug LIMIT 1"
+            );
+            $statement->bindValue(':slug', $normalizedSlug, \PDO::PARAM_STR);
+            $statement->execute();
+
+            $book = $statement->fetch();
+
+            if (!$book) {
+                return null;
+            }
+
+            return $this->normalizeBook($book);
+        };
+
+        return $this->withSchemaRetry($operation);
+    }
+
     public function findAllBooksForAdmin(): array
     {
         $operation = function (): array {

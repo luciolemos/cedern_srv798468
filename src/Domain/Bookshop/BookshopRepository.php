@@ -22,6 +22,11 @@ interface BookshopRepository
     public function findCatalogGenres(): array;
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function findCatalogBookBySlug(string $slug): ?array;
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public function findAllBooksForAdmin(): array;

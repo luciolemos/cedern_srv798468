@@ -23,6 +23,11 @@ class FallbackBookshopRepository implements BookshopRepository
         return [];
     }
 
+    public function findCatalogBookBySlug(string $slug): ?array
+    {
+        return null;
+    }
+
     public function findAllBooksForAdmin(): array
     {
         return [];

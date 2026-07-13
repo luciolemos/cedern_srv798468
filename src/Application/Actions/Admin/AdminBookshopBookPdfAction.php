@@ -81,12 +81,17 @@ class AdminBookshopBookPdfAction extends AbstractAdminBookshopAction
         Request $request,
         Response $response,
         array $book,
-        ?string $documentUrlOverride = null
+        ?string $documentUrlOverride = null,
+        array $documentOverrides = []
     ): Response {
         $documentData = $this->buildDocumentData($request, $book);
 
         if ($documentUrlOverride !== null && trim($documentUrlOverride) !== '') {
             $documentData['pdf_document_url'] = $documentUrlOverride;
+        }
+
+        if ($documentOverrides !== []) {
+            $documentData = array_merge($documentData, $documentOverrides);
         }
 
         $html = $this->twig->getEnvironment()->render('pages/admin-bookshop-book-pdf.twig', $documentData);

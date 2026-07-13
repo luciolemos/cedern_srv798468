@@ -109,6 +109,7 @@ use App\Application\Actions\Page\FraternalServicePageAction;
 use App\Application\Actions\Page\HomePageAction;
 use App\Application\Actions\Page\LibraryPageAction;
 use App\Application\Actions\Page\StoreBazaarPageAction;
+use App\Application\Actions\Page\StoreBookshopBookPdfAction;
 use App\Application\Actions\Page\StoreBookshopIiPageAction;
 use App\Application\Actions\Page\StoreBookshopPageAction;
 use App\Application\Actions\Page\StorePageAction;
@@ -310,6 +311,7 @@ return function (App $app) {
     $app->get('/loja', StorePageAction::class);
     $app->get('/loja/bazar', StoreBazaarPageAction::class);
     $app->get('/loja/livraria', StoreBookshopIiPageAction::class);
+    $app->get('/loja/livraria/{slug}/pdf', StoreBookshopBookPdfAction::class);
     $app->get('/loja/livraria-ii', function (Request $request, Response $response) {
         $queryString = trim($request->getUri()->getQuery());
         $target = '/loja/livraria' . ($queryString !== '' ? '?' . $queryString : '');

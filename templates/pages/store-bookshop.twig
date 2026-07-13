@@ -238,6 +238,18 @@
                     </div>
                     <span class="nc-store-status {{ book.store_availability_class|default('is-live') }}">{{ book.store_availability_label|default('Disponivel no balcao') }}</span>
                   </div>
+                  {% if book.slug|default('') %}
+                    <div class="nc-actions is-stacked-mobile">
+                      <a
+                        class="nc-btn nc-btn-secondary nc-btn-block-mobile"
+                        href="{{ bookshop_base_path }}/{{ book.slug }}/pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Abrir ficha para impressão
+                      </a>
+                    </div>
+                  {% endif %}
                 </div>
               </div>
 
