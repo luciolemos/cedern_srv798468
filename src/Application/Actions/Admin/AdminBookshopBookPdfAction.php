@@ -9,15 +9,11 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use RuntimeException;
 use Throwable;
 
 class AdminBookshopBookPdfAction extends AbstractAdminBookshopAction
 {
     private const DOCUMENT_TIMEZONE = 'America/Fortaleza';
-    private const PLAYWRIGHT_BROWSER_CACHE_DIR = 'var/cache/ms-playwright';
-    private const PRINTABLE_HTML_FALLBACK_NOTICE =
-        'Gerador de PDF indisponível neste servidor no momento. Use a impressão do navegador para salvar em PDF.';
 
     public function __invoke(Request $request, Response $response): Response
     {
@@ -57,107 +53,50 @@ class AdminBookshopBookPdfAction extends AbstractAdminBookshopAction
         $book['description'] = BookshopDescriptionSanitizer::sanitizeForDisplay((string) ($book['description'] ?? ''));
 
         try {
-            $documentData = $this->buildDocumentData($request, $book);
-            $documentData['pdf_document_url'] = $this->buildAbsoluteAppUrl($request, '/painel/livraria/acervo/' . $bookId);
-            $html = $this->twig->getEnvironment()->render('pages/admin-bookshop-book-pdf.twig', $documentData);
-            $pdfBinary = $this->renderPdfFromHtml($html);
-        } catch (Throwable $exception) {
-            $this->logger->error('Falha ao gerar PDF administrativo do item do acervo da livraria.', [
-                'book_id' => $bookId,
-                'error' => $exception->getMessage(),
-            ]);
-
-            $fallbackResponse = $this->respondWithPrintableHtmlFallback(
+            $documentResponse = $this->respondWithPrintableHtmlDocument(
                 $request,
                 $response,
                 $book,
                 $this->buildAbsoluteAppUrl($request, '/painel/livraria/acervo/' . $bookId)
             );
-            if ($fallbackResponse !== null) {
-                return $fallbackResponse;
-            }
-
-            $response->getBody()->write('Não foi possível gerar o PDF do livro neste momento.');
+        } catch (Throwable $exception) {
+            $this->logger->error('Falha ao gerar ficha para impressão do item do acervo da livraria.', [
+                'book_id' => $bookId,
+                'error' => $exception->getMessage(),
+            ]);
+            $response->getBody()->write('Não foi possível preparar a ficha para impressão do livro neste momento.');
 
             return $response
                 ->withStatus(500)
                 ->withHeader('Content-Type', 'text/plain; charset=utf-8');
         }
 
-        $response->getBody()->write($pdfBinary);
-
-        return $response
-            ->withHeader('Content-Type', 'application/pdf')
-            ->withHeader('Content-Disposition', 'inline; filename="' . $this->buildPdfFileName($book) . '"')
-            ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->withHeader('Pragma', 'no-cache');
+        return $documentResponse;
     }
 
     /**
      * @param array<string, mixed> $book
      */
-    protected function respondWithPrintableHtmlFallback(
+    protected function respondWithPrintableHtmlDocument(
         Request $request,
         Response $response,
         array $book,
         ?string $documentUrlOverride = null
-    ): ?Response {
-        try {
-            $documentData = $this->buildDocumentData($request, $book);
-            $documentData['pdf_notice'] = self::PRINTABLE_HTML_FALLBACK_NOTICE;
+    ): Response {
+        $documentData = $this->buildDocumentData($request, $book);
 
-            if ($documentUrlOverride !== null && trim($documentUrlOverride) !== '') {
-                $documentData['pdf_document_url'] = $documentUrlOverride;
-            }
-
-            $html = $this->twig->getEnvironment()->render('pages/admin-bookshop-book-pdf.twig', $documentData);
-        } catch (Throwable $fallbackException) {
-            $this->logger->error('Falha ao gerar fallback HTML do PDF do item do acervo da livraria.', [
-                'book_id' => (int) ($book['id'] ?? 0),
-                'error' => $fallbackException->getMessage(),
-            ]);
-
-            return null;
+        if ($documentUrlOverride !== null && trim($documentUrlOverride) !== '') {
+            $documentData['pdf_document_url'] = $documentUrlOverride;
         }
+
+        $html = $this->twig->getEnvironment()->render('pages/admin-bookshop-book-pdf.twig', $documentData);
 
         $response->getBody()->write($html);
 
         return $response
             ->withHeader('Content-Type', 'text/html; charset=utf-8')
-            ->withHeader('X-Cede-Document-Fallback', 'html')
             ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->withHeader('Pragma', 'no-cache');
-    }
-
-    protected function renderPdfFromHtml(string $html): string
-    {
-        $exportDirectory = $this->prepareExportDirectory();
-        $exportToken = date('YmdHis') . '-' . bin2hex(random_bytes(6));
-        $htmlPath = $exportDirectory . '/ficha-acervo-' . $exportToken . '.html';
-        $pdfPath = $exportDirectory . '/ficha-acervo-' . $exportToken . '.pdf';
-
-        if (file_put_contents($htmlPath, $html) === false) {
-            throw new RuntimeException('Não foi possível preparar o HTML temporário do PDF.');
-        }
-
-        try {
-            $this->runPdfCommand($htmlPath, $pdfPath);
-            clearstatcache(true, $pdfPath);
-
-            if (!is_file($pdfPath) || filesize($pdfPath) < 1) {
-                throw new RuntimeException('O arquivo PDF não foi criado.');
-            }
-
-            $pdfBinary = file_get_contents($pdfPath);
-            if ($pdfBinary === false) {
-                throw new RuntimeException('Não foi possível ler o PDF gerado.');
-            }
-
-            return $pdfBinary;
-        } finally {
-            @unlink($htmlPath);
-            @unlink($pdfPath);
-        }
     }
 
     /**
@@ -200,131 +139,6 @@ class AdminBookshopBookPdfAction extends AbstractAdminBookshopAction
             'pdf_sections' => [],
             'pdf_description_html' => trim(strip_tags($descriptionHtml)) !== '' ? $descriptionHtml : '',
         ];
-    }
-
-    /**
-     * @param array<string, mixed> $book
-     */
-    private function buildPdfFileName(array $book): string
-    {
-        $baseName = trim((string) ($book['slug'] ?? ''));
-
-        if ($baseName === '') {
-            $baseName = trim((string) ($book['sku'] ?? ''));
-        }
-
-        if ($baseName === '') {
-            $baseName = trim((string) ($book['title'] ?? 'livro-acervo'));
-        }
-
-        $slug = $this->slugify($baseName);
-        if ($slug === '') {
-            $slug = 'livro-acervo';
-        }
-
-        return 'ficha-acervo-' . $slug . '.pdf';
-    }
-
-    private function prepareExportDirectory(): string
-    {
-        $directory = dirname(__DIR__, 4) . '/var/cache/bookshop-book-pdf';
-
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('Não foi possível criar o diretório temporário do PDF.');
-        }
-
-        if (!is_writable($directory)) {
-            @chmod($directory, 0775);
-            clearstatcache(true, $directory);
-        }
-
-        if (!is_writable($directory)) {
-            throw new RuntimeException('O diretório temporário do PDF não está gravável.');
-        }
-
-        return $directory;
-    }
-
-    private function runPdfCommand(string $htmlPath, string $pdfPath): void
-    {
-        $nodeBinary = trim((string) ($_ENV['NODE_BINARY'] ?? 'node'));
-        $nodeScript = dirname(__DIR__, 4) . '/scripts/export_bookshop_manual_pdf.mjs';
-        $playwrightBrowsersPath = $this->preparePlaywrightBrowserCacheDirectory();
-
-        if (!is_file($nodeScript)) {
-            throw new RuntimeException('O script de exportação do PDF não foi encontrado.');
-        }
-
-        $command = sprintf(
-            'PLAYWRIGHT_BROWSERS_PATH=%s %s %s %s %s',
-            escapeshellarg($playwrightBrowsersPath),
-            escapeshellarg($nodeBinary),
-            escapeshellarg($nodeScript),
-            escapeshellarg($htmlPath),
-            escapeshellarg($pdfPath)
-        );
-
-        if (function_exists('proc_open')) {
-            $descriptorSpec = [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ];
-
-            $process = proc_open($command, $descriptorSpec, $pipes, dirname(__DIR__, 4));
-            if (!is_resource($process)) {
-                throw new RuntimeException('Não foi possível iniciar o gerador de PDF.');
-            }
-
-            fclose($pipes[0]);
-            $stdout = stream_get_contents($pipes[1]) ?: '';
-            fclose($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]) ?: '';
-            fclose($pipes[2]);
-            $exitCode = proc_close($process);
-
-            if ($exitCode !== 0) {
-                throw new RuntimeException(
-                    'Falha ao executar o gerador de PDF.'
-                    . ($stderr !== '' ? ' ' . trim($stderr) : '')
-                    . ($stdout !== '' ? ' ' . trim($stdout) : '')
-                );
-            }
-
-            return;
-        }
-
-        if (function_exists('exec')) {
-            $output = [];
-            $exitCode = 0;
-            exec($command . ' 2>&1', $output, $exitCode);
-
-            if ($exitCode !== 0) {
-                throw new RuntimeException('Falha ao executar o gerador de PDF. ' . trim(implode("\n", $output)));
-            }
-
-            return;
-        }
-
-        throw new RuntimeException('Nenhum executor de comando está disponível para gerar o PDF.');
-    }
-
-    private function preparePlaywrightBrowserCacheDirectory(): string
-    {
-        $directory = dirname(__DIR__, 4) . '/' . self::PLAYWRIGHT_BROWSER_CACHE_DIR;
-
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('Não foi possível preparar o cache local do Playwright.');
-        }
-
-        @chmod($directory, 0775);
-        clearstatcache(true, $directory);
-
-        if (!is_dir($directory) || !is_readable($directory) || !is_executable($directory)) {
-            throw new RuntimeException('O cache local do Playwright não está acessível.');
-        }
-
-        return $directory;
     }
 
     /**

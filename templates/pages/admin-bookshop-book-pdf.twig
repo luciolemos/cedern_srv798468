@@ -2,11 +2,12 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LIVRARIA AUTA DE SOUSA | CEDE</title>
     <style>
       @page {
         size: A4;
-        margin: 18mm 14mm 16mm 14mm;
+        margin: 16mm 15mm 18mm 15mm;
       }
 
       :root {
@@ -24,33 +25,60 @@
       }
 
       body {
-        color: #1f2933;
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: 11pt;
-        line-height: 1.55;
+        color: #1c2832;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        line-height: 1.42;
+        background: #fff;
+      }
+
+      .pdf-screen-toolbar {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 50;
+        display: flex;
+      }
+
+      .pdf-screen-print-button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        background: #16222c;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.8pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3.2mm 4.8mm;
+        cursor: pointer;
+        box-shadow: 0 2.5mm 6mm rgba(22, 34, 44, 0.18);
+      }
+
+      .pdf-screen-print-button:hover {
+        background: #243240;
       }
 
       .pdf-running-header {
         position: fixed;
         left: 0;
         right: 0;
-        color: #4f5f6f;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 9pt;
+        color: #4a5762;
+        font-size: 8pt;
       }
 
       .pdf-running-header {
-        top: -12mm;
+        top: -14mm;
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        border-bottom: 0.35mm solid #d8dee4;
-        padding: 0 14mm 2.4mm;
+        align-items: center;
+        padding: 0 15mm 3mm;
       }
 
       .pdf-document {
         display: grid;
-        gap: 7mm;
+        gap: 6mm;
       }
 
       .pdf-section,
@@ -66,7 +94,7 @@
 
       .pdf-sheet {
         display: grid;
-        gap: 6mm;
+        gap: 5mm;
       }
 
       .pdf-document-header,
@@ -81,25 +109,30 @@
       }
 
       .pdf-document-header {
+        gap: 2.2mm;
         justify-items: center;
         text-align: center;
+        padding-bottom: 5mm;
       }
 
       .pdf-document-brand-row {
+        width: 100%;
+        padding: 1.2mm 0 1.2mm;
         display: flex;
         justify-content: center;
-        align-items: center;
-        gap: 1rem;
+        align-items: flex-start;
+        gap: 5mm;
       }
 
       .pdf-brand-block {
+        gap: 0.6mm;
         justify-items: center;
-        align-items: center;
       }
 
       .pdf-brand-logo {
-        max-height: 16mm;
-        width: auto;
+        display: block;
+        width: 18mm;
+        height: auto;
       }
 
       .pdf-brand-subtitle {
@@ -112,11 +145,10 @@
       }
 
       .pdf-brand-legal-name {
-        color: #1f2933;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 9pt;
+        color: #384654;
+        font-size: 7.9pt;
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
 
@@ -127,8 +159,11 @@
       }
 
       .pdf-title-copy h1 {
-        font-size: 22pt;
-        line-height: 1.08;
+        color: #16222c;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 15.6pt;
+        line-height: 1.12;
+        letter-spacing: 0.04em;
       }
 
       .pdf-title-copy p,
@@ -138,11 +173,24 @@
         margin: 0;
       }
 
+      .pdf-title-copy {
+        gap: 0.35mm;
+        justify-items: center;
+        text-align: center;
+        width: 100%;
+        padding: 0 0 1.2mm;
+      }
+
+      .pdf-title-copy p {
+        max-width: 118mm;
+      }
+
       .pdf-notice {
         color: #8a5a10;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 9.5pt;
+        font-size: 7.6pt;
         font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
       .pdf-document-meta-grid {
@@ -153,19 +201,28 @@
       }
 
       .pdf-meta-card {
-        padding: 4.5mm;
+        border: 0.3mm solid #dde4ea;
+        border-radius: 2.5mm;
+        background: #fbfcfd;
+        padding: 3mm 3.2mm;
       }
 
       .pdf-panel-label,
       .pdf-meta-label,
       .pdf-summary-label,
       .pdf-field-label {
-        color: #7b8794;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 8.5pt;
+        color: #76828c;
+        font-size: 7.6pt;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
+      }
+
+      .pdf-meta-value {
+        margin-top: 0.15rem;
+        color: #17232d;
+        font-size: 9.6pt;
+        font-weight: 700;
       }
 
       .pdf-meta-value,
@@ -325,7 +382,95 @@
         padding-left: 1.2rem;
       }
 
+      @media screen {
+        body {
+          padding: 56px 12px 16px;
+          background: #f4f7fa;
+        }
+
+        .pdf-running-header {
+          position: static;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 0 auto 12px;
+          padding: 0;
+          max-width: 1080px;
+          color: #52606d;
+        }
+
+        .pdf-document {
+          max-width: 1080px;
+          margin: 0 auto;
+        }
+
+        .pdf-sheet,
+        .pdf-section,
+        .pdf-description {
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+      }
+
+      @media screen and (max-width: 760px) {
+        body {
+          padding: 60px 10px 14px;
+        }
+
+        .pdf-screen-toolbar {
+          top: 10px;
+          right: 10px;
+        }
+
+        .pdf-screen-print-button {
+          padding: 10px 14px;
+        }
+
+        .pdf-running-header {
+          display: grid;
+          gap: 4px;
+          justify-items: start;
+          text-align: left;
+          margin-bottom: 10px;
+        }
+
+        .pdf-document {
+          gap: 12px;
+        }
+
+        .pdf-sheet {
+          gap: 12px;
+        }
+
+        .pdf-document-header {
+          padding-bottom: 0;
+        }
+
+        .pdf-document-meta-grid,
+        .pdf-hero,
+        .pdf-field-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .pdf-summary-card .pdf-field {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.3rem;
+        }
+
+        .pdf-field.is-span-2,
+        .pdf-field.is-span-3 {
+          grid-column: auto;
+        }
+
+        .pdf-cover-frame {
+          min-height: 56mm;
+        }
+      }
+
       @media print {
+        .pdf-screen-toolbar {
+          display: none !important;
+        }
+
         .pdf-sheet,
         .pdf-section,
         .pdf-description {
@@ -335,6 +480,10 @@
     </style>
   </head>
   <body>
+    <div class="pdf-screen-toolbar">
+      <button class="pdf-screen-print-button" type="button" onclick="window.print()">Imprimir</button>
+    </div>
+
     <header class="pdf-running-header">
       <span>Centro de Estudos da Doutrina Espírita</span>
       <span>Livraria Auta de Sousa</span>
@@ -354,7 +503,6 @@
 
           <div class="pdf-title-copy">
             <h1>LIVRARIA AUTA DE SOUSA</h1>
-            <p>Documento para conferência e impressão dos dados do título cadastrado na livraria.</p>
             {% if pdf_notice|default('') %}
               <p class="pdf-notice">{{ pdf_notice }}</p>
             {% endif %}

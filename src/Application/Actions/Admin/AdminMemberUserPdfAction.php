@@ -47,40 +47,25 @@ class AdminMemberUserPdfAction extends MemberCompleteProfilePdfAction
         }
 
         try {
-            $documentData = $this->buildDocumentData($request, $user, []);
-            $documentData['pdf_document_url'] = $this->buildAbsoluteAppUrl($request, '/painel/usuarios/' . $userId);
-            $html = $this->twig->getEnvironment()->render('pages/member-registration-form-pdf.twig', $documentData);
-            $pdfBinary = $this->renderPdfFromHtml($html);
-        } catch (Throwable $exception) {
-            $this->logger->error('Falha ao gerar PDF administrativo do formulário de cadastro do associado.', [
-                'user_id' => $userId,
-                'error' => $exception->getMessage(),
-            ]);
-
-            $fallbackResponse = $this->respondWithPrintableHtmlFallback(
+            $documentResponse = $this->respondWithPrintableHtmlDocument(
                 $request,
                 $response,
                 $user,
                 [],
                 $this->buildAbsoluteAppUrl($request, '/painel/usuarios/' . $userId)
             );
-            if ($fallbackResponse !== null) {
-                return $fallbackResponse;
-            }
-
-            $response->getBody()->write('Não foi possível gerar o PDF do cadastro neste momento.');
+        } catch (Throwable $exception) {
+            $this->logger->error('Falha ao gerar ficha para impressão administrativa do formulário de cadastro do associado.', [
+                'user_id' => $userId,
+                'error' => $exception->getMessage(),
+            ]);
+            $response->getBody()->write('Não foi possível preparar a ficha para impressão do cadastro neste momento.');
 
             return $response
                 ->withStatus(500)
                 ->withHeader('Content-Type', 'text/plain; charset=utf-8');
         }
 
-        $response->getBody()->write($pdfBinary);
-
-        return $response
-            ->withHeader('Content-Type', 'application/pdf')
-            ->withHeader('Content-Disposition', 'inline; filename="formulario-cadastro-associado.pdf"')
-            ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->withHeader('Pragma', 'no-cache');
+        return $documentResponse;
     }
 }
