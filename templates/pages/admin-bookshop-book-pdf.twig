@@ -510,7 +510,7 @@
 
           <div class="pdf-document-meta-grid">
             <div class="pdf-meta-card">
-              <div class="pdf-meta-label">Origem do cadastro</div>
+              <div class="pdf-meta-label">{{ pdf_origin_label|default('Origem do cadastro') }}</div>
               <div class="pdf-meta-value">{{ pdf_document_url|default('') }}</div>
             </div>
             <div class="pdf-meta-card">
@@ -519,7 +519,7 @@
             </div>
             <div class="pdf-meta-card">
               <div class="pdf-meta-label">Finalidade</div>
-              <div class="pdf-meta-value">Conferência administrativa do acervo da livraria.</div>
+              <div class="pdf-meta-value">{{ pdf_purpose|default('Conferência administrativa do acervo da livraria.') }}</div>
             </div>
           </div>
         </header>

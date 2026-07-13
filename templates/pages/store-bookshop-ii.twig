@@ -284,6 +284,16 @@
                     <span class="nc-knowledge-toggle-icon" aria-hidden="true">+</span>
                     <span class="nc-knowledge-toggle-label">Ficha técnica</span>
                   </button>
+                  {% if book.slug|default('') %}
+                    <a
+                      class="nc-btn nc-btn-secondary nc-btn-block-mobile nc-knowledge-action-btn"
+                      href="{{ bookshop_base_path }}/{{ book.slug }}/pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Abrir ficha para impressão
+                    </a>
+                  {% endif %}
                 </div>
               </div>
 
