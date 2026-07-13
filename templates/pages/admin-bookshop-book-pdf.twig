@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>LIVRARIA AUTA DE SOUSA | CEDE</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 14mm 16mm 14mm;
+      }
+
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        color: #1f2933;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 11pt;
+        line-height: 1.55;
+      }
+
+      .pdf-running-header {
+        position: fixed;
+        left: 0;
+        right: 0;
+        color: #4f5f6f;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9pt;
+      }
+
+      .pdf-running-header {
+        top: -12mm;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 0.35mm solid #d8dee4;
+        padding: 0 14mm 2.4mm;
+      }
+
+      .pdf-document {
+        display: grid;
+        gap: 7mm;
+      }
+
+      .pdf-section,
+      .pdf-description,
+      .pdf-meta-card,
+      .pdf-summary-card,
+      .pdf-cover-card,
+      .pdf-field {
+        border: 0.35mm solid #d9dee5;
+        border-radius: 3mm;
+        background: #fff;
+      }
+
+      .pdf-sheet {
+        display: grid;
+        gap: 6mm;
+      }
+
+      .pdf-document-header,
+      .pdf-brand-block,
+      .pdf-title-copy,
+      .pdf-cover-copy,
+      .pdf-section-head,
+      .pdf-description-copy,
+      .pdf-field {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .pdf-document-header {
+        justify-items: center;
+        text-align: center;
+      }
+
+      .pdf-document-brand-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .pdf-brand-block {
+        justify-items: center;
+        align-items: center;
+      }
+
+      .pdf-brand-logo {
+        max-height: 16mm;
+        width: auto;
+      }
+
+      .pdf-brand-subtitle {
+        color: #52606d;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pdf-brand-legal-name {
+        color: #1f2933;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9pt;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .pdf-title-copy h1,
+      .pdf-section-head h2,
+      .pdf-cover-copy h2 {
+        margin: 0;
+      }
+
+      .pdf-title-copy h1 {
+        font-size: 22pt;
+        line-height: 1.08;
+      }
+
+      .pdf-title-copy p,
+      .pdf-section-head p,
+      .pdf-cover-copy p,
+      .pdf-description-copy p {
+        margin: 0;
+      }
+
+      .pdf-notice {
+        color: #8a5a10;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9.5pt;
+        font-weight: 700;
+      }
+
+      .pdf-document-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3.5mm;
+        width: 100%;
+      }
+
+      .pdf-meta-card {
+        padding: 4.5mm;
+      }
+
+      .pdf-panel-label,
+      .pdf-meta-label,
+      .pdf-summary-label,
+      .pdf-field-label {
+        color: #7b8794;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .pdf-meta-value,
+      .pdf-summary-value,
+      .pdf-field-value {
+        word-break: break-word;
+      }
+
+      .pdf-hero {
+        display: grid;
+        grid-template-columns: 76mm minmax(0, 1fr);
+        gap: 5mm;
+      }
+
+      .pdf-cover-card,
+      .pdf-summary-card {
+        padding: 5mm;
+      }
+
+      .pdf-summary-card {
+        align-content: start;
+      }
+
+      .pdf-cover-frame {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 92mm;
+        border: 0.3mm solid #e4e7eb;
+        border-radius: 2.5mm;
+        background: #f8fafc;
+        overflow: hidden;
+      }
+
+      .pdf-cover-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .pdf-cover-placeholder {
+        display: grid;
+        gap: 0.5rem;
+        justify-items: center;
+        padding: 1rem;
+        text-align: center;
+      }
+
+      .pdf-cover-placeholder-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 17mm;
+        height: 17mm;
+        border-radius: 999px;
+        background: #e9eef5;
+        color: #52606d;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12pt;
+        font-weight: 700;
+      }
+
+      .pdf-cover-copy {
+        margin-top: 4mm;
+      }
+
+      .pdf-summary-card .pdf-field-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.8mm;
+        margin-top: 3mm;
+      }
+
+      .pdf-summary-card .pdf-field {
+        grid-template-columns: 29mm minmax(0, 1fr);
+        align-items: start;
+        min-height: 0;
+        gap: 2.4mm;
+        padding: 0 0 1.8mm;
+        border: 0;
+        border-bottom: 0.3mm solid #e4e7eb;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .pdf-summary-card .pdf-field:last-child {
+        padding-bottom: 0;
+        border-bottom: 0;
+      }
+
+      .pdf-summary-card .pdf-field.is-span-2,
+      .pdf-summary-card .pdf-field.is-span-3 {
+        grid-column: auto;
+      }
+
+      .pdf-summary-card .pdf-field-label {
+        font-size: 7.1pt;
+        letter-spacing: 0.05em;
+      }
+
+      .pdf-summary-card .pdf-field-value {
+        font-size: 9.2pt;
+        line-height: 1.35;
+      }
+
+      .pdf-section {
+        display: grid;
+        gap: 4mm;
+        padding: 5mm;
+        break-inside: avoid;
+      }
+
+      .pdf-field-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3.5mm;
+      }
+
+      .pdf-field {
+        min-height: 18mm;
+        padding: 3.8mm;
+      }
+
+      .pdf-field.is-span-2 {
+        grid-column: span 2;
+      }
+
+      .pdf-field.is-span-3 {
+        grid-column: span 3;
+      }
+
+      .pdf-description {
+        padding: 5mm;
+      }
+
+      .pdf-description-copy h2 {
+        margin: 0 0 0.35rem;
+        font-size: 16pt;
+        line-height: 1.12;
+      }
+
+      .pdf-description-body > *:first-child {
+        margin-top: 0;
+      }
+
+      .pdf-description-body > *:last-child {
+        margin-bottom: 0;
+      }
+
+      .pdf-description-body p,
+      .pdf-description-body ul,
+      .pdf-description-body ol {
+        margin: 0 0 0.55rem;
+      }
+
+      .pdf-description-body ul,
+      .pdf-description-body ol {
+        padding-left: 1.2rem;
+      }
+
+      @media print {
+        .pdf-sheet,
+        .pdf-section,
+        .pdf-description {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="pdf-running-header">
+      <span>Centro de Estudos da Doutrina Espírita</span>
+      <span>Livraria Auta de Sousa</span>
+    </header>
+
+    <main class="pdf-document">
+      <section class="pdf-sheet">
+        <header class="pdf-document-header">
+          <div class="pdf-document-brand-row">
+            <div class="pdf-brand-block">
+              {% if pdf_brand_logo_data_uri|default('') %}
+                <img class="pdf-brand-logo" src="{{ pdf_brand_logo_data_uri }}" alt="Logo do CEDE">
+              {% endif %}
+              <div class="pdf-brand-legal-name">CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA</div>
+            </div>
+          </div>
+
+          <div class="pdf-title-copy">
+            <h1>LIVRARIA AUTA DE SOUSA</h1>
+            <p>Documento para conferência e impressão dos dados do título cadastrado na livraria.</p>
+            {% if pdf_notice|default('') %}
+              <p class="pdf-notice">{{ pdf_notice }}</p>
+            {% endif %}
+          </div>
+
+          <div class="pdf-document-meta-grid">
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Origem do cadastro</div>
+              <div class="pdf-meta-value">{{ pdf_document_url|default('') }}</div>
+            </div>
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Emitido em</div>
+              <div class="pdf-meta-value">{{ pdf_generated_at|default('') }}</div>
+            </div>
+            <div class="pdf-meta-card">
+              <div class="pdf-meta-label">Finalidade</div>
+              <div class="pdf-meta-value">Conferência administrativa do acervo da livraria.</div>
+            </div>
+          </div>
+        </header>
+
+        <div class="pdf-hero">
+          <section class="pdf-cover-card">
+            <div class="pdf-cover-frame">
+              {% if pdf_book_cover_data_uri|default('') %}
+                <img src="{{ pdf_book_cover_data_uri }}" alt="Capa de {{ pdf_book_title|default('livro') }}">
+              {% else %}
+                <div class="pdf-cover-placeholder">
+                  <span class="pdf-cover-placeholder-mark">L</span>
+                  <strong>{{ pdf_book_title|default('Livro sem título') }}</strong>
+                  <span>{{ pdf_book_author|default('Autor não informado') }}</span>
+                </div>
+              {% endif %}
+            </div>
+            <div class="pdf-cover-copy">
+              <div class="pdf-panel-label">Obra cadastrada</div>
+              <h2>{{ pdf_book_title|default('Livro sem título') }}</h2>
+              {% if pdf_book_subtitle|default('') %}
+                <p>{{ pdf_book_subtitle }}</p>
+              {% endif %}
+              <p>{{ pdf_book_author|default('Autor não informado') }}</p>
+            </div>
+          </section>
+
+          <section class="pdf-summary-card">
+            <div class="pdf-panel-label">Dados editoriais</div>
+            <div class="pdf-field-grid">
+              {% for row in pdf_editorial_rows|default([]) %}
+                <div class="pdf-field{% if row.span|default(1) == 2 %} is-span-2{% elseif row.span|default(1) == 3 %} is-span-3{% endif %}">
+                  <div class="pdf-field-label">{{ row.label }}</div>
+                  <div class="pdf-field-value">{{ row.value }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        </div>
+      </section>
+
+      {% for section in pdf_sections|default([]) %}
+        <section class="pdf-section">
+          <div class="pdf-section-head">
+            <h2>{{ section.title }}</h2>
+            {% if section.description|default('') %}
+              <p>{{ section.description }}</p>
+            {% endif %}
+          </div>
+
+          <div class="pdf-field-grid">
+            {% for row in section.rows|default([]) %}
+              <div class="pdf-field{% if row.span|default(1) == 2 %} is-span-2{% elseif row.span|default(1) == 3 %} is-span-3{% endif %}">
+                <div class="pdf-field-label">{{ row.label }}</div>
+                <div class="pdf-field-value">{{ row.value }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+
+      {% if pdf_description_html|default('') %}
+        <section class="pdf-description">
+          <div class="pdf-description-copy">
+            <div class="pdf-panel-label">Descrição editorial</div>
+            <h2>Descrição / Sinopse</h2>
+          </div>
+          <div class="pdf-description-body">{{ pdf_description_html|raw }}</div>
+        </section>
+      {% endif %}
+    </main>
+  </body>
+</html>
