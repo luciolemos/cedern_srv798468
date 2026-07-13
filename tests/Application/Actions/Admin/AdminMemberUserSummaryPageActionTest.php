@@ -131,6 +131,7 @@ final class AdminMemberUserSummaryPageActionTest extends TestCase
         $this->assertStringContainsString('Entender regras da função no CEDE', $html);
         $this->assertStringContainsString('A função no CEDE só permanece se o campo Vínculo associativo estiver como Associado e o Acesso ao SISCEDE estiver Ativo.', $html);
         $this->assertStringContainsString('Funções exclusivas exigem que não exista outro usuário ativo ocupando o mesmo cargo.', $html);
+        $this->assertStringContainsString('2º Secretário', $html);
         $this->assertStringContainsString('Coordenador(a) do Curso de Mediunidade', $html);
         $this->assertStringContainsString('Entender regras do tipo de sócio', $html);
         $this->assertStringContainsString('Definições do Estatuto do CEDE', $html);

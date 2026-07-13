@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Member;
 
 use App\Domain\Member\MemberAuthRepository;
 use App\Support\ContributionParticipation;
+use App\Support\InstitutionalRole;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -803,6 +804,17 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
 
     public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool
     {
+        foreach (InstitutionalRole::equivalents($institutionalRole) as $roleOption) {
+            if ($this->hasActiveInstitutionalRoleExact($roleOption, $exceptUserId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function hasActiveInstitutionalRoleExact(string $institutionalRole, int $exceptUserId = 0): bool
+    {
         $normalizedRole = trim($institutionalRole);
 
         if ($normalizedRole === '') {
@@ -810,22 +822,22 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         }
 
         try {
-                        $currentManagementId = $this->ensureCurrentManagementId();
+            $currentManagementId = $this->ensureCurrentManagementId();
 
             $sql = <<<SQL
                 SELECT COUNT(*)
-                                FROM member_management_roles mmr
-                                INNER JOIN member_users u ON u.id = mmr.member_user_id
-                                WHERE mmr.management_id = :management_id
-                                    AND mmr.role_name = :institutional_role
-                                    AND mmr.ends_at IS NULL
-                                    AND u.status = 'active'
-                                    AND (:except_user_id_check <= 0 OR u.id <> :except_user_id_filter)
+                FROM member_management_roles mmr
+                INNER JOIN member_users u ON u.id = mmr.member_user_id
+                WHERE mmr.management_id = :management_id
+                  AND mmr.role_name = :institutional_role
+                  AND mmr.ends_at IS NULL
+                  AND u.status = 'active'
+                  AND (:except_user_id_check <= 0 OR u.id <> :except_user_id_filter)
             SQL;
 
             $statement = $this->pdo->prepare($sql);
             $statement->execute([
-                                'management_id' => $currentManagementId,
+                'management_id' => $currentManagementId,
                 'institutional_role' => $normalizedRole,
                 'except_user_id_check' => $exceptUserId,
                 'except_user_id_filter' => $exceptUserId,
@@ -1843,7 +1855,9 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
         $row['preferred_payment_method'] = $row['preferred_payment_method'] ?? null;
         $row['billing_email_opt_in'] = (int) ($row['billing_email_opt_in'] ?? 0);
         $row['billing_whatsapp_opt_in'] = (int) ($row['billing_whatsapp_opt_in'] ?? 0);
-        $row['institutional_role'] = $row['institutional_role'] ?? null;
+        $row['institutional_role'] = InstitutionalRole::normalize(
+            $row['institutional_role'] !== null ? (string) $row['institutional_role'] : null
+        );
         $row['member_type'] = $row['member_type'] ?? null;
         $row['member_type_label'] = $this->resolveMemberTypeLabel((string) ($row['member_type'] ?? ''));
         $row['association_status'] = $associationStatus;
@@ -3008,7 +3022,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
     ): array {
         $rulesApplied = [];
         $normalizedMemberType = $this->nullableText($memberType);
-        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedInstitutionalRole = InstitutionalRole::normalize($this->nullableText($institutionalRole));
         $normalizedAssociationStatus = strtolower(trim((string) $associationStatus));
         if (!in_array($normalizedAssociationStatus, ['applicant', 'member', 'former'], true)) {
             $normalizedAssociationStatus = 'member';
@@ -3086,7 +3100,7 @@ class MySqlMemberAuthRepository implements MemberAuthRepository
             'role_id' => (int) ($user['role_id'] ?? 0),
             'role_key' => (string) ($user['role_key'] ?? ''),
             'role_name' => (string) ($user['role_name'] ?? ''),
-            'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
+            'institutional_role' => InstitutionalRole::normalize($this->nullableText($user['institutional_role'] ?? null)),
             'member_type' => $this->nullableText($user['member_type'] ?? null),
             'association_status' => $associationStatus,
             'is_contributor' => ContributionParticipation::normalize($user['is_contributor'] ?? null),

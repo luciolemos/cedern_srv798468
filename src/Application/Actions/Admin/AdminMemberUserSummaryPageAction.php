@@ -7,6 +7,7 @@ namespace App\Application\Actions\Admin;
 use App\Application\Actions\Page\AbstractPageAction;
 use App\Domain\Member\MemberAuthRepository;
 use App\Support\ContributionParticipation;
+use App\Support\InstitutionalRole;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -21,7 +22,8 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
     private const INSTITUTIONAL_ROLE_OPTIONS = [
         'Presidente CEDE',
         'Vice-presidente CEDE',
-        'Secretário',
+        '1º Secretário',
+        '2º Secretário',
         'Diretor de Finanças',
         'Diretor de Eventos',
         'Diretor de Patrimônio',
@@ -168,6 +170,7 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
             ? strtolower(trim((string) ($user['status'] ?? '')))
             : 'pending';
         $user['status_label'] = self::ACCOUNT_STATUS_OPTIONS[$user['status']];
+        $user['institutional_role'] = InstitutionalRole::normalize((string) ($user['institutional_role'] ?? '')) ?? '';
         $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
         $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
         $user['birth_date_display'] = $this->formatDate((string) ($user['birth_date'] ?? ''));
@@ -175,7 +178,7 @@ class AdminMemberUserSummaryPageAction extends AbstractPageAction
         $user['role_name_display'] = $this->resolveRoleNameDisplay($user);
 
         $institutionalRoleOptions = self::INSTITUTIONAL_ROLE_OPTIONS;
-        $currentInstitutionalRole = trim((string) ($user['institutional_role'] ?? ''));
+        $currentInstitutionalRole = trim((string) $user['institutional_role']);
         if ($currentInstitutionalRole !== '' && !in_array($currentInstitutionalRole, $institutionalRoleOptions, true)) {
             $institutionalRoleOptions[] = $currentInstitutionalRole;
         }

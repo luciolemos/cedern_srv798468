@@ -86,6 +86,53 @@ final class AdminMemberAssignRoleActionTest extends TestCase
         $this->assertSame('Plano coordenacao', $updatedUser['contribution_plan_label'] ?? null);
     }
 
+    public function testAcceptsSecondSecretaryInstitutionalRole(): void
+    {
+        $memberAuthRepository = new FallbackMemberAuthRepository();
+        $userId = $memberAuthRepository->createPendingUser([
+            'full_name' => 'Carlos Secretaria',
+            'email' => 'carlos.secretaria@example.com',
+            'password_hash' => 'hash',
+        ]);
+
+        $app = $this->getAppInstance();
+        $container = $app->getContainer();
+
+        /** @var LoggerInterface $logger */
+        $logger = $container->get(LoggerInterface::class);
+        /** @var Twig $twig */
+        $twig = $container->get(Twig::class);
+
+        $action = new AdminMemberAssignRoleAction(
+            $logger,
+            $twig,
+            $memberAuthRepository
+        );
+
+        $request = $this->createRequest('POST', '/painel/usuarios/' . $userId . '/atribuir-perfil')
+            ->withAttribute('id', $userId)
+            ->withParsedBody([
+                'role_id' => '1',
+                'institutional_role' => '2º Secretário',
+                'member_type' => 'efetivo',
+                'association_status' => 'member',
+                'account_status' => 'active',
+                'is_contributor' => '0',
+                'redirect_to' => '/painel/usuarios/' . $userId . '/resumo',
+            ]);
+
+        $response = $action($request, new Response());
+        $updatedUser = $memberAuthRepository->findById($userId);
+        $flash = $_SESSION['_codex_flash']['admin_member_user_summary_' . $userId] ?? null;
+
+        $this->assertSame(303, $response->getStatusCode());
+        $this->assertSame('/painel/usuarios/' . $userId . '/resumo', $response->getHeaderLine('Location'));
+        $this->assertIsArray($flash);
+        $this->assertSame('approved', $flash['status'] ?? null);
+        $this->assertIsArray($updatedUser);
+        $this->assertSame('2º Secretário', $updatedUser['institutional_role'] ?? null);
+    }
+
     public function testPersistsAdministrativeFinancialConfigurationForContributor(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();

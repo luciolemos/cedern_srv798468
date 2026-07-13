@@ -6,6 +6,7 @@ namespace App\Infrastructure\Persistence\Member;
 
 use App\Domain\Member\MemberAuthRepository;
 use App\Support\ContributionParticipation;
+use App\Support\InstitutionalRole;
 
 class FallbackMemberAuthRepository implements MemberAuthRepository
 {
@@ -454,9 +455,9 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
 
     public function hasActiveInstitutionalRole(string $institutionalRole, int $exceptUserId = 0): bool
     {
-        $normalizedRole = trim($institutionalRole);
+        $normalizedRole = InstitutionalRole::normalize($institutionalRole);
 
-        if ($normalizedRole === '') {
+        if ($normalizedRole === null) {
             return false;
         }
 
@@ -469,7 +470,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
                 continue;
             }
 
-            if ((string) ($user['institutional_role'] ?? '') === $normalizedRole) {
+            if (InstitutionalRole::normalize((string) ($user['institutional_role'] ?? '')) === $normalizedRole) {
                 return true;
             }
         }
@@ -926,6 +927,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
         $user['association_status_label'] = $this->resolveAssociationStatusLabel((string) $user['association_status']);
         $user['is_contributor'] = ContributionParticipation::normalize($user['is_contributor'] ?? null);
         $user['contributor_label'] = ContributionParticipation::label($user['is_contributor']);
+        $user['institutional_role'] = InstitutionalRole::normalize($this->nullableText($user['institutional_role'] ?? null));
         $user['privacy_notice_version'] = $user['privacy_notice_version'] ?? null;
         $user['privacy_notice_accepted_at'] = $user['privacy_notice_accepted_at'] ?? null;
 
@@ -1006,7 +1008,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
     ): array {
         $rulesApplied = [];
         $normalizedMemberType = $this->nullableText($memberType);
-        $normalizedInstitutionalRole = $this->nullableText($institutionalRole);
+        $normalizedInstitutionalRole = InstitutionalRole::normalize($this->nullableText($institutionalRole));
         $normalizedAssociationStatus = strtolower(trim((string) $associationStatus));
         if (!in_array($normalizedAssociationStatus, ['applicant', 'member', 'former'], true)) {
             $normalizedAssociationStatus = 'member';
@@ -1084,7 +1086,7 @@ class FallbackMemberAuthRepository implements MemberAuthRepository
             'role_id' => (int) ($user['role_id'] ?? 0),
             'role_key' => (string) ($user['role_key'] ?? ''),
             'role_name' => (string) ($user['role_name'] ?? ''),
-            'institutional_role' => $this->nullableText($user['institutional_role'] ?? null),
+            'institutional_role' => InstitutionalRole::normalize($this->nullableText($user['institutional_role'] ?? null)),
             'member_type' => $this->nullableText($user['member_type'] ?? null),
             'association_status' => $associationStatus,
             'is_contributor' => ContributionParticipation::normalize($user['is_contributor'] ?? null),

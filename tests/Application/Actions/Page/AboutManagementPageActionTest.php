@@ -42,6 +42,12 @@ final class AboutManagementPageActionTest extends TestCase
                 'association_status' => 'former',
                 'institutional_role' => 'Secretário',
             ],
+            [
+                'full_name' => 'Segundo Secretario',
+                'status' => 'active',
+                'association_status' => 'member',
+                'institutional_role' => '2º Secretário',
+            ],
         ]);
 
         $action = $this->createCapturingAction($memberAuthRepositoryProphecy->reveal());
@@ -52,7 +58,7 @@ final class AboutManagementPageActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('pages/about-management.twig', $action->capturedTemplate);
-        $this->assertCount(3, $managementMembers);
+        $this->assertCount(4, $managementMembers);
         $this->assertSame('Presidente CEDE', $managementMembers[0]['institutional_role'] ?? '');
         $this->assertSame('Presidente Teste', $managementMembers[0]['full_name'] ?? '');
         $this->assertSame('Vice-presidente CEDE', $managementMembers[1]['institutional_role'] ?? '');
@@ -61,7 +67,9 @@ final class AboutManagementPageActionTest extends TestCase
             'Apoia a presidência na coordenação geral, acompanha frentes prioritárias e substitui a presidência quando necessário.',
             $managementMembers[1]['institutional_role_description'] ?? ''
         );
-        $this->assertSame('Diretor de Finanças', $managementMembers[2]['institutional_role'] ?? '');
+        $this->assertSame('2º Secretário', $managementMembers[2]['institutional_role'] ?? '');
+        $this->assertSame('Segundo Secretario', $managementMembers[2]['full_name'] ?? '');
+        $this->assertSame('Diretor de Finanças', $managementMembers[3]['institutional_role'] ?? '');
     }
 
     /**
