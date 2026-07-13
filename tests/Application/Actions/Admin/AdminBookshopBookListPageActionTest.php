@@ -173,7 +173,7 @@ class AdminBookshopBookListPageActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('/painel/livraria/acervo/1/pdf', $html);
-        $this->assertStringContainsString('Abrir PDF do livro', $html);
+        $this->assertStringContainsString('Abrir ficha para impressão', $html);
     }
 
     /**

@@ -30,7 +30,7 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         parent::tearDown();
     }
 
-    public function testGeneratesPdfResponseUsingCurrentFormValues(): void
+    public function testReturnsPrintableHtmlUsingCurrentFormValues(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
         $userId = $memberAuthRepository->createPendingUser([
@@ -97,16 +97,7 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $memberAuthRepository) extends MemberCompleteProfilePdfAction {
-            public string $capturedHtml = '';
-
-            protected function renderPdfFromHtml(string $html): string
-            {
-                $this->capturedHtml = $html;
-
-                return '%PDF-TEST%';
-            }
-        };
+        $action = new MemberCompleteProfilePdfAction($logger, $twig, $memberAuthRepository);
 
         $request = $this->createRequest('POST', '/membro/perfil/completar/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
             ->withParsedBody([
@@ -134,39 +125,37 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
             ]);
 
         $response = $action($request, new Response());
+        $body = (string) $response->getBody();
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString(
-            'formulario-cadastro-associado.pdf',
-            $response->getHeaderLine('Content-Disposition')
-        );
-        $this->assertSame('%PDF-TEST%', (string) $response->getBody());
-        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $action->capturedHtml);
-        $this->assertStringContainsString('class="pdf-brand-logo"', $action->capturedHtml);
-        $this->assertStringContainsString('src="data:image/png;base64,', $action->capturedHtml);
-        $this->assertStringContainsString('Nome para PDF', $action->capturedHtml);
-        $this->assertStringContainsString('05/01/2001', $action->capturedHtml);
-        $this->assertStringContainsString('Dia 12', $action->capturedHtml);
-        $this->assertStringContainsString('R$ 88,90', $action->capturedHtml);
-        $this->assertStringContainsString('Pix', $action->capturedHtml);
-        $this->assertStringContainsString('Usuário SISCEDE', $action->capturedHtml);
-        $this->assertStringContainsString('Sem função definida', $action->capturedHtml);
-        $this->assertStringContainsString('Nome para PDF', $action->capturedHtml);
-        $this->assertStringContainsString('Associado(a)', $action->capturedHtml);
-        $this->assertStringContainsString('Presidente Teste CEDE', $action->capturedHtml);
-        $this->assertStringContainsString('Presidente do CEDE', $action->capturedHtml);
-        $this->assertSame(1, substr_count($action->capturedHtml, '<div class="pdf-field-grid">'));
-        $this->assertSame(1, substr_count($action->capturedHtml, '<div class="pdf-field-grid is-address">'));
-        $this->assertSame(1, substr_count($action->capturedHtml, '<div class="pdf-field-grid is-finance">'));
+        $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('', $response->getHeaderLine('X-Cede-Document-Fallback'));
+        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
+        $this->assertStringContainsString('class="pdf-brand-logo"', $body);
+        $this->assertStringContainsString('src="data:image/png;base64,', $body);
+        $this->assertStringContainsString('Nome para PDF', $body);
+        $this->assertStringContainsString('05/01/2001', $body);
+        $this->assertStringContainsString('Dia 12', $body);
+        $this->assertStringContainsString('R$ 88,90', $body);
+        $this->assertStringContainsString('Pix', $body);
+        $this->assertStringContainsString('Usuário SISCEDE', $body);
+        $this->assertStringContainsString('Sem função definida', $body);
+        $this->assertStringContainsString('Nome para PDF', $body);
+        $this->assertStringContainsString('Associado(a)', $body);
+        $this->assertStringContainsString('Presidente Teste CEDE', $body);
+        $this->assertStringContainsString('Presidente do CEDE', $body);
+        $this->assertSame(1, substr_count($body, '<div class="pdf-field-grid">'));
+        $this->assertSame(1, substr_count($body, '<div class="pdf-field-grid is-address">'));
+        $this->assertSame(1, substr_count($body, '<div class="pdf-field-grid is-finance">'));
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
 
-        $addressSectionStart = strpos($action->capturedHtml, '<h2>Endereço</h2>');
-        $financeSectionStart = strpos($action->capturedHtml, '<h2>Contribuição e cobrança</h2>');
+        $addressSectionStart = strpos($body, '<h2>Endereço</h2>');
+        $financeSectionStart = strpos($body, '<h2>Contribuição e cobrança</h2>');
         $this->assertNotFalse($addressSectionStart);
         $this->assertNotFalse($financeSectionStart);
 
-        $addressHtml = substr($action->capturedHtml, $addressSectionStart);
-        $financeHtml = substr($action->capturedHtml, $financeSectionStart);
+        $addressHtml = substr($body, $addressSectionStart);
+        $financeHtml = substr($body, $financeSectionStart);
 
         $cepPosition = strpos($addressHtml, 'CEP');
         $ufPosition = strpos($addressHtml, 'UF');
@@ -197,7 +186,7 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         $this->assertLessThan($planoPosition, $privacidadePosition);
     }
 
-    public function testFallsBackToPrintableHtmlWhenPdfGeneratorFails(): void
+    public function testReturnsPrintableHtmlWithoutFallbackNoticeWhenMemberIsAuthenticated(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
         $userId = $memberAuthRepository->createPendingUser([
@@ -235,12 +224,7 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $memberAuthRepository) extends MemberCompleteProfilePdfAction {
-            protected function renderPdfFromHtml(string $html): string
-            {
-                throw new \RuntimeException('pdf-unavailable');
-            }
-        };
+        $action = new MemberCompleteProfilePdfAction($logger, $twig, $memberAuthRepository);
 
         $request = $this->createRequest('GET', '/membro/perfil/completar/pdf', ['HTTP_ACCEPT' => 'application/pdf']);
         $response = $action($request, new Response());
@@ -248,9 +232,8 @@ final class MemberCompleteProfilePdfActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame('html', $response->getHeaderLine('X-Cede-Document-Fallback'));
         $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
-        $this->assertStringContainsString('Use a impressão do navegador para salvar em PDF.', $body);
         $this->assertStringContainsString('Associado Fallback', $body);
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
     }
 }

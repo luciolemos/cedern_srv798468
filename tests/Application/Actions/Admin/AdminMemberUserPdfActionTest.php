@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 final class AdminMemberUserPdfActionTest extends TestCase
 {
-    public function testGeneratesAdministrativePdfForSelectedUser(): void
+    public function testReturnsAdministrativePrintableHtmlForSelectedUser(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
         $userId = $memberAuthRepository->createPendingUser([
@@ -78,45 +78,34 @@ final class AdminMemberUserPdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $memberAuthRepository) extends AdminMemberUserPdfAction {
-            public string $capturedHtml = '';
-
-            protected function renderPdfFromHtml(string $html): string
-            {
-                $this->capturedHtml = $html;
-
-                return '%PDF-ADMIN-TEST%';
-            }
-        };
+        $action = new AdminMemberUserPdfAction($logger, $twig, $memberAuthRepository);
 
         $request = $this->createRequest('GET', '/painel/usuarios/' . $userId . '/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
             ->withAttribute('id', $userId);
 
         $response = $action($request, new Response());
+        $body = (string) $response->getBody();
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString(
-            'formulario-cadastro-associado.pdf',
-            $response->getHeaderLine('Content-Disposition')
-        );
-        $this->assertSame('%PDF-ADMIN-TEST%', (string) $response->getBody());
-        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $action->capturedHtml);
-        $this->assertStringContainsString('Helena Martins', $action->capturedHtml);
-        $this->assertStringContainsString('25/03/1988', $action->capturedHtml);
-        $this->assertStringContainsString('529.982.247-25', $action->capturedHtml);
-        $this->assertStringContainsString('Dia 08', $action->capturedHtml);
-        $this->assertStringContainsString('R$ 72,40', $action->capturedHtml);
-        $this->assertStringContainsString('Boleto', $action->capturedHtml);
-        $this->assertStringContainsString('Plano diretoria', $action->capturedHtml);
-        $this->assertStringContainsString('Coordenador', $action->capturedHtml);
-        $this->assertStringContainsString('Associado(a)', $action->capturedHtml);
-        $this->assertStringContainsString('Presidente CEDE Teste', $action->capturedHtml);
-        $this->assertStringContainsString('Presidente do CEDE', $action->capturedHtml);
-        $this->assertStringContainsString('/painel/usuarios/' . $userId, $action->capturedHtml);
+        $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('', $response->getHeaderLine('X-Cede-Document-Fallback'));
+        $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
+        $this->assertStringContainsString('Helena Martins', $body);
+        $this->assertStringContainsString('25/03/1988', $body);
+        $this->assertStringContainsString('529.982.247-25', $body);
+        $this->assertStringContainsString('Dia 08', $body);
+        $this->assertStringContainsString('R$ 72,40', $body);
+        $this->assertStringContainsString('Boleto', $body);
+        $this->assertStringContainsString('Plano diretoria', $body);
+        $this->assertStringContainsString('Coordenador', $body);
+        $this->assertStringContainsString('Associado(a)', $body);
+        $this->assertStringContainsString('Presidente CEDE Teste', $body);
+        $this->assertStringContainsString('Presidente do CEDE', $body);
+        $this->assertStringContainsString('/painel/usuarios/' . $userId, $body);
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
     }
 
-    public function testFallsBackToPrintableHtmlWhenAdministrativePdfGeneratorFails(): void
+    public function testReturnsAdministrativePrintableHtmlWithoutFallbackNotice(): void
     {
         $memberAuthRepository = new FallbackMemberAuthRepository();
         $userId = $memberAuthRepository->createPendingUser([
@@ -150,12 +139,7 @@ final class AdminMemberUserPdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $memberAuthRepository) extends AdminMemberUserPdfAction {
-            protected function renderPdfFromHtml(string $html): string
-            {
-                throw new \RuntimeException('pdf-unavailable');
-            }
-        };
+        $action = new AdminMemberUserPdfAction($logger, $twig, $memberAuthRepository);
 
         $request = $this->createRequest('GET', '/painel/usuarios/' . $userId . '/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
             ->withAttribute('id', $userId);
@@ -165,10 +149,9 @@ final class AdminMemberUserPdfActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame('html', $response->getHeaderLine('X-Cede-Document-Fallback'));
         $this->assertStringContainsString('FORMULÁRIO DE CADASTRO DE ASSOCIADO', $body);
-        $this->assertStringContainsString('Use a impressão do navegador para salvar em PDF.', $body);
         $this->assertStringContainsString('Helena Fallback', $body);
         $this->assertStringContainsString('/painel/usuarios/' . $userId, $body);
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
     }
 }

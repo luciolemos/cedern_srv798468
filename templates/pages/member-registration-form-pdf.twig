@@ -2,6 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CEDE | Formulário de Cadastro de Associado</title>
     <style>
       @page {
@@ -29,6 +30,34 @@
         font-size: 10pt;
         line-height: 1.42;
         background: #fff;
+      }
+
+      .pdf-screen-toolbar {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 50;
+        display: flex;
+      }
+
+      .pdf-screen-print-button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        background: #16222c;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8.8pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3.2mm 4.8mm;
+        cursor: pointer;
+        box-shadow: 0 2.5mm 6mm rgba(22, 34, 44, 0.18);
+      }
+
+      .pdf-screen-print-button:hover {
+        background: #243240;
       }
 
       .pdf-running-header {
@@ -141,6 +170,7 @@
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 3.5mm;
+        width: 100%;
       }
 
       .pdf-meta-card,
@@ -153,7 +183,10 @@
       }
 
       .pdf-meta-card {
+        display: grid;
+        justify-items: center;
         padding: 3mm 3.2mm;
+        text-align: center;
       }
 
       .pdf-meta-label,
@@ -216,10 +249,10 @@
 
       .pdf-photo-frame img {
         display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        object-position: center;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
       }
 
       .pdf-photo-placeholder {
@@ -408,9 +441,117 @@
         font-size: 8.8pt;
         text-align: center;
       }
+
+      @media screen {
+        body {
+          padding: 56px 12px 16px;
+          background: #f4f7fa;
+        }
+
+        .pdf-running-header {
+          position: static;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 0 auto 12px;
+          padding: 0;
+          max-width: 1080px;
+          color: #52606d;
+        }
+
+        .pdf-document {
+          max-width: 1080px;
+          margin: 0 auto;
+        }
+
+        .pdf-sheet,
+        .pdf-section,
+        .pdf-declaration {
+          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+      }
+
+      @media screen and (max-width: 760px) {
+        body {
+          padding: 60px 10px 14px;
+        }
+
+        .pdf-screen-toolbar {
+          top: 10px;
+          right: 10px;
+        }
+
+        .pdf-screen-print-button {
+          padding: 10px 14px;
+        }
+
+        .pdf-running-header {
+          display: grid;
+          gap: 4px;
+          justify-items: start;
+          text-align: left;
+          margin-bottom: 10px;
+        }
+
+        .pdf-document {
+          gap: 12px;
+        }
+
+        .pdf-sheet {
+          gap: 12px;
+        }
+
+        .pdf-document-header {
+          padding-bottom: 0;
+        }
+
+        .pdf-document-meta-grid,
+        .pdf-identity-strip,
+        .pdf-summary-panel-grid,
+        .pdf-field-grid,
+        .pdf-field-grid.is-finance,
+        .pdf-field-grid.is-address,
+        .pdf-signature-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .pdf-photo-frame {
+          height: auto;
+          min-height: 0;
+          padding: 3mm 0;
+        }
+
+        .pdf-photo-frame img {
+          width: auto;
+          height: auto;
+          max-width: min(100%, 220px);
+          max-height: 220px;
+        }
+
+        .pdf-photo-placeholder {
+          min-height: 120px;
+        }
+
+        .pdf-field.is-wide,
+        .pdf-field.is-span-1,
+        .pdf-field.is-span-2,
+        .pdf-field.is-span-3 {
+          grid-column: auto;
+        }
+      }
+
+      @media print {
+        .pdf-screen-toolbar {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="pdf-screen-toolbar">
+      <button class="pdf-screen-print-button" type="button" onclick="window.print()">Imprimir</button>
+    </div>
+
     <div class="pdf-running-header">
       <strong>Centro de Estudos da Doutrina Espírita</strong>
       <span>Formulário de Cadastro de Associado</span>

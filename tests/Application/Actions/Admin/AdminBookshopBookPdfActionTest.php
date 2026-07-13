@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 final class AdminBookshopBookPdfActionTest extends TestCase
 {
-    public function testGeneratesAdministrativePdfForSelectedBook(): void
+    public function testReturnsPrintableHtmlForSelectedBook(): void
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -29,42 +29,31 @@ final class AdminBookshopBookPdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $bookshopRepositoryProphecy->reveal()) extends AdminBookshopBookPdfAction {
-            public string $capturedHtml = '';
-
-            protected function renderPdfFromHtml(string $html): string
-            {
-                $this->capturedHtml = $html;
-
-                return '%PDF-BOOKSHOP-TEST%';
-            }
-        };
+        $action = new AdminBookshopBookPdfAction($logger, $twig, $bookshopRepositoryProphecy->reveal());
 
         $request = $this->createRequest('GET', '/painel/livraria/acervo/7/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
             ->withAttribute('id', 7);
 
         $response = $action($request, new Response());
+        $body = (string) $response->getBody();
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
-        $this->assertStringContainsString(
-            'ficha-acervo-semeador-de-estrelas.pdf',
-            $response->getHeaderLine('Content-Disposition')
-        );
-        $this->assertSame('%PDF-BOOKSHOP-TEST%', (string) $response->getBody());
-        $this->assertStringContainsString('LIVRARIA AUTA DE SOUSA', $action->capturedHtml);
-        $this->assertStringContainsString('CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA', $action->capturedHtml);
-        $this->assertStringContainsString('Semeador de Estrelas', $action->capturedHtml);
-        $this->assertStringContainsString('Joana de Angelis', $action->capturedHtml);
-        $this->assertStringContainsString('Dados editoriais', $action->capturedHtml);
-        $this->assertStringContainsString('ISBN', $action->capturedHtml);
-        $this->assertStringContainsString('Conferência administrativa do acervo da livraria.', $action->capturedHtml);
-        $this->assertStringContainsString('/painel/livraria/acervo/7', $action->capturedHtml);
-        $this->assertStringNotContainsString('Quadro de identificação', $action->capturedHtml);
-        $this->assertStringNotContainsString('Registro administrativo', $action->capturedHtml);
+        $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        $this->assertSame('', $response->getHeaderLine('X-Cede-Document-Fallback'));
+        $this->assertStringContainsString('LIVRARIA AUTA DE SOUSA', $body);
+        $this->assertStringContainsString('CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA', $body);
+        $this->assertStringContainsString('Semeador de Estrelas', $body);
+        $this->assertStringContainsString('Joana de Angelis', $body);
+        $this->assertStringContainsString('Dados editoriais', $body);
+        $this->assertStringContainsString('ISBN', $body);
+        $this->assertStringContainsString('Conferência administrativa do acervo da livraria.', $body);
+        $this->assertStringContainsString('/painel/livraria/acervo/7', $body);
+        $this->assertStringNotContainsString('Quadro de identificação', $body);
+        $this->assertStringNotContainsString('Registro administrativo', $body);
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
     }
 
-    public function testFallsBackToPrintableHtmlWhenBookPdfGeneratorFails(): void
+    public function testReturnsPrintableHtmlWithoutFallbackNoticeForOtherBooks(): void
     {
         $bookshopRepositoryProphecy = $this->prophesize(BookshopRepository::class);
         $bookshopRepositoryProphecy
@@ -83,12 +72,7 @@ final class AdminBookshopBookPdfActionTest extends TestCase
         /** @var Twig $twig */
         $twig = $container->get(Twig::class);
 
-        $action = new class ($logger, $twig, $bookshopRepositoryProphecy->reveal()) extends AdminBookshopBookPdfAction {
-            protected function renderPdfFromHtml(string $html): string
-            {
-                throw new \RuntimeException('pdf-unavailable');
-            }
-        };
+        $action = new AdminBookshopBookPdfAction($logger, $twig, $bookshopRepositoryProphecy->reveal());
 
         $request = $this->createRequest('GET', '/painel/livraria/acervo/7/pdf', ['HTTP_ACCEPT' => 'application/pdf'])
             ->withAttribute('id', 7);
@@ -98,15 +82,14 @@ final class AdminBookshopBookPdfActionTest extends TestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        $this->assertSame('html', $response->getHeaderLine('X-Cede-Document-Fallback'));
         $this->assertStringContainsString('LIVRARIA AUTA DE SOUSA', $body);
         $this->assertStringContainsString('CENTRO DE ESTUDOS DA DOUTRINA ESPÍRITA', $body);
         $this->assertStringContainsString('Dados editoriais', $body);
-        $this->assertStringContainsString('Use a impressão do navegador para salvar em PDF.', $body);
         $this->assertStringContainsString('Livro Fallback', $body);
         $this->assertStringContainsString('/painel/livraria/acervo/7', $body);
         $this->assertStringNotContainsString('Quadro de identificação', $body);
         $this->assertStringNotContainsString('Registro administrativo', $body);
+        $this->assertStringNotContainsString('Gerador de PDF indisponível neste servidor no momento.', $body);
     }
 
     /**
