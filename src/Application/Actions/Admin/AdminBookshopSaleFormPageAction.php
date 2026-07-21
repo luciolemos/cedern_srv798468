@@ -229,9 +229,7 @@ class AdminBookshopSaleFormPageAction extends AbstractAdminBookshopAction
         }
 
         $customerCpf = trim((string) ($payload['customer_cpf'] ?? ''));
-        if ($customerCpf === '') {
-            $errors[] = 'Informe o CPF do cliente.';
-        } elseif (!$this->isValidCpf($customerCpf)) {
+        if ($customerCpf !== '' && !$this->isValidCpf($customerCpf)) {
             $errors[] = 'Informe um CPF válido para o cliente.';
         }
 
